@@ -5,14 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Building extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'tenant_id',
         'name',
         'address',
-        'description'
+        'description',
+        'phone',
+        'total_floors',
+        'status',
+        'image',
+        'amenities'
+    ];
+
+    protected $casts = [
+        'amenities' => 'array',
+        'total_floors' => 'integer'
     ];
 
     public function tenant(): BelongsTo

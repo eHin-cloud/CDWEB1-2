@@ -94,7 +94,7 @@ class TenantAdminController extends Controller
     public function listBuildings()
     {
         $tenantId = Auth::user()->tenant_id;
-        $buildings = Building::where('tenant_id', $tenantId)->get();
+        $buildings = Building::where('tenant_id', $tenantId)->withCount('rooms')->get();
         return response()->json(['success' => true, 'buildings' => $buildings]);
     }
 
@@ -103,6 +103,11 @@ class TenantAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'total_floors' => 'nullable|integer|min:1|max:100',
+            'status' => 'nullable|in:active,maintenance,inactive',
+            'image' => 'nullable|string',
+            'amenities' => 'nullable|array',
             'description' => 'nullable|string'
         ]);
 
@@ -112,6 +117,11 @@ class TenantAdminController extends Controller
             'tenant_id' => $tenantId,
             'name' => $request->name,
             'address' => $request->address,
+            'phone' => $request->phone,
+            'total_floors' => $request->total_floors ?? 1,
+            'status' => $request->status ?? 'active',
+            'image' => $request->image,
+            'amenities' => $request->amenities ?? [],
             'description' => $request->description
         ]);
 
@@ -126,10 +136,15 @@ class TenantAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'total_floors' => 'nullable|integer|min:1|max:100',
+            'status' => 'nullable|in:active,maintenance,inactive',
+            'image' => 'nullable|string',
+            'amenities' => 'nullable|array',
             'description' => 'nullable|string'
         ]);
 
-        $building->update($request->only('name', 'address', 'description'));
+        $building->update($request->only('name', 'address', 'phone', 'total_floors', 'status', 'image', 'amenities', 'description'));
 
         return response()->json(['success' => true, 'message' => 'Cập nhật tòa nhà thành công', 'building' => $building]);
     }
@@ -138,6 +153,15 @@ class TenantAdminController extends Controller
     {
         $tenantId = Auth::user()->tenant_id;
         $building = Building::where('tenant_id', $tenantId)->findOrFail($id);
+
+        // Guard Check: Chặn xóa nếu còn phòng trực thuộc
+        if ($building->rooms()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa cơ sở lưu trú đang có phòng trực thuộc. Vui lòng chuyển hoặc xóa các phòng trước.'
+            ], 422);
+        }
+
         $building->delete();
 
         return response()->json(['success' => true, 'message' => 'Xóa tòa nhà thành công']);
