@@ -94,7 +94,7 @@ class TenantAdminController extends Controller
     public function listBuildings()
     {
         $tenantId = Auth::user()->tenant_id;
-        $buildings = Building::where('tenant_id', $tenantId)->get();
+        $buildings = Building::where('tenant_id', $tenantId)->withCount('rooms')->get();
         return response()->json(['success' => true, 'buildings' => $buildings]);
     }
 
@@ -103,6 +103,11 @@ class TenantAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'total_floors' => 'nullable|integer|min:1|max:100',
+            'status' => 'nullable|in:active,maintenance,inactive',
+            'image' => 'nullable|string',
+            'amenities' => 'nullable|array',
             'description' => 'nullable|string'
         ]);
 
@@ -112,6 +117,11 @@ class TenantAdminController extends Controller
             'tenant_id' => $tenantId,
             'name' => $request->name,
             'address' => $request->address,
+            'phone' => $request->phone,
+            'total_floors' => $request->total_floors ?? 1,
+            'status' => $request->status ?? 'active',
+            'image' => $request->image,
+            'amenities' => $request->amenities ?? [],
             'description' => $request->description
         ]);
 
@@ -126,10 +136,15 @@ class TenantAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'total_floors' => 'nullable|integer|min:1|max:100',
+            'status' => 'nullable|in:active,maintenance,inactive',
+            'image' => 'nullable|string',
+            'amenities' => 'nullable|array',
             'description' => 'nullable|string'
         ]);
 
-        $building->update($request->only('name', 'address', 'description'));
+        $building->update($request->only('name', 'address', 'phone', 'total_floors', 'status', 'image', 'amenities', 'description'));
 
         return response()->json(['success' => true, 'message' => 'Cập nhật tòa nhà thành công', 'building' => $building]);
     }
@@ -138,6 +153,15 @@ class TenantAdminController extends Controller
     {
         $tenantId = Auth::user()->tenant_id;
         $building = Building::where('tenant_id', $tenantId)->findOrFail($id);
+
+        // Guard Check: Chặn xóa nếu còn phòng trực thuộc
+        if ($building->rooms()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa cơ sở lưu trú đang có phòng trực thuộc. Vui lòng chuyển hoặc xóa các phòng trước.'
+            ], 422);
+        }
+
         $building->delete();
 
         return response()->json(['success' => true, 'message' => 'Xóa tòa nhà thành công']);
@@ -164,9 +188,12 @@ class TenantAdminController extends Controller
         $request->validate([
             'building_id' => 'required|exists:buildings,id',
             'room_number' => 'required|string|max:50',
-            'floor' => 'required|integer',
-            'price' => 'required|integer|min:0',
-            'area' => 'required|integer|min:0',
+            'floor' => 'required|integer|min:1',
+            'room_type' => 'nullable|in:standard,deluxe,vip,studio',
+            'rental_type' => 'nullable|in:month,day,hour',
+            'price' => 'required|integer|min:1',
+            'deposit' => 'nullable|integer|min:0',
+            'area' => 'required|integer|min:1',
             'amenities' => 'nullable|array',
             'description' => 'nullable|string'
         ]);
@@ -189,10 +216,14 @@ class TenantAdminController extends Controller
             'room_number' => $request->room_number,
             'floor' => $request->floor,
             'status' => 'empty',
+            'room_type' => $request->room_type ?? 'standard',
+            'rental_type' => $request->rental_type ?? 'month',
             'price' => $request->price,
+            'deposit' => $request->deposit ?? 0,
             'area' => $request->area,
             'amenities' => $request->amenities ?? [],
-            'description' => $request->description
+            'description' => $request->description,
+            'version' => 1
         ]);
 
         return response()->json(['success' => true, 'message' => 'Thêm phòng thành công', 'room' => $room], 201);
@@ -205,9 +236,12 @@ class TenantAdminController extends Controller
 
         $request->validate([
             'room_number' => 'required|string|max:50',
-            'floor' => 'required|integer',
-            'price' => 'required|integer|min:0',
-            'area' => 'required|integer|min:0',
+            'floor' => 'required|integer|min:1',
+            'room_type' => 'nullable|in:standard,deluxe,vip,studio',
+            'rental_type' => 'nullable|in:month,day,hour',
+            'price' => 'required|integer|min:1',
+            'deposit' => 'nullable|integer|min:0',
+            'area' => 'required|integer|min:1',
             'amenities' => 'nullable|array',
             'status' => 'required|in:empty,occupied,overdue,maintenance',
             'description' => 'nullable|string'
@@ -224,7 +258,7 @@ class TenantAdminController extends Controller
             }
         }
 
-        $room->update($request->only('room_number', 'floor', 'price', 'area', 'amenities', 'status', 'description'));
+        $room->update($request->only('room_number', 'floor', 'room_type', 'rental_type', 'price', 'deposit', 'area', 'amenities', 'status', 'description'));
 
         return response()->json(['success' => true, 'message' => 'Cập nhật phòng thành công', 'room' => $room]);
     }
