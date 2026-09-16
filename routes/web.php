@@ -13,6 +13,7 @@ use App\Http\Controllers\ResidentPortalController;
 use App\Http\Controllers\LandlordOnboardingController;
 use App\Http\Controllers\LandlordVerificationController;
 use App\Http\Controllers\VerificationDocumentController;
+use App\Http\Controllers\RoomMatrixRealtimeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -162,6 +163,9 @@ Route::middleware('admin')->group(function () {
         Route::post('/store', [RoomController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::post('/{id}/update', [RoomController::class, 'update'])->name('update');
+        Route::post('/{id}/quick-status', [RoomMatrixRealtimeController::class, 'updateStatus'])->name('quick_status');
+        Route::get('/matrix/stream', [RoomMatrixRealtimeController::class, 'stream'])->name('matrix.stream');
+        Route::get('/matrix/poll', [RoomMatrixRealtimeController::class, 'checkUpdates'])->name('matrix.poll');
         Route::post('/description/ai', [RoomController::class, 'generateDescription'])->middleware('role:landlord')->name('description.ai');
         Route::delete('/{id}/delete', [RoomController::class, 'destroy'])->middleware('role:landlord')->name('destroy');
     });
