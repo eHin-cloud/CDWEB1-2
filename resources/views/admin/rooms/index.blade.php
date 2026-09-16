@@ -143,11 +143,11 @@
                             <tr>
                                 <th class="px-6 py-4 font-bold">Hình Ảnh</th>
                                 <th class="px-6 py-4 font-bold">Số Phòng</th>
-                                <th class="px-6 py-4 font-bold">Loại Phòng</th>
+                                <th class="px-6 py-4 font-bold">Hạng Phòng</th>
                                 <th class="px-6 py-4 font-bold">Tòa Nhà</th>
                                 <th class="px-6 py-4 font-bold">Tầng</th>
                                 <th class="px-6 py-4 font-bold">Diện Tích</th>
-                                <th class="px-6 py-4 font-bold">Giá Thuê / Tháng</th>
+                                <th class="px-6 py-4 font-bold">Giá Thuê & Cọc</th>
                                 <th class="px-6 py-4 font-bold text-center">Trạng Thái</th>
                                 <th class="px-6 py-4 font-bold text-center">Thao Tác</th>
                             </tr>
@@ -167,16 +167,42 @@
                                 </td>
                                 <td class="px-6 py-4 font-bold text-slate-200">P. {{ $room->room_number }}</td>
                                 <td class="px-6 py-4 text-xs font-semibold text-slate-300">
-                                    @if(($room->room_type ?? 'normal') === 'vip')
+                                    @php
+                                        $type = $room->room_type;
+                                        if ($type === 'normal') $type = 'standard';
+                                    @endphp
+                                    @if($type === 'vip')
                                         <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold uppercase text-[9px]">VIP</span>
+                                    @elseif($type === 'deluxe')
+                                        <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase text-[9px]">Deluxe</span>
+                                    @elseif($type === 'studio')
+                                        <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold uppercase text-[9px]">Studio</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded bg-slate-500/10 text-slate-400 border border-slate-500/20 font-bold uppercase text-[9px]">Thường</span>
+                                        <span class="px-2 py-0.5 rounded bg-slate-500/10 text-slate-400 border border-slate-500/20 font-bold uppercase text-[9px]">Standard</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-xs font-semibold text-indigo-400">{{ $room->building->name ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 text-xs text-slate-400">Tầng {{ $room->floor }}</td>
                                 <td class="px-6 py-4 text-xs text-slate-400">{{ $room->area }} m²</td>
-                                <td class="px-6 py-4 text-xs font-bold text-emerald-400">{{ number_format($room->price) }}đ</td>
+                                <td class="px-6 py-4 text-xs">
+                                    <div class="font-bold text-emerald-400">
+                                        {{ number_format($room->price) }}đ
+                                        <span class="text-[10px] text-slate-400 font-normal">
+                                            @if(($room->rental_type ?? 'month') === 'day')
+                                                / ngày
+                                            @elseif(($room->rental_type ?? 'month') === 'hour')
+                                                / giờ
+                                            @else
+                                                / tháng
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if($room->deposit > 0)
+                                        <div class="text-[10px] text-slate-500 mt-0.5">
+                                            Cọc: {{ number_format($room->deposit) }}đ
+                                        </div>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-center">
                                     @if($room->status === 'empty')
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Trống</span>

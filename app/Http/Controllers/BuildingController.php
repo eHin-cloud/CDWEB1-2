@@ -181,6 +181,7 @@ class BuildingController extends Controller
 
         $imagePath = $building->image;
         if ($request->hasFile('image_file')) {
+            // Nếu ảnh cũ lưu trên local disk public, có thể dọn dẹp
             if ($imagePath && !str_starts_with($imagePath, 'http') && Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }

@@ -188,9 +188,12 @@ class TenantAdminController extends Controller
         $request->validate([
             'building_id' => 'required|exists:buildings,id',
             'room_number' => 'required|string|max:50',
-            'floor' => 'required|integer',
-            'price' => 'required|integer|min:0',
-            'area' => 'required|integer|min:0',
+            'floor' => 'required|integer|min:1',
+            'room_type' => 'nullable|in:standard,deluxe,vip,studio',
+            'rental_type' => 'nullable|in:month,day,hour',
+            'price' => 'required|integer|min:1',
+            'deposit' => 'nullable|integer|min:0',
+            'area' => 'required|integer|min:1',
             'amenities' => 'nullable|array',
             'description' => 'nullable|string'
         ]);
@@ -213,10 +216,14 @@ class TenantAdminController extends Controller
             'room_number' => $request->room_number,
             'floor' => $request->floor,
             'status' => 'empty',
+            'room_type' => $request->room_type ?? 'standard',
+            'rental_type' => $request->rental_type ?? 'month',
             'price' => $request->price,
+            'deposit' => $request->deposit ?? 0,
             'area' => $request->area,
             'amenities' => $request->amenities ?? [],
-            'description' => $request->description
+            'description' => $request->description,
+            'version' => 1
         ]);
 
         return response()->json(['success' => true, 'message' => 'Thêm phòng thành công', 'room' => $room], 201);
@@ -229,9 +236,12 @@ class TenantAdminController extends Controller
 
         $request->validate([
             'room_number' => 'required|string|max:50',
-            'floor' => 'required|integer',
-            'price' => 'required|integer|min:0',
-            'area' => 'required|integer|min:0',
+            'floor' => 'required|integer|min:1',
+            'room_type' => 'nullable|in:standard,deluxe,vip,studio',
+            'rental_type' => 'nullable|in:month,day,hour',
+            'price' => 'required|integer|min:1',
+            'deposit' => 'nullable|integer|min:0',
+            'area' => 'required|integer|min:1',
             'amenities' => 'nullable|array',
             'status' => 'required|in:empty,occupied,overdue,maintenance',
             'description' => 'nullable|string'
@@ -248,7 +258,7 @@ class TenantAdminController extends Controller
             }
         }
 
-        $room->update($request->only('room_number', 'floor', 'price', 'area', 'amenities', 'status', 'description'));
+        $room->update($request->only('room_number', 'floor', 'room_type', 'rental_type', 'price', 'deposit', 'area', 'amenities', 'status', 'description'));
 
         return response()->json(['success' => true, 'message' => 'Cập nhật phòng thành công', 'room' => $room]);
     }
