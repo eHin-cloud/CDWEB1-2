@@ -712,7 +712,7 @@
                         </button>
                     </div>
                     
-                    <div class="flex items-center gap-6 text-xs font-bold text-slate-400">
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold text-slate-400">
                         <div class="flex items-center gap-2">
                             <span class="w-3.5 h-3.5 rounded-md bg-emerald-500 border border-emerald-400/30"></span>
                             <span>Trống</span>
@@ -725,13 +725,21 @@
                             <span class="w-3.5 h-3.5 rounded-md bg-amber-500 border border-amber-400/30"></span>
                             <span>Nợ tiền</span>
                         </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3.5 h-3.5 rounded-md bg-orange-500 border border-orange-400/30 animate-pulse"></span>
+                            <span>Dọn dẹp</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3.5 h-3.5 rounded-md bg-slate-500 border border-slate-400/30"></span>
+                            <span>Bảo trì</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Floors and room grid -->
-                <div class="space-y-8">
+                <div class="space-y-8" id="room-matrix-container">
                     @foreach($roomsByFloor as $floor => $floorRooms)
-                    <div class="floor-group">
+                    <div class="floor-group" data-floor="{{ $floor }}">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <i class="fa-solid fa-layer-group text-indigo-400"></i> Tầng {{ $floor }}
                         </h3>
@@ -742,22 +750,26 @@
                                 $latestBill = $room->utilityRecords->first();
                                 $elecUsed = $latestBill ? ($latestBill->new_electricity - $latestBill->old_electricity) : 0;
                                 $waterUsed = $latestBill ? ($latestBill->new_water - $latestBill->old_water) : 0;
-                                $statusLabel = $room->status === 'empty' ? 'Trống' : ($room->status === 'overdue' ? 'Nợ phí' : 'Đã thuê');
-                                $statusClass = $room->status === 'empty' ? 'room-empty border-emerald-500/20' : ($room->status === 'overdue' ? 'room-overdue border-amber-500/20' : 'room-occupied border-red-500/20');
-                                $badgeClass = $room->status === 'empty' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ($room->status === 'overdue' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20');
+                                $statusLabel = $room->status_label;
+                                $statusClass = $room->status_class;
+                                $badgeClass = $room->badge_class;
                                 $totalBill = $latestBill ? ($room->price + ($elecUsed * $latestBill->electricity_price) + ($waterUsed * $latestBill->water_price) + 150000) : 0;
                             @endphp
-                            <div onclick="openRoomDetail('{{ $room->room_number }}', '{{ $room->status }}', '{{ $resident ? $resident->name : '' }}', '{{ $resident ? $resident->phone : '' }}', '{{ number_format($room->price) }}đ', '{{ $elecUsed }} kWh', '{{ $waterUsed }} m3', '{{ number_format($totalBill) }}đ', '{{ $latestBill ? $latestBill->id : 'null' }}')" 
-                                 class="room-card {{ $statusClass }} glass-card rounded-2xl p-5 cursor-pointer relative overflow-hidden group">
+                            <div id="room-card-{{ $room->id }}"
+                                 data-room-id="{{ $room->id }}"
+                                 data-room-number="{{ $room->room_number }}"
+                                 data-room-status="{{ $room->status }}"
+                                 onclick="openRoomDetail('{{ $room->id }}', '{{ $room->room_number }}', '{{ $room->status }}', '{{ $resident ? $resident->name : '' }}', '{{ $resident ? $resident->phone : '' }}', '{{ number_format($room->price) }}đ', '{{ $elecUsed }} kWh', '{{ $waterUsed }} m3', '{{ number_format($totalBill) }}đ', '{{ $latestBill ? $latestBill->id : 'null' }}')" 
+                                 class="room-card {{ $statusClass }} glass-card rounded-2xl p-5 cursor-pointer relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10">
                                 <div class="flex justify-between items-start mb-4">
                                     <span class="text-lg font-extrabold text-slate-200">P. {{ $room->room_number }}</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold border {{ $badgeClass }}">{{ $statusLabel }}</span>
+                                    <span class="room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border {{ $badgeClass }}">{{ $statusLabel }}</span>
                                 </div>
                                 @if($resident)
-                                    <h4 class="text-xs font-bold text-slate-400 truncate mb-1">Cư dân: {{ $resident->name }}</h4>
+                                    <h4 class="room-resident text-xs font-bold text-slate-400 truncate mb-1">Cư dân: {{ $resident->name }}</h4>
                                     <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
                                 @else
-                                    <h4 class="text-xs font-bold text-slate-500 italic mb-1">Chưa có cư dân</h4>
+                                    <h4 class="room-resident text-xs font-bold text-slate-500 italic mb-1">Chưa có cư dân</h4>
                                     <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
                                 @endif
                             </div>
@@ -767,70 +779,94 @@
                     @endforeach
                 </div>
 
-                <!-- ROOM DETAIL DRAWER/MODAL (HIDDEN BY DEFAULT) -->
-                <div id="room-detail-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-sm hidden flex justify-end items-stretch transition-opacity duration-300">
-                    <div class="w-full max-w-md bg-[#0a0f1d] border-l border-slate-800 p-8 flex flex-col justify-between h-full shadow-2xl relative animate-slide-in">
-                        <button onclick="closeRoomDetail()" class="absolute top-6 right-6 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
-                            <i class="fa-solid fa-xmark"></i>
+                <!-- ROOM DETAIL MODAL (CENTERED & FITS CONTENT) -->
+                <div id="room-detail-modal" onclick="closeRoomDetail()" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden flex items-center justify-center p-4 sm:p-6 transition-all duration-200">
+                    <div onclick="event.stopPropagation()" class="w-full max-w-md bg-[#0a0f1d] border border-slate-800/80 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto space-y-4 animate-fade-in border-t border-t-indigo-500/30">
+                        <button type="button" onclick="closeRoomDetail()" class="absolute top-5 right-5 w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all shadow-sm">
+                            <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
                         
-                        <div class="space-y-6">
+                        <div class="space-y-4">
                             <!-- Room Head -->
-                            <div>
+                            <div class="pr-8">
                                 <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold uppercase" id="modal-room-status-badge">Đã thuê</span>
                                 <h2 class="text-2xl font-extrabold text-slate-100 mt-2" id="modal-room-title">Phòng 202</h2>
                             </div>
 
-                            <hr class="border-slate-900">
+                            <!-- Housekeeping Quick Action Selector -->
+                            <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2.5">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                                    <span class="flex items-center gap-1.5 uppercase tracking-wider text-slate-300">
+                                        <i class="fa-solid fa-broom text-amber-400"></i> Housekeeping / Dọn buồng
+                                    </span>
+                                    <span id="quick-status-loading" class="text-indigo-400 hidden">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <button type="button" onclick="setQuickRoomStatus('empty')" id="btn-quick-empty" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 border-slate-800 bg-slate-900/50">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+                                        <span class="text-[11px]">Đã dọn xong</span>
+                                    </button>
+                                    <button type="button" onclick="setQuickRoomStatus('cleaning')" id="btn-quick-cleaning" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-orange-500 hover:bg-orange-500/10 text-orange-400 border-slate-800 bg-slate-900/50">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></span>
+                                        <span class="text-[11px]">Cần dọn dẹp</span>
+                                    </button>
+                                    <button type="button" onclick="setQuickRoomStatus('maintenance')" id="btn-quick-maintenance" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-slate-500 hover:bg-slate-500/10 text-slate-400 border-slate-800 bg-slate-900/50">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500 shadow-sm shadow-slate-500/50"></span>
+                                        <span class="text-[11px]">Bảo trì</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <!-- Resident details -->
-                            <div class="space-y-3" id="modal-resident-details">
+                            <!-- Resident details (chỉ hiện khi phòng có người ở) -->
+                            <div class="space-y-2 hidden" id="modal-resident-details">
                                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin cư dân</h3>
-                                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/40 space-y-2">
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Họ tên:</span> <strong class="text-slate-200" id="modal-resident-name">Lê Thị Bình</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Số điện thoại:</span> <strong class="text-slate-200" id="modal-resident-phone">0901234567</strong></div>
+                                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-2">
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Họ tên:</span> <strong class="text-slate-200" id="modal-resident-name">-</strong></div>
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Số điện thoại:</span> <strong class="text-slate-200" id="modal-resident-phone">-</strong></div>
                                     <div class="flex justify-between text-xs"><span class="text-slate-500">Bắt đầu ở:</span> <strong class="text-slate-200">01/03/2025</strong></div>
                                 </div>
                             </div>
 
-                            <!-- Billing summary -->
-                            <div class="space-y-3" id="modal-billing-details">
+                            <!-- Billing summary (chỉ hiện khi phòng có hóa đơn) -->
+                            <div class="space-y-2 hidden" id="modal-billing-details">
                                 <div class="flex justify-between items-center">
-                                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hóa đơn tháng 05/2026</h3>
+                                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hóa đơn tháng gần nhất</h3>
                                     <span class="text-[10px] text-amber-400 font-bold" id="modal-bill-status">Chưa thanh toán</span>
                                 </div>
-                                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/40 space-y-2">
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền thuê phòng:</span> <strong class="text-slate-200" id="modal-bill-rent">3.800.000đ</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền điện:</span> <strong class="text-slate-200" id="modal-bill-electric">385.000đ (110 kWh)</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền nước:</span> <strong class="text-slate-200" id="modal-bill-water">120.000đ (8 m3)</strong></div>
+                                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-2">
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền thuê phòng:</span> <strong class="text-slate-200" id="modal-bill-rent">0đ</strong></div>
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền điện:</span> <strong class="text-slate-200" id="modal-bill-electric">0đ</strong></div>
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền nước:</span> <strong class="text-slate-200" id="modal-bill-water">0đ</strong></div>
                                     <div class="flex justify-between text-xs"><span class="text-slate-500">Dịch vụ (Mạng, vệ sinh):</span> <strong class="text-slate-200">150.000đ</strong></div>
-                                    <hr class="border-slate-800/40 my-2">
-                                    <div class="flex justify-between text-sm"><strong class="text-indigo-400">Tổng thanh toán:</strong> <strong class="text-indigo-400 font-extrabold" id="modal-bill-total">4.455.000đ</strong></div>
+                                    <hr class="border-slate-800/60 my-2">
+                                    <div class="flex justify-between text-sm"><strong class="text-indigo-400">Tổng thanh toán:</strong> <strong class="text-indigo-400 font-extrabold" id="modal-bill-total">0đ</strong></div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action buttons -->
-                        <div class="space-y-3 mt-6">
+                        <div class="space-y-2.5 pt-3 border-t border-slate-800/60">
                             <form id="modal-pay-form" action="" method="POST" class="hidden">
                                 @csrf
                             </form>
                             <form id="modal-notify-form" action="" method="POST" class="hidden">
                                 @csrf
                             </form>
-                            <button id="modal-btn-pay" onclick="submitModalPay()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 transition-all hidden">
+                            <button id="modal-btn-pay" onclick="submitModalPay()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 transition-all hidden">
                                 <i class="fa-solid fa-circle-check"></i> Xác nhận đã đóng tiền
                             </button>
-                            <button id="modal-btn-action" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all">
+                            <button id="modal-btn-action" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all hidden">
                                 <i class="fa-solid fa-bell-slash"></i> Gửi nhắc nợ qua Zalo/Mail
                             </button>
-                            <button id="modal-btn-qr" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all">
+                            <button id="modal-btn-qr" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
                                 <i class="fa-solid fa-qrcode text-indigo-400"></i> Xem mã VietQR hóa đơn
                             </button>
-                            <button id="modal-btn-print" onclick="printModalInvoice()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
+                            <button id="modal-btn-print" onclick="printModalInvoice()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
                                 <i class="fa-solid fa-print text-indigo-400"></i> In hóa đơn / Xuất PDF
                             </button>
-                            <button onclick="closeRoomDetail()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-400 bg-transparent hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                            <button type="button" onclick="closeRoomDetail()" class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-semibold text-slate-400 bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 hover:border-slate-700 transition-all">
                                 Đóng lại
                             </button>
                         </div>
@@ -2317,39 +2353,80 @@
             }
         }
 
+        // Biến lưu thông tin phòng đang mở trong modal
+        let currentActiveRoomId = null;
+        let currentActiveRoomStatus = null;
+        let currentActiveRoomNumber = null;
+
         // Room Detail modal triggers
-        function openRoomDetail(roomNum, status, name, phone, rent, elec, water, total, latestBillId) {
+        function openRoomDetail(roomId, roomNum, status, name, phone, rent, elec, water, total, latestBillId) {
+            // Hỗ trợ trường hợp gọi cũ (9 tham số mà không có roomId ở đầu)
+            if (arguments.length === 9 && typeof roomId === 'string' && isNaN(roomId)) {
+                latestBillId = total;
+                total = water;
+                water = elec;
+                elec = rent;
+                rent = phone;
+                phone = name;
+                name = status;
+                status = roomNum;
+                roomNum = roomId;
+                roomId = null;
+            }
+
+            currentActiveRoomId = roomId;
+            currentActiveRoomStatus = status;
+            currentActiveRoomNumber = roomNum;
+
             const modal = document.getElementById('room-detail-modal');
             const title = document.getElementById('modal-room-title');
             const badge = document.getElementById('modal-room-status-badge');
             
             title.textContent = "Phòng " + roomNum;
-            badge.textContent = status === 'empty' ? 'Trống' : (status === 'overdue' ? 'Nợ phí' : 'Đã thuê');
             
-            // Set badge classes
-            badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border ";
-            if(status === 'empty') badge.className += "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-            else if(status === 'occupied') badge.className += "bg-red-500/10 text-red-400 border-red-500/20";
-            else badge.className += "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            // Set nhãn trạng thái và badge
+            const statusLabels = {
+                'empty': 'Trống',
+                'occupied': 'Đã thuê',
+                'overdue': 'Nợ phí',
+                'cleaning': 'Cần dọn dẹp',
+                'maintenance': 'Bảo trì'
+            };
+            const badgeClasses = {
+                'empty': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                'occupied': 'bg-red-500/10 text-red-400 border-red-500/20',
+                'overdue': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                'cleaning': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                'maintenance': 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+            };
 
-            // If empty, hide resident and billing details
+            badge.textContent = statusLabels[status] || 'Không xác định';
+            badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + (badgeClasses[status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20');
+
+            // Cập nhật trạng thái active cho các nút Housekeeping
+            updateQuickStatusButtons(status);
+
+            // If empty, cleaning or maintenance, hide resident and billing details
             const resDetails = document.getElementById('modal-resident-details');
             const billDetails = document.getElementById('modal-billing-details');
             const actionBtn = document.getElementById('modal-btn-action');
             const payBtn = document.getElementById('modal-btn-pay');
             const printBtn = document.getElementById('modal-btn-print');
+            const qrBtn = document.getElementById('modal-btn-qr');
             
-            if(status === 'empty') {
+            if(status === 'empty' || status === 'cleaning' || status === 'maintenance') {
                 resDetails.classList.add('hidden');
                 billDetails.classList.add('hidden');
                 actionBtn.classList.add('hidden');
                 payBtn.classList.add('hidden');
                 printBtn.classList.add('hidden');
+                if (qrBtn) qrBtn.classList.add('hidden');
                 currentBillId = null;
             } else {
                 resDetails.classList.remove('hidden');
                 billDetails.classList.remove('hidden');
                 actionBtn.classList.remove('hidden');
+                if (qrBtn) qrBtn.classList.remove('hidden');
                 
                 document.getElementById('modal-resident-name').textContent = name;
                 document.getElementById('modal-resident-phone').textContent = phone;
@@ -2359,7 +2436,6 @@
                 document.getElementById('modal-bill-total').textContent = total || rent;
                 
                 const billStatusBadge = document.getElementById('modal-bill-status');
-                const qrBtn = document.getElementById('modal-btn-qr');
                 const rawAmount = (total || rent).replace(/\D/g, '');
                 
                 if (qrBtn) {
@@ -2391,7 +2467,7 @@
                         document.getElementById('modal-pay-form').action = `/smartroom/admin/utility/${latestBillId}/pay`;
                         document.getElementById('modal-notify-form').action = `/smartroom/admin/utility/${latestBillId}/notify`;
                         actionBtn.onclick = function() {
-                            openSendMsgModal(phone, name, `Kính gửi anh/chị ${name}, ban quản lý thông báo hóa đơn dịch vụ tháng 06 phòng ${roomNum} chưa được thanh toán với tổng số tiền là ${total}. Vui lòng thanh toán sớm nhất có thể. Trân trọng!`, 'debt');
+                            openSendMsgModal(phone, name, `Kính gửi anh/chị ${name}, ban quản lý thông báo hóa đơn dịch vụ phòng ${roomNum} chưa được thanh toán với tổng số tiền là ${total}. Vui lòng thanh toán sớm nhất có thể. Trân trọng!`, 'debt');
                         };
                     } else {
                         payBtn.classList.add('hidden');
@@ -2408,7 +2484,91 @@
             }
 
             modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
+
+        function closeRoomDetail() {
+            const modal = document.getElementById('room-detail-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+
+        function updateQuickStatusButtons(status) {
+            const btnEmpty = document.getElementById('btn-quick-empty');
+            const btnCleaning = document.getElementById('btn-quick-cleaning');
+            const btnMaintenance = document.getElementById('btn-quick-maintenance');
+            
+            if (!btnEmpty || !btnCleaning || !btnMaintenance) return;
+
+            // Reset classes
+            [btnEmpty, btnCleaning, btnMaintenance].forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-1', 'ring-offset-slate-950', 'border-emerald-500', 'border-orange-500', 'border-slate-400', 'bg-emerald-500/20', 'bg-orange-500/20', 'bg-slate-500/20');
+            });
+
+            if (status === 'empty') {
+                btnEmpty.classList.add('border-emerald-500', 'bg-emerald-500/20', 'ring-2', 'ring-emerald-400');
+            } else if (status === 'cleaning') {
+                btnCleaning.classList.add('border-orange-500', 'bg-orange-500/20', 'ring-2', 'ring-orange-400');
+            } else if (status === 'maintenance') {
+                btnMaintenance.classList.add('border-slate-400', 'bg-slate-500/20', 'ring-2', 'ring-slate-400');
+            }
+        }
+
+        // Cập nhật nhanh trạng thái phòng (Housekeeping) qua AJAX
+        async function setQuickRoomStatus(newStatus) {
+            if (!currentActiveRoomId) {
+                alert('Không xác định được phòng cần cập nhật!');
+                return;
+            }
+
+            const loadingSpinner = document.getElementById('quick-status-loading');
+            if (loadingSpinner) loadingSpinner.classList.remove('hidden');
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                    || '{{ csrf_token() }}';
+
+                const response = await fetch(`/smartroom/admin/rooms/${currentActiveRoomId}/quick-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
+                    return;
+                }
+
+                // Cập nhật trực tiếp trên thẻ phòng trên Ma Trận
+                applyRoomCardUpdate(data.room);
+
+                // Cập nhật lại trạng thái hiển thị trong Drawer
+                currentActiveRoomStatus = newStatus;
+                const badge = document.getElementById('modal-room-status-badge');
+                if (badge) {
+                    badge.textContent = data.room.status_label;
+                    badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + data.room.badge_class;
+                }
+                updateQuickStatusButtons(newStatus);
+
+                showRealtimeToast(`Đã cập nhật P.${data.room.room_number}: ${data.room.status_label}`, 'success');
+            } catch (err) {
+                console.error('Lỗi setQuickRoomStatus: ', err);
+                alert('Không thể kết nối đến máy chủ.');
+            } finally {
+                if (loadingSpinner) loadingSpinner.classList.add('hidden');
+            }
+        }
+
 
         function syncInputs(btn) {
             const row = btn.closest('tr');
@@ -4241,10 +4401,120 @@
             }
         }
 
+        // ==========================================
+        // REALTIME ROOM MATRIX & HOUSEKEEPING
+        // ==========================================
+        let lastEventTimestamp = Math.floor(Date.now() / 1000);
+
+        function applyRoomCardUpdate(roomData) {
+            const card = document.getElementById('room-card-' + roomData.id);
+            if (!card) return;
+
+            // Cập nhật trạng thái
+            card.setAttribute('data-room-status', roomData.status);
+
+            // Cập nhật class viền/nền
+            card.className = card.className.replace(/room-(empty|occupied|overdue|cleaning|maintenance)/g, '');
+            card.className = card.className.replace(/border-(emerald|red|amber|orange|slate)-500\/20/g, '');
+            
+            const newStatusClass = roomData.status_class || 'border-slate-800/40';
+            card.classList.add(...newStatusClass.split(' ').filter(c => c));
+
+            // Cập nhật Badge
+            const badge = card.querySelector('.room-badge');
+            if (badge) {
+                badge.textContent = roomData.status_label;
+                badge.className = "room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border " + (roomData.badge_class || 'border-slate-700 text-slate-400');
+            }
+
+            // Hiệu ứng Pulse Flash Realtime
+            card.classList.add('ring-4', 'ring-emerald-400', 'scale-[1.03]');
+            setTimeout(() => {
+                card.classList.remove('ring-4', 'ring-emerald-400', 'scale-[1.03]');
+            }, 1800);
+        }
+
+        function showRealtimeToast(msg, type = 'info') {
+            let container = document.getElementById('realtime-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'realtime-toast-container';
+                container.className = 'fixed top-20 right-8 z-50 flex flex-col gap-3 pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/95 border border-indigo-500/40 text-slate-100 shadow-2xl shadow-indigo-500/20 backdrop-blur-md text-xs font-semibold animate-slide-in transition-all duration-300';
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-bolt animate-bounce"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Realtime Room Matrix</div>
+                    <div class="text-slate-200 mt-0.5">${msg}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-8');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function initRoomMatrixRealtime() {
+            // 1. Kết nối qua Server-Sent Events (SSE) native của HTML5
+            if (window.EventSource) {
+                try {
+                    const eventSource = new EventSource("{{ route('admin.rooms.matrix.stream') }}");
+
+                    eventSource.addEventListener('room-updated', function(e) {
+                        try {
+                            const data = JSON.parse(e.data);
+                            if (data && data.id) {
+                                lastEventTimestamp = data.updated_at || Math.floor(Date.now() / 1000);
+                                applyRoomCardUpdate(data);
+                                showRealtimeToast(`Phòng P.${data.room_number} vừa đổi sang [${data.status_label}]!`);
+                            }
+                        } catch (err) {
+                            console.error('Lỗi parse SSE room data: ', err);
+                        }
+                    });
+
+                    eventSource.onerror = function() {
+                        console.warn('SSE stream ping/reconnect.');
+                    };
+                } catch (err) {
+                    console.error('Không thể khởi tạo EventSource: ', err);
+                }
+            }
+
+            // 2. Thăm dò nhẹ (Long polling fallback) mỗi 6 giây bảo đảm độ tươi dữ liệu
+            setInterval(async () => {
+                try {
+                    const res = await fetch("{{ route('admin.rooms.matrix.poll') }}?since=" + lastEventTimestamp);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.has_update && json.event) {
+                            lastEventTimestamp = json.event.updated_at;
+                            applyRoomCardUpdate(json.event);
+                            showRealtimeToast(`Phòng P.${json.event.room_number} vừa đổi sang [${json.event.status_label}]!`);
+                        }
+                    }
+                } catch (e) {
+                    // im lặng bỏ qua lỗi mạng
+                }
+            }, 6000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initRoomMatrixRealtime();
+        });
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeKycTermsModal();
-                closeRenewContractModal();
+                closeRoomDetail();
             }
         });
     </script>

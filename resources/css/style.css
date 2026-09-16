@@ -623,6 +623,18 @@ body::after {
     --liquid-iridescent-2: rgba(251, 191, 36, 0.08);
 }
 
+.glass-card.room-cleaning {
+    --liquid-iridescent-1: rgba(249, 115, 22, 0.16);
+    --liquid-iridescent-2: rgba(251, 146, 60, 0.10);
+    border-color: rgba(249, 115, 22, 0.35);
+}
+
+.glass-card.room-maintenance {
+    --liquid-iridescent-1: rgba(148, 163, 184, 0.12);
+    --liquid-iridescent-2: rgba(100, 116, 139, 0.08);
+    border-color: rgba(148, 163, 184, 0.3);
+}
+
 /* Portal card variations */
 .glass-card.portal-violet {
     --liquid-border-hover: rgba(139, 92, 246, 0.5);
