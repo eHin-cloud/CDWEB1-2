@@ -169,8 +169,8 @@ echo    ^|                    SmartRoom DOCKER RUNNER - CHAY MOI TRUONG DOCKER  
 echo    +======================================================================================+
 echo.
 echo    [!] Che do nay se chay Laravel tren Docker Compose kem MySQL rieng.
-echo        - Website: http://localhost:8000
-echo        - MySQL tren may host: localhost:3307
+echo        - Website: http://localhost:8088
+echo        - MySQL tren may host: localhost:3309
 echo        - Database: quan_ly_nha_tro / User: smartroom / Password: smartroom
 echo.
 
