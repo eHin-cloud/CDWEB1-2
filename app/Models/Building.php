@@ -12,8 +12,26 @@ class Building extends Model
         'tenant_id',
         'name',
         'address',
-        'description'
+        'description',
+        'property_type',
+        'checkin_time',
+        'checkout_time',
     ];
+
+    public function isHotel(): bool
+    {
+        return $this->property_type === 'hotel';
+    }
+
+    public function isApartment(): bool
+    {
+        return $this->property_type === 'apartment';
+    }
+
+    public function isBoarding(): bool
+    {
+        return $this->property_type === 'boarding' || empty($this->property_type);
+    }
 
     public function tenant(): BelongsTo
     {

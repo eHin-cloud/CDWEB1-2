@@ -17,7 +17,12 @@ class Room extends Model
         'floor',
         'status',
         'room_type',
+        'rental_type',
         'price',
+        'price_per_day',
+        'price_per_hour',
+        'price_extra_hour',
+        'cleaning_status',
         'area',
         'amenities',
         'description',
@@ -127,6 +132,31 @@ class Room extends Model
     public function equipmentAllocations(): HasMany
     {
         return $this->hasMany(RoomEquipment::class);
+    }
+
+    public function hotelBookings(): HasMany
+    {
+        return $this->hasMany(HotelBooking::class);
+    }
+
+    public function activeHotelBooking(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(HotelBooking::class)->where('status', 'checked_in')->latest('id');
+    }
+
+    public function isHourly(): bool
+    {
+        return $this->rental_type === 'hour';
+    }
+
+    public function isDaily(): bool
+    {
+        return $this->rental_type === 'day';
+    }
+
+    public function isMonthly(): bool
+    {
+        return $this->rental_type === 'month' || empty($this->rental_type);
     }
 
     public function activeResidents(): HasMany

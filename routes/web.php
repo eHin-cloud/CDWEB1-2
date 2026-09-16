@@ -14,6 +14,8 @@ use App\Http\Controllers\LandlordOnboardingController;
 use App\Http\Controllers\LandlordVerificationController;
 use App\Http\Controllers\VerificationDocumentController;
 use App\Http\Controllers\RoomMatrixRealtimeController;
+use App\Http\Controllers\HotelReceptionController;
+use App\Http\Controllers\HousekeepingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -196,7 +198,22 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/resident/{residentId}/relative', [AdminDashboardController::class, 'storeRelative'])->name('smartroom.admin.resident.relative.store');
     Route::put('/smartroom/admin/relative/{id}', [AdminDashboardController::class, 'updateRelative'])->name('smartroom.admin.relative.update');
     Route::delete('/smartroom/admin/relative/{id}', [AdminDashboardController::class, 'deleteRelative'])->middleware('role:landlord')->name('smartroom.admin.relative.delete');
+
+    // Phân hệ Khách sạn / Lễ tân (Reception & Hospitality)
+    Route::prefix('smartroom/admin/hotel')->name('admin.hotel.')->group(function () {
+        Route::post('/check-in', [HotelReceptionController::class, 'checkIn'])->name('checkin');
+        Route::post('/folio/{bookingId}/items', [HotelReceptionController::class, 'addFolioItem'])->name('folio.add_item');
+        Route::post('/check-out/{bookingId}', [HotelReceptionController::class, 'checkOut'])->name('checkout');
+        Route::get('/folio/{bookingId}', [HotelReceptionController::class, 'printFolio'])->name('folio');
+    });
 });
+
+// Phân hệ Buồng phòng (Housekeeping) - Tối ưu di động
+Route::middleware('auth')->prefix('smartroom/housekeeping')->name('admin.housekeeping.')->group(function () {
+    Route::get('/', [HousekeepingController::class, 'index'])->name('index');
+    Route::post('/{roomId}/status', [HousekeepingController::class, 'updateStatus'])->name('update');
+});
+
 Route::get('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContractView'])->name('smartroom.contract.sign_view');
 Route::get('/smartroom/contract/{id}/pdf', [AdminDashboardController::class, 'printContractPdf'])->name('smartroom.contract.pdf');
 Route::post('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContract'])->name('smartroom.contract.sign');

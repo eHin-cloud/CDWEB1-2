@@ -364,6 +364,20 @@ Hệ thống được xây dựng nhằm đạt được các mục tiêu trọn
 • Trí tuệ nhân tạo (AI Integration): Tích hợp Google Gemini API (gemini-3.1-flash-lite / gemini-2.5-flash): Cơ chế RAG (Retrieval-Augmented Generation) truy vấn dữ liệu phòng thực tế đưa vào ngữ cảnh Prompt, triệt tiêu hiện tượng AI bịa đặt thông tin; AI Vision OCR phân tích ảnh chụp mặt đồng hồ điện/nước để trích xuất chỉ số công tơ; AI NLP phân loại độ khẩn cấp sự cố bảo trì của cư dân và tự động sinh điều khoản hợp đồng thuê.
 
 
+### d. Kiến trúc Đa mô hình lưu trú & Động cơ Tính tiền (Billing Engine)
+
+Hệ thống được thiết kế theo kiến trúc lai (Hybrid Hospitality & Rental PMS) nhằm đáp ứng đồng thời cả 2 luồng vận hành đặc thù:
+
+1. **Mô hình Thuê dài hạn theo tháng (Nhà trọ truyền thống & Chung cư mini)**:
+   - **Đối tượng**: Cư dân (Resident) thuê dài hạn từ 6 - 12 tháng, ký kết hợp đồng điện tử xác thực OTP và chữ ký vẽ tay Canvas.
+   - **Động cơ tính tiền định kỳ**: Vào cuối tháng, hệ thống tổng hợp: `Tiền phòng/tháng + (Điện mới - Điện cũ) * Giá điện + (Nước mới - Nước cũ) * Giá nước + Phí dịch vụ cố định (Thang máy, rác, wifi, gửi xe)`. Hóa đơn được xuất tự động kèm mã VietQR và gửi tin nhắn nhắc nợ qua Zalo. Đồng thời, hệ thống hỗ trợ xuất dữ liệu khai báo cư trú Mẫu CT01 theo quy chuẩn Bộ Công An.
+
+2. **Mô hình Thuê ngắn hạn theo ngày / giờ (Khách sạn & Homestay nghỉ dưỡng)**:
+   - **Đối tượng**: Khách lưu trú (Guest) thuê theo block giờ (2 giờ đầu cố định + đơn giá giờ phụ trội) hoặc thuê theo ngày/đêm (Check-in 14:00, Check-out 12:00 hôm sau).
+   - **Động cơ tính tiền tức thời (Folio Engine)**: Tại thời điểm Check-out, hệ thống tự động tính toán: `(Số ngày/đêm * Giá ngày) hoặc [Giá block 2h đầu + (Số giờ thêm * Đơn giá giờ thêm)] + Phụ thu nhận phòng sớm / trả phòng trễ + Chi phí Minibar (đồ uống, thức ăn nhẹ tiêu thụ) - Tiền đặt cọc`. Hóa đơn Bảng kê Folio tích hợp mã VietQR động được in ngay tại quầy lễ tân.
+   - **Quy trình Xoay vòng buồng phòng thời gian thực (Realtime Room Flow)**: Khi khách Check-out, phòng tự động chuyển sang trạng thái **Cần dọn dẹp** (`cleaning` / `dirty`). Nhân viên Buồng phòng (Housekeeper) nhận danh sách trên thiết bị di động, sau khi vệ sinh xong bấm **"Đã dọn xong"** ➔ Phòng lập tức chuyển sang trạng thái **Sạch** (`clean` / `empty`), phát tín hiệu Realtime qua Server-Sent Events (SSE) để Sơ đồ ma trận phòng của Lễ tân đổi màu xanh đón khách mới ngay lập tức.
+
+
 ## 2. Bảng danh mục chức năng và Endpoint API hệ thống (Bảng 4)
 
 Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được trích xuất trực tiếp từ routes/web.php và routes/api.php:
@@ -429,6 +443,12 @@ Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được tr
 | Cư dân | Gửi mã OTP xác thực ký | POST | /smartroom/contract/{id}/send-otp | Gửi mã OTP về số điện thoại cư dân trước khi cho phép ký số |
 | Cư dân | Cư dân xác nhận ký hợp đồng | POST | /smartroom/contract/{id}/sign | Lưu chữ ký Base64 và mã OTP xác nhận hợp đồng có hiệu lực |
 | Cư dân | Tải file PDF Hợp đồng | GET | /smartroom/contract/{id}/pdf | Tải bản PDF hợp đồng có chữ ký số của cả hai bên để lưu trữ |
+| Lễ tân | Check-in nhận phòng nhanh | POST | /smartroom/admin/hotel/check-in | Tiếp nhận thông tin khách lưu trú ngắn hạn (ngày/giờ), đổi phòng sang Đang ở (occupied) |
+| Lễ tân | Ghi nhận sử dụng Minibar | POST | /smartroom/admin/hotel/folio/{id}/items | Tích chọn đồ uống minibar và dịch vụ phòng khách đã tiêu thụ vào hóa đơn phòng |
+| Lễ tân | Check-out trả phòng tức thì | POST | /smartroom/admin/hotel/check-out/{id} | Tính tiền giờ/ngày + phụ thu + minibar, chuyển trạng thái phòng sang Cần dọn (cleaning) |
+| Lễ tân | Xuất Bảng kê Folio VietQR | GET | /smartroom/admin/hotel/folio/{id} | Xuất hóa đơn Folio chi tiết tích hợp mã VietQR động để khách thanh toán tại quầy |
+| Buồng phòng | Danh sách phòng chờ dọn | GET | /smartroom/housekeeping | Giao diện tối ưu di động hiển thị danh sách các phòng bẩn khách vừa trả |
+| Buồng phòng | Cập nhật trạng thái vệ sinh | POST | /smartroom/housekeeping/{id}/status | Buồng phòng bấm Đã dọn xong, chuyển phòng sang Sạch (clean) và bắn tín hiệu Realtime |
 | Admin | Danh sách duyệt xác minh | GET | /admin/verifications | Xem danh sách các hồ sơ KYC và Premium đang chờ phê duyệt |
 | Admin | Phê duyệt hồ sơ xác minh | POST | /admin/verifications/{id}/approve | Duyệt hồ sơ: thăng cấp quyền chủ trọ, cấp Tích Xanh, mở cổng VietQR |
 | Admin | Từ chối hồ sơ xác minh | POST | /admin/verifications/{id}/reject | Từ chối hồ sơ kèm lý do phản hồi cho chủ trọ bổ sung lại |
@@ -437,7 +457,7 @@ Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được tr
 | Admin | Nhật ký kiểm toán Audit Log | GET | /admin/audit-logs | Xem lịch sử truy cập dữ liệu nhạy cảm bất biến (chống sửa xóa) |
 | Admin | Nhật ký hoạt động Admin | GET | /smartroom/admin/activity-logs | Theo dõi toàn bộ lịch sử thao tác đăng nhập, tạo sửa xóa của hệ thống |
 | Admin | Quản lý người dùng hệ thống | GET | /list | Xem danh sách toàn bộ tài khoản người dùng trên hệ thống |
-| Admin | Phân quyền vai trò | POST | /users/role | Cập nhật vai trò quản trị (Admin, Landlord, Manager, Resident, Guest) |
+| Admin | Phân quyền vai trò | POST | /users/role | Cập nhật vai trò quản trị (Admin, Landlord, Manager, Receptionist, Housekeeper, Resident, Guest) |
 | Admin | Khóa / Xóa tài khoản | DELETE | /delete/{id} | Vô hiệu hóa hoặc xóa người dùng vi phạm quy chế hoạt động |
 
 
@@ -485,17 +505,17 @@ Bảng 5: Mô tả cấu trúc bảng Users (Tài khoản người dùng)
 | phone_blind_index | VARCHAR(64), NULL | Chỉ mục mù HMAC-SHA256 phục vụ tra cứu số điện thoại |
 | email | VARCHAR(255), NULL | Địa chỉ thư điện tử người dùng |
 | password | VARCHAR(255) | Mật khẩu đã được băm (Bcrypt hash) |
-| role | VARCHAR(50) | Tên vai trò: admin, landlord, unverified_landlord, manager, resident, guest |
+| role | VARCHAR(50) | Tên vai trò: admin, landlord, unverified_landlord, manager, receptionist, housekeeper, resident, guest |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo tài khoản |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-Bảng 6: Mô tả cấu trúc bảng Roles (Vai trò và phân quyền)
+Bảng 6: Mô tả cấu trúc bảng Roles (Vai trò và phân quyền 8 Roles)
 
 | Tên Trường | Kiểu Dữ Liệu | Mô Tả |
 | --- | --- | --- |
 | id | BIGINT UNSIGNED | Khóa chính, tự động tăng |
-| name | VARCHAR(100) | Tên hiển thị vai trò (Ví dụ: Chủ trọ, Quản lý, Cư dân) |
-| slug | VARCHAR(50), UNIQUE | Mã định danh vai trò: admin, landlord, manager, resident, guest |
+| name | VARCHAR(100) | Tên hiển thị vai trò (Ví dụ: Chủ trọ, Quản lý, Lễ tân, Buồng phòng, Cư dân) |
+| slug | VARCHAR(50), UNIQUE | Mã định danh vai trò: admin, landlord, unverified_landlord, manager, receptionist, housekeeper, resident, guest |
 | description | VARCHAR(255), NULL | Mô tả phạm vi quyền hạn của vai trò |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo vai trò |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
@@ -514,7 +534,10 @@ Bảng 7: Mô tả cấu trúc bảng Properties / Buildings (Cơ sở lưu trú
 | name | VARCHAR(255) | Tên cơ sở lưu trú (Ví dụ: Dãy trọ A, Khách sạn Renty Star, Căn hộ dịch vụ Landmark) |
 | address | VARCHAR(255) | Địa chỉ cụ thể của tòa nhà |
 | total_floors | INT UNSIGNED, DEFAULT 1 | Tổng số tầng của cơ sở lưu trú |
-| description | TEXT, NULL | Loại hình cơ sở (property_type: boarding, apartment, hotel), giờ check-in/out, tiện ích chung |
+| description | TEXT, NULL | Thông tin mô tả đặc điểm, vị trí và dịch vụ của cơ sở |
+| property_type | VARCHAR(30), DEFAULT 'boarding' | Phân loại mô hình cơ sở lưu trú: boarding (nhà trọ), apartment (chung cư mini), hotel (khách sạn) |
+| checkin_time | TIME, DEFAULT '14:00:00' | Giờ quy chuẩn nhận phòng tiêu chuẩn khách sạn |
+| checkout_time | TIME, DEFAULT '12:00:00' | Giờ quy chuẩn trả phòng tiêu chuẩn khách sạn |
 | phone | VARCHAR(50), NULL | Số điện thoại hotline / liên hệ quản lý cơ sở lưu trú |
 | status | VARCHAR(30), DEFAULT 'active' | Trạng thái hoạt động: active (hoạt động), maintenance (bảo trì), inactive (tạm ngưng) |
 | image | VARCHAR(255), NULL | Đường dẫn ảnh đại diện tòa nhà / cơ sở lưu trú |
@@ -526,7 +549,7 @@ Bảng 7: Mô tả cấu trúc bảng Properties / Buildings (Cơ sở lưu trú
 
 ### c. Bảng Rooms & Condos (Phòng trọ, Căn hộ chung cư, Phòng khách sạn & Minibar)
 
-Quản lý chi tiết từng căn phòng trọ hoặc căn hộ chung cư: số phòng/mã căn (P.101, Căn 12A.03), phân loại phòng (Studio, 1PN, 2PN, 3PN, Deluxe, VIP), hình thức thuê linh hoạt (theo tháng cho trọ/chung cư, theo ngày hoặc theo giờ cho khách sạn), đa khung giá (giá tháng, giá đêm, giá giờ), trạng thái phòng (trống, đang ở, đang dọn dẹp vệ sinh - Housekeeping, bảo trì), danh mục tiện ích (WC, ban công, thang máy, thẻ từ) và danh mục tài sản/minibar bàn giao.
+Quản lý chi tiết từng căn phòng trọ hoặc căn hộ chung cư: số phòng/mã căn (P.101, Căn 12A.03), phân loại phòng (Studio, 1PN, 2PN, 3PN, Deluxe, VIP), hình thức thuê linh hoạt (theo tháng cho trọ/chung cư, theo ngày hoặc theo giờ cho khách sạn), đa khung giá (giá tháng, giá ngày/đêm, giá giờ đầu và giờ phụ trội), trạng thái phòng (trống, đang ở, nợ cước, đang dọn dẹp, bảo trì), trạng thái vệ sinh buồng phòng (clean, dirty, cleaning, inspected), danh mục tiện ích (WC, ban công, thang máy, thẻ từ) và danh mục tài sản/minibar bàn giao.
 
 Bảng 8: Mô tả cấu trúc bảng Rooms & Condos (Phòng lưu trú, Căn hộ chung cư & Minibar)
 
@@ -537,10 +560,14 @@ Bảng 8: Mô tả cấu trúc bảng Rooms & Condos (Phòng lưu trú, Căn h�
 | building_id | BIGINT UNSIGNED, NULL | Khóa ngoại tham chiếu bảng buildings(id) |
 | room_number | VARCHAR(50) | Mã hoặc số phòng (Ví dụ: P.101, Phòng Deluxe 202, VIP Suite) |
 | floor | INT | Tầng mà phòng trọ đang tọa lạc |
-| price | DECIMAL(12,2) | Giá thuê phòng (Theo tháng với trọ/căn hộ, hoặc theo ngày/giờ với khách sạn) |
+| price | DECIMAL(12,2) | Giá thuê phòng theo tháng (VNĐ) |
+| price_per_day | DECIMAL(12,2), NULL | Giá thuê phòng theo ngày / đêm khách sạn (VNĐ) |
+| price_per_hour | DECIMAL(12,2), NULL | Giá thuê phòng block 2 giờ đầu khách sạn (VNĐ) |
+| price_extra_hour | DECIMAL(12,2), NULL | Giá phụ trội mỗi giờ tiếp theo khi thuê theo giờ (VNĐ) |
 | area | INT | Diện tích sử dụng của phòng (m2) |
-| status | ENUM | Trạng thái phòng: Trống (empty), Đang ở (occupied), Nợ cước (overdue), Bảo trì (maintenance) |
-| amenities | JSON, NULL | Mảng JSON lưu các tiện ích: WC khép kín, ban công, gác lửng, thú cưng |
+| status | VARCHAR(30) | Trạng thái phòng: Trống (empty), Đang ở (occupied), Nợ cước (overdue), Đang dọn dẹp (cleaning), Bảo trì (maintenance) |
+| cleaning_status | VARCHAR(30) | Trạng thái vệ sinh buồng phòng: Sạch (clean), Bẩn cần dọn (dirty), Đang dọn (cleaning), Đã kiểm tra (inspected) |
+| amenities | JSON, NULL | Mảng JSON lưu các tiện ích: WC khép kín, ban công, gác lửng, minibar, khóa từ, thú cưng |
 | image | VARCHAR(255), NULL | Đường dẫn ảnh đại diện phòng |
 | images | JSON, NULL | Mảng JSON danh sách ảnh thực tế các góc chụp trong phòng |
 | video | VARCHAR(255), NULL | Đường dẫn video thực tế không gian phòng |
@@ -576,6 +603,48 @@ Bảng 10: Mô tả cấu trúc bảng RoomEquipment (Phân bổ trang thiết b
 | condition | VARCHAR(100) | Tình trạng thiết bị: Mới 100%, Hoạt động tốt, Cần bảo trì |
 | assigned_date | DATE, NULL | Ngày bàn giao thiết bị vào phòng |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo bản ghi |
+| updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
+
+Bảng 10b: Mô tả cấu trúc bảng HotelBookings (Phiếu đặt phòng & Lưu trú khách sạn ngắn hạn)
+
+| Tên Trường | Kiểu Dữ Liệu | Mô Tả |
+| --- | --- | --- |
+| id | BIGINT UNSIGNED | Khóa chính, tự động tăng |
+| tenant_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng tenants(id) |
+| room_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng rooms(id) |
+| booking_code | VARCHAR(30), UNIQUE | Mã phiếu đặt phòng duy nhất (Ví dụ: HB-RENTY01) |
+| guest_name | VARCHAR(255) | Họ và tên khách lưu trú |
+| guest_phone | TEXT, NULL | Số điện thoại liên hệ (Mã hóa AES-256-GCM) |
+| guest_cccd | TEXT, NULL | Số Căn cước công dân khách (Mã hóa AES-256-GCM) |
+| rental_type | VARCHAR(20), DEFAULT 'day' | Hình thức thuê phòng: day (theo ngày/đêm), hour (theo giờ) |
+| check_in_at | TIMESTAMP | Thời điểm nhận phòng thực tế |
+| expected_check_out_at | TIMESTAMP, NULL | Thời điểm dự kiến trả phòng |
+| actual_check_out_at | TIMESTAMP, NULL | Thời điểm thực tế trả phòng (Check-out) |
+| unit_rate | DECIMAL(12,2) | Đơn giá phòng áp dụng theo giờ hoặc ngày |
+| room_amount | DECIMAL(12,2) | Tổng tiền phòng sau tính toán thời gian lưu trú |
+| service_amount | DECIMAL(12,2) | Tổng tiền dịch vụ minibar và tiện ích phòng |
+| surcharge_amount | DECIMAL(12,2) | Tiền phụ thu trả phòng muộn hoặc nhận phòng sớm |
+| deposit_amount | DECIMAL(12,2) | Tiền đặt cọc giữ phòng của khách |
+| total_amount | DECIMAL(12,2) | Tổng số tiền thanh toán cuối cùng trên hóa đơn Folio |
+| payment_status | VARCHAR(20), DEFAULT 'unpaid' | Trạng thái thanh toán: unpaid (chưa thanh toán), paid (đã thanh toán) |
+| payment_method | VARCHAR(30), NULL | Phương thức thanh toán: cash (tiền mặt), vietqr, transfer |
+| status | VARCHAR(20), DEFAULT 'checked_in' | Trạng thái lượt ở: checked_in (đang ở), checked_out (đã trả phòng), cancelled |
+| note | TEXT, NULL | Ghi chú yêu cầu đặc biệt của khách |
+| created_at | TIMESTAMP, NULL | Thời điểm tạo bản ghi |
+| updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
+
+Bảng 10c: Mô tả cấu trúc bảng HotelFolioItems (Chi tiết Bảng kê Dịch vụ & Minibar Khách sạn)
+
+| Tên Trường | Kiểu Dữ Liệu | Mô Tả |
+| --- | --- | --- |
+| id | BIGINT UNSIGNED | Khóa chính, tự động tăng |
+| booking_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng hotel_bookings(id) |
+| item_name | VARCHAR(255) | Tên sản phẩm/dịch vụ (Bia Heineken, Nước suối, Snack, Giặt ủi...) |
+| item_type | VARCHAR(30), DEFAULT 'minibar' | Phân loại: minibar, service (dịch vụ), surcharge (phụ thu) |
+| quantity | INT, DEFAULT 1 | Số lượng tiêu thụ |
+| unit_price | DECIMAL(12,2) | Đơn giá niêm yết của dịch vụ / sản phẩm minibar (VNĐ) |
+| subtotal | DECIMAL(12,2) | Thành tiền chi tiết = Số lượng * Đơn giá (VNĐ) |
+| created_at | TIMESTAMP, NULL | Thời điểm thêm dịch vụ |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
 
