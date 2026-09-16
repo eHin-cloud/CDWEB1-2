@@ -8,18 +8,15 @@ RUN apt-get update \
         git \
         libicu-dev \
         libpng-dev \
-        libsqlite3-dev \
         libzip-dev \
         unzip \
         zip \
     && docker-php-ext-install \
         bcmath \
         intl \
-        opcache \
         pdo_mysql \
-        pdo_sqlite \
-        sqlite3 \
         zip \
+    && docker-php-ext-enable opcache \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

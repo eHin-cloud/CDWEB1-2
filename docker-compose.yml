@@ -6,7 +6,7 @@ services:
     container_name: smartroom_app
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8088:8000"
     volumes:
       - .:/var/www/html
       - composer_cache:/tmp/composer-cache
@@ -18,7 +18,7 @@ services:
       DB_DATABASE: quan_ly_nha_tro
       DB_USERNAME: smartroom
       DB_PASSWORD: smartroom
-      APP_URL: http://localhost:8000
+      APP_URL: http://localhost:8088
     depends_on:
       mysql:
         condition: service_healthy
@@ -27,8 +27,9 @@ services:
     image: mysql:8.4
     container_name: smartroom_mysql
     restart: unless-stopped
+    command: --log-bin-trust-function-creators=1
     ports:
-      - "3307:3306"
+      - "3309:3306"
     environment:
       MYSQL_DATABASE: quan_ly_nha_tro
       MYSQL_USER: smartroom

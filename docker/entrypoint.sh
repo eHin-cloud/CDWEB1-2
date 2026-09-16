@@ -26,7 +26,7 @@ fi
 php artisan config:clear
 
 if [ "${DB_CONNECTION:-}" = "mysql" ]; then
-    until mysqladmin ping -h"${DB_HOST:-mysql}" -P"${DB_PORT:-3306}" -u"${DB_USERNAME:-smartroom}" -p"${DB_PASSWORD:-smartroom}" --silent; do
+    until mysqladmin ping -h"${DB_HOST:-mysql}" -P"${DB_PORT:-3306}" -u"${DB_USERNAME:-smartroom}" -p"${DB_PASSWORD:-smartroom}" --skip-ssl --silent; do
         sleep 2
     done
 fi
