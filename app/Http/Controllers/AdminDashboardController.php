@@ -404,6 +404,75 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    public function aiOcrMeterBulk(Request $request, AiManagementService $aiManagementService)
+    {
+        $validated = $request->validate([
+            'images' => 'required|array|min:1|max:30',
+            'images.*' => 'required|string',
+            'type' => 'required|string|in:electricity,water',
+        ]);
+
+        $tenantId = $this->currentTenantId();
+        $type = $validated['type'];
+        $serialColumn = $type === 'electricity' ? 'electric_meter_serial' : 'water_meter_serial';
+
+        // Lấy danh sách phòng thuộc tenant hiện tại đã có cấu hình số SX
+        $rooms = Room::where('tenant_id', $tenantId)
+            ->whereNotNull($serialColumn)
+            ->where($serialColumn, '!=', '')
+            ->get(['id', 'room_number', $serialColumn])
+            ->keyBy(fn($r) => trim(strtolower($r->{$serialColumn})));
+
+        $allRooms = Room::where('tenant_id', $tenantId)->get(['id', 'room_number']);
+
+        $matched = [];
+        $unmatched = [];
+
+        foreach ($validated['images'] as $index => $base64) {
+            $analysis = $aiManagementService->analyzeMeterImage($base64, $type);
+            $serial = !empty($analysis['serial_number']) ? trim(strtolower($analysis['serial_number'])) : null;
+
+            $matchedRoom = null;
+            if ($serial && isset($rooms[$serial])) {
+                $matchedRoom = $rooms[$serial];
+            }
+
+            if ($matchedRoom) {
+                $matched[] = [
+                    'index' => $index,
+                    'room_id' => $matchedRoom->id,
+                    'room_number' => $matchedRoom->room_number,
+                    'serial_number' => $analysis['serial_number'],
+                    'value' => $analysis['value'],
+                    'confidence' => $analysis['confidence'],
+                    'used_ai' => $analysis['used_ai'] ?? true,
+                ];
+            } else {
+                $unmatched[] = [
+                    'index' => $index,
+                    'serial_number' => $analysis['serial_number'] ?? null,
+                    'value' => $analysis['value'],
+                    'confidence' => $analysis['confidence'],
+                    'reason' => $serial 
+                        ? "Không tìm thấy phòng nào có Số SX [{$analysis['serial_number']}]" 
+                        : "Ảnh mờ hoặc không nhận diện được Số SX",
+                    'used_ai' => $analysis['used_ai'] ?? true,
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'type' => $type,
+            'total_scanned' => count($validated['images']),
+            'matched_count' => count($matched),
+            'unmatched_count' => count($unmatched),
+            'matched' => $matched,
+            'unmatched' => $unmatched,
+            'all_rooms' => $allRooms,
+        ]);
+    }
+
     public function aiContractTerms(Request $request, AiManagementService $aiManagementService)
     {
         $tenantId = $this->currentTenantId();

@@ -19,6 +19,8 @@ class Room extends Model
         'room_type',
         'price',
         'area',
+        'electric_meter_serial',
+        'water_meter_serial',
         'amenities',
         'description',
         'image',
