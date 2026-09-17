@@ -27,6 +27,8 @@ class Room extends Model
         'price_extra_hour',
         'cleaning_status',
         'area',
+        'electric_meter_serial',
+        'water_meter_serial',
         'amenities',
         'description',
         'image',

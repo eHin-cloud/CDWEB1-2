@@ -148,6 +148,7 @@ Route::middleware('admin')->group(function () {
         Route::post('/smartroom/admin/ai/assistant', [AdminDashboardController::class, 'aiAssistant'])->name('smartroom.admin.ai.assistant');
         Route::post('/smartroom/admin/ai/contract-terms', [AdminDashboardController::class, 'aiContractTerms'])->name('smartroom.admin.ai.contract_terms');
         Route::post('/smartroom/admin/ai/ocr-meter', [AdminDashboardController::class, 'aiOcrMeter'])->name('smartroom.admin.ai.ocr_meter');
+        Route::post('/smartroom/admin/ai/ocr-meter-bulk', [AdminDashboardController::class, 'aiOcrMeterBulk'])->name('smartroom.admin.ai.ocr_meter_bulk');
         Route::get('/smartroom/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
         Route::post('/smartroom/admin/reports/transactions', [ReportController::class, 'storeTransaction'])->name('admin.reports.transaction.store');
         Route::get('/smartroom/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity_logs.index');
