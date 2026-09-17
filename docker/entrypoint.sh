@@ -32,6 +32,8 @@ if [ "${DB_CONNECTION:-}" = "mysql" ]; then
 fi
 
 php artisan migrate --force
-php artisan db:seed --force
+
+# Khoi dong Reverb WebSocket Server chay nen
+php artisan reverb:start --host=0.0.0.0 --port=8085 &
 
 exec "$@"

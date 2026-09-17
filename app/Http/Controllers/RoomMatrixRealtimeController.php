@@ -23,7 +23,11 @@ class RoomMatrixRealtimeController extends Controller
             'status' => 'required|string|in:empty,occupied,overdue,cleaning,maintenance',
         ]);
 
-        $room = Room::where('tenant_id', $tenantId)->findOrFail($id);
+        $room = Room::query()
+            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->findOrFail($id);
+        
+        $tenantId = $room->tenant_id;
         $oldStatus = $room->status;
         $newStatus = $request->input('status');
 
@@ -55,15 +59,16 @@ class RoomMatrixRealtimeController extends Controller
             'updated_by' => $user->name,
         ];
 
-        // 1. Lưu vào Cache để SSE Stream đọc ngay lập tức
-        $cacheKey = "room_matrix_latest_event_{$tenantId}";
-        Cache::put($cacheKey, $payload, 120);
+        // 1. Lưu vào Cache để SSE/Polling đọc ngay lập tức
+        Cache::put("room_matrix_latest_event_{$tenantId}", $payload, 120);
+        Cache::put("room_matrix_latest_event_global", $payload, 120);
 
         // 2. Kích hoạt Broadcast Event (cho Laravel Reverb / Echo)
         try {
             event(new RoomStatusUpdated($room));
         } catch (\Throwable $e) {
-            // Không chặn request nếu broadcast driver chưa cấu hình
+            // Ghi log để chẩn đoán nếu broadcast gặp trục trặc
+            \Log::warning('RoomStatusUpdated broadcast notice: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -86,41 +91,25 @@ class RoomMatrixRealtimeController extends Controller
         }
 
         $response = new StreamedResponse(function () use ($tenantId) {
-            // Đóng buffer để gửi dữ liệu tức thì
             if (ob_get_level()) {
                 ob_end_clean();
             }
 
             $cacheKey = "room_matrix_latest_event_{$tenantId}";
-            $lastSentTimestamp = 0;
-            $startTime = time();
+            $latestEvent = Cache::get($cacheKey);
 
-            // Giữ kết nối trong tối đa 25 giây (tránh timeout proxy web)
-            while ((time() - $startTime) < 25) {
-                if (connection_aborted()) {
-                    break;
-                }
-
-                $latestEvent = Cache::get($cacheKey);
-
-                if ($latestEvent && isset($latestEvent['updated_at']) && $latestEvent['updated_at'] > $lastSentTimestamp) {
-                    $lastSentTimestamp = $latestEvent['updated_at'];
-                    echo "event: room-updated\n";
-                    echo "data: " . json_encode($latestEvent) . "\n\n";
-                    flush();
-                } else {
-                    // Gửi heartbeat giữ kết nối sống
-                    echo ": ping\n\n";
-                    flush();
-                }
-
-                usleep(800000); // kiểm tra mỗi 0.8 giây
+            if ($latestEvent) {
+                echo "event: room-updated\n";
+                echo "data: " . json_encode($latestEvent) . "\n\n";
+            } else {
+                echo ": connected\n\n";
             }
+            flush();
         });
 
         $response->headers->set('Content-Type', 'text/event-stream');
         $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        $response->headers->set('Connection', 'keep-alive');
+        $response->headers->set('Connection', 'close');
         $response->headers->set('X-Accel-Buffering', 'no'); // Tắt buffering trên Nginx
 
         return $response;
@@ -135,12 +124,8 @@ class RoomMatrixRealtimeController extends Controller
         $tenantId = $user ? $user->tenant_id : null;
         $since = (int) $request->query('since', 0);
 
-        if (!$tenantId) {
-            return response()->json(['has_update' => false]);
-        }
-
-        $cacheKey = "room_matrix_latest_event_{$tenantId}";
-        $latestEvent = Cache::get($cacheKey);
+        $cacheKey = $tenantId ? "room_matrix_latest_event_{$tenantId}" : "room_matrix_latest_event_global";
+        $latestEvent = Cache::get($cacheKey) ?? Cache::get("room_matrix_latest_event_global");
 
         if ($latestEvent && isset($latestEvent['updated_at']) && $latestEvent['updated_at'] > $since) {
             return response()->json([

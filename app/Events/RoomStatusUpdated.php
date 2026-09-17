@@ -5,11 +5,11 @@ namespace App\Events;
 use App\Models\Room;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class RoomStatusUpdated implements ShouldBroadcast
+class RoomStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -42,6 +42,7 @@ class RoomStatusUpdated implements ShouldBroadcast
     {
         return [
             new Channel('tenant.' . $this->room->tenant_id . '.room-matrix'),
+            new Channel('room-matrix'),
         ];
     }
 

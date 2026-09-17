@@ -5429,7 +5429,7 @@
             }, 1800);
         }
 
-        function showRealtimeToast(msg, type = 'info') {
+        function showRealtimeToast(title, subtitle = '', type = 'room') {
             let container = document.getElementById('realtime-toast-container');
             if (!container) {
                 container = document.createElement('div');
@@ -5439,14 +5439,21 @@
             }
 
             const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/95 border border-indigo-500/40 text-slate-100 shadow-2xl shadow-indigo-500/20 backdrop-blur-md text-xs font-semibold animate-slide-in transition-all duration-300';
+            const isTicket = type === 'ticket';
+            const iconBg = isTicket ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400';
+            const icon = isTicket ? 'fa-triangle-exclamation' : 'fa-bolt';
+            const borderColor = isTicket ? 'border-rose-500/40' : 'border-emerald-500/40';
+            const tagLabel = isTicket ? 'Sự cố cư dân (Realtime Echo)' : 'Sơ đồ phòng (Realtime Reverb)';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 border ${borderColor} text-slate-100 shadow-2xl shadow-indigo-500/20 backdrop-blur-md text-xs font-semibold animate-slide-in transition-all duration-300`;
             toast.innerHTML = `
-                <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-sm">
-                    <i class="fa-solid fa-bolt animate-bounce"></i>
+                <div class="w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-sm shrink-0">
+                    <i class="fa-solid ${icon} animate-bounce"></i>
                 </div>
-                <div>
-                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Realtime Room Matrix</div>
-                    <div class="text-slate-200 mt-0.5">${msg}</div>
+                <div class="min-w-[180px]">
+                    <div class="text-[10px] ${isTicket ? 'text-rose-400' : 'text-emerald-400'} font-bold uppercase tracking-wider">${tagLabel}</div>
+                    <div class="text-slate-100 font-bold mt-0.5">${title}</div>
+                    ${subtitle ? `<div class="text-[11px] text-slate-400 mt-0.5 leading-snug">${subtitle}</div>` : ''}
                 </div>
             `;
 
@@ -5455,38 +5462,64 @@
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-x-8');
                 setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            }, 5000);
+        }
+
+        @php
+            $activeTenantId = $tenant->id ?? (Auth::user()?->tenant_id ?? ($rooms->first()?->tenant_id ?? 1));
+        @endphp
+        const tenantId = {{ $activeTenantId }};
+        let lastProcessedEventKey = '';
+
+        function handleIncomingRoomUpdate(data) {
+            if (!data || !data.id) return;
+            const eventKey = `${data.id}_${data.status}_${data.updated_at || ''}`;
+            if (eventKey === lastProcessedEventKey) {
+                return; // Tránh xử lý trùng lặp từ 2 channel
+            }
+            lastProcessedEventKey = eventKey;
+            lastEventTimestamp = Math.floor(Date.now() / 1000);
+            applyRoomCardUpdate(data);
+            showRealtimeToast(
+                `P.${data.room_number}: ${data.status_label}`,
+                'Đồng bộ trạng thái phòng tức thời qua WebSocket Reverb!',
+                'room'
+            );
         }
 
         function initRoomMatrixRealtime() {
-            // 1. Kết nối qua Server-Sent Events (SSE) native của HTML5
-            if (window.EventSource) {
+            // 1. Kết nối chính thức qua Laravel Echo + Reverb (WebSocket)
+            if (window.Echo) {
                 try {
-                    const eventSource = new EventSource("{{ route('admin.rooms.matrix.stream') }}");
+                    // Lắng nghe trên kênh tenant cụ thể
+                    window.Echo.channel(`tenant.${tenantId}.room-matrix`)
+                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
 
-                    eventSource.addEventListener('room-updated', function(e) {
-                        try {
-                            const data = JSON.parse(e.data);
+                    // Lắng nghe trên kênh toàn cục để các tab Admin luôn nhận được tức thì
+                    window.Echo.channel('room-matrix')
+                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
+
+                    // Lắng nghe báo hỏng sự cố tức thời từ cư dân
+                    window.Echo.channel(`tenant.${tenantId}.dashboard`)
+                        .listen('.ticket.created', (data) => {
                             if (data && data.id) {
-                                lastEventTimestamp = data.updated_at || Math.floor(Date.now() / 1000);
-                                applyRoomCardUpdate(data);
-                                showRealtimeToast(`Phòng P.${data.room_number} vừa đổi sang [${data.status_label}]!`);
+                                showRealtimeToast(
+                                    `🚨 Sự cố mới: P.${data.room_number}`,
+                                    `[${data.category}] ${data.title}`,
+                                    'ticket'
+                                );
+                                const bellBadge = document.querySelector('.fa-bell + span');
+                                if (bellBadge) bellBadge.classList.add('animate-ping');
                             }
-                        } catch (err) {
-                            console.error('Lỗi parse SSE room data: ', err);
-                        }
-                    });
-
-                    eventSource.onerror = function() {
-                        console.warn('SSE stream ping/reconnect.');
-                    };
+                        });
                 } catch (err) {
-                    console.error('Không thể khởi tạo EventSource: ', err);
+                    console.warn('Echo Reverb subscription error: ', err);
                 }
             }
 
-            // 2. Thăm dò nhẹ (Long polling fallback) mỗi 6 giây bảo đảm độ tươi dữ liệu
+            // 2. Thăm dò phụ (Polling fallback nhẹ nhàng) mỗi 25s khi tab đang hiển thị
             setInterval(async () => {
+                if (document.hidden) return; // Không poll khi tab ẩn để tiết kiệm tài nguyên
                 try {
                     const res = await fetch("{{ route('admin.rooms.matrix.poll') }}?since=" + lastEventTimestamp);
                     if (res.ok) {
@@ -5494,17 +5527,16 @@
                         if (json.has_update && json.event) {
                             lastEventTimestamp = json.event.updated_at;
                             applyRoomCardUpdate(json.event);
-                            showRealtimeToast(`Phòng P.${json.event.room_number} vừa đổi sang [${json.event.status_label}]!`);
                         }
                     }
                 } catch (e) {
-                    // im lặng bỏ qua lỗi mạng
+                    // im lặng bỏ qua lỗi mạng tạm thời
                 }
-            }, 6000);
+            }, 25000);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            initRoomMatrixRealtime();
+            setTimeout(initRoomMatrixRealtime, 250);
         });
 
         document.addEventListener('keydown', function(e) {
