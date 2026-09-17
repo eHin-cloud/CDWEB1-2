@@ -13,6 +13,7 @@ use App\Http\Controllers\ResidentPortalController;
 use App\Http\Controllers\LandlordOnboardingController;
 use App\Http\Controllers\LandlordVerificationController;
 use App\Http\Controllers\VerificationDocumentController;
+use App\Http\Controllers\BuildingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -154,6 +155,16 @@ Route::middleware('admin')->group(function () {
         Route::post('/smartroom/admin/notifications/contracts', [AdminDashboardController::class, 'notifyContracts'])->name('smartroom.admin.notifications.contracts');
         Route::post('/smartroom/admin/notifications/maintenance', [AdminDashboardController::class, 'notifyMaintenance'])->name('smartroom.admin.notifications.maintenance');
         Route::post('/smartroom/admin/notifications/run-all', [AdminDashboardController::class, 'notifyAll'])->name('smartroom.admin.notifications.run_all');
+    });
+
+    // Building Management (Cơ sở lưu trú)
+    Route::prefix('smartroom/admin/buildings')->name('admin.buildings.')->middleware('role:landlord')->group(function () {
+        Route::get('/', [BuildingController::class, 'index'])->name('index');
+        Route::get('/create', [BuildingController::class, 'create'])->name('create');
+        Route::post('/store', [BuildingController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [BuildingController::class, 'edit'])->name('edit');
+        Route::post('/{id}/update', [BuildingController::class, 'update'])->name('update');
+        Route::delete('/{id}/delete', [BuildingController::class, 'destroy'])->name('destroy');
     });
 
     // Room Management

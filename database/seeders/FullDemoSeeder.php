@@ -983,7 +983,7 @@ class FullDemoSeeder extends Seeder
                     'room_number' => $roomNumber,
                     'floor' => (int) substr($roomNumber, 0, 1),
                     'status' => $statuses[$index],
-                    'room_type' => $index % 3 === 0 ? 'vip' : 'normal',
+                    'room_type' => ['standard', 'deluxe', 'vip', 'studio'][$index % 4],
                     'price' => $basePrice + ($index * 150000),
                     'area' => 20 + ($index * 2),
                     'amenities' => $amenitiesPool[$index % count($amenitiesPool)],

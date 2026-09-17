@@ -90,7 +90,9 @@ class RoomController extends Controller
             'room_number' => 'nullable|string|max:50',
             'floor' => 'nullable|integer|min:0',
             'room_type' => 'nullable|string|max:50',
-            'price' => 'required|integer|min:0',
+            'rental_type' => 'nullable|string|max:50',
+            'price' => 'required|integer|min:1',
+            'deposit' => 'nullable|integer|min:0',
             'area' => 'required|integer|min:1',
             'amenities' => 'nullable|array',
             'amenities.*' => 'string|max:100',
@@ -122,6 +124,9 @@ class RoomController extends Controller
         }
         if (isset($input['price'])) {
             $input['price'] = $this->toHalfWidth($this->cleanWhitespace($input['price']));
+        }
+        if (isset($input['deposit'])) {
+            $input['deposit'] = $this->toHalfWidth($this->cleanWhitespace($input['deposit']));
         }
         if (isset($input['area'])) {
             $input['area'] = $this->toHalfWidth($this->cleanWhitespace($input['area']));
@@ -163,26 +168,41 @@ class RoomController extends Controller
             ],
             'floor' => 'required|integer|min:1|max:100',
             'status' => 'required|in:empty,occupied,overdue,maintenance',
-            'room_type' => 'required|in:normal,vip',
-            'price' => 'required|integer|min:0|max:1000000000',
+            'room_type' => 'required|in:standard,deluxe,vip,studio',
+            'rental_type' => 'required|in:month,day,hour',
+            'price' => 'required|integer|min:1|max:1000000000',
+            'deposit' => 'nullable|integer|min:0|max:1000000000',
             'area' => 'required|integer|min:1|max:1000',
             'amenities' => 'nullable|array',
             'description' => 'nullable|string|max:1000',
             'images' => 'nullable|array|max:10',
-            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:2048',
-            'video' => 'nullable|file|mimetypes:video/mp4,video/webm,video/quicktime|max:51200',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048' // Chặn file lạ (PDF, exe...), dung lượng max 2MB
+            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'video' => 'nullable|file|mimetypes:video/mp4,video/webm,video/quicktime|max:30720',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120' // Chặn file lạ (PDF, exe...), dung lượng max 5MB
         ], [
             'room_number.required' => 'Vui lòng nhập số phòng.',
             'floor.required' => 'Vui lòng nhập tầng.',
             'floor.integer' => 'Tầng phải là số nguyên hợp lệ.',
+            'room_type.required' => 'Vui lòng chọn hạng phòng.',
+            'room_type.in' => 'Hạng phòng phải là Standard, Deluxe, VIP hoặc Studio.',
+            'rental_type.required' => 'Vui lòng chọn hình thức cho thuê.',
+            'rental_type.in' => 'Hình thức cho thuê phải là theo tháng, theo ngày hoặc theo giờ.',
             'price.required' => 'Vui lòng nhập giá phòng.',
             'price.integer' => 'Giá phòng phải là số nguyên hợp lệ.',
+            'price.min' => 'Giá thuê phòng phải là số dương lớn hơn 0.',
+            'deposit.integer' => 'Tiền cọc phải là số nguyên hợp lệ.',
+            'deposit.min' => 'Tiền cọc không được là số âm.',
             'area.required' => 'Vui lòng nhập diện tích.',
             'area.integer' => 'Diện tích phải là số nguyên hợp lệ.',
+            'area.min' => 'Diện tích phòng phải là số dương lớn hơn 0.',
             'image.image' => 'Chỉ chấp nhận định dạng hình ảnh (jpg, png, webp).',
             'image.mimes' => 'Hình ảnh phải có đuôi mở rộng: jpeg, jpg, png, webp.',
-            'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.'
+            'image.max' => 'Dung lượng hình ảnh không được vượt quá 5MB.',
+            'images.*.image' => 'Chỉ chấp nhận định dạng hình ảnh (jpg, png, webp).',
+            'images.*.mimes' => 'Hình ảnh phải có đuôi mở rộng: jpeg, jpg, png, webp.',
+            'images.*.max' => 'Mỗi hình ảnh không được vượt quá 5MB.',
+            'video.mimetypes' => 'Video phải có định dạng mp4, webm hoặc quicktime.',
+            'video.max' => 'Dung lượng video không được vượt quá 30MB.'
         ]);
 
         // 3. Xử lý lưu ảnh
@@ -198,7 +218,9 @@ class RoomController extends Controller
             'floor' => $request->floor,
             'status' => $request->status,
             'room_type' => $request->room_type,
+            'rental_type' => $request->rental_type,
             'price' => $request->price,
+            'deposit' => $request->deposit ?? 0,
             'area' => $request->area,
             'electric_meter_serial' => $request->electric_meter_serial ? trim($request->electric_meter_serial) : null,
             'water_meter_serial' => $request->water_meter_serial ? trim($request->water_meter_serial) : null,
@@ -217,7 +239,7 @@ class RoomController extends Controller
             $room,
             ['room_number' => $room->room_number],
             null,
-            $room->only(['room_number', 'floor', 'status', 'room_type', 'price', 'area'])
+            $room->only(['room_number', 'floor', 'status', 'room_type', 'rental_type', 'price', 'deposit', 'area'])
         );
 
         return redirect()->route('admin.rooms.index')->with('success', 'Thêm phòng trọ mới thành công.');
@@ -283,6 +305,9 @@ class RoomController extends Controller
         if (isset($input['price'])) {
             $input['price'] = $this->toHalfWidth($this->cleanWhitespace($input['price']));
         }
+        if (isset($input['deposit'])) {
+            $input['deposit'] = $this->toHalfWidth($this->cleanWhitespace($input['deposit']));
+        }
         if (isset($input['area'])) {
             $input['area'] = $this->toHalfWidth($this->cleanWhitespace($input['area']));
         }
@@ -320,23 +345,41 @@ class RoomController extends Controller
             ],
             'floor' => 'required|integer|min:1|max:100',
             'status' => 'required|in:empty,occupied,overdue,maintenance',
-            'room_type' => 'required|in:normal,vip',
-            'price' => 'required|integer|min:0|max:1000000000',
+            'room_type' => 'required|in:standard,deluxe,vip,studio',
+            'rental_type' => 'required|in:month,day,hour',
+            'price' => 'required|integer|min:1|max:1000000000',
+            'deposit' => 'nullable|integer|min:0|max:1000000000',
             'area' => 'required|integer|min:1|max:1000',
             'amenities' => 'nullable|array',
             'description' => 'nullable|string|max:1000',
             'images' => 'nullable|array|max:10',
-            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:2048',
-            'video' => 'nullable|file|mimetypes:video/mp4,video/webm,video/quicktime|max:51200',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048'
+            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'video' => 'nullable|file|mimetypes:video/mp4,video/webm,video/quicktime|max:30720',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120'
         ], [
             'room_number.required' => 'Vui lòng nhập số phòng.',
             'floor.required' => 'Vui lòng nhập tầng.',
+            'floor.integer' => 'Tầng phải là số nguyên hợp lệ.',
+            'room_type.required' => 'Vui lòng chọn hạng phòng.',
+            'room_type.in' => 'Hạng phòng phải là Standard, Deluxe, VIP hoặc Studio.',
+            'rental_type.required' => 'Vui lòng chọn hình thức cho thuê.',
+            'rental_type.in' => 'Hình thức cho thuê phải là theo tháng, theo ngày hoặc theo giờ.',
             'price.required' => 'Vui lòng nhập giá phòng.',
+            'price.integer' => 'Giá phòng phải là số nguyên hợp lệ.',
+            'price.min' => 'Giá thuê phòng phải là số dương lớn hơn 0.',
+            'deposit.integer' => 'Tiền cọc phải là số nguyên hợp lệ.',
+            'deposit.min' => 'Tiền cọc không được là số âm.',
             'area.required' => 'Vui lòng nhập diện tích.',
+            'area.integer' => 'Diện tích phải là số nguyên hợp lệ.',
+            'area.min' => 'Diện tích phòng phải là số dương lớn hơn 0.',
             'image.image' => 'Chỉ chấp nhận định dạng hình ảnh (jpg, png, webp).',
             'image.mimes' => 'Hình ảnh phải có đuôi mở rộng: jpeg, jpg, png, webp.',
-            'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.'
+            'image.max' => 'Dung lượng hình ảnh không được vượt quá 5MB.',
+            'images.*.image' => 'Chỉ chấp nhận định dạng hình ảnh (jpg, png, webp).',
+            'images.*.mimes' => 'Hình ảnh phải có đuôi mở rộng: jpeg, jpg, png, webp.',
+            'images.*.max' => 'Mỗi hình ảnh không được vượt quá 5MB.',
+            'video.mimetypes' => 'Video phải có định dạng mp4, webm hoặc quicktime.',
+            'video.max' => 'Dung lượng video không được vượt quá 30MB.'
         ]);
 
         // 6. Xử lý ảnh: Giữ nguyên ảnh cũ nếu không chọn ảnh mới (Update Persistence)
@@ -357,7 +400,7 @@ class RoomController extends Controller
         }
 
         // 7. Cập nhật dữ liệu phòng trọ và tăng version lên 1
-        $before = $room->only(['room_number', 'floor', 'status', 'room_type', 'price', 'area', 'building_id']);
+        $before = $room->only(['room_number', 'floor', 'status', 'room_type', 'rental_type', 'price', 'deposit', 'area', 'building_id']);
 
         $room->update([
             'building_id' => $request->building_id,
@@ -365,13 +408,17 @@ class RoomController extends Controller
             'floor' => $request->floor,
             'status' => $request->status,
             'room_type' => $request->room_type,
+            'rental_type' => $request->rental_type,
             'price' => $request->price,
+            'deposit' => $request->deposit ?? 0,
             'area' => $request->area,
             'electric_meter_serial' => $request->electric_meter_serial ? trim($request->electric_meter_serial) : null,
             'water_meter_serial' => $request->water_meter_serial ? trim($request->water_meter_serial) : null,
             'amenities' => $request->amenities ?? [],
             'description' => $request->description,
             'image' => $imagePath,
+            'images' => $imagePaths,
+            'video' => $videoPath,
             'version' => $room->version + 1 // Tăng version để phòng chống cập nhật đè (Optimistic Locking)
         ]);
 
@@ -382,7 +429,7 @@ class RoomController extends Controller
             $room,
             ['room_number' => $room->room_number],
             $before,
-            $room->fresh()->only(['room_number', 'floor', 'status', 'room_type', 'price', 'area', 'building_id'])
+            $room->fresh()->only(['room_number', 'floor', 'status', 'room_type', 'rental_type', 'price', 'deposit', 'area', 'building_id'])
         );
 
         return redirect()->route('admin.rooms.index')->with('success', 'Cập nhật phòng trọ thành công.');
@@ -423,7 +470,7 @@ class RoomController extends Controller
             Storage::disk('public')->delete($room->video);
         }
 
-        $before = $room->only(['room_number', 'floor', 'status', 'room_type', 'price', 'area', 'building_id']);
+        $before = $room->only(['room_number', 'floor', 'status', 'room_type', 'rental_type', 'price', 'deposit', 'area', 'building_id']);
         $roomNumber = $room->room_number;
 
         $room->delete();

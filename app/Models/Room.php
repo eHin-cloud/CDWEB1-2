@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Room extends Model
 {
     public const MAX_OCCUPANTS = 5;
+    public const ROOM_TYPES = ['standard', 'deluxe', 'vip', 'studio'];
+    public const RENTAL_TYPES = ['month', 'day', 'hour'];
 
     protected $fillable = [
         'building_id',
@@ -17,7 +19,9 @@ class Room extends Model
         'floor',
         'status',
         'room_type',
+        'rental_type',
         'price',
+        'deposit',
         'area',
         'electric_meter_serial',
         'water_meter_serial',
@@ -32,6 +36,8 @@ class Room extends Model
     protected $casts = [
         'amenities' => 'array',
         'images' => 'array',
+        'deposit' => 'integer',
+        'price' => 'integer',
     ];
 
     public function building(): BelongsTo

@@ -59,6 +59,14 @@
                 <span>Sơ Đồ Phòng</span>
             </a>
             
+            @if($isLandlord)
+                <a href="{{ route('admin.buildings.index') }}" 
+                   class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ request()->routeIs('admin.buildings.*') ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent hover:border-slate-800' }}">
+                    <i class="fa-solid fa-city text-lg"></i>
+                    <span>Cơ sở lưu trú</span>
+                </a>
+            @endif
+
             <a href="{{ route('admin.rooms.index') }}" 
                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ request()->routeIs('admin.rooms.*') ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent hover:border-slate-800' }}">
                 <i class="fa-solid fa-door-open text-lg"></i>

@@ -109,6 +109,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tầng <span class="text-rose-500">*</span></label>
                             <input type="text" name="floor" id="floor" required 
+                                   value="{{ old('floor') }}"
                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" 
                                    placeholder="Ví dụ: 1, 2" oninput="sanitizeNumberInput(this)" onblur="validateFloor()">
                             <span class="text-xs text-rose-400 mt-1 hidden" id="err-floor"></span>
@@ -116,6 +117,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Diện Tích (m²) <span class="text-rose-500">*</span></label>
                             <input type="text" name="area" id="area" required 
+                                   value="{{ old('area') }}"
                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" 
                                    placeholder="Ví dụ: 25" oninput="sanitizeNumberInput(this)" onblur="validateArea()">
                             <span class="text-xs text-rose-400 mt-1 hidden" id="err-area"></span>
@@ -123,38 +125,71 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Trạng Thái <span class="text-rose-500">*</span></label>
                             <select name="status" id="status" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                                <option value="empty">Trống</option>
-                                <option value="occupied">Đầy (Đang thuê)</option>
-                                <option value="maintenance">Đang sửa chữa</option>
-                                <option value="overdue">Nợ tiền</option>
+                                <option value="empty" {{ old('status') === 'empty' ? 'selected' : '' }}>Trống</option>
+                                <option value="occupied" {{ old('status') === 'occupied' ? 'selected' : '' }}>Đầy (Đang thuê)</option>
+                                <option value="maintenance" {{ old('status') === 'maintenance' ? 'selected' : '' }}>Đang sửa chữa</option>
+                                <option value="overdue" {{ old('status') === 'overdue' ? 'selected' : '' }}>Nợ tiền</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Loại Phòng <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hạng Phòng <span class="text-rose-500">*</span></label>
                             <select name="room_type" id="room_type" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                                <option value="normal">Thường</option>
-                                <option value="vip">VIP</option>
+                                <option value="standard" {{ old('room_type', 'standard') === 'standard' ? 'selected' : '' }}>Standard</option>
+                                <option value="deluxe" {{ old('room_type') === 'deluxe' ? 'selected' : '' }}>Deluxe</option>
+                                <option value="vip" {{ old('room_type') === 'vip' ? 'selected' : '' }}>VIP</option>
+                                <option value="studio" {{ old('room_type') === 'studio' ? 'selected' : '' }}>Studio</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Giá và hình ảnh -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Hình thức thuê, Giá thuê, Tiền cọc -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giá Thuê / Tháng (VND) <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hình Thức Thuê <span class="text-rose-500">*</span></label>
+                            <select name="rental_type" id="rental_type" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                                <option value="month" {{ old('rental_type', 'month') === 'month' ? 'selected' : '' }}>Theo tháng</option>
+                                <option value="day" {{ old('rental_type') === 'day' ? 'selected' : '' }}>Theo ngày</option>
+                                <option value="hour" {{ old('rental_type') === 'hour' ? 'selected' : '' }}>Theo giờ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giá Thuê (VND) <span class="text-rose-500">*</span></label>
                             <input type="text" name="price" id="price" required 
+                                   value="{{ old('price') }}"
                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" 
                                    placeholder="Ví dụ: 3000000" oninput="sanitizeNumberInput(this)" onblur="validatePrice()">
                             <span class="text-xs text-rose-400 mt-1 hidden" id="err-price"></span>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hình Ảnh Minh Họa</label>
-                            <input type="file" name="images[]" id="images" accept="image/*" multiple
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tiền Cọc (VND)</label>
+                            <input type="text" name="deposit" id="deposit" 
+                                   value="{{ old('deposit', '0') }}"
+                                   class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" 
+                                   placeholder="Ví dụ: 1000000" oninput="sanitizeNumberInput(this)" onblur="validateDeposit()">
+                            <span class="text-xs text-rose-400 mt-1 hidden" id="err-deposit"></span>
+                        </div>
+                    </div>
+
+                    <!-- Hình ảnh minh họa -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hình Ảnh Minh Họa (Tối đa 10 ảnh, mỗi ảnh $\le$ 5MB)</label>
+                            <input type="file" name="images[]" id="images" accept="image/jpeg,image/png,image/webp" multiple
                                    class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none"
                                    onchange="previewImages(this)">
                             <span class="text-xs text-rose-400 mt-1 hidden" id="err-image"></span>
                             <div class="mt-3 hidden" id="preview-box">
                                 <div id="preview-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Video Giới Thiệu Phòng (≤ 30MB)</label>
+                            <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/quicktime"
+                                   class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none"
+                                   onchange="previewVideo(this)">
+                            <span class="text-xs text-rose-400 mt-1 hidden" id="err-video"></span>
+                            <div class="mt-3 hidden" id="video-preview-box">
+                                <video id="preview-video" class="w-full max-h-64 rounded-lg border border-slate-800 bg-black" controls></video>
                             </div>
                         </div>
                     </div>
@@ -188,44 +223,41 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Video giới thiệu phòng</label>
-                        <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/quicktime"
-                               class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none"
-                               onchange="previewVideo(this)">
-                        <span class="text-xs text-rose-400 mt-1 hidden" id="err-video"></span>
-                        <div class="mt-3 hidden" id="video-preview-box">
-                            <video id="preview-video" class="w-full max-h-64 rounded-lg border border-slate-800 bg-black" controls></video>
-                        </div>
-                    </div>
-
                     <!-- Tiện ích (Checkbox) -->
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Tiện Ích Đi Kèm</label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" name="amenities[]" value="gác lửng" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <input type="checkbox" name="amenities[]" value="Máy lạnh" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <span><i class="fa-solid fa-snowflake text-cyan-400 mr-1"></i> Máy lạnh</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
+                                <input type="checkbox" name="amenities[]" value="Nóng lạnh" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <span><i class="fa-solid fa-fire text-amber-400 mr-1"></i> Nóng lạnh</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
+                                <input type="checkbox" name="amenities[]" value="Minibar" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <span><i class="fa-solid fa-wine-glass text-rose-400 mr-1"></i> Minibar</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
+                                <input type="checkbox" name="amenities[]" value="SmartLock" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <span><i class="fa-solid fa-key text-emerald-400 mr-1"></i> SmartLock</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
+                                <input type="checkbox" name="amenities[]" value="Gác lửng" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
                                 <span>Gác lửng</span>
                             </label>
                             <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" name="amenities[]" value="điều hòa" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
-                                <span>Điều hòa</span>
+                                <input type="checkbox" name="amenities[]" value="Máy giặt" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <span>Máy giặt</span>
                             </label>
                             <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" name="amenities[]" value="nước nóng" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
-                                <span>Bình nóng lạnh</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" name="amenities[]" value="máy giặt" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
-                                <span>Máy giặt riêng</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" name="amenities[]" value="tủ lạnh" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <input type="checkbox" name="amenities[]" value="Tủ lạnh" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
                                 <span>Tủ lạnh</span>
                             </label>
                             <label class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer">
-                                <input type="checkbox" name="amenities[]" value="ban công" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
-                                <span>Ban công thoáng</span>
+                                <input type="checkbox" name="amenities[]" value="Ban công" class="rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500">
+                                <span>Ban công</span>
                             </label>
                         </div>
                     </div>
@@ -322,8 +354,22 @@
             const input = document.getElementById('price');
             input.value = cleanString(input.value);
             const errSpan = document.getElementById('err-price');
-            if (input.value === '' || isNaN(input.value) || parseInt(input.value) < 0) {
-                errSpan.textContent = 'Giá thuê phải là số nguyên dương hợp lệ.';
+            if (input.value === '' || isNaN(input.value) || parseInt(input.value) <= 0) {
+                errSpan.textContent = 'Giá thuê phải là số nguyên dương lớn hơn 0.';
+                errSpan.classList.remove('hidden');
+                return false;
+            }
+            errSpan.classList.add('hidden');
+            return true;
+        }
+
+        function validateDeposit() {
+            const input = document.getElementById('deposit');
+            if (!input) return true;
+            input.value = cleanString(input.value);
+            const errSpan = document.getElementById('err-deposit');
+            if (input.value !== '' && (isNaN(input.value) || parseInt(input.value) < 0)) {
+                errSpan.textContent = 'Tiền cọc không được là số âm.';
                 errSpan.classList.remove('hidden');
                 return false;
             }
@@ -360,25 +406,25 @@
             }
 
             if (files.length > 10) {
-                errSpan.textContent = 'Chi duoc chon toi da 10 hinh anh.';
+                errSpan.textContent = 'Chỉ được chọn tối đa 10 hình ảnh.';
                 errSpan.classList.remove('hidden');
                 input.value = '';
                 previewBox.classList.add('hidden');
                 return;
             }
 
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
             for (const file of files) {
                 if (!allowedTypes.includes(file.type)) {
-                    errSpan.textContent = 'Chi chap nhan dinh dang hinh anh jpg, png, webp, gif.';
+                    errSpan.textContent = 'Chỉ chấp nhận định dạng hình ảnh (.jpg, .png, .webp). Chặn file lạ!';
                     errSpan.classList.remove('hidden');
                     input.value = '';
                     previewBox.classList.add('hidden');
                     return;
                 }
 
-                if (file.size > 2 * 1024 * 1024) {
-                    errSpan.textContent = 'Moi hinh anh khong duoc vuot qua 2MB.';
+                if (file.size > 5 * 1024 * 1024) {
+                    errSpan.textContent = 'Mỗi hình ảnh không được vượt quá 5MB.';
                     errSpan.classList.remove('hidden');
                     input.value = '';
                     previewBox.classList.add('hidden');
@@ -414,15 +460,15 @@
 
             const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
             if (!allowedTypes.includes(file.type)) {
-                errSpan.textContent = 'Video phai co dinh dang mp4, webm hoac mov.';
+                errSpan.textContent = 'Video phải có định dạng mp4, webm hoặc mov.';
                 errSpan.classList.remove('hidden');
                 input.value = '';
                 previewBox.classList.add('hidden');
                 return;
             }
 
-            if (file.size > 50 * 1024 * 1024) {
-                errSpan.textContent = 'Dung luong video khong duoc vuot qua 50MB.';
+            if (file.size > 30 * 1024 * 1024) {
+                errSpan.textContent = 'Dung lượng video không được vượt quá 30MB.';
                 errSpan.classList.remove('hidden');
                 input.value = '';
                 previewBox.classList.add('hidden');
@@ -466,7 +512,9 @@
                     room_number: document.getElementById('room_number').value,
                     floor: Number(document.getElementById('floor').value || 0),
                     room_type: document.getElementById('room_type').value,
+                    rental_type: document.getElementById('rental_type')?.value || 'month',
                     price: Number(price),
+                    deposit: Number(document.getElementById('deposit')?.value || 0),
                     area: Number(area),
                     status: document.getElementById('status').value,
                     amenities: selectedAmenities()
@@ -498,7 +546,7 @@
             e.preventDefault();
             
             // Validate lại toàn bộ
-            const isOk = validateRoomNumber() && validateFloor() && validateArea() && validatePrice() && validateDescription();
+            const isOk = validateRoomNumber() && validateFloor() && validateArea() && validatePrice() && validateDeposit() && validateDescription();
             if (!isOk) {
                 alert('Vui lòng kiểm tra lại thông tin form nhập liệu.');
                 return false;
