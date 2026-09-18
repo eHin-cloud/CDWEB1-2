@@ -541,6 +541,7 @@
         }
 
         // Chặn Spam click / Double click gửi form
+        let isFormSubmitting = false;
         const form = document.getElementById('create-room-form');
         form.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -550,6 +551,12 @@
             if (!isOk) {
                 alert('Vui lòng kiểm tra lại thông tin form nhập liệu.');
                 return false;
+            }
+
+            // Đánh dấu submit hợp lệ & ngắt observer tránh tự kích hoạt cảnh báo
+            isFormSubmitting = true;
+            if (typeof observer !== 'undefined' && observer) {
+                observer.disconnect();
             }
 
             // Disable button ngay lập tức
@@ -589,15 +596,19 @@
 
         // 4. MutationObserver giám sát việc hack sửa thuộc tính DOM (Ví dụ sửa disabled của nút lưu)
         const targetBtn = document.getElementById('submit-btn');
-        const observer = new MutationObserver((mutationsList) => {
-            for (let mutation of mutationsList) {
-                if (mutation.type === 'attributes') {
-                    alert('Phát hiện hành vi can thiệp hệ thống!');
-                    window.location.reload();
+        let observer = null;
+        if (targetBtn) {
+            observer = new MutationObserver((mutationsList) => {
+                if (isFormSubmitting) return;
+                for (let mutation of mutationsList) {
+                    if (mutation.type === 'attributes') {
+                        alert('Phát hiện hành vi can thiệp hệ thống!');
+                        window.location.reload();
+                    }
                 }
-            }
-        });
-        observer.observe(targetBtn, { attributes: true });
+            });
+            observer.observe(targetBtn, { attributes: true });
+        }
     </script>
     <script src="{{ asset('js/admin-sidebar.js') }}"></script>
 </body>
