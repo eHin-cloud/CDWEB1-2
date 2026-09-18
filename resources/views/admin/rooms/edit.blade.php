@@ -216,7 +216,7 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Video Giới Thiệu Phòng ($\le$ 30MB)</label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Video Giới Thiệu Phòng (≤ 30MB)</label>
                             <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/quicktime"
                                    class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none"
                                    onchange="previewVideo(this)">
@@ -224,6 +224,35 @@
                             <div class="mt-3 {{ $room->video ? '' : 'hidden' }}" id="video-preview-box">
                                 <video id="preview-video" class="w-full max-h-64 rounded-lg border border-slate-800 bg-black" controls
                                        @if($room->video) src="{{ asset('storage/' . $room->video) }}" @endif></video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin Số Sản Xuất Công Tơ (Phục vụ AI Quét Hàng Loạt) -->
+                    <div class="rounded-2xl p-5 border border-indigo-500/20 bg-indigo-950/10 space-y-4">
+                        <div class="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wider">
+                            <i class="fa-solid fa-barcode"></i> Định Danh Công Tơ Đo Lường (Hỗ trợ AI Quét Hàng Loạt)
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1.5">Số Sản Xuất (Số SX) Công Tơ Điện</label>
+                                <div class="relative">
+                                    <input type="text" name="electric_meter_serial" id="electric_meter_serial" value="{{ old('electric_meter_serial', $room->electric_meter_serial) }}"
+                                           class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none font-mono" 
+                                           placeholder="Ví dụ: 16258817">
+                                    <span class="absolute left-3.5 top-3 text-amber-400 text-xs"><i class="fa-solid fa-bolt"></i></span>
+                                </div>
+                                <span class="text-[11px] text-slate-500 mt-1 block">Dập trên mặt đồng hồ GELEX EMIC hoặc công tơ điện tử.</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1.5">Số Sản Xuất (Số SX) Đồng Hồ Nước</label>
+                                <div class="relative">
+                                    <input type="text" name="water_meter_serial" id="water_meter_serial" value="{{ old('water_meter_serial', $room->water_meter_serial) }}"
+                                           class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none font-mono" 
+                                           placeholder="Ví dụ: DHN-88219">
+                                    <span class="absolute left-3.5 top-3 text-cyan-400 text-xs"><i class="fa-solid fa-droplet"></i></span>
+                                </div>
+                                <span class="text-[11px] text-slate-500 mt-1 block">Mã số dập trên mặt kính hoặc vành đồng hồ nước.</span>
                             </div>
                         </div>
                     </div>

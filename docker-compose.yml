@@ -7,11 +7,13 @@ services:
     restart: unless-stopped
     ports:
       - "8088:8000"
+      - "8085:8085"
     volumes:
       - .:/var/www/html
       - composer_cache:/tmp/composer-cache
     environment:
       COMPOSER_CACHE_DIR: /tmp/composer-cache
+      PHP_CLI_SERVER_WORKERS: "4"
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
@@ -19,6 +21,8 @@ services:
       DB_USERNAME: smartroom
       DB_PASSWORD: smartroom
       APP_URL: http://localhost:8088
+      REVERB_HOST: 127.0.0.1
+      REVERB_PORT: 8085
     depends_on:
       mysql:
         condition: service_healthy

@@ -649,12 +649,13 @@ class AiManagementService
     }
 
     /**
-     * Nhận diện chỉ số công tơ điện nước qua hình ảnh sử dụng Gemini AI.
+     * Nhận diện chỉ số và số sản xuất (Số SX) công tơ điện nước qua hình ảnh sử dụng Gemini AI.
      */
     public function analyzeMeterImage(string $base64Image, string $type = 'electricity'): array
     {
         $fallback = [
             'value' => 120, // giá trị giả định mẫu
+            'serial_number' => null,
             'confidence' => 0.5,
             'used_ai' => false,
             'fallback_reason' => 'ai_not_configured',
@@ -673,14 +674,17 @@ class AiManagementService
             $messages = [
                 [
                     'role' => 'system',
-                    'content' => 'Bạn là trợ lý nhận diện số công tơ điện nước qua hình ảnh chuyên nghiệp. Phân tích hình ảnh và trả về kết quả dưới dạng JSON.',
+                    'content' => 'Bạn là chuyên gia thị giác máy tính nhận diện đồng hồ công tơ điện nước đo lường. Luôn đọc kỹ số nguyên và số sản xuất (Số SX/Serial) để trả về định dạng JSON.',
                 ],
                 [
                     'role' => 'user',
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => "Hãy đọc số chỉ số hiển thị trên mặt công tơ điện/nước ({$type}) từ bức ảnh này. Chỉ lấy phần số nguyên. Trả về JSON dạng {\"value\": 1234, \"confidence\": 0.95}."
+                            'text' => "Hãy phân tích ảnh chụp mặt công tơ ({$type}) và trích xuất 2 thông tin: "
+                                    . "1. Chỉ số tiêu thụ hiện tại: CHỈ lấy các chữ số nguyên màu đen (BỎ QUA chữ số màu đỏ hoặc viền đỏ hàng thập phân 1/10). "
+                                    . "2. Số sản xuất công tơ (Số SX / Serial Number): Mã số định danh in/dập trên mặt đồng hồ (thường nằm cạnh chữ 'Số SX:', 'No.', 'S/N:'). Nếu không thấy hãy trả về null. "
+                                    . "Trả về định dạng JSON chuẩn: {\"value\": 5818, \"serial_number\": \"16258817\", \"confidence\": 0.95}."
                         ],
                         [
                             'type' => 'image_url',
@@ -694,8 +698,15 @@ class AiManagementService
 
             $content = $this->chatJson($messages);
 
+            $serialNumber = null;
+            if (!empty($content['serial_number']) && $content['serial_number'] !== 'null') {
+                // Chuẩn hóa loại bỏ ký tự rác nếu có
+                $serialNumber = preg_replace('/[^a-zA-Z0-9\-_]/', '', (string) $content['serial_number']);
+            }
+
             return [
                 'value' => (int) ($content['value'] ?? 0),
+                'serial_number' => $serialNumber ?: null,
                 'confidence' => (float) ($content['confidence'] ?? 1.0),
                 'used_ai' => true,
                 'fallback_reason' => null,
