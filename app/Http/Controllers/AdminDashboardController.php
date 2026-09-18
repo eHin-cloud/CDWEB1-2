@@ -44,6 +44,8 @@ class AdminDashboardController extends Controller
         $occupiedRooms = Room::where('tenant_id', $tenantId)->where('status', 'occupied')->count();
         $emptyRooms = Room::where('tenant_id', $tenantId)->where('status', 'empty')->count();
         $overdueRooms = Room::where('tenant_id', $tenantId)->where('status', 'overdue')->count();
+        $cleaningRooms = Room::where('tenant_id', $tenantId)->where('status', 'cleaning')->count();
+        $maintenanceRooms = Room::where('tenant_id', $tenantId)->where('status', 'maintenance')->count();
 
         // 2. Charts Data
         // Revenue trend from paid utility records
@@ -309,6 +311,8 @@ class AdminDashboardController extends Controller
             'occupiedRooms',
             'emptyRooms',
             'overdueRooms',
+            'cleaningRooms',
+            'maintenanceRooms',
             'chartMonths',
             'chartRevenue',
             'rooms',

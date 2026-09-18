@@ -45,6 +45,8 @@ class RoomMatrixRealtimeController extends Controller
         $room->status = $newStatus;
         $room->save();
 
+        $activeResident = $room->activeResidents()->first();
+
         // Chuẩn bị payload realtime
         $payload = [
             'id' => $room->id,
@@ -55,6 +57,9 @@ class RoomMatrixRealtimeController extends Controller
             'badge_class' => $room->badge_class,
             'status_class' => $room->status_class,
             'price_formatted' => number_format($room->price) . 'đ',
+            'has_resident' => (bool) $activeResident,
+            'resident_name' => $activeResident?->name,
+            'resident_phone' => $activeResident?->phone,
             'updated_at' => now()->timestamp,
             'updated_by' => $user->name,
         ];
