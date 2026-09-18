@@ -11,43 +11,48 @@ echo    [ KHOI CHAY ] Dang phat hien moi truong he thong...
 echo    --------------------------------------------------
 
 :: Phat hien PHP.exe tu dong
+set "PHP_CMD="
 where php >nul 2>&1
 if %errorlevel% equ 0 (
-    set PHP_CMD=php
+    set "PHP_CMD=php"
     echo    [+] Phien ban PHP: Da bat dau voi bien moi truong he thong [PATH].
-) else (
-    echo    [!] Canh bao: Khong tim thay PHP trong PATH. Dang quet thu muc thong dung...
-    if exist "C:\xampp\php\php.exe" (
-        set PHP_CMD="C:\xampp\php\php.exe"
-        echo    [+] Phat hien PHP tu XAMPP: C:\xampp\php\php.exe
-    ) else (
-        set PHP_FOUND=0
-        for /d %%d in (C:\laragon\bin\php\php-*) do (
-            if exist "%%d\php.exe" (
-                set PHP_CMD="%%d\php.exe"
-                set PHP_FOUND=1
-            )
-        )
-        if !PHP_FOUND! equ 1 (
-            echo    [+] Phat hien PHP tu Laragon: !PHP_CMD!
-        ) else (
-            where docker >nul 2>&1
-            if !errorlevel! equ 0 (
-                color 0e
-                echo    [!] Khong tim thay PHP cuc bo, nhung he thong da phat hien DOCKER!
-                echo    Ban co the khoi chay du an hoan toan bang Docker Compose.
-                echo.
-                set /p use_docker_choice="   >> Ban co muon khoi chay du an bang DOCKER ngay khong? [y/n]: "
-                if /i "!use_docker_choice!"=="y" goto DOCKER_RUN
-            )
-            color 0c
-            echo    [LOI CRITICAL] Khong tim thay PHP tren he thong!
-            echo    Vui long cai dat PHP [XAMPP/Laragon] va them vao PATH (hoac dung Docker).
-            pause
-            exit
-        )
+    goto PHP_DETECTED
+)
+
+echo    [!] Canh bao: Khong tim thay PHP trong PATH. Dang quet thu muc thong dung...
+if exist "C:\xampp\php\php.exe" (
+    set PHP_CMD="C:\xampp\php\php.exe"
+    echo    [+] Phat hien PHP tu XAMPP: C:\xampp\php\php.exe
+    goto PHP_DETECTED
+)
+
+for /d %%d in (C:\laragon\bin\php\php-*) do (
+    if exist "%%d\php.exe" (
+        set PHP_CMD="%%d\php.exe"
+        echo    [+] Phat hien PHP tu Laragon: %%d\php.exe
+        goto PHP_DETECTED
     )
 )
+
+:: Neu khong tim thay PHP, kiem tra Docker
+where docker >nul 2>&1
+if %errorlevel% equ 0 (
+    color 0e
+    echo    [!] Khong tim thay PHP tren he thong, nhung da phat hien DOCKER!
+    echo    Ban co the khoi chay du an hoan toan bang Docker Compose.
+    echo.
+    set /p use_docker_choice="   >> Ban co muon khoi chay du an bang DOCKER ngay khong? [y/n]: "
+    if /i "!use_docker_choice!"=="y" goto DOCKER_RUN
+)
+
+color 0c
+echo    [LOI CRITICAL] Khong tim thay PHP tren he thong!
+echo    Vui long cai dat PHP [XAMPP/Laragon] va them vao PATH hoac su dung Docker.
+pause
+exit /b 1
+
+:PHP_DETECTED
+
 
 :: Phat hien Composer tu dong
 where composer >nul 2>&1
