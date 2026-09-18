@@ -163,6 +163,12 @@ class ResidentController extends Controller
             'status' => 'pending'
         ]);
 
+        try {
+            event(new \App\Events\TicketCreated($ticket));
+        } catch (\Throwable $e) {
+            Log::warning('TicketCreated broadcast failed: ' . $e->getMessage());
+        }
+
         // Gửi thông báo tự động cho chủ trọ qua Telegram Bot khi có ticket mới
         $botToken = config('services.telegram.bot_token');
         $chatId = config('services.telegram.chat_id');
