@@ -21,6 +21,7 @@ class Tenant extends Model
         'name',
         'email',
         'phone',
+        'telegram_chat_id',
         'bank_name',
         'bank_account_no',
         'bank_account_name',

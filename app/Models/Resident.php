@@ -27,6 +27,7 @@ class Resident extends Model
         'dob',
         'phone',
         'email',
+        'telegram_chat_id',
         'cccd',
         'hometown',
         'start_date',

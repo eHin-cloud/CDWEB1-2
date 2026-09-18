@@ -16,6 +16,8 @@ use App\Models\UtilityRecord;
 use App\Services\AdminActivityLogger;
 use App\Services\AiManagementService;
 use App\Services\NotificationService;
+use App\Services\TelegramService;
+use App\Services\SmsZaloService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -1019,7 +1021,7 @@ class AdminDashboardController extends Controller
         return view('admin.print_utility', compact('record', 'resident'));
     }
 
-    public function notifyUtility($id)
+    public function notifyUtility(Request $request, $id, TelegramService $telegramService, SmsZaloService $smsZaloService)
     {
         $record = UtilityRecord::with('room')->findOrFail($id);
         $resident = Resident::where('room_id', $record->room_id)
@@ -1035,6 +1037,13 @@ class AdminDashboardController extends Controller
         $waterUsed = $record->new_water - $record->old_water;
         $total = $record->room->price + ($elecUsed * $record->electricity_price) + ($waterUsed * $record->water_price) + 150000;
 
+        $tenant = Tenant::find($this->currentTenantId());
+        $vietQrUrl = null;
+        if ($tenant && $tenant->bank_name && $tenant->bank_account_no) {
+            $addInfo = "Thanh toan tien phong {$record->room->room_number} thang {$record->billing_month}";
+            $vietQrUrl = "https://img.vietqr.io/image/{$tenant->bank_name}-{$tenant->bank_account_no}-compact.png?amount={$total}&addInfo=" . rawurlencode($addInfo) . "&accountName=" . rawurlencode($tenant->bank_account_name ?? 'CHU TRO');
+        }
+
         $message = "🔔 [SmartRoom] HÓA ĐƠN TIỀN NHÀ THÁNG {$month}\n"
                  . "Phòng: {$record->room->room_number}\n"
                  . "Cư dân: {$resident->name}\n"
@@ -1046,26 +1055,79 @@ class AdminDashboardController extends Controller
                  . "Tổng cộng: " . number_format($total) . "đ\n"
                  . "Vui lòng thanh toán trước ngày 10 hàng tháng. Cảm ơn!";
 
-        \Illuminate\Support\Facades\Log::info("Telegram Notification Sent:\n" . $message);
-        NotificationLog::create([
-            'tenant_id' => $this->currentTenantId(),
-            'type' => 'payment_reminder',
-            'channel' => 'zalo',
-            'recipient_name' => $resident->name,
-            'recipient_contact' => $resident->phone,
-            'subject' => 'Nhac hoa don phong ' . $record->room->room_number,
-            'message' => $message,
-            'status' => 'sent',
-            'target_type' => UtilityRecord::class,
-            'target_id' => $record->id,
-            'meta' => [
-                'room_number' => $record->room->room_number,
-                'billing_month' => $record->billing_month,
-                'total_amount' => $total,
-                'simulated' => true,
-            ],
-            'sent_at' => now(),
-        ]);
+        // 1. Gửi qua Telegram (Group hoặc cá nhân)
+        $telegramTarget = $resident->telegram_chat_id ?? $tenant?->telegram_chat_id ?? config('services.telegram.chat_id');
+        if ($telegramTarget) {
+            $telegramResult = $telegramService->sendPaymentReminderFormatted(
+                $record->room->room_number,
+                $resident->name,
+                $record->billing_month,
+                $total,
+                [
+                    'room_price' => $record->room->price,
+                    'electricity_usage' => $elecUsed,
+                    'electricity_cost' => $elecUsed * $record->electricity_price,
+                    'water_usage' => $waterUsed,
+                    'water_cost' => $waterUsed * $record->water_price,
+                    'service_cost' => 150000,
+                ],
+                $vietQrUrl,
+                $telegramTarget
+            );
+
+            NotificationLog::create([
+                'tenant_id' => $this->currentTenantId(),
+                'type' => 'payment_reminder',
+                'channel' => 'telegram',
+                'recipient_name' => $resident->name,
+                'recipient_contact' => $telegramTarget,
+                'subject' => 'Nhắc hóa đơn Telegram phòng ' . $record->room->room_number,
+                'message' => $message,
+                'status' => ($telegramResult['success'] ?? false) ? 'sent' : 'failed',
+                'target_type' => UtilityRecord::class,
+                'target_id' => $record->id,
+                'meta' => [
+                    'room_number' => $record->room->room_number,
+                    'billing_month' => $record->billing_month,
+                    'total_amount' => $total,
+                    'vietqr_url' => $vietQrUrl,
+                ],
+                'sent_at' => ($telegramResult['success'] ?? false) ? now() : null,
+            ]);
+        }
+
+        // 2. Gửi qua Zalo ZNS (Sandbox Mock / Live)
+        if ($resident->phone) {
+            $smsZaloService->sendPaymentReminder(
+                $resident->phone,
+                $resident->name,
+                $record->room->room_number,
+                $record->billing_month,
+                $total,
+                $vietQrUrl
+            );
+
+            NotificationLog::create([
+                'tenant_id' => $this->currentTenantId(),
+                'type' => 'payment_reminder',
+                'channel' => 'zalo',
+                'recipient_name' => $resident->name,
+                'recipient_contact' => $resident->phone,
+                'subject' => 'Nhắc hóa đơn Zalo phòng ' . $record->room->room_number,
+                'message' => $message,
+                'status' => 'sent',
+                'target_type' => UtilityRecord::class,
+                'target_id' => $record->id,
+                'meta' => [
+                    'room_number' => $record->room->room_number,
+                    'billing_month' => $record->billing_month,
+                    'total_amount' => $total,
+                    'vietqr_url' => $vietQrUrl,
+                    'mode' => config('services.zalo.mode', 'sandbox'),
+                ],
+                'sent_at' => now(),
+            ]);
+        }
 
         AdminActivityLogger::log(
             'notify',
@@ -1075,7 +1137,7 @@ class AdminDashboardController extends Controller
             ['room_number' => $record->room->room_number, 'billing_month' => $record->billing_month, 'resident_name' => $resident->name]
         );
 
-        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', 'Đã tự động gửi thông báo chi tiết hóa đơn qua Telegram & Zalo thành công!');
+        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', 'Đã gửi thông báo hóa đơn kèm VietQR qua Telegram & Zalo thành công!');
     }
 
     public function autoRemindUtilities(NotificationService $notificationService)

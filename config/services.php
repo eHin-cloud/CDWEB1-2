@@ -40,6 +40,13 @@ return [
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
+    'zalo' => [
+        'mode' => env('ZALO_MODE', 'sandbox'), // sandbox | live
+        'oa_id' => env('ZALO_OA_ID'),
+        'access_token' => env('ZALO_ACCESS_TOKEN'),
+        'template_payment' => env('ZALO_TEMPLATE_PAYMENT_ID'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

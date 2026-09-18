@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Jobs\SendSmsZaloNotification;
 use App\Models\Contract;
 use App\Models\NotificationLog;
 use App\Models\RoomEquipment;
+use App\Models\Tenant;
 use App\Models\UtilityRecord;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -16,22 +18,26 @@ class NotificationService
 {
     private const SERVICE_FEE = 150000;
 
-    private const DEFAULT_CHANNELS = ['email', 'zalo', 'sms'];
+    public const DEFAULT_CHANNELS = ['email', 'telegram', 'zalo', 'sms'];
 
-    public function __construct(private readonly AiReminderService $aiReminderService)
-    {
+    public function __construct(
+        private readonly AiReminderService $aiReminderService,
+        private readonly TelegramService $telegramService,
+        private readonly SmsZaloService $smsZaloService
+    ) {
     }
 
     public function sendPaymentReminders(int $tenantId, ?string $billingMonth = null, array $channels = self::DEFAULT_CHANNELS): Collection
     {
         $billingMonth ??= now()->format('Y-m');
+        $tenant = Tenant::find($tenantId);
 
         return UtilityRecord::with(['room.residents' => fn ($query) => $query->where('status', 'active')])
             ->where('billing_month', $billingMonth)
             ->where('status', '!=', 'paid')
             ->whereHas('room', fn ($query) => $query->where('tenant_id', $tenantId))
             ->get()
-            ->flatMap(function (UtilityRecord $record) use ($tenantId, $billingMonth, $channels) {
+            ->flatMap(function (UtilityRecord $record) use ($tenantId, $tenant, $billingMonth, $channels) {
                 $room = $record->room;
                 $resident = $room?->residents->first();
 
@@ -44,20 +50,30 @@ class NotificationService
                 }
 
                 $total = $this->utilityTotal($record);
+
+                // Tạo VietQR URL nếu chủ nhà đã cấu hình ngân hàng
+                $vietQrUrl = null;
+                if ($tenant && $tenant->bank_name && $tenant->bank_account_no) {
+                    $addInfo = "Thanh toan tien phong {$room->room_number} thang {$billingMonth}";
+                    $vietQrUrl = "https://img.vietqr.io/image/{$tenant->bank_name}-{$tenant->bank_account_no}-compact.png?amount={$total}&addInfo=" . rawurlencode($addInfo) . "&accountName=" . rawurlencode($tenant->bank_account_name ?? 'CHU TRO');
+                }
+
                 $recipient = [
                     'name' => $resident->name,
                     'email' => $resident->email,
                     'phone' => $resident->phone,
+                    'telegram_chat_id' => $resident->telegram_chat_id ?? $tenant?->telegram_chat_id ?? config('services.telegram.chat_id'),
                 ];
 
                 return collect($channels)
-                    ->map(function (string $channel) use ($tenantId, $record, $room, $resident, $total, $recipient, $billingMonth) {
+                    ->map(function (string $channel) use ($tenantId, $record, $room, $resident, $total, $recipient, $billingMonth, $vietQrUrl) {
                         $content = $this->aiReminderService->generatePaymentReminder($record, $room, $resident, $total, $channel);
 
                         return $this->send($tenantId, 'payment_reminder', $channel, $recipient, $content['subject'], $content['message'], UtilityRecord::class, $record->id, [
                             'room_number' => $room->room_number,
                             'billing_month' => $billingMonth,
                             'total_amount' => $total,
+                            'vietqr_url' => $vietQrUrl,
                             'ai_generated' => $content['used_ai'],
                             'ai_fallback_reason' => $content['fallback_reason'],
                             'simulated' => false,
@@ -71,6 +87,7 @@ class NotificationService
     {
         $today = Carbon::today();
         $limitDate = $today->copy()->addDays($days);
+        $tenant = Tenant::find($tenantId);
 
         return Contract::with(['room', 'resident'])
             ->where('tenant_id', $tenantId)
@@ -79,7 +96,7 @@ class NotificationService
             ->whereDate('end_date', '<=', $limitDate)
             ->orderBy('end_date')
             ->get()
-            ->flatMap(function (Contract $contract) use ($tenantId, $today, $channels) {
+            ->flatMap(function (Contract $contract) use ($tenantId, $tenant, $today, $channels) {
                 $resident = $contract->resident;
                 if (!$resident) {
                     return collect();
@@ -95,6 +112,7 @@ class NotificationService
                     'name' => $resident->name,
                     'email' => $resident->email,
                     'phone' => $resident->phone,
+                    'telegram_chat_id' => $resident->telegram_chat_id ?? $tenant?->telegram_chat_id ?? config('services.telegram.chat_id'),
                 ], $subject, $message, Contract::class, $contract->id, [
                     'contract_code' => $contract->contract_code,
                     'end_date' => $endDate->toDateString(),
@@ -104,9 +122,10 @@ class NotificationService
             ->values();
     }
 
-    public function sendMaintenanceReminders(int $tenantId, int $daysSinceAllocated = 90, array $channels = ['email']): Collection
+    public function sendMaintenanceReminders(int $tenantId, int $daysSinceAllocated = 90, array $channels = ['email', 'telegram']): Collection
     {
         $cutoff = now()->subDays($daysSinceAllocated);
+        $tenant = Tenant::find($tenantId);
 
         return RoomEquipment::with(['room', 'equipment'])
             ->where('tenant_id', $tenantId)
@@ -117,7 +136,7 @@ class NotificationService
             })
             ->orderBy('last_allocated_at')
             ->get()
-            ->flatMap(function (RoomEquipment $allocation) use ($tenantId, $channels, $daysSinceAllocated) {
+            ->flatMap(function (RoomEquipment $allocation) use ($tenantId, $tenant, $channels, $daysSinceAllocated) {
                 $subject = 'Nhac bao tri thiet bi phong ' . ($allocation->room->room_number ?? 'N/A');
                 $message = 'Thiet bi ' . ($allocation->equipment->name ?? 'N/A') . ' tai phong '
                     . ($allocation->room->room_number ?? 'N/A') . ' can kiem tra bao tri dinh ky sau '
@@ -127,6 +146,7 @@ class NotificationService
                     'name' => 'Ban quan ly',
                     'email' => config('mail.from.address'),
                     'phone' => null,
+                    'telegram_chat_id' => $tenant?->telegram_chat_id ?? config('services.telegram.chat_id'),
                 ], $subject, $message, RoomEquipment::class, $allocation->id, [
                     'room_number' => $allocation->room->room_number ?? null,
                     'equipment_name' => $allocation->equipment->name ?? null,
@@ -163,9 +183,12 @@ class NotificationService
         int $targetId,
         array $meta
     ): NotificationLog {
-        $contact = $channel === 'email'
-            ? ($recipient['email'] ?? null)
-            : ($recipient['phone'] ?? null);
+        $contact = match ($channel) {
+            'email' => $recipient['email'] ?? null,
+            'telegram' => $recipient['telegram_chat_id'] ?? config('services.telegram.chat_id'),
+            default => $recipient['phone'] ?? null,
+        };
+
         $status = $contact ? 'sent' : 'skipped';
         $error = null;
 
@@ -179,9 +202,35 @@ class NotificationService
                 $status = 'failed';
                 $error = $exception->getMessage();
             }
+        } elseif ($channel === 'telegram' && $contact) {
+            try {
+                $photoUrl = $meta['vietqr_url'] ?? null;
+                $telegramText = "<b>[SmartRoom - " . htmlspecialchars($subject) . "]</b>\n\n" . htmlspecialchars($message);
+
+                if ($photoUrl) {
+                    $result = $this->telegramService->sendPhoto($photoUrl, $telegramText, $contact);
+                } else {
+                    $result = $this->telegramService->sendMessage($telegramText, $contact);
+                }
+
+                if (!($result['success'] ?? false) && ($result['error'] ?? '') === 'api_error') {
+                    $status = 'failed';
+                    $error = json_encode($result['details'] ?? 'Lỗi gửi Telegram');
+                }
+            } catch (Throwable $exception) {
+                $status = 'failed';
+                $error = $exception->getMessage();
+            }
         } elseif (in_array($channel, ['sms', 'zalo']) && $contact) {
             try {
-                \App\Jobs\SendSmsZaloNotification::dispatch($channel, $contact, $message);
+                SendSmsZaloNotification::dispatch($channel, $contact, $message, [
+                    'photo_url' => $meta['vietqr_url'] ?? null,
+                    'customer_name' => $recipient['name'] ?? 'Cư dân',
+                    'room_number' => $meta['room_number'] ?? '',
+                    'billing_month' => $meta['billing_month'] ?? '',
+                    'total_amount' => $meta['total_amount'] ?? 0,
+                    'vietqr_url' => $meta['vietqr_url'] ?? null,
+                ]);
             } catch (Throwable $exception) {
                 $status = 'failed';
                 $error = $exception->getMessage();
@@ -210,6 +259,7 @@ class NotificationService
             'target_id' => $targetId,
             'meta' => array_merge($meta, [
                 'real_email' => $channel === 'email',
+                'telegram_dispatched' => $channel === 'telegram',
                 'simulated' => false,
                 'error' => $error,
                 'queued' => in_array($channel, ['sms', 'zalo']),

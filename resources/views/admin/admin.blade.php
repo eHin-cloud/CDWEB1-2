@@ -922,6 +922,12 @@
                                                      <a href="{{ route('smartroom.admin.utility.print', $latestBill->id) }}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold border border-slate-700 transition-all flex items-center gap-1" title="In hóa đơn">
                                                          <i class="fa-solid fa-print"></i> In
                                                      </a>
+                                                     <form action="{{ route('smartroom.admin.utility.notify', $latestBill->id) }}" method="POST" class="inline">
+                                                         @csrf
+                                                         <button type="submit" class="px-3 py-1.5 bg-sky-600/20 hover:bg-sky-600 text-sky-400 hover:text-white rounded-lg text-xs font-bold border border-sky-500/20 transition-all flex items-center gap-1" title="Gửi nhắc nhở qua Telegram & Zalo">
+                                                             <i class="fa-brands fa-telegram text-sky-400"></i> Nhắc nợ
+                                                         </button>
+                                                     </form>
                                                  @else
                                                      <button type="button" onclick="saveSingleUtility('{{ $room->id }}', this)" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-xs font-bold border border-indigo-500/20 transition-all">
                                                          <i class="fa-solid fa-save"></i> Lưu số
