@@ -697,18 +697,24 @@
             <section id="room-map-section" class="tab-content hidden space-y-8 animate-fade-in">
                 <!-- Filter buttons and color legend -->
                 <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl">
-                    <div class="flex items-center gap-2">
-                        <button onclick="filterRooms('all')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white transition-all">
-                            Tất cả ({{ $totalRooms }})
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button data-filter="all" onclick="filterRooms('all', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white transition-all">
+                            Tất cả (<span id="filter-count-all">{{ $totalRooms }}</span>)
                         </button>
-                        <button onclick="filterRooms('empty')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-                            Trống ({{ $emptyRooms }})
+                        <button data-filter="empty" onclick="filterRooms('empty', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Trống (<span id="filter-count-empty">{{ $emptyRooms }}</span>)
                         </button>
-                        <button onclick="filterRooms('occupied')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-                            Đã thuê ({{ $occupiedRooms }})
+                        <button data-filter="occupied" onclick="filterRooms('occupied', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Đã thuê (<span id="filter-count-occupied">{{ $occupiedRooms }}</span>)
                         </button>
-                        <button onclick="filterRooms('overdue')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-                            Nợ phí ({{ $overdueRooms }})
+                        <button data-filter="overdue" onclick="filterRooms('overdue', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Nợ phí (<span id="filter-count-overdue">{{ $overdueRooms }}</span>)
+                        </button>
+                        <button data-filter="cleaning" onclick="filterRooms('cleaning', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Cần dọn (<span id="filter-count-cleaning">{{ $cleaningRooms ?? 0 }}</span>)
+                        </button>
+                        <button data-filter="maintenance" onclick="filterRooms('maintenance', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Bảo trì (<span id="filter-count-maintenance">{{ $maintenanceRooms ?? 0 }}</span>)
                         </button>
                     </div>
                     
@@ -759,19 +765,25 @@
                                  data-room-id="{{ $room->id }}"
                                  data-room-number="{{ $room->room_number }}"
                                  data-room-status="{{ $room->status }}"
-                                 onclick="openRoomDetail('{{ $room->id }}', '{{ $room->room_number }}', '{{ $room->status }}', '{{ $resident ? $resident->name : '' }}', '{{ $resident ? $resident->phone : '' }}', '{{ number_format($room->price) }}đ', '{{ $elecUsed }} kWh', '{{ $waterUsed }} m3', '{{ number_format($totalBill) }}đ', '{{ $latestBill ? $latestBill->id : 'null' }}')" 
+                                 data-resident-name="{{ $resident ? $resident->name : '' }}"
+                                 data-resident-phone="{{ $resident ? $resident->phone : '' }}"
+                                 data-price="{{ number_format($room->price) }}đ"
+                                 data-elec-used="{{ $elecUsed }} kWh"
+                                 data-water-used="{{ $waterUsed }} m3"
+                                 data-total-bill="{{ number_format($totalBill) }}đ"
+                                 data-latest-bill-id="{{ $latestBill ? $latestBill->id : '' }}"
+                                 onclick="openRoomDetailById({{ $room->id }})" 
                                  class="room-card {{ $statusClass }} glass-card rounded-2xl p-5 cursor-pointer relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10">
                                 <div class="flex justify-between items-start mb-4">
                                     <span class="text-lg font-extrabold text-slate-200">P. {{ $room->room_number }}</span>
                                     <span class="room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border {{ $badgeClass }}">{{ $statusLabel }}</span>
                                 </div>
-                                @if($resident)
+                                @if($resident && in_array($room->status, ['occupied', 'overdue']))
                                     <h4 class="room-resident text-xs font-bold text-slate-400 truncate mb-1">Cư dân: {{ $resident->name }}</h4>
-                                    <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
                                 @else
                                     <h4 class="room-resident text-xs font-bold text-slate-500 italic mb-1">Chưa có cư dân</h4>
-                                    <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
                                 @endif
+                                <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
                             </div>
                             @endforeach
                         </div>
@@ -2440,27 +2452,59 @@
             });
         });
 
-        // Room filter function
-        function filterRooms(status) {
+        // Room filter state & functions
+        let currentRoomFilter = 'all';
+
+        function applyCurrentFilterToCard(card) {
+            if (!card) return;
+            const status = card.getAttribute('data-room-status') || '';
+            if (currentRoomFilter === 'all' || currentRoomFilter === status) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        }
+
+        function updateRoomFilterCounts() {
+            const cards = document.querySelectorAll('.room-card');
+            const counts = {
+                all: cards.length,
+                empty: 0,
+                occupied: 0,
+                overdue: 0,
+                cleaning: 0,
+                maintenance: 0
+            };
+
+            cards.forEach(card => {
+                const st = card.getAttribute('data-room-status');
+                if (counts.hasOwnProperty(st)) {
+                    counts[st]++;
+                }
+            });
+
+            for (const [key, val] of Object.entries(counts)) {
+                const el = document.getElementById('filter-count-' + key);
+                if (el) el.textContent = val;
+            }
+        }
+
+        function filterRooms(status, btnElement = null) {
+            currentRoomFilter = status;
+
             // Set active button style
             document.querySelectorAll('.room-filter-btn').forEach(btn => {
                 btn.classList.remove('bg-indigo-600', 'text-white');
                 btn.classList.add('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                if (btn.getAttribute('data-filter') === status) {
+                    btn.classList.remove('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                }
             });
-            event.currentTarget.classList.remove('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
-            event.currentTarget.classList.add('bg-indigo-600', 'text-white');
 
             // Show/hide cards
             document.querySelectorAll('.room-card').forEach(card => {
-                if (status === 'all') {
-                    card.classList.remove('hidden');
-                } else {
-                    if (card.classList.contains('room-' + status)) {
-                        card.classList.remove('hidden');
-                    } else {
-                        card.classList.add('hidden');
-                    }
-                }
+                applyCurrentFilterToCard(card);
             });
         }
 
@@ -2637,6 +2681,23 @@
         let currentActiveRoomId = null;
         let currentActiveRoomStatus = null;
         let currentActiveRoomNumber = null;
+
+        function openRoomDetailById(roomId) {
+            const card = document.getElementById('room-card-' + roomId);
+            if (!card) return;
+
+            const roomNum = card.getAttribute('data-room-number') || '';
+            const status = card.getAttribute('data-room-status') || 'empty';
+            const name = card.getAttribute('data-resident-name') || '';
+            const phone = card.getAttribute('data-resident-phone') || '';
+            const rent = card.getAttribute('data-price') || '0đ';
+            const elec = card.getAttribute('data-elec-used') || '0 kWh';
+            const water = card.getAttribute('data-water-used') || '0 m3';
+            const total = card.getAttribute('data-total-bill') || '0đ';
+            const latestBillId = card.getAttribute('data-latest-bill-id') || null;
+
+            openRoomDetail(roomId, roomNum, status, name, phone, rent, elec, water, total, latestBillId);
+        }
 
         // Room Detail modal triggers
         function openRoomDetail(roomId, roomNum, status, name, phone, rent, elec, water, total, latestBillId) {
@@ -5405,24 +5466,88 @@
             const card = document.getElementById('room-card-' + roomData.id);
             if (!card) return;
 
-            // Cập nhật trạng thái
+            // 1. Cập nhật thuộc tính trong dataset
             card.setAttribute('data-room-status', roomData.status);
+            if (roomData.room_number) {
+                card.setAttribute('data-room-number', roomData.room_number);
+            }
 
-            // Cập nhật class viền/nền
+            // 2. Cập nhật thông tin cư dân trên thẻ & dataset
+            const resH4 = card.querySelector('.room-resident');
+            if (roomData.has_resident && roomData.resident_name && (roomData.status === 'occupied' || roomData.status === 'overdue')) {
+                card.setAttribute('data-resident-name', roomData.resident_name);
+                if (roomData.resident_phone) card.setAttribute('data-resident-phone', roomData.resident_phone);
+                if (resH4) {
+                    resH4.textContent = 'Cư dân: ' + roomData.resident_name;
+                    resH4.className = 'room-resident text-xs font-bold text-slate-400 truncate mb-1';
+                }
+            } else if (['empty', 'cleaning', 'maintenance'].includes(roomData.status)) {
+                card.setAttribute('data-resident-name', '');
+                card.setAttribute('data-resident-phone', '');
+                if (resH4) {
+                    resH4.textContent = 'Chưa có cư dân';
+                    resH4.className = 'room-resident text-xs font-bold text-slate-500 italic mb-1';
+                }
+            }
+
+            // 3. Cập nhật class viền/nền CSS
             card.className = card.className.replace(/room-(empty|occupied|overdue|cleaning|maintenance)/g, '');
             card.className = card.className.replace(/border-(emerald|red|amber|orange|slate)-500\/20/g, '');
             
-            const newStatusClass = roomData.status_class || 'border-slate-800/40';
+            const newStatusClass = roomData.status_class || ('room-' + roomData.status);
             card.classList.add(...newStatusClass.split(' ').filter(c => c));
 
-            // Cập nhật Badge
+            // 4. Cập nhật Badge trên card
             const badge = card.querySelector('.room-badge');
             if (badge) {
                 badge.textContent = roomData.status_label;
                 badge.className = "room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border " + (roomData.badge_class || 'border-slate-700 text-slate-400');
             }
 
-            // Hiệu ứng Pulse Flash Realtime
+            // 5. Ẩn/hiện card ngay theo tab bộ lọc hiện tại (nếu đang chọn tab)
+            applyCurrentFilterToCard(card);
+
+            // 6. Cập nhật số đếm tất cả các nút filter
+            updateRoomFilterCounts();
+
+            // 7. Đồng bộ trực tiếp nếu Modal của phòng này đang mở
+            if (currentActiveRoomId == roomData.id) {
+                currentActiveRoomStatus = roomData.status;
+                const modalBadge = document.getElementById('modal-room-status-badge');
+                if (modalBadge) {
+                    modalBadge.textContent = roomData.status_label;
+                    modalBadge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + (roomData.badge_class || 'bg-slate-500/10 text-slate-400 border-slate-500/20');
+                }
+                updateQuickStatusButtons(roomData.status);
+
+                const resDetails = document.getElementById('modal-resident-details');
+                const billDetails = document.getElementById('modal-billing-details');
+                const actionBtn = document.getElementById('modal-btn-action');
+                const payBtn = document.getElementById('modal-btn-pay');
+                const printBtn = document.getElementById('modal-btn-print');
+                const qrBtn = document.getElementById('modal-btn-qr');
+
+                if (['empty', 'cleaning', 'maintenance'].includes(roomData.status)) {
+                    if (resDetails) resDetails.classList.add('hidden');
+                    if (billDetails) billDetails.classList.add('hidden');
+                    if (actionBtn) actionBtn.classList.add('hidden');
+                    if (payBtn) payBtn.classList.add('hidden');
+                    if (printBtn) printBtn.classList.add('hidden');
+                    if (qrBtn) qrBtn.classList.add('hidden');
+                } else if (roomData.has_resident) {
+                    if (resDetails) resDetails.classList.remove('hidden');
+                    const resNameEl = document.getElementById('modal-resident-name');
+                    if (resNameEl && roomData.resident_name) {
+                        resNameEl.textContent = roomData.resident_name;
+                    }
+                    const resPhoneEl = document.getElementById('modal-resident-phone');
+                    if (resPhoneEl && roomData.resident_phone) {
+                        resPhoneEl.textContent = roomData.resident_phone;
+                    }
+                }
+            }
+
+            // 8. Hiệu ứng Pulse Flash Realtime
             card.classList.add('ring-4', 'ring-emerald-400', 'scale-[1.03]');
             setTimeout(() => {
                 card.classList.remove('ring-4', 'ring-emerald-400', 'scale-[1.03]');
