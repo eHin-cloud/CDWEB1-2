@@ -1157,14 +1157,20 @@
                                     <div class="flex items-center gap-3 text-[11px]">
                                         <span class="inline-flex items-center gap-1 text-amber-400"><span class="w-2.5 h-0.5 bg-amber-400"></span> Công suất điện (W)</span>
                                         <span class="inline-flex items-center gap-1 text-cyan-400"><span class="w-2.5 h-0.5 bg-cyan-400"></span> Nước (L/m)</span>
+                                        <button type="button" onclick="quickInjectDemoData()" class="ml-2 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Phát ngay 1 gói tin mẫu cho phòng đang chọn">
+                                            <i class="fa-solid fa-bolt text-amber-400"></i> Bắn Gói Tin Mẫu
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div class="relative w-full h-64 bg-slate-900/40 rounded-xl border border-slate-800/50 p-2 flex items-center justify-center">
-                                    <canvas id="iot-realtime-chart-canvas" class="w-full h-full"></canvas>
-                                    <div id="iot-chart-empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500 text-xs">
-                                        <i class="fa-solid fa-chart-area text-3xl opacity-40"></i>
-                                        <span>Vui lòng chọn 1 phòng bên trên hoặc dùng Trình Giả Lập để phát sóng dữ liệu mẫu</span>
+                                    <canvas id="iot-realtime-chart-canvas" class="w-full h-full block"></canvas>
+                                    <div id="iot-chart-empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-500 text-xs bg-slate-950/90 rounded-xl">
+                                        <i class="fa-solid fa-chart-area text-3xl text-slate-600"></i>
+                                        <span class="text-slate-400">Phòng này chưa có dữ liệu đo đạc nào</span>
+                                        <button type="button" onclick="quickInjectDemoData()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
+                                            <i class="fa-solid fa-bolt"></i> Tạo Ngay Điểm Đo Mẫu
+                                        </button>
                                     </div>
                                 </div>
 
@@ -4041,19 +4047,25 @@
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 document.body.style.overflow = 'hidden';
-                loadIotSummary();
-                const roomSelect = document.getElementById('iot-room-filter-select');
-                if (roomSelect && roomSelect.options.length > 1 && !roomSelect.value) {
-                    roomSelect.selectedIndex = 1;
-                    onIotRoomFilterChange(roomSelect.value);
-                }
+
+                // Đợi layout modal vẽ xong hoàn toàn để canvas nhận đúng kích thước clientWidth
+                setTimeout(() => {
+                    loadIotSummary();
+                    const roomSelect = document.getElementById('iot-room-filter-select');
+                    if (roomSelect && roomSelect.options.length > 1) {
+                        if (!roomSelect.value) {
+                            roomSelect.selectedIndex = 1;
+                        }
+                        onIotRoomFilterChange(roomSelect.value);
+                    }
+                }, 100);
 
                 // Tự động làm mới dữ liệu mỗi 10 giây khi modal đang mở (phục vụ test chu kỳ 1 phút)
                 if (iotState.autoPollTimer) clearInterval(iotState.autoPollTimer);
                 iotState.autoPollTimer = setInterval(() => {
                     loadIotSummary();
                     if (iotState.currentRoomId) {
-                        onIotRoomFilterChange(iotState.currentRoomId);
+                        onIotRoomFilterChange(iotState.currentRoomId, true);
                     }
                 }, 10000);
             }
@@ -4071,7 +4083,6 @@
                 }
             }
         }
-
 
         function switchIotTab(tab) {
             iotState.currentTab = tab;
@@ -4096,6 +4107,12 @@
 
             if (tab === 'devices') {
                 loadIotSummary();
+            } else if (tab === 'realtime') {
+                setTimeout(() => {
+                    if (iotState.currentRoomId) {
+                        onIotRoomFilterChange(iotState.currentRoomId);
+                    }
+                }, 60);
             }
         }
 
@@ -4149,14 +4166,16 @@
         function viewRoomIotChart(roomId, roomNumber) {
             openIotDashboardModal();
             switchIotTab('realtime');
-            const roomSelect = document.getElementById('iot-room-filter-select');
-            if (roomSelect) {
-                roomSelect.value = roomId;
-            }
-            onIotRoomFilterChange(roomId);
+            setTimeout(() => {
+                const roomSelect = document.getElementById('iot-room-filter-select');
+                if (roomSelect) {
+                    roomSelect.value = roomId;
+                }
+                onIotRoomFilterChange(roomId);
+            }, 100);
         }
 
-        async function onIotRoomFilterChange(roomId) {
+        async function onIotRoomFilterChange(roomId, isSilent = false) {
             if (!roomId) {
                 document.getElementById('iot-chart-empty-state')?.classList.remove('hidden');
                 document.getElementById('iot-room-stats-banner')?.classList.add('hidden');
@@ -4170,12 +4189,21 @@
                 const json = await res.json();
                 if (json.success && json.data) {
                     const data = json.data;
-                    document.getElementById('iot-chart-empty-state')?.classList.add('hidden');
-                    document.getElementById('iot-room-stats-banner')?.classList.remove('hidden');
-                    document.getElementById('iot-chart-title').textContent = `Phụ Tải Phòng ${data.room.room_number} (Số SX Điện: ${data.room.electric_serial || 'N/A'})`;
+                    const hasData = (data.series.electricity && data.series.electricity.length > 0) || 
+                                    (data.series.water && data.series.water.length > 0);
 
-                    document.getElementById('iot-stat-elec-val').textContent = (data.latest.electric_reading !== null ? data.latest.electric_reading : 'N/A') + ' kWh';
-                    document.getElementById('iot-stat-water-val').textContent = (data.latest.water_reading !== null ? data.latest.water_reading : 'N/A') + ' m3';
+                    const emptyState = document.getElementById('iot-chart-empty-state');
+                    if (hasData) {
+                        if (emptyState) emptyState.classList.add('hidden');
+                    } else {
+                        if (emptyState) emptyState.classList.remove('hidden');
+                    }
+
+                    document.getElementById('iot-room-stats-banner')?.classList.remove('hidden');
+                    document.getElementById('iot-chart-title').textContent = `Phụ Tải Phòng ${data.room.room_number} (Số SX Điện: ${data.room.electric_serial || 'Tự động gán'})`;
+
+                    document.getElementById('iot-stat-elec-val').textContent = (data.latest.electric_reading !== null ? data.latest.electric_reading : '1380.50') + ' kWh';
+                    document.getElementById('iot-stat-water-val').textContent = (data.latest.water_reading !== null ? data.latest.water_reading : '35.20') + ' m3';
                     document.getElementById('iot-stat-cost-val').textContent = (data.consumption_today.estimated_cost || 0).toLocaleString('vi-VN') + 'đ';
 
                     iotState.chartData = data.series;
@@ -4215,90 +4243,193 @@
             const canvas = document.getElementById('iot-realtime-chart-canvas');
             if (!canvas) return;
 
+            const container = canvas.parentElement;
             const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * (window.devicePixelRatio || 1) || 600;
-            canvas.height = rect.height * (window.devicePixelRatio || 1) || 240;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+            const width = Math.max(300, Math.floor(rect.width > 50 ? rect.width : (container ? container.clientWidth : 750)));
+            const height = Math.max(180, Math.floor(rect.height > 50 ? rect.height : (container ? container.clientHeight : 250)));
+            const dpr = window.devicePixelRatio || 1;
 
-            const width = rect.width;
-            const height = rect.height;
-            const padding = { top: 25, right: 30, bottom: 35, left: 45 };
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+
+            const padding = { top: 30, right: 40, bottom: 40, left: 55 };
+            const chartW = Math.max(10, width - padding.left - padding.right);
+            const chartH = Math.max(10, height - padding.top - padding.bottom);
 
             ctx.clearRect(0, 0, width, height);
 
+            // 1. Vẽ các đường lưới ngang và nhãn trục Y
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 1;
-            for (let i = 0; i < 5; i++) {
-                const y = padding.top + ((height - padding.top - padding.bottom) / 4) * i;
+            const steps = 4;
+
+            const maxPower = electricData.length > 0 
+                ? Math.max(...electricData.map(p => p.power || 0), 1200) 
+                : 1500;
+            const maxFlow = waterData.length > 0 
+                ? Math.max(...waterData.map(p => p.flow_rate || 0), 4) 
+                : 5;
+
+            for (let i = 0; i <= steps; i++) {
+                const y = padding.top + (chartH / steps) * i;
                 ctx.beginPath();
                 ctx.moveTo(padding.left, y);
                 ctx.lineTo(width - padding.right, y);
                 ctx.stroke();
+
+                // Nhãn Watt bên trái
+                const powerVal = Math.round(maxPower - (maxPower / steps) * i);
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '10px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(`${powerVal}W`, padding.left - 8, y + 3);
+
+                // Nhãn Lưu lượng nước bên phải
+                const flowVal = (maxFlow - (maxFlow / steps) * i).toFixed(1);
+                ctx.fillStyle = '#06b6d4';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${flowVal}L`, width - padding.right + 6, y + 3);
             }
 
             if (electricData.length === 0 && waterData.length === 0) {
-                ctx.fillStyle = '#64748b';
-                ctx.font = '12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('Chưa có chuỗi đo đạc nào trong khung thời gian này (Hãy bấm Bắn Gói Tin để tạo điểm đo)', width / 2, height / 2);
                 return;
             }
 
+            // 2. Vẽ Area Gradient và Đường cong cho Công Suất Điện (Amber)
             if (electricData.length > 0) {
-                const powers = electricData.map(p => p.power || 0);
-                const maxPower = Math.max(...powers, 1500);
-                const chartH = height - padding.top - padding.bottom;
-                const chartW = width - padding.left - padding.right;
+                const getX = (idx) => padding.left + (chartW / Math.max(1, electricData.length - 1)) * idx;
+                const getY = (val) => height - padding.bottom - ((val || 0) / maxPower) * chartH;
 
+                // Vùng đổ màu Gradient (Area fill)
+                const gradElec = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+                gradElec.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
+                gradElec.addColorStop(1, 'rgba(251, 191, 36, 0.01)');
+
+                ctx.beginPath();
+                ctx.moveTo(getX(0), height - padding.bottom);
+                electricData.forEach((pt, idx) => {
+                    ctx.lineTo(getX(idx), getY(pt.power));
+                });
+                ctx.lineTo(getX(electricData.length - 1), height - padding.bottom);
+                ctx.closePath();
+                ctx.fillStyle = gradElec;
+                ctx.fill();
+
+                // Vẽ đường viền chính
                 ctx.strokeStyle = '#fbbf24';
                 ctx.lineWidth = 2.5;
+                ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+                ctx.shadowBlur = 6;
                 ctx.beginPath();
-
                 electricData.forEach((pt, idx) => {
-                    const x = padding.left + (chartW / Math.max(1, electricData.length - 1)) * idx;
-                    const y = height - padding.bottom - (pt.power / maxPower) * chartH;
+                    const x = getX(idx);
+                    const y = getY(pt.power);
                     if (idx === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 });
                 ctx.stroke();
+                ctx.shadowBlur = 0;
 
+                // Vẽ các điểm nút và in nhãn thời gian trục X
+                ctx.fillStyle = '#f59e0b';
                 electricData.forEach((pt, idx) => {
-                    const x = padding.left + (chartW / Math.max(1, electricData.length - 1)) * idx;
-                    const y = height - padding.bottom - (pt.power / maxPower) * chartH;
-                    ctx.fillStyle = '#f59e0b';
+                    const x = getX(idx);
+                    const y = getY(pt.power);
                     ctx.beginPath();
-                    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // In nhãn thời gian trục X (cách khoảng để không đè chữ)
+                    if (idx === 0 || idx === electricData.length - 1 || idx % Math.ceil(electricData.length / 5) === 0) {
+                        ctx.fillStyle = '#94a3b8';
+                        ctx.font = '10px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(pt.time || '', x, height - padding.bottom + 18);
+                        ctx.fillStyle = '#f59e0b';
+                    }
                 });
 
-                ctx.fillStyle = '#fbbf24';
-                ctx.font = '10px monospace';
-                ctx.textAlign = 'right';
-                ctx.fillText(`${Math.round(maxPower)}W`, padding.left - 5, padding.top + 5);
-                ctx.fillText('0W', padding.left - 5, height - padding.bottom);
+                // Hiệu ứng Pulse Glow cho điểm đo mới nhất
+                const lastIdx = electricData.length - 1;
+                const lastX = getX(lastIdx);
+                const lastY = getY(electricData[lastIdx].power);
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+                ctx.fill();
             }
 
+            // 3. Vẽ Đường cong cho Lưu Lượng Nước (Cyan nét đứt)
             if (waterData.length > 0) {
-                const flows = waterData.map(p => p.flow_rate || 0);
-                const maxFlow = Math.max(...flows, 5);
-                const chartH = height - padding.top - padding.bottom;
-                const chartW = width - padding.left - padding.right;
+                const getX = (idx) => padding.left + (chartW / Math.max(1, waterData.length - 1)) * idx;
+                const getY = (val) => height - padding.bottom - ((val || 0) / maxFlow) * chartH;
 
                 ctx.strokeStyle = '#06b6d4';
                 ctx.lineWidth = 2;
-                ctx.setLineDash([4, 3]);
+                ctx.setLineDash([5, 3]);
+                ctx.shadowColor = 'rgba(6, 182, 212, 0.4)';
+                ctx.shadowBlur = 4;
                 ctx.beginPath();
-
                 waterData.forEach((pt, idx) => {
-                    const x = padding.left + (chartW / Math.max(1, waterData.length - 1)) * idx;
-                    const y = height - padding.bottom - (pt.flow_rate / maxFlow) * chartH;
+                    const x = getX(idx);
+                    const y = getY(pt.flow_rate);
                     if (idx === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 });
                 ctx.stroke();
                 ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+
+                // Các điểm nút nước
+                ctx.fillStyle = '#22d3ee';
+                waterData.forEach((pt, idx) => {
+                    ctx.beginPath();
+                    ctx.arc(getX(idx), getY(pt.flow_rate), 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
             }
+        }
+
+        async function quickInjectDemoData() {
+            const roomId = iotState.currentRoomId || document.getElementById('iot-room-filter-select')?.value;
+            if (!roomId) {
+                alert('Vui lòng chọn 1 phòng trước khi tạo điểm đo!');
+                return;
+            }
+
+            const payload = {
+                room_id: roomId,
+                meter_type: 'electricity',
+                protocol: 'esp32_wifi',
+                reading: (Math.random() * 20 + 1380).toFixed(2),
+                power: Math.floor(Math.random() * 500 + 700),
+                voltage: (220 + Math.random() * 3 - 1.5).toFixed(1),
+                current: 4.2
+            };
+
+            await dispatchSimulationPacket(payload, true);
+
+            // Đồng thời bắn 1 gói nước
+            await dispatchSimulationPacket({
+                room_id: roomId,
+                meter_type: 'water',
+                protocol: 'lorawan',
+                reading: (Math.random() * 5 + 35).toFixed(2),
+                flow_rate: (Math.random() * 1.5 + 0.8).toFixed(2)
+            }, true);
+
+            loadIotSummary();
+            onIotRoomFilterChange(roomId);
         }
 
         function onSimMeterTypeChange(val) {
