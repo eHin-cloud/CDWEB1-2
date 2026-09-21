@@ -1,0 +1,54 @@
+name: SmartRoom & Renty - Docker CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'CI/CD'
+    paths:
+      - 'Dockerfile'
+      - 'docker/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'docker/**'
+      - 'docker-compose.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-build-test:
+    name: 🐳 Build & Kiểm tra Docker Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Thiết lập Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Kiểm tra cấu trúc file Dockerfile
+        run: |
+          test -f Dockerfile || (echo "Lỗi: Không tìm thấy Dockerfile!" && exit 1)
+          test -f docker/entrypoint.sh || (echo "Lỗi: Không tìm thấy docker/entrypoint.sh!" && exit 1)
+
+      - name: Build Docker Image thử nghiệm
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: smartroom-app:ci-test
+          load: true
+
+      - name: Kiểm tra Container khởi động và phiên bản PHP/Artisan
+        run: |
+          docker run --rm smartroom-app:ci-test php -v
+          docker run --rm smartroom-app:ci-test node -v
+          echo " Docker Image đã sẵn sàng triển khai môi trường Production / Staging!"

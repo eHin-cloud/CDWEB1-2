@@ -7,6 +7,50 @@ use Tests\TestCase;
 
 class SmartSearchApiTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $tenant = \App\Models\Tenant::create([
+            'name' => 'Demo Tenant',
+            'email' => 'tenant@example.com',
+        ]);
+
+        $b1 = \App\Models\Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Tòa Nhà Cầu Giấy',
+            'address' => 'Số 10 Cầu Giấy, Hà Nội',
+        ]);
+
+        \App\Models\Room::create([
+            'tenant_id' => $tenant->id,
+            'building_id' => $b1->id,
+            'room_number' => '101',
+            'floor' => 1,
+            'price' => 3500000,
+            'status' => 'empty',
+            'description' => 'Phòng đẹp khép kín Cầu Giấy',
+        ]);
+
+        $b2 = \App\Models\Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Tòa Nhà Thanh Xuân',
+            'address' => 'Số 20 Nguyễn Trãi, Thanh Xuân, Hà Nội',
+        ]);
+
+        \App\Models\Room::create([
+            'tenant_id' => $tenant->id,
+            'building_id' => $b2->id,
+            'room_number' => '201',
+            'floor' => 2,
+            'price' => 3800000,
+            'status' => 'empty',
+            'description' => 'Phòng khép kín Thanh Xuân có ban công',
+        ]);
+    }
+
     /**
      * Test API tìm kiếm thông thường với địa danh chính xác
      */
