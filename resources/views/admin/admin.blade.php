@@ -1163,7 +1163,7 @@
                                     </div>
                                 </div>
 
-                                <div class="relative w-full h-64 bg-slate-900/40 rounded-xl border border-slate-800/50 p-2 flex items-center justify-center">
+                                <div class="relative w-full h-64 bg-slate-900/40 rounded-xl border border-slate-800/50 p-2 overflow-hidden">
                                     <canvas id="iot-realtime-chart-canvas" class="w-full h-full block cursor-crosshair"></canvas>
 
                                     <!-- Interactive Hover Tooltip Box -->
@@ -4267,15 +4267,16 @@
             if (!canvas) return;
 
             const container = canvas.parentElement;
-            const rect = canvas.getBoundingClientRect();
-            const width = Math.max(300, Math.floor(rect.width > 50 ? rect.width : (container ? container.clientWidth : 750)));
-            const height = Math.max(180, Math.floor(rect.height > 50 ? rect.height : (container ? container.clientHeight : 250)));
+            // Luôn đọc chiều rộng và cao cố định từ container cha (khung bao w-full h-64),
+            // Tuyệt đối không đọc từ rect.width của canvas để tránh lỗi canvas tự co lại mỗi lần re-render
+            const width = Math.max(300, Math.floor(container ? (container.clientWidth - 16) : 750));
+            const height = Math.max(180, Math.floor(container ? (container.clientHeight - 16) : 230));
             const dpr = window.devicePixelRatio || 1;
 
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
 
             const ctx = canvas.getContext('2d');
             ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4535,7 +4536,10 @@
                 }
 
                 const rect = canvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
+                const container = canvas.parentElement;
+                const containerW = container ? (container.clientWidth - 16) : 750;
+                const scaleX = rect.width > 0 ? (containerW / rect.width) : 1;
+                const mouseX = (e.clientX - rect.left) * scaleX;
 
                 // Tìm điểm đo gần nhất với con trỏ chuột theo trục X
                 let closest = null;
