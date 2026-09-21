@@ -57,9 +57,10 @@ class IotDevice extends Model
             return false;
         }
 
-        // Nếu thiết bị không gửi dữ liệu trong 35 phút (quá 2 chu kỳ 15 phút) -> coi là offline
-        return $this->last_seen_at->greaterThanOrEqualTo(now()->subMinutes(35));
+        // Với chu kỳ test 1 phút/lần: Nếu không nhận tín hiệu quá 3 phút (3 chu kỳ) -> coi là Offline
+        return $this->last_seen_at->greaterThanOrEqualTo(now()->subMinutes(3));
     }
+
 
     public function getStatusLabelAttribute(): string
     {

@@ -1060,10 +1060,10 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h3 class="text-base font-bold text-slate-100">IoT Smart Metering & Giám Sát Thời Gian Thực</h3>
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Chu kỳ 15 phút/lần
+                                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Chu kỳ 1 phút/lần (Chế độ Test)
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-400 mt-0.5">Tích hợp công tơ điện tử thông minh truyền không dây qua LoRaWAN / ESP32 WiFi / Modbus RS485 / Zigbee</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">Tích hợp công tơ điện tử thông minh truyền không dây qua LoRaWAN / ESP32 WiFi / Modbus RS485 / Zigbee (Chu kỳ test: 1 phút)</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -1115,13 +1115,13 @@
                         <!-- Tab Navigation -->
                         <div class="flex items-center gap-2 border-b border-slate-800 pb-1">
                             <button type="button" onclick="switchIotTab('realtime')" id="iot-tab-btn-realtime" class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                                <i class="fa-solid fa-chart-line"></i> Biểu Đồ Phụ Tải 24h
+                                <i class="fa-solid fa-chart-line"></i> Biểu Đồ Phụ Tải (Realtime)
                             </button>
                             <button type="button" onclick="switchIotTab('devices')" id="iot-tab-btn-devices" class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 border border-transparent">
                                 <i class="fa-solid fa-microchip"></i> Danh Sách Công Tơ IoT
                             </button>
                             <button type="button" onclick="switchIotTab('simulator')" id="iot-tab-btn-simulator" class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 border border-transparent">
-                                <i class="fa-solid fa-flask-vial"></i> Trình Giả Lập Phát Sóng (Simulator)
+                                <i class="fa-solid fa-flask-vial"></i> Trình Giả Lập 1 Phút (Simulator)
                             </button>
                         </div>
 
@@ -1137,12 +1137,15 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-xs text-slate-400">Khung thời gian:</span>
-                                    <button type="button" onclick="changeIotChartRange('24h')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700">24 Giờ</button>
-                                    <button type="button" onclick="changeIotChartRange('7d')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">7 Ngày</button>
+                                    <button type="button" onclick="changeIotChartRange('15m')" id="btn-range-15m" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">15 Phút</button>
+                                    <button type="button" onclick="changeIotChartRange('1h')" id="btn-range-1h" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">1 Giờ (Từng phút)</button>
+                                    <button type="button" onclick="changeIotChartRange('24h')" id="btn-range-24h" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">24 Giờ</button>
+                                    <button type="button" onclick="changeIotChartRange('7d')" id="btn-range-7d" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">7 Ngày</button>
                                 </div>
                             </div>
+
 
                             <!-- Interactive Chart Canvas -->
                             <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-3">
@@ -1263,12 +1266,21 @@
                                         <input type="number" step="0.1" name="flow_rate" value="1.8" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-cyan-500 focus:outline-none font-mono">
                                     </div>
 
-                                    <div class="md:col-span-3 flex justify-end pt-2">
+                                    <div class="md:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                                        <div class="flex items-center gap-2.5">
+                                            <button type="button" id="btn-auto-sim" onclick="toggleAutoSimulation()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                                                <i class="fa-solid fa-play text-amber-400" id="auto-sim-icon"></i> <span id="auto-sim-text">Bật Tự Động Bắn Gói Tin (Mỗi 1 Phút)</span>
+                                            </button>
+                                            <span id="auto-sim-counter" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                Đã gửi: <span id="auto-sim-count">0</span> gói
+                                            </span>
+                                        </div>
                                         <button type="submit" id="btn-send-sim" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all flex items-center gap-2">
-                                            <i class="fa-solid fa-satellite-dish"></i> 🚀 Phát Tín Hiệu Telemetry Lên Server
+                                            <i class="fa-solid fa-satellite-dish"></i> 🚀 Bắn 1 Gói Tin Thử Ngay
                                         </button>
                                     </div>
                                 </form>
+
                             </div>
                         </div>
 
@@ -4016,8 +4028,11 @@
         const iotState = {
             currentTab: 'realtime',
             currentRoomId: null,
-            currentRange: '24h',
-            chartData: { electric: [], water: [] }
+            currentRange: '1h',
+            chartData: { electric: [], water: [] },
+            autoSimTimer: null,
+            autoSimCount: 0,
+            autoPollTimer: null
         };
 
         function openIotDashboardModal() {
@@ -4032,6 +4047,15 @@
                     roomSelect.selectedIndex = 1;
                     onIotRoomFilterChange(roomSelect.value);
                 }
+
+                // Tự động làm mới dữ liệu mỗi 10 giây khi modal đang mở (phục vụ test chu kỳ 1 phút)
+                if (iotState.autoPollTimer) clearInterval(iotState.autoPollTimer);
+                iotState.autoPollTimer = setInterval(() => {
+                    loadIotSummary();
+                    if (iotState.currentRoomId) {
+                        onIotRoomFilterChange(iotState.currentRoomId);
+                    }
+                }, 10000);
             }
         }
 
@@ -4041,8 +4065,13 @@
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
                 document.body.style.overflow = '';
+                if (iotState.autoPollTimer) {
+                    clearInterval(iotState.autoPollTimer);
+                    iotState.autoPollTimer = null;
+                }
             }
         }
+
 
         function switchIotTab(tab) {
             iotState.currentTab = tab;
@@ -4159,6 +4188,17 @@
 
         function changeIotChartRange(range) {
             iotState.currentRange = range;
+            ['15m', '1h', '24h', '7d'].forEach(r => {
+                const btn = document.getElementById(`btn-range-${r}`);
+                if (btn) {
+                    if (r === range) {
+                        btn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800';
+                    }
+                }
+            });
+
             if (iotState.currentRoomId) {
                 onIotRoomFilterChange(iotState.currentRoomId);
             }
@@ -4201,7 +4241,7 @@
                 ctx.fillStyle = '#64748b';
                 ctx.font = '12px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('Chưa có chuỗi đo đạc 15 phút nào trong khung thời gian này', width / 2, height / 2);
+                ctx.fillText('Chưa có chuỗi đo đạc nào trong khung thời gian này (Hãy bấm Bắn Gói Tin để tạo điểm đo)', width / 2, height / 2);
                 return;
             }
 
@@ -4277,19 +4317,7 @@
             }
         }
 
-        async function sendIotSimulation(event) {
-            event.preventDefault();
-            const btn = document.getElementById('btn-send-sim');
-            const form = document.getElementById('iot-simulator-form');
-            if (!form) return;
-
-            const formData = new FormData(form);
-            const payload = Object.fromEntries(formData.entries());
-
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang truyền telemetry...';
-
+        async function dispatchSimulationPacket(payload, isSilent = false) {
             try {
                 const response = await fetch("{{ route('smartroom.admin.iot.simulate') }}", {
                     method: 'POST',
@@ -4303,24 +4331,102 @@
 
                 const res = await response.json();
                 if (res.success) {
-                    alert('🎉 ' + res.message);
                     loadIotSummary();
                     if (payload.room_id) {
                         const roomSelect = document.getElementById('iot-room-filter-select');
-                        if (roomSelect) roomSelect.value = payload.room_id;
+                        if (roomSelect && roomSelect.value != payload.room_id) {
+                            roomSelect.value = payload.room_id;
+                        }
                         onIotRoomFilterChange(payload.room_id);
                     }
-                } else {
+                    if (!isSilent) {
+                        alert('🎉 ' + res.message);
+                    }
+                } else if (!isSilent) {
                     alert('Lỗi: ' + (res.message || 'Không thể gửi gói tin'));
                 }
             } catch (err) {
                 console.error(err);
-                alert('Có lỗi xảy ra khi kết nối máy chủ IoT!');
-            } finally {
+                if (!isSilent) alert('Có lỗi xảy ra khi kết nối máy chủ IoT!');
+            }
+        }
+
+        async function sendIotSimulation(event) {
+            if (event) event.preventDefault();
+            const btn = document.getElementById('btn-send-sim');
+            const form = document.getElementById('iot-simulator-form');
+            if (!form) return;
+
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang truyền...';
+            }
+
+            await dispatchSimulationPacket(payload, false);
+
+            if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
             }
         }
+
+        function toggleAutoSimulation() {
+            const btn = document.getElementById('btn-auto-sim');
+            const icon = document.getElementById('auto-sim-icon');
+            const text = document.getElementById('auto-sim-text');
+            const counterBadge = document.getElementById('auto-sim-counter');
+            const countEl = document.getElementById('auto-sim-count');
+
+            if (iotState.autoSimTimer) {
+                // Tắt auto simulation
+                clearInterval(iotState.autoSimTimer);
+                iotState.autoSimTimer = null;
+                if (btn) btn.className = 'px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2';
+                if (icon) icon.className = 'fa-solid fa-play text-amber-400';
+                if (text) text.textContent = 'Bật Tự Động Bắn Gói Tin (Mỗi 1 Phút)';
+            } else {
+                // Bật auto simulation (chu kỳ 60 giây / 1 phút)
+                if (btn) btn.className = 'px-3.5 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/50 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-amber-500/10';
+                if (icon) icon.className = 'fa-solid fa-pause text-amber-400';
+                if (text) text.textContent = 'Đang Bắn Mỗi 1 Phút (Bấm để Dừng)';
+                if (counterBadge) counterBadge.classList.remove('hidden');
+
+                const autoStep = () => {
+                    const form = document.getElementById('iot-simulator-form');
+                    if (!form) return;
+                    const readingInp = document.getElementById('sim-reading');
+                    if (readingInp) {
+                        // Tăng nhẹ chỉ số lũy kế theo thời gian thực mỗi phút
+                        const currentVal = parseFloat(readingInp.value) || 1420.0;
+                        readingInp.value = (currentVal + 0.05).toFixed(2);
+                    }
+
+                    const formData = new FormData(form);
+                    const payload = Object.fromEntries(formData.entries());
+                    // Dao động nhẹ công suất 650W - 1100W
+                    if (payload.meter_type === 'electricity') {
+                        payload.power = Math.floor(Math.random() * (1100 - 650 + 1) + 650);
+                        payload.voltage = (220 + (Math.random() * 3 - 1.5)).toFixed(1);
+                    } else {
+                        payload.flow_rate = (Math.random() * 2.5 + 0.5).toFixed(2);
+                    }
+
+                    dispatchSimulationPacket(payload, true);
+                    iotState.autoSimCount++;
+                    if (countEl) countEl.textContent = iotState.autoSimCount;
+                };
+
+                // Phát ngay gói đầu tiên
+                autoStep();
+                // Lặp lại mỗi 60,000ms = 1 phút
+                iotState.autoSimTimer = setInterval(autoStep, 60000);
+            }
+        }
+
 
         async function triggerIotAutoSync(btn) {
             if (!confirm('Bạn có chắc chắn muốn CHỐT SỐ TỰ ĐỘNG TỪ IOT cho toàn bộ các phòng vào hóa đơn tháng này?')) {

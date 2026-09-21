@@ -143,10 +143,12 @@ class IotSmartMeteringService
     /**
      * Lấy dữ liệu chuỗi thời gian Realtime của một phòng để vẽ biểu đồ và giám sát
      */
-    public function getRoomRealtimeMetrics(int $roomId, string $range = '24h'): array
+    public function getRoomRealtimeMetrics(int $roomId, string $range = '1h'): array
     {
         $room = Room::findOrFail($roomId);
         $startTime = match ($range) {
+            '15m' => now()->subMinutes(15),
+            '1h' => now()->subHour(),
             '7d' => now()->subDays(7),
             '30d' => now()->subDays(30),
             default => now()->subHours(24),
@@ -162,7 +164,7 @@ class IotSmartMeteringService
 
         foreach ($telemetries as $item) {
             $point = [
-                'time' => $item->recorded_at->format('H:i d/m'),
+                'time' => $item->recorded_at->format('H:i:s'),
                 'reading' => (float) $item->reading,
                 'power' => (float) $item->power,
                 'voltage' => (float) $item->voltage,
@@ -176,6 +178,7 @@ class IotSmartMeteringService
                 $waterData[] = $point;
             }
         }
+
 
         // Lấy chỉ số mới nhất
         $latestElectric = $room->latestElectricTelemetry;
@@ -347,15 +350,16 @@ class IotSmartMeteringService
 
         // Tính tổng công suất tức thời toàn cơ sở (kW)
         $recentElectricTelemetries = IotMeterTelemetry::where('meter_type', 'electricity')
-            ->where('recorded_at', '>=', now()->subMinutes(30))
+            ->where('recorded_at', '>=', now()->subMinutes(3))
             ->get();
         $totalPowerWatts = $recentElectricTelemetries->sum('power');
 
         // Tính tổng lưu lượng nước tức thời (m3/h)
         $recentWaterTelemetries = IotMeterTelemetry::where('meter_type', 'water')
-            ->where('recorded_at', '>=', now()->subMinutes(30))
+            ->where('recorded_at', '>=', now()->subMinutes(3))
             ->get();
         $totalWaterFlow = $recentWaterTelemetries->sum('flow_rate');
+
 
         return [
             'total_devices' => $totalDevices,
