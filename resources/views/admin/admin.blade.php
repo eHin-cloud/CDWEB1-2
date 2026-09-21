@@ -1167,7 +1167,7 @@
                                     <canvas id="iot-realtime-chart-canvas" class="w-full h-full block cursor-crosshair"></canvas>
 
                                     <!-- Interactive Hover Tooltip Box -->
-                                    <div id="iot-chart-tooltip" class="absolute pointer-events-none hidden z-20 px-3.5 py-2.5 bg-slate-950/95 border border-slate-700/90 rounded-2xl shadow-2xl shadow-black text-xs backdrop-blur-md transition-all duration-75 space-y-1.5 min-w-[175px]">
+                                    <div id="iot-chart-tooltip" class="absolute pointer-events-none hidden z-20 px-3.5 py-2.5 bg-slate-950/95 border border-slate-700/90 rounded-2xl shadow-2xl shadow-black text-xs backdrop-blur-md transition-all duration-75 space-y-1.5 min-w-[185px]">
                                         <div class="flex items-center justify-between border-b border-slate-800 pb-1 text-[11px] font-mono">
                                             <span class="flex items-center gap-1.5 text-slate-200 font-bold"><i class="fa-regular fa-clock text-emerald-400"></i> <span id="iot-tt-time">--:--:--</span></span>
                                             <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 font-bold">1 Phút</span>
@@ -1178,11 +1178,17 @@
                                         </div>
                                         <div class="flex items-center justify-between gap-4 text-xs font-mono">
                                             <span class="text-cyan-400 flex items-center gap-1.5 font-sans"><i class="fa-solid fa-droplet text-[10px]"></i> Lưu lượng:</span>
-                                            <strong id="iot-tt-water" class="text-cyan-300 font-bold">0 L/m</strong>
+                                            <strong id="iot-tt-water" class="text-cyan-300 font-bold">0.0 L/m</strong>
                                         </div>
-                                        <div class="flex items-center justify-between gap-4 text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/80">
-                                            <span class="font-sans">Chỉ số tích lũy:</span>
-                                            <span id="iot-tt-reading" class="text-slate-300 font-bold">0 kWh</span>
+                                        <div class="pt-1 border-t border-slate-800/80 space-y-1 text-[10px] font-mono">
+                                            <div class="flex items-center justify-between text-slate-400">
+                                                <span class="font-sans">Chỉ số điện:</span>
+                                                <span id="iot-tt-reading" class="text-slate-200 font-bold">0.00 kWh</span>
+                                            </div>
+                                            <div class="flex items-center justify-between text-slate-400">
+                                                <span class="font-sans">Chỉ số nước:</span>
+                                                <span id="iot-tt-water-reading" class="text-cyan-300 font-bold">0.00 m3</span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1196,7 +1202,7 @@
                                 </div>
 
                                 <!-- Current Room Stats Summary -->
-                                <div id="iot-room-stats-banner" class="hidden grid grid-cols-3 gap-3 pt-2 text-xs">
+                                <div id="iot-room-stats-banner" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
                                     <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
                                         <span class="text-slate-400 block text-[10px]">Chỉ số điện tích lũy:</span>
                                         <strong id="iot-stat-elec-val" class="text-emerald-400 font-mono text-sm">0 kWh</strong>
@@ -1204,6 +1210,10 @@
                                     <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
                                         <span class="text-slate-400 block text-[10px]">Chỉ số nước tích lũy:</span>
                                         <strong id="iot-stat-water-val" class="text-cyan-400 font-mono text-sm">0 m3</strong>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                                        <span class="text-slate-400 block text-[10px]">Lưu lượng nước tức thời:</span>
+                                        <strong id="iot-stat-water-flow" class="text-sky-300 font-mono text-sm">0.0 L/m</strong>
                                     </div>
                                     <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
                                         <span class="text-slate-400 block text-[10px]">Ước tính tiêu thụ hôm nay:</span>
@@ -4227,6 +4237,10 @@
 
                     document.getElementById('iot-stat-elec-val').textContent = (data.latest.electric_reading !== null ? data.latest.electric_reading : '1380.50') + ' kWh';
                     document.getElementById('iot-stat-water-val').textContent = (data.latest.water_reading !== null ? data.latest.water_reading : '35.20') + ' m3';
+                    const waterFlowEl = document.getElementById('iot-stat-water-flow');
+                    if (waterFlowEl) {
+                        waterFlowEl.textContent = (data.latest.water_flow_rate !== null ? Number(data.latest.water_flow_rate).toFixed(1) : '0.0') + ' L/m';
+                    }
                     document.getElementById('iot-stat-cost-val').textContent = (data.consumption_today.estimated_cost || 0).toLocaleString('vi-VN') + 'đ';
 
                     iotState.chartData = data.series;
@@ -4420,10 +4434,25 @@
                 }
             }
 
-            // 3. Vẽ Đường cong cho Lưu Lượng Nước (Cyan nét đứt)
+            // 3. Vẽ Đường cong cho Lưu Lượng Nước (Cyan nét đứt) và dải màu mờ
             if (waterData.length > 0) {
                 const getX = (idx) => padding.left + (chartW / Math.max(1, waterData.length - 1)) * idx;
                 const getY = (val) => height - padding.bottom - ((val || 0) / maxFlow) * chartH;
+
+                // Vùng đổ màu Gradient mờ Cyan cho lưu lượng nước
+                const gradWater = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+                gradWater.addColorStop(0, 'rgba(6, 182, 212, 0.16)');
+                gradWater.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
+
+                ctx.beginPath();
+                ctx.moveTo(getX(0), height - padding.bottom);
+                waterData.forEach((pt, idx) => {
+                    ctx.lineTo(getX(idx), getY(pt.flow_rate));
+                });
+                ctx.lineTo(getX(waterData.length - 1), height - padding.bottom);
+                ctx.closePath();
+                ctx.fillStyle = gradWater;
+                ctx.fill();
 
                 ctx.strokeStyle = '#06b6d4';
                 ctx.lineWidth = 2;
@@ -4483,7 +4512,7 @@
                     ctx.fill();
                 }
 
-                // Điểm sáng nổi bật trên đường lưu lượng nước
+                // Điểm sáng nổi bật và Callout Badge trên đường lưu lượng nước
                 if (hl.waterY !== null) {
                     ctx.fillStyle = 'rgba(6, 182, 212, 0.4)';
                     ctx.beginPath();
@@ -4494,6 +4523,27 @@
                     ctx.beginPath();
                     ctx.arc(hl.x, hl.waterY, 4, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Callout Badge hiển thị trực tiếp lưu lượng nước (L/m) tại điểm
+                    ctx.save();
+                    const waterValText = `${Number(hl.flow_rate || 0).toFixed(1)} L/m`;
+                    ctx.font = 'bold 9px monospace';
+                    const tw = ctx.measureText(waterValText).width;
+                    const bw = tw + 10;
+                    const bh = 16;
+                    const bx = Math.min(width - padding.right - bw, Math.max(padding.left, hl.x - bw / 2));
+                    const by = Math.max(padding.top + 2, hl.waterY - 22);
+
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(bx, by, bw, bh);
+                    ctx.strokeStyle = '#06b6d4';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(bx, by, bw, bh);
+
+                    ctx.fillStyle = '#22d3ee';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(waterValText, bx + bw / 2, by + 11);
+                    ctx.restore();
                 }
 
                 // Huy hiệu mốc thời gian nổi bật ở trục hoành
@@ -4567,11 +4617,13 @@
                     const powerEl = document.getElementById('iot-tt-power');
                     const waterEl = document.getElementById('iot-tt-water');
                     const readingEl = document.getElementById('iot-tt-reading');
+                    const waterReadingEl = document.getElementById('iot-tt-water-reading');
 
                     if (timeEl) timeEl.textContent = closest.time || '--:--:--';
                     if (powerEl) powerEl.textContent = `${Math.round(closest.power || 0)} W`;
-                    if (waterEl) waterEl.textContent = `${(closest.flow_rate || 0).toFixed(1)} L/m`;
-                    if (readingEl) readingEl.textContent = `${(closest.reading || 0).toFixed(2)} kWh`;
+                    if (waterEl) waterEl.textContent = `${Number(closest.flow_rate || 0).toFixed(1)} L/m`;
+                    if (readingEl) readingEl.textContent = `${Number(closest.reading || 0).toFixed(2)} kWh`;
+                    if (waterReadingEl) waterReadingEl.textContent = `${Number(closest.water_reading || 0).toFixed(2)} m3`;
 
                     tooltip.classList.remove('hidden');
 
