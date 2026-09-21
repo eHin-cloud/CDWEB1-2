@@ -91,13 +91,19 @@ class AdminDashboardController extends Controller
         // 4. Utility Readings Tab
         // Rooms that are rented (occupied/overdue) need meter readings
         $utilityRooms = Room::where('tenant_id', $tenantId)->where('status', '!=', 'empty')
-            ->with(['residents' => function($q) {
-                $q->where('status', 'active');
-            }, 'utilityRecords' => function($q) {
-                $q->orderBy('billing_month', 'desc');
-            }])
+            ->with([
+                'residents' => function($q) {
+                    $q->where('status', 'active');
+                }, 
+                'utilityRecords' => function($q) {
+                    $q->orderBy('billing_month', 'desc');
+                },
+                'latestElectricTelemetry',
+                'latestWaterTelemetry',
+            ])
             ->orderBy('room_number')
             ->get();
+
 
         // 5. Resident Management Tab
         $residentFilters = [

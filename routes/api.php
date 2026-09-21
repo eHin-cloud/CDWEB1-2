@@ -37,6 +37,13 @@ Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);
 Route::post('/renty/rooms/compare', [VisitorController::class, 'compare']);
 
+// IoT Smart Metering Ingestion & Realtime Telemetry APIs
+Route::post('/v1/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);
+Route::post('/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);
+Route::get('/v1/iot/rooms/{id}/realtime', [\App\Http\Controllers\IotMeteringController::class, 'roomRealtime']);
+Route::get('/iot/rooms/{id}/realtime', [\App\Http\Controllers\IotMeteringController::class, 'roomRealtime']);
+
+
 // ==========================================
 // 2. AUTHENTICATED ROUTES (Đã đăng nhập)
 // ==========================================

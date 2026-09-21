@@ -158,7 +158,14 @@ Route::middleware('admin')->group(function () {
         Route::post('/smartroom/admin/notifications/contracts', [AdminDashboardController::class, 'notifyContracts'])->name('smartroom.admin.notifications.contracts');
         Route::post('/smartroom/admin/notifications/maintenance', [AdminDashboardController::class, 'notifyMaintenance'])->name('smartroom.admin.notifications.maintenance');
         Route::post('/smartroom/admin/notifications/run-all', [AdminDashboardController::class, 'notifyAll'])->name('smartroom.admin.notifications.run_all');
+
+        // IoT Smart Metering Management & Realtime Dashboard
+        Route::get('/smartroom/admin/iot/summary', [\App\Http\Controllers\IotMeteringController::class, 'facilitySummary'])->name('smartroom.admin.iot.summary');
+        Route::get('/smartroom/admin/iot/rooms/{id}/realtime', [\App\Http\Controllers\IotMeteringController::class, 'roomRealtime'])->name('smartroom.admin.iot.room_realtime');
+        Route::post('/smartroom/admin/iot/sync-billing', [\App\Http\Controllers\IotMeteringController::class, 'syncBilling'])->name('smartroom.admin.iot.sync_billing');
+        Route::post('/smartroom/admin/iot/simulate', [\App\Http\Controllers\IotMeteringController::class, 'simulate'])->name('smartroom.admin.iot.simulate');
     });
+
 
     // Building Management (Cơ sở lưu trú)
     Route::prefix('smartroom/admin/buildings')->name('admin.buildings.')->middleware('role:landlord')->group(function () {
