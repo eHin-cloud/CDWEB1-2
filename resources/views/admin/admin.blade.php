@@ -1106,14 +1106,20 @@
                             <p class="text-xs text-slate-500">Nhập chỉ số điện nước tháng 06/2026. Đơn giá: Điện 3.500đ/kWh, Nước 15.000đ/m3.</p>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
+                            <button type="button" onclick="openIotDashboardModal()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-tower-broadcast animate-pulse"></i> 📡 IoT Smart Metering (Realtime)
+                            </button>
+                            <button type="button" onclick="triggerIotAutoSync(this)" class="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-cyan-600/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-bolt-lightning"></i> ⚡ Chốt Số Tự Động Từ IoT
+                            </button>
                             <button type="button" onclick="triggerAutoRemind(this)" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-bell animate-bounce"></i> Nhắc Nợ Zalo Hàng Loạt
                             </button>
                             <button type="button" onclick="openBulkOcrModal('electricity')" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-bolt-lightning animate-pulse"></i> ⚡ AI Quét Hàng Loạt (Khớp Phòng)
+                                <i class="fa-solid fa-camera"></i> ⚡ AI Quét Hàng Loạt
                             </button>
                             <button type="submit" form="bulk-utility-form" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-check-double"></i> Lưu & Xuất Hóa Đơn Hàng Loạt
+                                <i class="fa-solid fa-check-double"></i> Lưu & Xuất Hóa Đơn
                             </button>
                         </div>
                     </div>
@@ -1159,6 +1165,11 @@
                                             <div class="flex items-center gap-2 font-bold">
                                                 <span class="w-2.5 h-2.5 rounded-full {{ $statusColor }}"></span> 
                                                 <span>{{ $room->room_number }} ({{ $resident ? $resident->name : 'N/A' }})</span>
+                                                @if($room->latestElectricTelemetry || $room->latestWaterTelemetry)
+                                                    <button type="button" onclick="viewRoomIotChart('{{ $room->id }}', '{{ $room->room_number }}')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20 text-[9px] font-semibold transition-all shadow-sm" title="Công tơ thông minh IoT chu kỳ 15 phút. Bấm để xem đồ thị phụ tải">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> IoT Online
+                                                    </button>
+                                                @endif
                                             </div>
                                             <div class="text-[10px] text-slate-400 flex items-center gap-1.5 mt-1 font-mono flex-wrap">
                                                 @if($room->electric_meter_serial)
@@ -1180,6 +1191,11 @@
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-1.5">
                                                 <input type="number" name="utilities[{{ $room->id }}][new_electricity]" value="{{ $newElec }}" oninput="calculateRowCost(this)" class="new-elec-input w-24 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-colors" placeholder="Số mới">
+                                                @if($room->latestElectricTelemetry)
+                                                    <button type="button" onclick="applyIotReadingToInput(this, '{{ (int) round($room->latestElectricTelemetry->reading) }}')" class="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-500/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 text-xs transition-all shadow-sm" title="Lấy số điện từ IoT Smart Meter: {{ $room->latestElectricTelemetry->reading }} kWh">
+                                                        <i class="fa-solid fa-bolt-lightning"></i>
+                                                    </button>
+                                                @endif
                                                 <button type="button" onclick="openMeterOcrModal('{{ $room->id }}', '{{ $room->room_number }}', 'electricity', this)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-indigo-500/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 text-xs transition-all shadow-sm" title="Quét số điện bằng AI OCR Camera">
                                                     <i class="fa-solid fa-camera"></i>
                                                 </button>
@@ -1189,11 +1205,17 @@
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-1.5">
                                                 <input type="number" name="utilities[{{ $room->id }}][new_water]" value="{{ $newWater }}" oninput="calculateRowCost(this)" class="new-water-input w-24 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-colors" placeholder="Số mới">
+                                                @if($room->latestWaterTelemetry)
+                                                    <button type="button" onclick="applyIotReadingToInput(this, '{{ (int) round($room->latestWaterTelemetry->reading) }}')" class="w-7 h-7 flex items-center justify-center rounded-lg bg-cyan-500/10 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-cyan-500/20 text-xs transition-all shadow-sm" title="Lấy số nước từ IoT Smart Meter: {{ $room->latestWaterTelemetry->reading }} m3">
+                                                        <i class="fa-solid fa-droplet"></i>
+                                                    </button>
+                                                @endif
                                                 <button type="button" onclick="openMeterOcrModal('{{ $room->id }}', '{{ $room->room_number }}', 'water', this)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-cyan-500/10 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-cyan-500/20 text-xs transition-all shadow-sm" title="Quét số nước bằng AI OCR Camera">
                                                     <i class="fa-solid fa-camera"></i>
                                                 </button>
                                             </div>
                                         </td>
+
                                         <td class="px-6 py-4 text-xs text-slate-400">
                                             <div class="flex items-center gap-1.5">
                                                 <span>⚡ Điện: <strong data-field="used-elec">0</strong> kWh</span>
@@ -1236,7 +1258,299 @@
                     </div>
                 </div>
 
+                <!-- MODAL IOT SMART METERING & REALTIME DASHBOARD -->
+                <div id="iot-metering-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto">
+                    <div class="relative w-full max-w-5xl bg-slate-900/95 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 my-8 text-slate-200">
+                        <!-- Header -->
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25">
+                                    <i class="fa-solid fa-tower-broadcast text-xl animate-pulse"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="text-base font-bold text-slate-100">IoT Smart Metering & Giám Sát Thời Gian Thực</h3>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Chu kỳ 1 phút/lần (Chế độ Test)
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-0.5">Tích hợp công tơ điện tử thông minh truyền không dây qua LoRaWAN / ESP32 WiFi / Modbus RS485 / Zigbee (Chu kỳ test: 1 phút)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="loadIotSummary()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5" title="Tải lại dữ liệu">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Làm mới
+                                </button>
+                                <button type="button" onclick="closeIotDashboardModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 flex items-center justify-center transition-all">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- KPI Summary Cards -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                                <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+                                    <span>Công Suất Tức Thời</span>
+                                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-amber-300 font-mono" id="iot-kpi-power">0.00 <span class="text-xs font-bold text-slate-400">kW</span></div>
+                                <div class="text-[10px] text-slate-500 mt-1">Toàn bộ phòng trọ</div>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                                <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+                                    <span>Lưu Lượng Nước</span>
+                                    <i class="fa-solid fa-droplet text-cyan-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-cyan-300 font-mono" id="iot-kpi-water">0.00 <span class="text-xs font-bold text-slate-400">m3/h</span></div>
+                                <div class="text-[10px] text-slate-500 mt-1">Lưu lượng tức thời</div>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                                <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+                                    <span>Công Tơ Đang Kết Nối</span>
+                                    <i class="fa-solid fa-wifi text-emerald-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-emerald-300 font-mono" id="iot-kpi-devices">0 / 0</div>
+                                <div class="text-[10px] text-emerald-400/80 mt-1" id="iot-kpi-status-hint">Trạng thái Online</div>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                                <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+                                    <span>Cảnh Báo Dị Thường</span>
+                                    <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-rose-400 font-mono" id="iot-kpi-warnings">0</div>
+                                <div class="text-[10px] text-slate-500 mt-1">Quá tải / Rò rỉ nước</div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Navigation -->
+                        <div class="flex items-center gap-2 border-b border-slate-800 pb-1">
+                            <button type="button" onclick="switchIotTab('realtime')" id="iot-tab-btn-realtime" class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                                <i class="fa-solid fa-chart-line"></i> Biểu Đồ Phụ Tải (Realtime)
+                            </button>
+                            <button type="button" onclick="switchIotTab('devices')" id="iot-tab-btn-devices" class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 border border-transparent">
+                                <i class="fa-solid fa-microchip"></i> Danh Sách Công Tơ IoT
+                            </button>
+                            <button type="button" onclick="switchIotTab('simulator')" id="iot-tab-btn-simulator" class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 border border-transparent">
+                                <i class="fa-solid fa-flask-vial"></i> Trình Giả Lập 1 Phút (Simulator)
+                            </button>
+                        </div>
+
+                        <!-- Tab 1: Realtime Load Curves -->
+                        <div id="iot-tab-realtime" class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/50 p-3 rounded-2xl border border-slate-800/80">
+                                <div class="flex items-center gap-2">
+                                    <label class="text-xs text-slate-400 font-semibold">Chọn phòng:</label>
+                                    <select id="iot-room-filter-select" onchange="onIotRoomFilterChange(this.value)" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none">
+                                        <option value="">-- Chọn phòng xem biểu đồ --</option>
+                                        @foreach($utilityRooms as $r)
+                                            <option value="{{ $r->id }}">Phòng {{ $r->room_number }} ({{ $r->residents->first()?->name ?? 'Trống' }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs text-slate-400">Khung thời gian:</span>
+                                    <button type="button" onclick="changeIotChartRange('15m')" id="btn-range-15m" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">15 Phút</button>
+                                    <button type="button" onclick="changeIotChartRange('1h')" id="btn-range-1h" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">1 Giờ (Từng phút)</button>
+                                    <button type="button" onclick="changeIotChartRange('24h')" id="btn-range-24h" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">24 Giờ</button>
+                                    <button type="button" onclick="changeIotChartRange('7d')" id="btn-range-7d" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800">7 Ngày</button>
+                                </div>
+                            </div>
+
+
+                            <!-- Interactive Chart Canvas -->
+                            <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                                        <h4 class="text-xs font-bold text-slate-300" id="iot-chart-title">Đường Cong Phụ Tải Điện (W) & Lưu Lượng Nước (L/phút) Theo Chu Kỳ 15 Phút</h4>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-[11px]">
+                                        <span class="inline-flex items-center gap-1 text-amber-400"><span class="w-2.5 h-0.5 bg-amber-400"></span> Công suất điện (W)</span>
+                                        <span class="inline-flex items-center gap-1 text-cyan-400"><span class="w-2.5 h-0.5 bg-cyan-400"></span> Nước (L/m)</span>
+                                        <button type="button" onclick="quickInjectDemoData()" class="ml-2 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-sm" title="Phát ngay 1 gói tin mẫu cho phòng đang chọn">
+                                            <i class="fa-solid fa-bolt text-amber-400"></i> Bắn Gói Tin Mẫu
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="relative w-full h-64 bg-slate-900/40 rounded-xl border border-slate-800/50 p-2 overflow-hidden">
+                                    <canvas id="iot-realtime-chart-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+                                    <!-- Interactive Hover Tooltip Box -->
+                                    <div id="iot-chart-tooltip" class="absolute pointer-events-none hidden z-20 px-3.5 py-2.5 bg-slate-950/95 border border-slate-700/90 rounded-2xl shadow-2xl shadow-black text-xs backdrop-blur-md transition-all duration-75 space-y-1.5 min-w-[185px]">
+                                        <div class="flex items-center justify-between border-b border-slate-800 pb-1 text-[11px] font-mono">
+                                            <span class="flex items-center gap-1.5 text-slate-200 font-bold"><i class="fa-regular fa-clock text-emerald-400"></i> <span id="iot-tt-time">--:--:--</span></span>
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 font-bold">1 Phút</span>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4 text-xs font-mono">
+                                            <span class="text-amber-400 flex items-center gap-1.5 font-sans"><i class="fa-solid fa-bolt text-[10px]"></i> Công suất:</span>
+                                            <strong id="iot-tt-power" class="text-amber-300 font-bold">0 W</strong>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4 text-xs font-mono">
+                                            <span class="text-cyan-400 flex items-center gap-1.5 font-sans"><i class="fa-solid fa-droplet text-[10px]"></i> Lưu lượng:</span>
+                                            <strong id="iot-tt-water" class="text-cyan-300 font-bold">0.0 L/m</strong>
+                                        </div>
+                                        <div class="pt-1 border-t border-slate-800/80 space-y-1 text-[10px] font-mono">
+                                            <div class="flex items-center justify-between text-slate-400">
+                                                <span class="font-sans">Chỉ số điện:</span>
+                                                <span id="iot-tt-reading" class="text-slate-200 font-bold">0.00 kWh</span>
+                                            </div>
+                                            <div class="flex items-center justify-between text-slate-400">
+                                                <span class="font-sans">Chỉ số nước:</span>
+                                                <span id="iot-tt-water-reading" class="text-cyan-300 font-bold">0.00 m3</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="iot-chart-empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-500 text-xs bg-slate-950/90 rounded-xl">
+                                        <i class="fa-solid fa-chart-area text-3xl text-slate-600"></i>
+                                        <span class="text-slate-400">Phòng này chưa có dữ liệu đo đạc nào</span>
+                                        <button type="button" onclick="quickInjectDemoData()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
+                                            <i class="fa-solid fa-bolt"></i> Tạo Ngay Điểm Đo Mẫu
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Current Room Stats Summary -->
+                                <div id="iot-room-stats-banner" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+                                    <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                                        <span class="text-slate-400 block text-[10px]">Chỉ số điện tích lũy:</span>
+                                        <strong id="iot-stat-elec-val" class="text-emerald-400 font-mono text-sm">0 kWh</strong>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                                        <span class="text-slate-400 block text-[10px]">Chỉ số nước tích lũy:</span>
+                                        <strong id="iot-stat-water-val" class="text-cyan-400 font-mono text-sm">0 m3</strong>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                                        <span class="text-slate-400 block text-[10px]">Lưu lượng nước tức thời:</span>
+                                        <strong id="iot-stat-water-flow" class="text-sky-300 font-mono text-sm">0.0 L/m</strong>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                                        <span class="text-slate-400 block text-[10px]">Ước tính tiêu thụ hôm nay:</span>
+                                        <strong id="iot-stat-cost-val" class="text-indigo-400 font-mono text-sm">0đ</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Devices Fleet -->
+                        <div id="iot-tab-devices" class="hidden space-y-4">
+                            <div class="overflow-x-auto rounded-2xl border border-slate-800">
+                                <table class="w-full text-left text-xs text-slate-300">
+                                    <thead class="bg-slate-950/70 text-[11px] text-slate-400 uppercase border-b border-slate-800">
+                                        <tr>
+                                            <th class="px-4 py-3">Mã Thiết Bị</th>
+                                            <th class="px-4 py-3">Giao Thức</th>
+                                            <th class="px-4 py-3">Phòng Gán</th>
+                                            <th class="px-4 py-3">Số SX Công Tơ</th>
+                                            <th class="px-4 py-3">Loại</th>
+                                            <th class="px-4 py-3">Chỉ Số Gần Nhất</th>
+                                            <th class="px-4 py-3">Trạng Thái</th>
+                                            <th class="px-4 py-3">Lần Cuối Nhận Tin</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60" id="iot-devices-table-body">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-6 text-slate-500">Đang tải danh sách thiết bị...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Hardware Simulator -->
+                        <div id="iot-tab-simulator" class="hidden space-y-4">
+                            <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-4">
+                                <div class="flex items-center gap-2 text-xs font-bold text-amber-300">
+                                    <i class="fa-solid fa-flask text-sm"></i>
+                                    <span>Bộ Giả Lập Phát Sóng Gói Tin IoT (Hardware Telemetry Simulator)</span>
+                                </div>
+                                <p class="text-xs text-slate-400">Tính năng này cho phép bạn giả lập một vi điều khiển (ESP32 / LoRaWAN Node) gửi gói tin đo đạc về máy chủ theo chu kỳ 15 phút để kiểm thử hệ thống ngay trên trình duyệt mà không cần phần cứng thật.</p>
+
+                                <form id="iot-simulator-form" onsubmit="sendIotSimulation(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                    <div>
+                                        <label class="block text-slate-400 mb-1 font-semibold">Phòng nhận dữ liệu <span class="text-rose-400">*</span></label>
+                                        <select name="room_id" id="sim-room-id" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-emerald-500 focus:outline-none">
+                                            @foreach($utilityRooms as $r)
+                                                <option value="{{ $r->id }}">Phòng {{ $r->room_number }} (Số SX Điện: {{ $r->electric_meter_serial ?: 'Chưa có' }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-400 mb-1 font-semibold">Loại công tơ</label>
+                                        <select name="meter_type" id="sim-meter-type" onchange="onSimMeterTypeChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-emerald-500 focus:outline-none">
+                                            <option value="electricity">⚡ Điện (PZEM-004T / Modbus)</option>
+                                            <option value="water">💧 Nước (Pulse Counter / Ultrasonic)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-400 mb-1 font-semibold">Giao thức truyền thông</label>
+                                        <select name="protocol" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-emerald-500 focus:outline-none">
+                                            <option value="esp32_wifi">ESP32 (WiFi / HTTP Webhook)</option>
+                                            <option value="lorawan">LoRaWAN Long-Range 868MHz</option>
+                                            <option value="modbus_rs485">Modbus RS485 Bus RTU</option>
+                                            <option value="zigbee">Zigbee 3.0 Mesh</option>
+                                            <option value="mqtt">MQTT Broker Ingestion</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-slate-400 mb-1 font-semibold">Chỉ số tích lũy mới (kWh hoặc m3)</label>
+                                        <input type="number" step="0.01" name="reading" id="sim-reading" value="1420.5" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-emerald-500 focus:outline-none font-mono" placeholder="Chỉ số công tơ">
+                                    </div>
+                                    <div id="sim-elec-inputs" class="contents">
+                                        <div>
+                                            <label class="block text-slate-400 mb-1 font-semibold">Điện áp tức thời (V)</label>
+                                            <input type="number" step="0.1" name="voltage" value="221.8" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-emerald-500 focus:outline-none font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-400 mb-1 font-semibold">Công suất tức thời (W)</label>
+                                            <input type="number" step="1" name="power" value="780" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-emerald-500 focus:outline-none font-mono">
+                                        </div>
+                                    </div>
+                                    <div id="sim-water-inputs" class="hidden">
+                                        <label class="block text-slate-400 mb-1 font-semibold">Lưu lượng nước tức thời (L/phút)</label>
+                                        <input type="number" step="0.1" name="flow_rate" value="1.8" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:border-cyan-500 focus:outline-none font-mono">
+                                    </div>
+
+                                    <div class="md:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                                        <div class="flex items-center gap-2.5">
+                                            <button type="button" id="btn-auto-sim" onclick="toggleAutoSimulation()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                                                <i class="fa-solid fa-play text-amber-400" id="auto-sim-icon"></i> <span id="auto-sim-text">Bật Tự Động Bắn Gói Tin (Mỗi 1 Phút)</span>
+                                            </button>
+                                            <span id="auto-sim-counter" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                Đã gửi: <span id="auto-sim-count">0</span> gói
+                                            </span>
+                                        </div>
+                                        <button type="submit" id="btn-send-sim" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all flex items-center gap-2">
+                                            <i class="fa-solid fa-satellite-dish"></i> 🚀 Bắn 1 Gói Tin Thử Ngay
+                                        </button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-800">
+                            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-emerald-400"></i> Máy chủ Ingestion sẵn sàng nhận gói tin tại: <code class="bg-slate-950 px-2 py-0.5 rounded font-mono text-[11px] text-emerald-300">/api/v1/iot/telemetry</code>
+                            </span>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <button type="button" onclick="closeIotDashboardModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all">
+                                    Đóng lại
+                                </button>
+                                <button type="button" onclick="triggerIotAutoSync(this)" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white text-xs font-bold shadow-lg shadow-cyan-600/20 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-bolt-lightning"></i> ⚡ Chốt Số Tự Động Sang Hóa Đơn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- MODAL AI OCR CAMERA QUÉT CÔNG TƠ ĐIỆN NƯỚC -->
+
                 <div id="meter-ocr-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden flex items-center justify-center p-4 transition-all duration-300">
                     <div class="glass-card w-full max-w-lg rounded-3xl border border-slate-800 p-6 space-y-5 shadow-2xl relative animate-fade-in bg-[#0a0f1d]/95">
                         <!-- Header -->
@@ -4022,8 +4336,844 @@
             }
         });
 
+        // =======================================================
+        // 3. IOT SMART METERING & REALTIME MONITORING (LORAWAN / ESP32 / MODBUS)
+        // =======================================================
+        const iotState = {
+            currentTab: 'realtime',
+            currentRoomId: null,
+            currentRange: '1h',
+            chartData: { electricity: [], water: [] },
+            activePoints: [],
+            hoveredIndex: null,
+            autoSimTimer: null,
+            autoSimCount: 0,
+            autoPollTimer: null
+        };
+
+        function openIotDashboardModal() {
+            const modal = document.getElementById('iot-metering-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+
+                // Đợi layout modal vẽ xong hoàn toàn để canvas nhận đúng kích thước clientWidth
+                setTimeout(() => {
+                    loadIotSummary();
+                    const roomSelect = document.getElementById('iot-room-filter-select');
+                    if (roomSelect && roomSelect.options.length > 1) {
+                        if (!roomSelect.value) {
+                            roomSelect.selectedIndex = 1;
+                        }
+                        onIotRoomFilterChange(roomSelect.value);
+                    }
+                }, 100);
+
+                // Tự động làm mới dữ liệu mỗi 10 giây khi modal đang mở (phục vụ test chu kỳ 1 phút)
+                if (iotState.autoPollTimer) clearInterval(iotState.autoPollTimer);
+                iotState.autoPollTimer = setInterval(() => {
+                    loadIotSummary();
+                    if (iotState.currentRoomId) {
+                        onIotRoomFilterChange(iotState.currentRoomId, true);
+                    }
+                }, 10000);
+            }
+        }
+
+        function closeIotDashboardModal() {
+            const modal = document.getElementById('iot-metering-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+                if (iotState.autoPollTimer) {
+                    clearInterval(iotState.autoPollTimer);
+                    iotState.autoPollTimer = null;
+                }
+            }
+        }
+
+        function switchIotTab(tab) {
+            iotState.currentTab = tab;
+            ['realtime', 'devices', 'simulator'].forEach(t => {
+                const el = document.getElementById(`iot-tab-${t}`);
+                const btn = document.getElementById(`iot-tab-btn-${t}`);
+                if (el) {
+                    if (t === tab) {
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                }
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = 'px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
+                    } else {
+                        btn.className = 'px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200 border border-transparent';
+                    }
+                }
+            });
+
+            if (tab === 'devices') {
+                loadIotSummary();
+            } else if (tab === 'realtime') {
+                setTimeout(() => {
+                    if (iotState.currentRoomId) {
+                        onIotRoomFilterChange(iotState.currentRoomId);
+                    }
+                }, 60);
+            }
+        }
+
+        async function loadIotSummary() {
+            try {
+                const response = await fetch("{{ route('smartroom.admin.iot.summary') }}", {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const res = await response.json();
+                if (res.success && res.data) {
+                    const d = res.data;
+                    document.getElementById('iot-kpi-power').innerHTML = `${d.total_power_kw} <span class="text-xs font-bold text-slate-400">kW</span>`;
+                    document.getElementById('iot-kpi-water').innerHTML = `${d.total_water_flow} <span class="text-xs font-bold text-slate-400">m3/h</span>`;
+                    document.getElementById('iot-kpi-devices').textContent = `${d.online_devices} / ${d.total_devices}`;
+                    document.getElementById('iot-kpi-status-hint').textContent = `${d.offline_devices} thiết bị Offline`;
+                    document.getElementById('iot-kpi-warnings').textContent = d.warning_devices;
+
+                    const tbody = document.getElementById('iot-devices-table-body');
+                    if (tbody && d.devices) {
+                        if (d.devices.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-500">Chưa có thiết bị công tơ nào được kích hoạt. Hãy dùng Bộ Giả Lập để phát gói tin thử nghiệm!</td></tr>';
+                        } else {
+                            tbody.innerHTML = d.devices.map(dev => {
+                                const statusBadge = dev.is_online
+                                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-circle text-[6px] mr-1"></i>Online</span>'
+                                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="fa-solid fa-circle text-[6px] mr-1"></i>Offline</span>';
+                                const typeIcon = dev.meter_type === 'electricity' ? '<i class="fa-solid fa-bolt text-amber-400"></i> Điện' : '<i class="fa-solid fa-droplet text-cyan-400"></i> Nước';
+                                const unit = dev.meter_type === 'electricity' ? 'kWh' : 'm3';
+
+                                return `
+                                    <tr class="hover:bg-slate-900/30 transition-all font-mono">
+                                        <td class="px-4 py-3 font-bold text-slate-200">${dev.device_code}</td>
+                                        <td class="px-4 py-3 text-slate-400 font-sans">${dev.protocol}</td>
+                                        <td class="px-4 py-3 font-sans font-bold text-emerald-400">P.${dev.room_number}</td>
+                                        <td class="px-4 py-3 text-slate-400">${dev.meter_serial}</td>
+                                        <td class="px-4 py-3 font-sans">${typeIcon}</td>
+                                        <td class="px-4 py-3 font-bold text-slate-200">${dev.last_reading} ${unit}</td>
+                                        <td class="px-4 py-3 font-sans">${statusBadge}</td>
+                                        <td class="px-4 py-3 text-slate-500 font-sans">${dev.last_seen}</td>
+                                    </tr>
+                                `;
+                            }).join('');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi khi tải IoT Summary:', err);
+            }
+        }
+
+        function viewRoomIotChart(roomId, roomNumber) {
+            openIotDashboardModal();
+            switchIotTab('realtime');
+            setTimeout(() => {
+                const roomSelect = document.getElementById('iot-room-filter-select');
+                if (roomSelect) {
+                    roomSelect.value = roomId;
+                }
+                onIotRoomFilterChange(roomId);
+            }, 100);
+        }
+
+        async function onIotRoomFilterChange(roomId, isSilent = false) {
+            if (!roomId) {
+                document.getElementById('iot-chart-empty-state')?.classList.remove('hidden');
+                document.getElementById('iot-room-stats-banner')?.classList.add('hidden');
+                clearIotCanvas();
+                return;
+            }
+
+            iotState.currentRoomId = roomId;
+            try {
+                const res = await fetch(`/smartroom/admin/iot/rooms/${roomId}/realtime?range=${iotState.currentRange}`);
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const data = json.data;
+                    const hasData = (data.series.electricity && data.series.electricity.length > 0) || 
+                                    (data.series.water && data.series.water.length > 0);
+
+                    const emptyState = document.getElementById('iot-chart-empty-state');
+                    if (hasData) {
+                        if (emptyState) emptyState.classList.add('hidden');
+                    } else {
+                        if (emptyState) emptyState.classList.remove('hidden');
+                    }
+
+                    document.getElementById('iot-room-stats-banner')?.classList.remove('hidden');
+                    document.getElementById('iot-chart-title').textContent = `Phụ Tải Phòng ${data.room.room_number} (Số SX Điện: ${data.room.electric_serial || 'Tự động gán'})`;
+
+                    document.getElementById('iot-stat-elec-val').textContent = (data.latest.electric_reading !== null ? data.latest.electric_reading : '1380.50') + ' kWh';
+                    document.getElementById('iot-stat-water-val').textContent = (data.latest.water_reading !== null ? data.latest.water_reading : '35.20') + ' m3';
+                    const waterFlowEl = document.getElementById('iot-stat-water-flow');
+                    if (waterFlowEl) {
+                        waterFlowEl.textContent = (data.latest.water_flow_rate !== null ? Number(data.latest.water_flow_rate).toFixed(1) : '0.0') + ' L/m';
+                    }
+                    document.getElementById('iot-stat-cost-val').textContent = (data.consumption_today.estimated_cost || 0).toLocaleString('vi-VN') + 'đ';
+
+                    iotState.chartData = data.series;
+                    iotState.latestData = data.latest;
+                    renderIotCanvasChart(data.series.electricity || [], data.series.water || []);
+                }
+            } catch (e) {
+                console.error('Lỗi tải dữ liệu phòng:', e);
+            }
+        }
+
+        function changeIotChartRange(range) {
+            iotState.currentRange = range;
+            ['15m', '1h', '24h', '7d'].forEach(r => {
+                const btn = document.getElementById(`btn-range-${r}`);
+                if (btn) {
+                    if (r === range) {
+                        btn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800';
+                    }
+                }
+            });
+
+            if (iotState.currentRoomId) {
+                onIotRoomFilterChange(iotState.currentRoomId);
+            }
+        }
+
+        function clearIotCanvas() {
+            const canvas = document.getElementById('iot-realtime-chart-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function renderIotCanvasChart(electricData, waterData, highlightIdx = null) {
+            const canvas = document.getElementById('iot-realtime-chart-canvas');
+            if (!canvas) return;
+
+            const container = canvas.parentElement;
+            // Luôn đọc chiều rộng và cao cố định từ container cha (khung bao w-full h-64),
+            // Tuyệt đối không đọc từ rect.width của canvas để tránh lỗi canvas tự co lại mỗi lần re-render
+            const width = Math.max(300, Math.floor(container ? (container.clientWidth - 16) : 750));
+            const height = Math.max(180, Math.floor(container ? (container.clientHeight - 16) : 230));
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+
+            const padding = { top: 30, right: 40, bottom: 40, left: 55 };
+            const chartW = Math.max(10, width - padding.left - padding.right);
+            const chartH = Math.max(10, height - padding.top - padding.bottom);
+
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Vẽ các đường lưới ngang và nhãn trục Y
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            const steps = 4;
+
+            const maxPower = electricData.length > 0 
+                ? Math.max(...electricData.map(p => p.power || 0), 1200) 
+                : 1500;
+            const maxFlow = waterData.length > 0 
+                ? Math.max(...waterData.map(p => p.flow_rate || 0), 4) 
+                : 5;
+
+            for (let i = 0; i <= steps; i++) {
+                const y = padding.top + (chartH / steps) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+
+                // Nhãn Watt bên trái
+                const powerVal = Math.round(maxPower - (maxPower / steps) * i);
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '10px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(`${powerVal}W`, padding.left - 8, y + 3);
+
+                // Nhãn Lưu lượng nước bên phải
+                const flowVal = (maxFlow - (maxFlow / steps) * i).toFixed(1);
+                ctx.fillStyle = '#06b6d4';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${flowVal}L`, width - padding.right + 6, y + 3);
+            }
+
+            if (electricData.length === 0 && waterData.length === 0) {
+                return;
+            }
+
+            // Ghi nhận toạ độ các điểm đo để phục vụ tra cứu khi hover chuột
+            const totalPoints = Math.max(electricData.length, waterData.length);
+            iotState.activePoints = [];
+            for (let i = 0; i < totalPoints; i++) {
+                const ePt = electricData[i] || null;
+                const wPt = waterData[i] || null;
+                const px = padding.left + (chartW / Math.max(1, totalPoints - 1)) * i;
+                const pyElec = ePt ? (height - padding.bottom - ((ePt.power || 0) / maxPower) * chartH) : null;
+                const pyWater = wPt ? (height - padding.bottom - ((wPt.flow_rate || 0) / maxFlow) * chartH) : null;
+
+                iotState.activePoints.push({
+                    idx: i,
+                    x: px,
+                    elecY: pyElec,
+                    waterY: pyWater,
+                    time: ePt?.time || wPt?.time || '',
+                    power: ePt?.power || 0,
+                    voltage: ePt?.voltage || 220,
+                    current: ePt?.current || 0,
+                    reading: ePt?.reading || 0,
+                    flow_rate: wPt?.flow_rate || 0,
+                    water_reading: wPt?.reading || 0
+                });
+            }
+
+            // 2. Vẽ Area Gradient và Đường cong cho Công Suất Điện (Amber)
+            if (electricData.length > 0) {
+                const getX = (idx) => padding.left + (chartW / Math.max(1, electricData.length - 1)) * idx;
+                const getY = (val) => height - padding.bottom - ((val || 0) / maxPower) * chartH;
+
+                // Vùng đổ màu Gradient (Area fill)
+                const gradElec = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+                gradElec.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
+                gradElec.addColorStop(1, 'rgba(251, 191, 36, 0.01)');
+
+                ctx.beginPath();
+                ctx.moveTo(getX(0), height - padding.bottom);
+                electricData.forEach((pt, idx) => {
+                    ctx.lineTo(getX(idx), getY(pt.power));
+                });
+                ctx.lineTo(getX(electricData.length - 1), height - padding.bottom);
+                ctx.closePath();
+                ctx.fillStyle = gradElec;
+                ctx.fill();
+
+                // Vẽ đường viền chính
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                electricData.forEach((pt, idx) => {
+                    const x = getX(idx);
+                    const y = getY(pt.power);
+                    if (idx === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Vẽ các điểm nút và nhãn thời gian trục X
+                ctx.fillStyle = '#f59e0b';
+                electricData.forEach((pt, idx) => {
+                    const x = getX(idx);
+                    const y = getY(pt.power);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // In nhãn thời gian trục X (cách khoảng để không đè chữ)
+                    if (idx === 0 || idx === electricData.length - 1 || idx % Math.ceil(electricData.length / 5) === 0) {
+                        ctx.fillStyle = '#94a3b8';
+                        ctx.font = '10px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(pt.time || '', x, height - padding.bottom + 18);
+                        ctx.fillStyle = '#f59e0b';
+                    }
+                });
+
+                // Hiệu ứng Pulse Glow cho điểm đo mới nhất (nếu không hover điểm khác)
+                if (highlightIdx === null) {
+                    const lastIdx = electricData.length - 1;
+                    const lastX = getX(lastIdx);
+                    const lastY = getY(electricData[lastIdx].power);
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(lastX, lastY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 3. Vẽ Đường cong cho Lưu Lượng Nước (Cyan nét đứt) và dải màu mờ
+            if (waterData.length > 0) {
+                const getX = (idx) => padding.left + (chartW / Math.max(1, waterData.length - 1)) * idx;
+                const getY = (val) => height - padding.bottom - ((val || 0) / maxFlow) * chartH;
+
+                // Vùng đổ màu Gradient mờ Cyan cho lưu lượng nước
+                const gradWater = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+                gradWater.addColorStop(0, 'rgba(6, 182, 212, 0.16)');
+                gradWater.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
+
+                ctx.beginPath();
+                ctx.moveTo(getX(0), height - padding.bottom);
+                waterData.forEach((pt, idx) => {
+                    ctx.lineTo(getX(idx), getY(pt.flow_rate));
+                });
+                ctx.lineTo(getX(waterData.length - 1), height - padding.bottom);
+                ctx.closePath();
+                ctx.fillStyle = gradWater;
+                ctx.fill();
+
+                ctx.strokeStyle = '#06b6d4';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]);
+                ctx.shadowColor = 'rgba(6, 182, 212, 0.4)';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                waterData.forEach((pt, idx) => {
+                    const x = getX(idx);
+                    const y = getY(pt.flow_rate);
+                    if (idx === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+
+                // Các điểm nút nước
+                ctx.fillStyle = '#22d3ee';
+                waterData.forEach((pt, idx) => {
+                    ctx.beginPath();
+                    ctx.arc(getX(idx), getY(pt.flow_rate), 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // 4. Hiển thị đường dóng dọc và hiệu ứng nổi bật khi rê chuột (Hover Crosshair)
+            if (highlightIdx !== null && iotState.activePoints[highlightIdx]) {
+                const hl = iotState.activePoints[highlightIdx];
+
+                // Đường dóng trục đứng
+                ctx.save();
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(hl.x, padding.top);
+                ctx.lineTo(hl.x, height - padding.bottom);
+                ctx.stroke();
+                ctx.restore();
+
+                // Điểm sáng nổi bật trên đường công suất điện
+                if (hl.elecY !== null) {
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.elecY, 10, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.elecY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.elecY, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Điểm sáng nổi bật và Callout Badge trên đường lưu lượng nước
+                if (hl.waterY !== null) {
+                    ctx.fillStyle = 'rgba(6, 182, 212, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.waterY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#22d3ee';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.waterY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Callout Badge hiển thị trực tiếp lưu lượng nước (L/m) tại điểm
+                    ctx.save();
+                    const waterValText = `${Number(hl.flow_rate || 0).toFixed(1)} L/m`;
+                    ctx.font = 'bold 9px monospace';
+                    const tw = ctx.measureText(waterValText).width;
+                    const bw = tw + 10;
+                    const bh = 16;
+                    const bx = Math.min(width - padding.right - bw, Math.max(padding.left, hl.x - bw / 2));
+                    const by = Math.max(padding.top + 2, hl.waterY - 22);
+
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(bx, by, bw, bh);
+                    ctx.strokeStyle = '#06b6d4';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(bx, by, bw, bh);
+
+                    ctx.fillStyle = '#22d3ee';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(waterValText, bx + bw / 2, by + 11);
+                    ctx.restore();
+                }
+
+                // Huy hiệu mốc thời gian nổi bật ở trục hoành
+                if (hl.time) {
+                    ctx.save();
+                    const badgeW = 62;
+                    const badgeH = 18;
+                    const bx = hl.x - badgeW / 2;
+                    const by = height - padding.bottom + 4;
+
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(bx, by, badgeW, badgeH);
+
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(bx, by, badgeW, badgeH);
+
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(hl.time, hl.x, by + 13);
+                    ctx.restore();
+                }
+            }
+
+            // Gắn lắng nghe sự kiện rê chuột (chỉ gán 1 lần)
+            setupIotChartHoverEvents();
+        }
+
+        function setupIotChartHoverEvents() {
+            const canvas = document.getElementById('iot-realtime-chart-canvas');
+            const tooltip = document.getElementById('iot-chart-tooltip');
+            if (!canvas || canvas.dataset.hoverBound) return;
+            canvas.dataset.hoverBound = 'true';
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!iotState.activePoints || iotState.activePoints.length === 0) {
+                    if (tooltip) tooltip.classList.add('hidden');
+                    return;
+                }
+
+                const rect = canvas.getBoundingClientRect();
+                const container = canvas.parentElement;
+                const containerW = container ? (container.clientWidth - 16) : 750;
+                const scaleX = rect.width > 0 ? (containerW / rect.width) : 1;
+                const mouseX = (e.clientX - rect.left) * scaleX;
+
+                // Tìm điểm đo gần nhất với con trỏ chuột theo trục X
+                let closest = null;
+                let minDiff = Infinity;
+                iotState.activePoints.forEach((pt) => {
+                    const diff = Math.abs(pt.x - mouseX);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = pt;
+                    }
+                });
+
+                if (!closest || minDiff > 55) {
+                    if (tooltip) tooltip.classList.add('hidden');
+                    if (iotState.hoveredIndex !== null) {
+                        iotState.hoveredIndex = null;
+                        renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], null);
+                    }
+                    return;
+                }
+
+                // Điền dữ liệu vào Tooltip hiển thị
+                if (tooltip) {
+                    const timeEl = document.getElementById('iot-tt-time');
+                    const powerEl = document.getElementById('iot-tt-power');
+                    const waterEl = document.getElementById('iot-tt-water');
+                    const readingEl = document.getElementById('iot-tt-reading');
+                    const waterReadingEl = document.getElementById('iot-tt-water-reading');
+
+                    if (timeEl) timeEl.textContent = closest.time || '--:--:--';
+                    if (powerEl) powerEl.textContent = `${Math.round(closest.power || 0)} W`;
+                    if (waterEl) waterEl.textContent = `${Number(closest.flow_rate || 0).toFixed(1)} L/m`;
+                    if (readingEl) readingEl.textContent = `${Number(closest.reading || 0).toFixed(2)} kWh`;
+                    if (waterReadingEl) waterReadingEl.textContent = `${Number(closest.water_reading || 0).toFixed(2)} m3`;
+
+                    tooltip.classList.remove('hidden');
+
+                    const container = canvas.parentElement;
+                    const containerW = container ? container.clientWidth : 750;
+                    const containerH = container ? container.clientHeight : 250;
+
+                    // Định vị tooltip thông minh tránh bị khuất ở mép phải
+                    let leftPos = closest.x + 16;
+                    if (leftPos + 185 > containerW) {
+                        leftPos = Math.max(10, closest.x - 195);
+                    }
+
+                    const targetY = (closest.elecY !== null ? closest.elecY : (closest.waterY !== null ? closest.waterY : 60)) - 45;
+                    const topPos = Math.max(10, Math.min(targetY, containerH - 120));
+
+                    tooltip.style.left = `${leftPos}px`;
+                    tooltip.style.top = `${topPos}px`;
+                }
+
+                // Đồng bộ cập nhật các ô thống kê bên dưới theo mốc thời gian chuột đang trỏ
+                const statElec = document.getElementById('iot-stat-elec-val');
+                const statWater = document.getElementById('iot-stat-water-val');
+                const statFlow = document.getElementById('iot-stat-water-flow');
+                if (statElec && closest.reading) statElec.textContent = `${Number(closest.reading).toFixed(2)} kWh`;
+                if (statWater && closest.water_reading) statWater.textContent = `${Number(closest.water_reading).toFixed(2)} m3`;
+                if (statFlow && closest.flow_rate !== undefined) statFlow.textContent = `${Number(closest.flow_rate).toFixed(1)} L/m`;
+
+                if (iotState.hoveredIndex !== closest.idx) {
+                    iotState.hoveredIndex = closest.idx;
+                    renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], closest.idx);
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                if (tooltip) tooltip.classList.add('hidden');
+                if (iotState.hoveredIndex !== null) {
+                    iotState.hoveredIndex = null;
+                    renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], null);
+                }
+
+                // Khôi phục giá trị tức thời mới nhất ở các thẻ thống kê
+                if (iotState.latestData) {
+                    const statElec = document.getElementById('iot-stat-elec-val');
+                    const statWater = document.getElementById('iot-stat-water-val');
+                    const statFlow = document.getElementById('iot-stat-water-flow');
+                    if (statElec && iotState.latestData.electric_reading !== null) {
+                        statElec.textContent = `${Number(iotState.latestData.electric_reading).toFixed(2)} kWh`;
+                    }
+                    if (statWater && iotState.latestData.water_reading !== null) {
+                        statWater.textContent = `${Number(iotState.latestData.water_reading).toFixed(2)} m3`;
+                    }
+                    if (statFlow && iotState.latestData.water_flow_rate !== null) {
+                        statFlow.textContent = `${Number(iotState.latestData.water_flow_rate).toFixed(1)} L/m`;
+                    }
+                }
+            });
+        }
+
+        async function quickInjectDemoData() {
+            const roomId = iotState.currentRoomId || document.getElementById('iot-room-filter-select')?.value;
+            if (!roomId) {
+                alert('Vui lòng chọn 1 phòng trước khi tạo điểm đo!');
+                return;
+            }
+
+            const payload = {
+                room_id: roomId,
+                meter_type: 'electricity',
+                protocol: 'esp32_wifi',
+                reading: (Math.random() * 20 + 1380).toFixed(2),
+                power: Math.floor(Math.random() * 500 + 700),
+                voltage: (220 + Math.random() * 3 - 1.5).toFixed(1),
+                current: 4.2
+            };
+
+            await dispatchSimulationPacket(payload, true);
+
+            // Đồng thời bắn 1 gói nước
+            await dispatchSimulationPacket({
+                room_id: roomId,
+                meter_type: 'water',
+                protocol: 'lorawan',
+                reading: (Math.random() * 5 + 35).toFixed(2),
+                flow_rate: (Math.random() * 1.5 + 0.8).toFixed(2)
+            }, true);
+
+            loadIotSummary();
+            onIotRoomFilterChange(roomId);
+        }
+
+        function onSimMeterTypeChange(val) {
+            const elecInputs = document.getElementById('sim-elec-inputs');
+            const waterInputs = document.getElementById('sim-water-inputs');
+            const readingInp = document.getElementById('sim-reading');
+
+            if (val === 'electricity') {
+                elecInputs?.classList.remove('hidden');
+                waterInputs?.classList.add('hidden');
+                if (readingInp) readingInp.value = 1420.5;
+            } else {
+                elecInputs?.classList.add('hidden');
+                waterInputs?.classList.remove('hidden');
+                if (readingInp) readingInp.value = 48.2;
+            }
+        }
+
+        async function dispatchSimulationPacket(payload, isSilent = false) {
+            try {
+                const response = await fetch("{{ route('smartroom.admin.iot.simulate') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const res = await response.json();
+                if (res.success) {
+                    loadIotSummary();
+                    if (payload.room_id) {
+                        const roomSelect = document.getElementById('iot-room-filter-select');
+                        if (roomSelect && roomSelect.value != payload.room_id) {
+                            roomSelect.value = payload.room_id;
+                        }
+                        onIotRoomFilterChange(payload.room_id);
+                    }
+                    if (!isSilent) {
+                        alert('🎉 ' + res.message);
+                    }
+                } else if (!isSilent) {
+                    alert('Lỗi: ' + (res.message || 'Không thể gửi gói tin'));
+                }
+            } catch (err) {
+                console.error(err);
+                if (!isSilent) alert('Có lỗi xảy ra khi kết nối máy chủ IoT!');
+            }
+        }
+
+        async function sendIotSimulation(event) {
+            if (event) event.preventDefault();
+            const btn = document.getElementById('btn-send-sim');
+            const form = document.getElementById('iot-simulator-form');
+            if (!form) return;
+
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang truyền...';
+            }
+
+            await dispatchSimulationPacket(payload, false);
+
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        function toggleAutoSimulation() {
+            const btn = document.getElementById('btn-auto-sim');
+            const icon = document.getElementById('auto-sim-icon');
+            const text = document.getElementById('auto-sim-text');
+            const counterBadge = document.getElementById('auto-sim-counter');
+            const countEl = document.getElementById('auto-sim-count');
+
+            if (iotState.autoSimTimer) {
+                // Tắt auto simulation
+                clearInterval(iotState.autoSimTimer);
+                iotState.autoSimTimer = null;
+                if (btn) btn.className = 'px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2';
+                if (icon) icon.className = 'fa-solid fa-play text-amber-400';
+                if (text) text.textContent = 'Bật Tự Động Bắn Gói Tin (Mỗi 1 Phút)';
+            } else {
+                // Bật auto simulation (chu kỳ 60 giây / 1 phút)
+                if (btn) btn.className = 'px-3.5 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/50 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-amber-500/10';
+                if (icon) icon.className = 'fa-solid fa-pause text-amber-400';
+                if (text) text.textContent = 'Đang Bắn Mỗi 1 Phút (Bấm để Dừng)';
+                if (counterBadge) counterBadge.classList.remove('hidden');
+
+                const autoStep = () => {
+                    const form = document.getElementById('iot-simulator-form');
+                    if (!form) return;
+                    const readingInp = document.getElementById('sim-reading');
+                    if (readingInp) {
+                        // Tăng nhẹ chỉ số lũy kế theo thời gian thực mỗi phút
+                        const currentVal = parseFloat(readingInp.value) || 1420.0;
+                        readingInp.value = (currentVal + 0.05).toFixed(2);
+                    }
+
+                    const formData = new FormData(form);
+                    const payload = Object.fromEntries(formData.entries());
+                    // Dao động nhẹ công suất 650W - 1100W
+                    if (payload.meter_type === 'electricity') {
+                        payload.power = Math.floor(Math.random() * (1100 - 650 + 1) + 650);
+                        payload.voltage = (220 + (Math.random() * 3 - 1.5)).toFixed(1);
+                    } else {
+                        payload.flow_rate = (Math.random() * 2.5 + 0.5).toFixed(2);
+                    }
+
+                    dispatchSimulationPacket(payload, true);
+                    iotState.autoSimCount++;
+                    if (countEl) countEl.textContent = iotState.autoSimCount;
+                };
+
+                // Phát ngay gói đầu tiên
+                autoStep();
+                // Lặp lại mỗi 60,000ms = 1 phút
+                iotState.autoSimTimer = setInterval(autoStep, 60000);
+            }
+        }
+
+
+        async function triggerIotAutoSync(btn) {
+            if (!confirm('Bạn có chắc chắn muốn CHỐT SỐ TỰ ĐỘNG TỪ IOT cho toàn bộ các phòng vào hóa đơn tháng này?')) {
+                return;
+            }
+
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ...';
+            }
+
+            try {
+                const response = await fetch("{{ route('smartroom.admin.iot.sync_billing') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const res = await response.json();
+                if (res.success) {
+                    alert(`⚡ ĐỒNG BỘ THÀNH CÔNG!\n${res.message}`);
+                    window.location.href = "{{ route('smartroom.admin', ['tab' => 'utility-section']) }}";
+                } else {
+                    alert('Lỗi: ' + (res.message || 'Không thể đồng bộ chốt số'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Có lỗi xảy ra khi gọi API chốt số IoT!');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            }
+        }
+
+        function applyIotReadingToInput(btn, value) {
+            const row = btn.closest('tr');
+            if (!row) return;
+            const input = btn.previousElementSibling;
+            if (input && input.tagName === 'INPUT') {
+                input.value = value;
+                calculateRowCost(input);
+                input.classList.add('ring-2', 'ring-emerald-400');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-emerald-400'), 2000);
+            }
+        }
+
         // Resident search
         function searchResidentTable() {
+
             const query = document.querySelector('input[name="resident_q"]')?.value.toLowerCase() || '';
             const rows = document.getElementById('resident-table-body').querySelectorAll('tr');
             rows.forEach(row => {
