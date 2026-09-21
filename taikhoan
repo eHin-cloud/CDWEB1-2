@@ -48,6 +48,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): tranminhanh
    - Số điện thoại: 0912000101
    - Email: minhanh.hn@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 101 (Tòa Cầu Giấy, Hà Nội)
    - Hợp đồng: Hợp đồng số 197 (Đang hiệu lực)
 
@@ -55,6 +56,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): nguyenhoangnam
    - Số điện thoại: 0912000102
    - Email: hoangnam.hn@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 102 (Tòa Cầu Giấy, Hà Nội)
    - Hợp đồng: Hợp đồng số 199 (Đang hiệu lực)
 
@@ -62,6 +64,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): lethutrang
    - Số điện thoại: 0912000201
    - Email: thutrang.hn@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 201 (Tòa Cầu Giấy, Hà Nội)
    - Hợp đồng: Hợp đồng số 201 (Đang hiệu lực)
 
@@ -69,6 +72,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): phamquocviet
    - Số điện thoại: 0912000302
    - Email: quocviet.hn@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 302 (Tòa Cầu Giấy, Hà Nội)
    - Hợp đồng: Hợp đồng số 203 (Đang hiệu lực)
 
@@ -76,6 +80,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): dokhanhlinh
    - Số điện thoại: 0912000402
    - Email: khanhlinh.hn@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 402 (Tòa Cầu Giấy, Hà Nội)
    - Hợp đồng: Hợp đồng số 205 (Đang hiệu lực)
 
@@ -84,6 +89,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): vuphuongthao
    - Số điện thoại: 0913000101
    - Email: phuongthao.hcm@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 101 (Tòa Luxury Bình Thạnh, TP.HCM)
    - Hợp đồng: Hợp đồng số 491 (Đang hiệu lực)
 
@@ -91,6 +97,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): danganhduc
    - Số điện thoại: 0913000102
    - Email: anhduc.hcm@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 102 (Tòa Luxury Bình Thạnh, TP.HCM)
    - Hợp đồng: Hợp đồng số 493 (Đang hiệu lực)
 
@@ -98,6 +105,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): ngobaochau
    - Số điện thoại: 0913000201
    - Email: baochau.hcm@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 201 (Tòa Luxury Bình Thạnh, TP.HCM)
    - Hợp đồng: Hợp đồng số 495 (Đang hiệu lực)
 
@@ -105,6 +113,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
    - Tên đăng nhập (username): hoanggiabao
    - Số điện thoại: 0913000602
    - Email: giabao.hcm@smartroom.local
+   - Mật khẩu (password): password
    - Phòng đang ở: Phòng 602 (Tòa Luxury Bình Thạnh, TP.HCM)
    - Hợp đồng: Hợp đồng số 489 (Đang hiệu lực)
 
@@ -112,6 +121,7 @@ Vai trò (role): user / resident (Cư dân thuê phòng)
     - Tên đăng nhập (username): buitiendat
     - Số điện thoại: 0913000502
     - Email: tiendat.hcm@smartroom.local
+    - Mật khẩu (password): password
     - Phòng đang ở: Phòng 502 (Tòa Luxury Bình Thạnh, TP.HCM)
     - Hợp đồng: Hợp đồng số 487 (Đang hiệu lực)
 
