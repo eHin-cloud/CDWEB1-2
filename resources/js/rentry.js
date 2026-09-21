@@ -1571,9 +1571,132 @@ function filterItems(options = {}) {
     }
 }
 
+let rentySmartSearchDebounce = null;
+let currentSmartSearchCorrection = null;
+
+// Gửi yêu cầu tìm kiếm thông minh tới API với debounce và hiển thị trực tiếp
+function fetchLiveSmartSearch(query) {
+    clearTimeout(rentySmartSearchDebounce);
+
+    const didYouMeanBox = document.getElementById('renty-did-you-mean-box');
+    const didYouMeanBtn = document.getElementById('renty-did-you-mean-btn');
+    const liveResultsSection = document.getElementById('renty-live-results-section');
+    const liveRoomsList = document.getElementById('renty-live-rooms-list');
+    const liveCount = document.getElementById('renty-live-count');
+    const loadingEl = document.getElementById('renty-search-loading');
+    const defaultChips = document.getElementById('renty-default-chips-section');
+
+    const trimmed = (query || '').trim();
+
+    if (trimmed.length < 2) {
+        currentSmartSearchCorrection = null;
+        if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+        if (liveResultsSection) liveResultsSection.classList.add('hidden');
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (defaultChips) defaultChips.classList.remove('hidden');
+        return;
+    }
+
+    if (loadingEl) loadingEl.classList.remove('hidden');
+
+    rentySmartSearchDebounce = setTimeout(async () => {
+        try {
+            const res = await fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(trimmed)}&limit=5`);
+            const data = await res.json();
+
+            if (loadingEl) loadingEl.classList.add('hidden');
+
+            if (!data.success) return;
+
+            // 1. Xử lý hiển thị "Có phải bạn muốn tìm..." khi phát hiện gõ nhầm / sai chính tả
+            if (data.has_correction && data.did_you_mean && data.did_you_mean.toLowerCase() !== trimmed.toLowerCase()) {
+                currentSmartSearchCorrection = data.did_you_mean;
+                if (didYouMeanBox && didYouMeanBtn) {
+                    didYouMeanBtn.textContent = data.did_you_mean;
+                    didYouMeanBox.classList.remove('hidden');
+                }
+            } else {
+                currentSmartSearchCorrection = null;
+                if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+            }
+
+            // 2. Xử lý hiển thị danh sách phòng xem nhanh (Live Previews)
+            if (liveResultsSection && liveRoomsList) {
+                if (data.rooms && data.rooms.length > 0) {
+                    if (liveCount) liveCount.textContent = data.count;
+                    liveRoomsList.innerHTML = data.rooms.map(room => `
+                        <a href="${room.url}" class="renty-live-room-item flex items-center justify-between p-2 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 transition-all group">
+                            <div class="flex items-center gap-2.5 overflow-hidden">
+                                <img src="${room.cover_image}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-700/60" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'">
+                                <div class="truncate text-left">
+                                    <h5 class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">${escapeHtml(room.title)}</h5>
+                                    <p class="text-[10px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                                        <span><i class="fa-solid fa-location-dot text-[8px] text-emerald-400"></i> ${escapeHtml(room.address || room.building_name)}</span>
+                                        <span>•</span>
+                                        <span>${room.area_formatted}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <span class="text-xs font-black text-emerald-400 block">${room.price_formatted}</span>
+                                <span class="text-[9px] text-amber-400 font-bold"><i class="fa-solid fa-star text-[8px]"></i> ${room.rating}</span>
+                            </div>
+                        </a>
+                    `).join('');
+                    liveResultsSection.classList.remove('hidden');
+                } else {
+                    liveRoomsList.innerHTML = `
+                        <div class="py-3 px-2 text-center text-[11px] text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800/60">
+                            <i class="fa-solid fa-magnifying-glass text-slate-500 mb-1 block"></i>
+                            Chưa tìm thấy phòng khớp chính xác. Thử từ khoá khác hoặc nhấn gợi ý sửa lỗi phía trên.
+                        </div>
+                    `;
+                    liveResultsSection.classList.remove('hidden');
+                }
+            }
+
+            // 3. Nếu đang ở trang xem phòng, kích hoạt lại filterItems để tận dụng từ đã sửa
+            if (document.getElementById('rooms-grid')) {
+                filterItems({ keepSkeleton: true, resetPage: false });
+            }
+
+        } catch (err) {
+            console.warn('Smart search request failed:', err);
+            if (loadingEl) loadingEl.classList.add('hidden');
+        }
+    }, 220);
+}
+
+// Áp dụng từ gợi ý sửa lỗi (Did you mean)
+function applySearchCorrection() {
+    if (!currentSmartSearchCorrection) return;
+
+    const navInput = document.getElementById('search-input');
+    const heroInput = document.getElementById('hero-search-input');
+
+    if (navInput) navInput.value = currentSmartSearchCorrection;
+    if (heroInput) heroInput.value = currentSmartSearchCorrection;
+
+    // Ẩn hộp gợi ý sau khi đã click sửa
+    document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+
+    if (!document.getElementById('rooms-grid')) {
+        window.location.href = '/renty?search=' + encodeURIComponent(currentSmartSearchCorrection);
+    } else {
+        filterItems();
+        fetchLiveSmartSearch(currentSmartSearchCorrection);
+    }
+}
+window.applySearchCorrection = applySearchCorrection;
+
 function openRentySearchSuggestions() {
     document.getElementById('renty-search-panel')?.classList.add('is-search-active');
     document.getElementById('renty-search-backdrop')?.classList.add('is-active');
+
+    const input = document.getElementById('search-input');
+    if (input && input.value.trim().length >= 2) {
+        fetchLiveSmartSearch(input.value);
+    }
 }
 
 function blurRentySearch() {
@@ -1584,14 +1707,17 @@ function blurRentySearch() {
 
 function applySearchSuggestion(query) {
     const input = document.getElementById('search-input');
+    const heroInput = document.getElementById('hero-search-input');
     if (input) {
         input.value = query;
+        if (heroInput) heroInput.value = query;
         if (!document.getElementById('rooms-grid')) {
             window.location.href = '/renty?search=' + encodeURIComponent(query);
         } else {
             input.focus();
             openRentySearchSuggestions();
             filterItems();
+            fetchLiveSmartSearch(query);
         }
     }
 }
@@ -1610,9 +1736,14 @@ function triggerRentySearch() {
 window.triggerRentySearch = triggerRentySearch;
 
 function handleSearchInput(e) {
+    const query = e.target.value;
+
+    // Kích hoạt tìm kiếm thông minh live với backend API
+    fetchLiveSmartSearch(query);
+
     if (!document.getElementById('rooms-grid')) {
         if (e.key === 'Enter') {
-            window.location.href = '/renty?search=' + encodeURIComponent(e.target.value);
+            window.location.href = '/renty?search=' + encodeURIComponent(query);
         }
     } else {
         filterItems();

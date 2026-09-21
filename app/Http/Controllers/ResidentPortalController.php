@@ -108,7 +108,7 @@ class ResidentPortalController extends Controller
             $imagePath = '/storage/' . $request->file('image')->store('tickets', 'public');
         }
 
-        Ticket::create([
+        $ticket = Ticket::create([
             'tenant_id' => $resident->tenant_id,
             'room_id' => $resident->room_id,
             'resident_id' => $resident->id,
@@ -118,6 +118,12 @@ class ResidentPortalController extends Controller
             'image_path' => $imagePath,
             'status' => 'pending',
         ]);
+
+        try {
+            event(new \App\Events\TicketCreated($ticket));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('TicketCreated broadcast failed: ' . $e->getMessage());
+        }
 
         return redirect()
             ->route('smartroom.resident', ['tab' => 'tickets'])

@@ -908,22 +908,28 @@
             <section id="room-map-section" class="tab-content hidden space-y-8 animate-fade-in">
                 <!-- Filter buttons and color legend -->
                 <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl">
-                    <div class="flex items-center gap-2">
-                        <button onclick="filterRooms('all')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white transition-all">
-                            Tất cả ({{ $totalRooms }})
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button data-filter="all" onclick="filterRooms('all', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 text-white transition-all">
+                            Tất cả (<span id="filter-count-all">{{ $totalRooms }}</span>)
                         </button>
-                        <button onclick="filterRooms('empty')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-                            Trống ({{ $emptyRooms }})
+                        <button data-filter="empty" onclick="filterRooms('empty', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Trống (<span id="filter-count-empty">{{ $emptyRooms }}</span>)
                         </button>
-                        <button onclick="filterRooms('occupied')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-                            Đã thuê ({{ $occupiedRooms }})
+                        <button data-filter="occupied" onclick="filterRooms('occupied', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Đã thuê (<span id="filter-count-occupied">{{ $occupiedRooms }}</span>)
                         </button>
-                        <button onclick="filterRooms('overdue')" class="room-filter-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
-                            Nợ phí ({{ $overdueRooms }})
+                        <button data-filter="overdue" onclick="filterRooms('overdue', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Nợ phí (<span id="filter-count-overdue">{{ $overdueRooms }}</span>)
+                        </button>
+                        <button data-filter="cleaning" onclick="filterRooms('cleaning', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Cần dọn (<span id="filter-count-cleaning">{{ $cleaningRooms ?? 0 }}</span>)
+                        </button>
+                        <button data-filter="maintenance" onclick="filterRooms('maintenance', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
+                            Bảo trì (<span id="filter-count-maintenance">{{ $maintenanceRooms ?? 0 }}</span>)
                         </button>
                     </div>
                     
-                    <div class="flex items-center gap-6 text-xs font-bold text-slate-400">
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold text-slate-400">
                         <div class="flex items-center gap-2">
                             <span class="w-3.5 h-3.5 rounded-md bg-emerald-500 border border-emerald-400/30"></span>
                             <span>Trống</span>
@@ -936,13 +942,21 @@
                             <span class="w-3.5 h-3.5 rounded-md bg-amber-500 border border-amber-400/30"></span>
                             <span>Nợ tiền</span>
                         </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3.5 h-3.5 rounded-md bg-orange-500 border border-orange-400/30 animate-pulse"></span>
+                            <span>Dọn dẹp</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3.5 h-3.5 rounded-md bg-slate-500 border border-slate-400/30"></span>
+                            <span>Bảo trì</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Floors and room grid -->
-                <div class="space-y-8">
+                <div class="space-y-8" id="room-matrix-container">
                     @foreach($roomsByFloor as $floor => $floorRooms)
-                    <div class="floor-group">
+                    <div class="floor-group" data-floor="{{ $floor }}">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <i class="fa-solid fa-layer-group text-indigo-400"></i> Tầng {{ $floor }}
                         </h3>
@@ -953,24 +967,34 @@
                                 $latestBill = $room->utilityRecords->first();
                                 $elecUsed = $latestBill ? ($latestBill->new_electricity - $latestBill->old_electricity) : 0;
                                 $waterUsed = $latestBill ? ($latestBill->new_water - $latestBill->old_water) : 0;
-                                $statusLabel = $room->status === 'empty' ? 'Trống' : ($room->status === 'overdue' ? 'Nợ phí' : 'Đã thuê');
-                                $statusClass = $room->status === 'empty' ? 'room-empty border-emerald-500/20' : ($room->status === 'overdue' ? 'room-overdue border-amber-500/20' : 'room-occupied border-red-500/20');
-                                $badgeClass = $room->status === 'empty' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ($room->status === 'overdue' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20');
+                                $statusLabel = $room->status_label;
+                                $statusClass = $room->status_class;
+                                $badgeClass = $room->badge_class;
                                 $totalBill = $latestBill ? ($room->price + ($elecUsed * $latestBill->electricity_price) + ($waterUsed * $latestBill->water_price) + 150000) : 0;
                             @endphp
-                            <div onclick="openRoomDetail('{{ $room->room_number }}', '{{ $room->status }}', '{{ $resident ? $resident->name : '' }}', '{{ $resident ? $resident->phone : '' }}', '{{ number_format($room->price) }}đ', '{{ $elecUsed }} kWh', '{{ $waterUsed }} m3', '{{ number_format($totalBill) }}đ', '{{ $latestBill ? $latestBill->id : 'null' }}')" 
-                                 class="room-card {{ $statusClass }} glass-card rounded-2xl p-5 cursor-pointer relative overflow-hidden group">
+                            <div id="room-card-{{ $room->id }}"
+                                 data-room-id="{{ $room->id }}"
+                                 data-room-number="{{ $room->room_number }}"
+                                 data-room-status="{{ $room->status }}"
+                                 data-resident-name="{{ $resident ? $resident->name : '' }}"
+                                 data-resident-phone="{{ $resident ? $resident->phone : '' }}"
+                                 data-price="{{ number_format($room->price) }}đ"
+                                 data-elec-used="{{ $elecUsed }} kWh"
+                                 data-water-used="{{ $waterUsed }} m3"
+                                 data-total-bill="{{ number_format($totalBill) }}đ"
+                                 data-latest-bill-id="{{ $latestBill ? $latestBill->id : '' }}"
+                                 onclick="openRoomDetailById({{ $room->id }})" 
+                                 class="room-card {{ $statusClass }} glass-card rounded-2xl p-5 cursor-pointer relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10">
                                 <div class="flex justify-between items-start mb-4">
                                     <span class="text-lg font-extrabold text-slate-200">P. {{ $room->room_number }}</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold border {{ $badgeClass }}">{{ $statusLabel }}</span>
+                                    <span class="room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border {{ $badgeClass }}">{{ $statusLabel }}</span>
                                 </div>
-                                @if($resident)
-                                    <h4 class="text-xs font-bold text-slate-400 truncate mb-1">Cư dân: {{ $resident->name }}</h4>
-                                    <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
+                                @if($resident && in_array($room->status, ['occupied', 'overdue']))
+                                    <h4 class="room-resident text-xs font-bold text-slate-400 truncate mb-1">Cư dân: {{ $resident->name }}</h4>
                                 @else
-                                    <h4 class="text-xs font-bold text-slate-500 italic mb-1">Chưa có cư dân</h4>
-                                    <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
+                                    <h4 class="room-resident text-xs font-bold text-slate-500 italic mb-1">Chưa có cư dân</h4>
                                 @endif
+                                <p class="text-[10px] text-slate-500">Giá phòng: {{ number_format($room->price) }}đ</p>
                             </div>
                             @endforeach
                         </div>
@@ -978,70 +1002,94 @@
                     @endforeach
                 </div>
 
-                <!-- ROOM DETAIL DRAWER/MODAL (HIDDEN BY DEFAULT) -->
-                <div id="room-detail-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-sm hidden flex justify-end items-stretch transition-opacity duration-300">
-                    <div class="w-full max-w-md bg-[#0a0f1d] border-l border-slate-800 p-8 flex flex-col justify-between h-full shadow-2xl relative animate-slide-in">
-                        <button onclick="closeRoomDetail()" class="absolute top-6 right-6 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
-                            <i class="fa-solid fa-xmark"></i>
+                <!-- ROOM DETAIL MODAL (CENTERED & FITS CONTENT) -->
+                <div id="room-detail-modal" onclick="closeRoomDetail()" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden flex items-center justify-center p-4 sm:p-6 transition-all duration-200">
+                    <div onclick="event.stopPropagation()" class="w-full max-w-md bg-[#0a0f1d] border border-slate-800/80 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto space-y-4 animate-fade-in border-t border-t-indigo-500/30">
+                        <button type="button" onclick="closeRoomDetail()" class="absolute top-5 right-5 w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all shadow-sm">
+                            <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
                         
-                        <div class="space-y-6">
+                        <div class="space-y-4">
                             <!-- Room Head -->
-                            <div>
+                            <div class="pr-8">
                                 <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold uppercase" id="modal-room-status-badge">Đã thuê</span>
                                 <h2 class="text-2xl font-extrabold text-slate-100 mt-2" id="modal-room-title">Phòng 202</h2>
                             </div>
 
-                            <hr class="border-slate-900">
+                            <!-- Housekeeping Quick Action Selector -->
+                            <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2.5">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                                    <span class="flex items-center gap-1.5 uppercase tracking-wider text-slate-300">
+                                        <i class="fa-solid fa-broom text-amber-400"></i> Housekeeping / Dọn buồng
+                                    </span>
+                                    <span id="quick-status-loading" class="text-indigo-400 hidden">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <button type="button" onclick="setQuickRoomStatus('empty')" id="btn-quick-empty" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 border-slate-800 bg-slate-900/50">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+                                        <span class="text-[11px]">Đã dọn xong</span>
+                                    </button>
+                                    <button type="button" onclick="setQuickRoomStatus('cleaning')" id="btn-quick-cleaning" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-orange-500 hover:bg-orange-500/10 text-orange-400 border-slate-800 bg-slate-900/50">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></span>
+                                        <span class="text-[11px]">Cần dọn dẹp</span>
+                                    </button>
+                                    <button type="button" onclick="setQuickRoomStatus('maintenance')" id="btn-quick-maintenance" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-slate-500 hover:bg-slate-500/10 text-slate-400 border-slate-800 bg-slate-900/50">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500 shadow-sm shadow-slate-500/50"></span>
+                                        <span class="text-[11px]">Bảo trì</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                            <!-- Resident details -->
-                            <div class="space-y-3" id="modal-resident-details">
+                            <!-- Resident details (chỉ hiện khi phòng có người ở) -->
+                            <div class="space-y-2 hidden" id="modal-resident-details">
                                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin cư dân</h3>
-                                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/40 space-y-2">
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Họ tên:</span> <strong class="text-slate-200" id="modal-resident-name">Lê Thị Bình</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Số điện thoại:</span> <strong class="text-slate-200" id="modal-resident-phone">0901234567</strong></div>
+                                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-2">
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Họ tên:</span> <strong class="text-slate-200" id="modal-resident-name">-</strong></div>
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Số điện thoại:</span> <strong class="text-slate-200" id="modal-resident-phone">-</strong></div>
                                     <div class="flex justify-between text-xs"><span class="text-slate-500">Bắt đầu ở:</span> <strong class="text-slate-200">01/03/2025</strong></div>
                                 </div>
                             </div>
 
-                            <!-- Billing summary -->
-                            <div class="space-y-3" id="modal-billing-details">
+                            <!-- Billing summary (chỉ hiện khi phòng có hóa đơn) -->
+                            <div class="space-y-2 hidden" id="modal-billing-details">
                                 <div class="flex justify-between items-center">
-                                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hóa đơn tháng 05/2026</h3>
+                                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hóa đơn tháng gần nhất</h3>
                                     <span class="text-[10px] text-amber-400 font-bold" id="modal-bill-status">Chưa thanh toán</span>
                                 </div>
-                                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/40 space-y-2">
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền thuê phòng:</span> <strong class="text-slate-200" id="modal-bill-rent">3.800.000đ</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền điện:</span> <strong class="text-slate-200" id="modal-bill-electric">385.000đ (110 kWh)</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền nước:</span> <strong class="text-slate-200" id="modal-bill-water">120.000đ (8 m3)</strong></div>
+                                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-2">
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền thuê phòng:</span> <strong class="text-slate-200" id="modal-bill-rent">0đ</strong></div>
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền điện:</span> <strong class="text-slate-200" id="modal-bill-electric">0đ</strong></div>
+                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền nước:</span> <strong class="text-slate-200" id="modal-bill-water">0đ</strong></div>
                                     <div class="flex justify-between text-xs"><span class="text-slate-500">Dịch vụ (Mạng, vệ sinh):</span> <strong class="text-slate-200">150.000đ</strong></div>
-                                    <hr class="border-slate-800/40 my-2">
-                                    <div class="flex justify-between text-sm"><strong class="text-indigo-400">Tổng thanh toán:</strong> <strong class="text-indigo-400 font-extrabold" id="modal-bill-total">4.455.000đ</strong></div>
+                                    <hr class="border-slate-800/60 my-2">
+                                    <div class="flex justify-between text-sm"><strong class="text-indigo-400">Tổng thanh toán:</strong> <strong class="text-indigo-400 font-extrabold" id="modal-bill-total">0đ</strong></div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action buttons -->
-                        <div class="space-y-3 mt-6">
+                        <div class="space-y-2.5 pt-3 border-t border-slate-800/60">
                             <form id="modal-pay-form" action="" method="POST" class="hidden">
                                 @csrf
                             </form>
                             <form id="modal-notify-form" action="" method="POST" class="hidden">
                                 @csrf
                             </form>
-                            <button id="modal-btn-pay" onclick="submitModalPay()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 transition-all hidden">
+                            <button id="modal-btn-pay" onclick="submitModalPay()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 transition-all hidden">
                                 <i class="fa-solid fa-circle-check"></i> Xác nhận đã đóng tiền
                             </button>
-                            <button id="modal-btn-action" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all">
+                            <button id="modal-btn-action" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all hidden">
                                 <i class="fa-solid fa-bell-slash"></i> Gửi nhắc nợ qua Zalo/Mail
                             </button>
-                            <button id="modal-btn-qr" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all">
+                            <button id="modal-btn-qr" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
                                 <i class="fa-solid fa-qrcode text-indigo-400"></i> Xem mã VietQR hóa đơn
                             </button>
-                            <button id="modal-btn-print" onclick="printModalInvoice()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
+                            <button id="modal-btn-print" onclick="printModalInvoice()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
                                 <i class="fa-solid fa-print text-indigo-400"></i> In hóa đơn / Xuất PDF
                             </button>
-                            <button onclick="closeRoomDetail()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-400 bg-transparent hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                            <button type="button" onclick="closeRoomDetail()" class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-semibold text-slate-400 bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 hover:border-slate-700 transition-all">
                                 Đóng lại
                             </button>
                         </div>
@@ -1057,11 +1105,14 @@
                             <h3 class="text-base font-bold text-slate-200">Chốt Điện Nước Cuối Tháng</h3>
                             <p class="text-xs text-slate-500">Nhập chỉ số điện nước tháng 06/2026. Đơn giá: Điện 3.500đ/kWh, Nước 15.000đ/m3.</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="triggerAutoRemind(this)" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-bell animate-bounce"></i> Tự Động Nhắc Nợ Zalo Hàng Loạt
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button type="button" onclick="triggerAutoRemind(this)" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-bell animate-bounce"></i> Nhắc Nợ Zalo Hàng Loạt
                             </button>
-                            <button type="submit" form="bulk-utility-form" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
+                            <button type="button" onclick="openBulkOcrModal('electricity')" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-bolt-lightning animate-pulse"></i> ⚡ AI Quét Hàng Loạt (Khớp Phòng)
+                            </button>
+                            <button type="submit" form="bulk-utility-form" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-check-double"></i> Lưu & Xuất Hóa Đơn Hàng Loạt
                             </button>
                         </div>
@@ -1073,7 +1124,7 @@
                             <table class="w-full text-left text-sm text-slate-300">
                                 <thead class="text-xs text-slate-500 uppercase bg-slate-900/50 border-b border-slate-900">
                                     <tr>
-                                        <th class="px-6 py-4 font-bold">Phòng</th>
+                                        <th class="px-6 py-4 font-bold">Phòng & Số SX Công Tơ</th>
                                         <th class="px-6 py-4 font-bold">Điện cũ</th>
                                         <th class="px-6 py-4 font-bold">Điện mới (kWh)</th>
                                         <th class="px-6 py-4 font-bold">Nước cũ</th>
@@ -1103,22 +1154,59 @@
                                         }
                                         $statusColor = $room->status === 'overdue' ? 'bg-amber-500' : ($room->status === 'empty' ? 'bg-emerald-500' : 'bg-red-500');
                                     @endphp
-                                    <tr class="hover:bg-slate-900/10 transition-all" data-room="{{ $room->room_number }}" data-price="{{ $room->price }}">
-                                        <td class="px-6 py-4 font-bold text-slate-200 flex items-center gap-2">
-                                            <span class="w-2.5 h-2.5 rounded-full {{ $statusColor }}"></span> 
-                                            {{ $room->room_number }} ({{ $resident ? $resident->name : 'N/A' }})
+                                    <tr class="hover:bg-slate-900/10 transition-all" data-room-id="{{ $room->id }}" data-room="{{ $room->room_number }}" data-price="{{ $room->price }}" data-electric-serial="{{ $room->electric_meter_serial ?? '' }}" data-water-serial="{{ $room->water_meter_serial ?? '' }}">
+                                        <td class="px-6 py-4 text-slate-200">
+                                            <div class="flex items-center gap-2 font-bold">
+                                                <span class="w-2.5 h-2.5 rounded-full {{ $statusColor }}"></span> 
+                                                <span>{{ $room->room_number }} ({{ $resident ? $resident->name : 'N/A' }})</span>
+                                            </div>
+                                            <div class="text-[10px] text-slate-400 flex items-center gap-1.5 mt-1 font-mono flex-wrap">
+                                                @if($room->electric_meter_serial)
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20" title="Số SX Công tơ Điện: {{ $room->electric_meter_serial }}">
+                                                        <i class="fa-solid fa-bolt"></i> {{ $room->electric_meter_serial }}
+                                                    </span>
+                                                @endif
+                                                @if($room->water_meter_serial)
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20" title="Số SX Đồng hồ Nước: {{ $room->water_meter_serial }}">
+                                                        <i class="fa-solid fa-droplet"></i> {{ $room->water_meter_serial }}
+                                                    </span>
+                                                @endif
+                                                @if(!$room->electric_meter_serial && !$room->water_meter_serial)
+                                                    <a href="{{ route('admin.rooms.edit', $room->id) }}" class="text-[9px] text-indigo-400 hover:underline italic" title="Bấm vào đây để cài đặt Số SX công tơ cho phòng">+ Cài Số SX</a>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-xs text-slate-500" data-field="old-elec">{{ $oldElec }}</td>
                                         <td class="px-6 py-4">
-                                            <input type="number" name="utilities[{{ $room->id }}][new_electricity]" value="{{ $newElec }}" oninput="calculateRowCost(this)" class="new-elec-input w-28 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none" placeholder="Nhập số mới">
+                                            <div class="flex items-center gap-1.5">
+                                                <input type="number" name="utilities[{{ $room->id }}][new_electricity]" value="{{ $newElec }}" oninput="calculateRowCost(this)" class="new-elec-input w-24 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-colors" placeholder="Số mới">
+                                                <button type="button" onclick="openMeterOcrModal('{{ $room->id }}', '{{ $room->room_number }}', 'electricity', this)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-indigo-500/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 text-xs transition-all shadow-sm" title="Quét số điện bằng AI OCR Camera">
+                                                    <i class="fa-solid fa-camera"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-xs text-slate-500" data-field="old-water">{{ $oldWater }}</td>
                                         <td class="px-6 py-4">
-                                            <input type="number" name="utilities[{{ $room->id }}][new_water]" value="{{ $newWater }}" oninput="calculateRowCost(this)" class="new-water-input w-28 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none" placeholder="Nhập số mới">
+                                            <div class="flex items-center gap-1.5">
+                                                <input type="number" name="utilities[{{ $room->id }}][new_water]" value="{{ $newWater }}" oninput="calculateRowCost(this)" class="new-water-input w-24 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-colors" placeholder="Số mới">
+                                                <button type="button" onclick="openMeterOcrModal('{{ $room->id }}', '{{ $room->room_number }}', 'water', this)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-cyan-500/10 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-cyan-500/20 text-xs transition-all shadow-sm" title="Quét số nước bằng AI OCR Camera">
+                                                    <i class="fa-solid fa-camera"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-xs text-slate-400">
-                                            <div>⚡ Điện: <strong data-field="used-elec">0</strong> kWh</div>
-                                            <div>💧 Nước: <strong data-field="used-water">0</strong> m3</div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span>⚡ Điện: <strong data-field="used-elec">0</strong> kWh</span>
+                                                <span class="abnormal-elec-warning hidden text-amber-400 font-bold text-[10px] items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded" title="Lượng điện tiêu thụ tăng đột biến (> 1000 kWh)!">
+                                                    <i class="fa-solid fa-triangle-exclamation animate-bounce"></i> Bất thường
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 mt-1">
+                                                <span>💧 Nước: <strong data-field="used-water">0</strong> m3</span>
+                                                <span class="abnormal-water-warning hidden text-amber-400 font-bold text-[10px] items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded" title="Lượng nước tiêu thụ tăng đột biến (> 100 m3)!">
+                                                    <i class="fa-solid fa-triangle-exclamation animate-bounce"></i> Bất thường
+                                                </span>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-indigo-400 font-bold text-xs" data-field="cost-total">0đ</td>
                                         <td class="px-6 py-4 text-center">
@@ -1145,6 +1233,246 @@
                                 </tbody>
                             </table>
                         </form>
+                    </div>
+                </div>
+
+                <!-- MODAL AI OCR CAMERA QUÉT CÔNG TƠ ĐIỆN NƯỚC -->
+                <div id="meter-ocr-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden flex items-center justify-center p-4 transition-all duration-300">
+                    <div class="glass-card w-full max-w-lg rounded-3xl border border-slate-800 p-6 space-y-5 shadow-2xl relative animate-fade-in bg-[#0a0f1d]/95">
+                        <!-- Header -->
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-inner">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                                        AI OCR Quét Công Tơ
+                                        <span id="ocr-meter-type-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Điện</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-400 mt-0.5">Phòng <strong id="ocr-target-room-text" class="text-slate-200">101</strong> — Google Gemini Vision AI bóc tách chỉ số</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="closeMeterOcrModal()" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Source Switch Tabs -->
+                        <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950 border border-slate-900">
+                            <button type="button" id="tab-btn-camera" onclick="switchOcrSource('camera')" class="py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm">
+                                <i class="fa-solid fa-camera"></i> Camera Trực Tiếp
+                            </button>
+                            <button type="button" id="tab-btn-upload" onclick="switchOcrSource('upload')" class="py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Tải Ảnh Có Sẵn
+                            </button>
+                        </div>
+
+                        <!-- Viewport Box: Camera Stream & Image Preview -->
+                        <div class="relative w-full rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden flex items-center justify-center min-h-[220px]">
+                            <!-- Video Stream -->
+                            <video id="ocr-camera-video" autoplay playsinline class="w-full h-56 object-cover hidden"></video>
+
+                            <!-- Image Preview -->
+                            <img id="ocr-image-preview" src="" alt="Meter Preview" class="w-full h-56 object-contain hidden">
+
+                            <!-- Upload Zone -->
+                            <div id="ocr-upload-zone" onclick="document.getElementById('ocr-file-input').click()" class="p-8 text-center cursor-pointer hover:bg-slate-900/30 transition-all flex flex-col items-center justify-center gap-2 hidden w-full h-56">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
+                                    <i class="fa-solid fa-image text-xl"></i>
+                                </div>
+                                <p class="text-xs font-bold text-slate-300">Bấm vào đây để chọn ảnh chụp công tơ</p>
+                                <p class="text-[10px] text-slate-500">Hỗ trợ định dạng JPG, PNG, WEBP (Tối đa 5MB)</p>
+                            </div>
+
+                            <!-- Laser Scanning Animation -->
+                            <div id="ocr-laser-line" class="hidden absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#22d3ee] animate-pulse"></div>
+
+                            <!-- AI Processing Overlay -->
+                            <div id="ocr-loading-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex flex-col items-center justify-center gap-3">
+                                <div class="w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span class="text-xs font-bold text-slate-200">Gemini Vision AI đang đọc chỉ số công tơ...</span>
+                                <span class="text-[10px] text-indigo-400">Quét số nguyên từ mặt đồng hồ</span>
+                            </div>
+
+                            <!-- Camera Permission / Error Warning -->
+                            <div id="ocr-camera-error" class="p-6 text-center hidden flex flex-col items-center justify-center gap-2">
+                                <i class="fa-solid fa-video-slash text-2xl text-rose-400 mb-1"></i>
+                                <p class="text-xs font-bold text-slate-300">Không thể mở Camera thiết bị</p>
+                                <p class="text-[10px] text-slate-500 max-w-xs">Vui lòng cấp quyền truy cập camera trên trình duyệt hoặc chuyển sang tab <strong>Tải Ảnh Có Sẵn</strong>.</p>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Form Elements -->
+                        <canvas id="ocr-capture-canvas" class="hidden"></canvas>
+                        <input type="file" id="ocr-file-input" accept="image/*" class="hidden" onchange="handleOcrFileSelected(this)">
+
+                        <!-- Intermediate Actions: Capture & Retake -->
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-ocr-capture" onclick="captureOcrSnapshot()" class="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25">
+                                <i class="fa-solid fa-camera"></i> Chụp Ảnh Mặt Đồng Hồ
+                            </button>
+                            <button type="button" id="btn-ocr-retake" onclick="resetOcrCapture()" class="hidden py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-rotate-left"></i> Chụp Lại
+                            </button>
+                            <button type="button" id="btn-ocr-analyze" onclick="submitOcrAnalysis()" class="hidden flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-90 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25">
+                                <i class="fa-solid fa-sparkles"></i> Phân Tích Với AI Gemini
+                            </button>
+                        </div>
+
+                        <!-- Result Display Box -->
+                        <div id="ocr-result-box" class="hidden p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Kết Quả Phân Tích</span>
+                                <span id="ocr-confidence-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    Độ tin cậy: 95%
+                                </span>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-xs text-slate-500">Chỉ số công tơ đọc được:</span>
+                                <div class="flex items-baseline gap-1">
+                                    <span id="ocr-result-value" class="text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">0</span>
+                                    <span id="ocr-result-unit" class="text-xs font-bold text-slate-400">kWh</span>
+                                </div>
+                            </div>
+                            <div id="ocr-fallback-hint" class="hidden p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                <span>AI nhận diện độ nét chưa tối ưu. Vui lòng kiểm tra lại ảnh chụp hoặc chỉnh tay nếu cần.</span>
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="flex gap-2 pt-2 border-t border-slate-900">
+                            <button type="button" onclick="closeMeterOcrModal()" class="w-1/3 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-bold transition-all">
+                                Đóng lại
+                            </button>
+                            <button type="button" id="btn-ocr-apply" onclick="applyOcrResultToInput()" disabled class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                                <i class="fa-solid fa-check"></i> Áp Dụng Chỉ Số Vào Bảng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: AI Bulk OCR Scanning (Quét Hàng Loạt & Khớp Phòng) -->
+                <div id="bulk-meter-ocr-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+                    <div class="relative w-full max-w-4xl bg-slate-900/95 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 my-8">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/25">
+                                    <i class="fa-solid fa-bolt-lightning text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-base font-bold text-slate-100">AI Quét Hàng Loạt & Khớp Phòng Tự Động</h3>
+                                        <span id="bulk-ocr-type-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Điện (kWh)</span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-0.5">Tải lên nhiều ảnh công tơ một lượt. Gemini Vision AI sẽ bóc tách Số SX và Chỉ số để tự động điền vào từng phòng.</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="closeBulkOcrModal()" class="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Loại công tơ: Điện hoặc Nước -->
+                        <div class="flex items-center justify-between gap-4 p-3 rounded-2xl bg-slate-950 border border-slate-800/60">
+                            <div class="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-filter text-indigo-400"></i> Loại công tơ đang quét:
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="bulk-type-btn-electricity" onclick="setBulkOcrType('electricity')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm">
+                                    <i class="fa-solid fa-bolt"></i> Công Tơ Điện
+                                </button>
+                                <button type="button" id="bulk-type-btn-water" onclick="setBulkOcrType('water')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200">
+                                    <i class="fa-solid fa-droplet"></i> Đồng Hồ Nước
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Khu vực tải nhiều ảnh (Dropzone) -->
+                        <input type="file" id="bulk-ocr-file-input" multiple accept="image/*" class="hidden" onchange="handleBulkOcrFilesSelected(this)">
+                        
+                        <div id="bulk-ocr-dropzone" onclick="document.getElementById('bulk-ocr-file-input').click()" class="border-2 border-dashed border-slate-700 hover:border-indigo-500/60 rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-950/50 hover:bg-slate-950/80 group">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 group-hover:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400 transition-all shadow-inner">
+                                    <i class="fa-solid fa-cloud-arrow-up text-2xl group-hover:scale-110 transition-transform"></i>
+                                </div>
+                                <p class="text-sm font-bold text-slate-200">Nhấn vào đây hoặc kéo thả nhiều ảnh công tơ vào đây</p>
+                                <p class="text-xs text-slate-400 max-w-md">Hỗ trợ định dạng JPG, PNG, WEBP (chụp từ điện thoại, tối đa 30 ảnh một lượt). AI sẽ tự xoay, phóng to mặt số và trích xuất.</p>
+                            </div>
+                        </div>
+
+                        <!-- Trạng thái ảnh đã chọn & Nút kích hoạt AI -->
+                        <div id="bulk-ocr-files-bar" class="hidden flex items-center justify-between p-3 rounded-2xl bg-slate-950 border border-slate-800">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                <span class="text-slate-300 font-semibold">Đã nạp <strong id="bulk-files-count" class="text-emerald-400 font-mono text-sm">0</strong> ảnh công tơ</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="clearBulkOcrFiles()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold transition-all">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Chọn lại
+                                </button>
+                                <button type="button" id="btn-start-bulk-ocr" onclick="startBulkOcrAnalysis()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-90 text-white text-xs font-bold transition-all shadow-lg shadow-purple-600/25 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Bắt Đầu Quét AI Tự Động
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hiệu ứng quét và thanh tiến trình -->
+                        <div id="bulk-ocr-progress-box" class="hidden p-4 rounded-2xl bg-slate-950 border border-indigo-500/30 space-y-3">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span class="text-indigo-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Đang phân tích qua Google Gemini Vision AI...
+                                </span>
+                                <span id="bulk-ocr-progress-text" class="text-slate-400 font-mono">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                                <div id="bulk-ocr-progress-bar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 italic">Hệ thống đang bóc tách Số SX và Chỉ số từng ảnh, đồng thời đối chiếu với các phòng trong nhà trọ của bạn...</p>
+                        </div>
+
+                        <!-- Bảng kết quả phân tích & đối chiếu (Review Table) -->
+                        <div id="bulk-ocr-results-wrapper" class="hidden space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-slate-200 uppercase tracking-wider">Kết Quả Khớp Dữ Liệu</span>
+                                    <span id="bulk-match-stats-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        Khớp thành công 0/0
+                                    </span>
+                                </div>
+                                <span class="text-[11px] text-slate-400">Bạn có thể chỉnh sửa lại phòng hoặc chỉ số trước khi chốt</span>
+                            </div>
+
+                            <div class="max-h-72 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950/60 divide-y divide-slate-800/60">
+                                <table class="w-full text-left text-xs text-slate-300">
+                                    <thead class="text-[11px] text-slate-400 uppercase bg-slate-900/80 sticky top-0 backdrop-blur-sm z-10 border-b border-slate-800">
+                                        <tr>
+                                            <th class="px-4 py-3">Ảnh</th>
+                                            <th class="px-4 py-3">Số SX AI Đọc</th>
+                                            <th class="px-4 py-3">Phòng Khớp Được</th>
+                                            <th class="px-4 py-3">Chỉ Số Mới</th>
+                                            <th class="px-4 py-3">Trạng Thái</th>
+                                            <th class="px-4 py-3 text-center">Bỏ qua</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bulk-ocr-results-body" class="divide-y divide-slate-900">
+                                        <!-- Rows rendered dynamically by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                            <button type="button" onclick="closeBulkOcrModal()" class="py-2.5 px-5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-bold transition-all">
+                                Đóng lại
+                            </button>
+                            <button type="button" id="btn-bulk-ocr-apply" onclick="applyBulkOcrToTable()" disabled class="py-2.5 px-6 rounded-xl bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                                <i class="fa-solid fa-check-double"></i> Áp Dụng Tất Cả Vào Bảng Chốt Số
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -2401,27 +2729,59 @@
             });
         });
 
-        // Room filter function
-        function filterRooms(status) {
+        // Room filter state & functions
+        let currentRoomFilter = 'all';
+
+        function applyCurrentFilterToCard(card) {
+            if (!card) return;
+            const status = card.getAttribute('data-room-status') || '';
+            if (currentRoomFilter === 'all' || currentRoomFilter === status) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        }
+
+        function updateRoomFilterCounts() {
+            const cards = document.querySelectorAll('.room-card');
+            const counts = {
+                all: cards.length,
+                empty: 0,
+                occupied: 0,
+                overdue: 0,
+                cleaning: 0,
+                maintenance: 0
+            };
+
+            cards.forEach(card => {
+                const st = card.getAttribute('data-room-status');
+                if (counts.hasOwnProperty(st)) {
+                    counts[st]++;
+                }
+            });
+
+            for (const [key, val] of Object.entries(counts)) {
+                const el = document.getElementById('filter-count-' + key);
+                if (el) el.textContent = val;
+            }
+        }
+
+        function filterRooms(status, btnElement = null) {
+            currentRoomFilter = status;
+
             // Set active button style
             document.querySelectorAll('.room-filter-btn').forEach(btn => {
                 btn.classList.remove('bg-indigo-600', 'text-white');
                 btn.classList.add('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                if (btn.getAttribute('data-filter') === status) {
+                    btn.classList.remove('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                }
             });
-            event.currentTarget.classList.remove('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
-            event.currentTarget.classList.add('bg-indigo-600', 'text-white');
 
             // Show/hide cards
             document.querySelectorAll('.room-card').forEach(card => {
-                if (status === 'all') {
-                    card.classList.remove('hidden');
-                } else {
-                    if (card.classList.contains('room-' + status)) {
-                        card.classList.remove('hidden');
-                    } else {
-                        card.classList.add('hidden');
-                    }
-                }
+                applyCurrentFilterToCard(card);
             });
         }
 
@@ -2594,39 +2954,97 @@
             }
         }
 
+        // Biến lưu thông tin phòng đang mở trong modal
+        let currentActiveRoomId = null;
+        let currentActiveRoomStatus = null;
+        let currentActiveRoomNumber = null;
+
+        function openRoomDetailById(roomId) {
+            const card = document.getElementById('room-card-' + roomId);
+            if (!card) return;
+
+            const roomNum = card.getAttribute('data-room-number') || '';
+            const status = card.getAttribute('data-room-status') || 'empty';
+            const name = card.getAttribute('data-resident-name') || '';
+            const phone = card.getAttribute('data-resident-phone') || '';
+            const rent = card.getAttribute('data-price') || '0đ';
+            const elec = card.getAttribute('data-elec-used') || '0 kWh';
+            const water = card.getAttribute('data-water-used') || '0 m3';
+            const total = card.getAttribute('data-total-bill') || '0đ';
+            const latestBillId = card.getAttribute('data-latest-bill-id') || null;
+
+            openRoomDetail(roomId, roomNum, status, name, phone, rent, elec, water, total, latestBillId);
+        }
+
         // Room Detail modal triggers
-        function openRoomDetail(roomNum, status, name, phone, rent, elec, water, total, latestBillId) {
+        function openRoomDetail(roomId, roomNum, status, name, phone, rent, elec, water, total, latestBillId) {
+            // Hỗ trợ trường hợp gọi cũ (9 tham số mà không có roomId ở đầu)
+            if (arguments.length === 9 && typeof roomId === 'string' && isNaN(roomId)) {
+                latestBillId = total;
+                total = water;
+                water = elec;
+                elec = rent;
+                rent = phone;
+                phone = name;
+                name = status;
+                status = roomNum;
+                roomNum = roomId;
+                roomId = null;
+            }
+
+            currentActiveRoomId = roomId;
+            currentActiveRoomStatus = status;
+            currentActiveRoomNumber = roomNum;
+
             const modal = document.getElementById('room-detail-modal');
             const title = document.getElementById('modal-room-title');
             const badge = document.getElementById('modal-room-status-badge');
             
             title.textContent = "Phòng " + roomNum;
-            badge.textContent = status === 'empty' ? 'Trống' : (status === 'overdue' ? 'Nợ phí' : 'Đã thuê');
             
-            // Set badge classes
-            badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border ";
-            if(status === 'empty') badge.className += "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-            else if(status === 'occupied') badge.className += "bg-red-500/10 text-red-400 border-red-500/20";
-            else badge.className += "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            // Set nhãn trạng thái và badge
+            const statusLabels = {
+                'empty': 'Trống',
+                'occupied': 'Đã thuê',
+                'overdue': 'Nợ phí',
+                'cleaning': 'Cần dọn dẹp',
+                'maintenance': 'Bảo trì'
+            };
+            const badgeClasses = {
+                'empty': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                'occupied': 'bg-red-500/10 text-red-400 border-red-500/20',
+                'overdue': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                'cleaning': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                'maintenance': 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+            };
 
-            // If empty, hide resident and billing details
+            badge.textContent = statusLabels[status] || 'Không xác định';
+            badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + (badgeClasses[status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20');
+
+            // Cập nhật trạng thái active cho các nút Housekeeping
+            updateQuickStatusButtons(status);
+
+            // If empty, cleaning or maintenance, hide resident and billing details
             const resDetails = document.getElementById('modal-resident-details');
             const billDetails = document.getElementById('modal-billing-details');
             const actionBtn = document.getElementById('modal-btn-action');
             const payBtn = document.getElementById('modal-btn-pay');
             const printBtn = document.getElementById('modal-btn-print');
+            const qrBtn = document.getElementById('modal-btn-qr');
             
-            if(status === 'empty') {
+            if(status === 'empty' || status === 'cleaning' || status === 'maintenance') {
                 resDetails.classList.add('hidden');
                 billDetails.classList.add('hidden');
                 actionBtn.classList.add('hidden');
                 payBtn.classList.add('hidden');
                 printBtn.classList.add('hidden');
+                if (qrBtn) qrBtn.classList.add('hidden');
                 currentBillId = null;
             } else {
                 resDetails.classList.remove('hidden');
                 billDetails.classList.remove('hidden');
                 actionBtn.classList.remove('hidden');
+                if (qrBtn) qrBtn.classList.remove('hidden');
                 
                 document.getElementById('modal-resident-name').textContent = name;
                 document.getElementById('modal-resident-phone').textContent = phone;
@@ -2636,7 +3054,6 @@
                 document.getElementById('modal-bill-total').textContent = total || rent;
                 
                 const billStatusBadge = document.getElementById('modal-bill-status');
-                const qrBtn = document.getElementById('modal-btn-qr');
                 const rawAmount = (total || rent).replace(/\D/g, '');
                 
                 if (qrBtn) {
@@ -2668,7 +3085,7 @@
                         document.getElementById('modal-pay-form').action = `/smartroom/admin/utility/${latestBillId}/pay`;
                         document.getElementById('modal-notify-form').action = `/smartroom/admin/utility/${latestBillId}/notify`;
                         actionBtn.onclick = function() {
-                            openSendMsgModal(phone, name, `Kính gửi anh/chị ${name}, ban quản lý thông báo hóa đơn dịch vụ tháng 06 phòng ${roomNum} chưa được thanh toán với tổng số tiền là ${total}. Vui lòng thanh toán sớm nhất có thể. Trân trọng!`, 'debt');
+                            openSendMsgModal(phone, name, `Kính gửi anh/chị ${name}, ban quản lý thông báo hóa đơn dịch vụ phòng ${roomNum} chưa được thanh toán với tổng số tiền là ${total}. Vui lòng thanh toán sớm nhất có thể. Trân trọng!`, 'debt');
                         };
                     } else {
                         payBtn.classList.add('hidden');
@@ -2685,7 +3102,91 @@
             }
 
             modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
+
+        function closeRoomDetail() {
+            const modal = document.getElementById('room-detail-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+
+        function updateQuickStatusButtons(status) {
+            const btnEmpty = document.getElementById('btn-quick-empty');
+            const btnCleaning = document.getElementById('btn-quick-cleaning');
+            const btnMaintenance = document.getElementById('btn-quick-maintenance');
+            
+            if (!btnEmpty || !btnCleaning || !btnMaintenance) return;
+
+            // Reset classes
+            [btnEmpty, btnCleaning, btnMaintenance].forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-1', 'ring-offset-slate-950', 'border-emerald-500', 'border-orange-500', 'border-slate-400', 'bg-emerald-500/20', 'bg-orange-500/20', 'bg-slate-500/20');
+            });
+
+            if (status === 'empty') {
+                btnEmpty.classList.add('border-emerald-500', 'bg-emerald-500/20', 'ring-2', 'ring-emerald-400');
+            } else if (status === 'cleaning') {
+                btnCleaning.classList.add('border-orange-500', 'bg-orange-500/20', 'ring-2', 'ring-orange-400');
+            } else if (status === 'maintenance') {
+                btnMaintenance.classList.add('border-slate-400', 'bg-slate-500/20', 'ring-2', 'ring-slate-400');
+            }
+        }
+
+        // Cập nhật nhanh trạng thái phòng (Housekeeping) qua AJAX
+        async function setQuickRoomStatus(newStatus) {
+            if (!currentActiveRoomId) {
+                alert('Không xác định được phòng cần cập nhật!');
+                return;
+            }
+
+            const loadingSpinner = document.getElementById('quick-status-loading');
+            if (loadingSpinner) loadingSpinner.classList.remove('hidden');
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                    || '{{ csrf_token() }}';
+
+                const response = await fetch(`/smartroom/admin/rooms/${currentActiveRoomId}/quick-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
+                    return;
+                }
+
+                // Cập nhật trực tiếp trên thẻ phòng trên Ma Trận
+                applyRoomCardUpdate(data.room);
+
+                // Cập nhật lại trạng thái hiển thị trong Drawer
+                currentActiveRoomStatus = newStatus;
+                const badge = document.getElementById('modal-room-status-badge');
+                if (badge) {
+                    badge.textContent = data.room.status_label;
+                    badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + data.room.badge_class;
+                }
+                updateQuickStatusButtons(newStatus);
+
+                showRealtimeToast(`Đã cập nhật P.${data.room.room_number}: ${data.room.status_label}`, 'success');
+            } catch (err) {
+                console.error('Lỗi setQuickRoomStatus: ', err);
+                alert('Không thể kết nối đến máy chủ.');
+            } finally {
+                if (loadingSpinner) loadingSpinner.classList.add('hidden');
+            }
+        }
+
 
         function syncInputs(btn) {
             const row = btn.closest('tr');
@@ -2723,27 +3224,77 @@
             }
         }
 
-        // Live calculation for electricity & water utility row
+        // Live calculation for electricity & water utility row with anomaly detection & validation
         function calculateRowCost(input) {
             const row = input.closest('tr');
-            const roomPrice = parseInt(row.getAttribute('data-price'));
+            const roomPrice = parseInt(row.getAttribute('data-price')) || 0;
             
-            const oldElec = parseInt(row.querySelector('[data-field="old-elec"]').textContent);
-            const newElecInput = row.querySelectorAll('input')[0].value;
-            const newElec = newElecInput ? parseInt(newElecInput) : 0;
-            
-            const oldWater = parseInt(row.querySelector('[data-field="old-water"]').textContent);
-            const newWaterInput = row.querySelectorAll('input')[1].value;
-            const newWater = newWaterInput ? parseInt(newWaterInput) : 0;
+            const oldElecEl = row.querySelector('[data-field="old-elec"]');
+            const oldWaterEl = row.querySelector('[data-field="old-water"]');
+            const oldElec = oldElecEl ? parseInt(oldElecEl.textContent) || 0 : 0;
+            const oldWater = oldWaterEl ? parseInt(oldWaterEl.textContent) || 0 : 0;
+
+            const newElecInputEl = row.querySelector('.new-elec-input');
+            const newWaterInputEl = row.querySelector('.new-water-input');
+            const newElecVal = newElecInputEl ? newElecInputEl.value.trim() : '';
+            const newWaterVal = newWaterInputEl ? newWaterInputEl.value.trim() : '';
+
+            const newElec = newElecVal !== '' ? parseInt(newElecVal) : oldElec;
+            const newWater = newWaterVal !== '' ? parseInt(newWaterVal) : oldWater;
+
+            // Kiểm tra số mới nhỏ hơn số cũ (Bảng 25)
+            if (newElecInputEl) {
+                if (newElecVal !== '' && parseInt(newElecVal) < oldElec) {
+                    newElecInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
+                    newElecInputEl.title = 'Chỉ số mới không được nhỏ hơn chỉ số cũ tháng trước (' + oldElec + ' kWh)';
+                } else {
+                    newElecInputEl.classList.remove('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
+                    newElecInputEl.removeAttribute('title');
+                }
+            }
+
+            if (newWaterInputEl) {
+                if (newWaterVal !== '' && parseInt(newWaterVal) < oldWater) {
+                    newWaterInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
+                    newWaterInputEl.title = 'Chỉ số mới không được nhỏ hơn chỉ số cũ tháng trước (' + oldWater + ' m3)';
+                } else {
+                    newWaterInputEl.classList.remove('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
+                    newWaterInputEl.removeAttribute('title');
+                }
+            }
 
             let elecUsed = 0;
             let waterUsed = 0;
             
-            if(newElec > oldElec) elecUsed = newElec - oldElec;
-            if(newWater > oldWater) waterUsed = newWater - oldWater;
+            if (newElec >= oldElec) elecUsed = newElec - oldElec;
+            if (newWater >= oldWater) waterUsed = newWater - oldWater;
 
-            row.querySelector('[data-field="used-elec"]').textContent = elecUsed;
-            row.querySelector('[data-field="used-water"]').textContent = waterUsed;
+            const usedElecEl = row.querySelector('[data-field="used-elec"]');
+            const usedWaterEl = row.querySelector('[data-field="used-water"]');
+            if (usedElecEl) usedElecEl.textContent = elecUsed;
+            if (usedWaterEl) usedWaterEl.textContent = waterUsed;
+
+            // Phát hiện tiêu thụ tăng đột biến bất thường (Bảng 25 Kịch bản lỗi)
+            const abnormalElecWarn = row.querySelector('.abnormal-elec-warning');
+            const abnormalWaterWarn = row.querySelector('.abnormal-water-warning');
+            if (abnormalElecWarn) {
+                if (elecUsed > 1000) {
+                    abnormalElecWarn.classList.remove('hidden');
+                    abnormalElecWarn.classList.add('inline-flex');
+                } else {
+                    abnormalElecWarn.classList.add('hidden');
+                    abnormalElecWarn.classList.remove('inline-flex');
+                }
+            }
+            if (abnormalWaterWarn) {
+                if (waterUsed > 100) {
+                    abnormalWaterWarn.classList.remove('hidden');
+                    abnormalWaterWarn.classList.add('inline-flex');
+                } else {
+                    abnormalWaterWarn.classList.add('hidden');
+                    abnormalWaterWarn.classList.remove('inline-flex');
+                }
+            }
 
             // Compute costs
             const elecCost = elecUsed * 3500;
@@ -2751,7 +3302,8 @@
             const serviceCost = 150000; // default service fee
             const total = roomPrice + elecCost + waterCost + serviceCost;
 
-            row.querySelector('[data-field="cost-total"]').textContent = total.toLocaleString('vi-VN') + "đ";
+            const totalEl = row.querySelector('[data-field="cost-total"]');
+            if (totalEl) totalEl.textContent = total.toLocaleString('vi-VN') + "đ";
         }
 
         function saveSingleUtility(roomId, btn) {
@@ -2805,6 +3357,670 @@
             document.body.appendChild(form);
             form.submit();
         }
+
+        // =======================================================
+        // 2. AI VISION OCR CAMERA QUÉT CÔNG TƠ ĐIỆN NƯỚC (GEMINI AI)
+        // =======================================================
+        const meterOcrState = {
+            roomId: null,
+            roomNumber: null,
+            type: 'electricity',
+            targetInput: null,
+            stream: null,
+            capturedBase64: null,
+            recognizedValue: null,
+            activeSource: 'camera'
+        };
+
+        function openMeterOcrModal(roomId, roomNumber, type, triggerBtn) {
+            meterOcrState.roomId = roomId;
+            meterOcrState.roomNumber = roomNumber;
+            meterOcrState.type = type;
+            
+            const row = triggerBtn.closest('tr');
+            meterOcrState.targetInput = row.querySelector('.new-' + (type === 'electricity' ? 'elec' : 'water') + '-input');
+            
+            // Cập nhật text UI
+            document.getElementById('ocr-target-room-text').textContent = roomNumber;
+            const badge = document.getElementById('ocr-meter-type-badge');
+            const unit = document.getElementById('ocr-result-unit');
+            if (type === 'electricity') {
+                badge.textContent = 'Điện (kWh)';
+                badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+                unit.textContent = 'kWh';
+            } else {
+                badge.textContent = 'Nước (m3)';
+                badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30';
+                unit.textContent = 'm3';
+            }
+
+            resetOcrModalState();
+            document.getElementById('meter-ocr-modal').classList.remove('hidden');
+
+            // Mặc định khởi động camera
+            switchOcrSource('camera');
+        }
+
+        function closeMeterOcrModal() {
+            stopOcrCamera();
+            document.getElementById('meter-ocr-modal').classList.add('hidden');
+            resetOcrModalState();
+        }
+
+        function resetOcrModalState() {
+            meterOcrState.capturedBase64 = null;
+            meterOcrState.recognizedValue = null;
+            
+            document.getElementById('ocr-image-preview').classList.add('hidden');
+            document.getElementById('ocr-image-preview').src = '';
+            document.getElementById('ocr-result-box').classList.add('hidden');
+            document.getElementById('ocr-laser-line').classList.add('hidden');
+            document.getElementById('ocr-loading-overlay').classList.add('hidden');
+            document.getElementById('ocr-fallback-hint').classList.add('hidden');
+            
+            document.getElementById('btn-ocr-capture').classList.remove('hidden');
+            document.getElementById('btn-ocr-retake').classList.add('hidden');
+            document.getElementById('btn-ocr-analyze').classList.add('hidden');
+            document.getElementById('btn-ocr-apply').disabled = true;
+            
+            const fileInp = document.getElementById('ocr-file-input');
+            if (fileInp) fileInp.value = '';
+        }
+
+        function switchOcrSource(mode) {
+            meterOcrState.activeSource = mode;
+            const tabCamera = document.getElementById('tab-btn-camera');
+            const tabUpload = document.getElementById('tab-btn-upload');
+            const videoEl = document.getElementById('ocr-camera-video');
+            const uploadZone = document.getElementById('ocr-upload-zone');
+            const previewImg = document.getElementById('ocr-image-preview');
+            const cameraError = document.getElementById('ocr-camera-error');
+            const btnCapture = document.getElementById('btn-ocr-capture');
+
+            cameraError.classList.add('hidden');
+
+            if (mode === 'camera') {
+                tabCamera.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm';
+                tabUpload.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200';
+                
+                uploadZone.classList.add('hidden');
+                previewImg.classList.add('hidden');
+                btnCapture.classList.remove('hidden');
+                document.getElementById('btn-ocr-retake').classList.add('hidden');
+                document.getElementById('btn-ocr-analyze').classList.add('hidden');
+
+                startOcrCamera();
+            } else {
+                stopOcrCamera();
+                tabUpload.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm';
+                tabCamera.className = 'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200';
+                
+                videoEl.classList.add('hidden');
+                btnCapture.classList.add('hidden');
+                
+                if (meterOcrState.capturedBase64) {
+                    previewImg.classList.remove('hidden');
+                    uploadZone.classList.add('hidden');
+                    document.getElementById('btn-ocr-retake').classList.remove('hidden');
+                    document.getElementById('btn-ocr-analyze').classList.remove('hidden');
+                } else {
+                    uploadZone.classList.remove('hidden');
+                    previewImg.classList.add('hidden');
+                }
+            }
+        }
+
+        async function startOcrCamera() {
+            const videoEl = document.getElementById('ocr-camera-video');
+            const cameraError = document.getElementById('ocr-camera-error');
+            videoEl.classList.add('hidden');
+            cameraError.classList.add('hidden');
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                cameraError.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                if (meterOcrState.stream) {
+                    stopOcrCamera();
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                meterOcrState.stream = stream;
+                videoEl.srcObject = stream;
+                videoEl.classList.remove('hidden');
+            } catch (err) {
+                console.warn('Camera access error:', err);
+                cameraError.classList.remove('hidden');
+            }
+        }
+
+        function stopOcrCamera() {
+            if (meterOcrState.stream) {
+                meterOcrState.stream.getTracks().forEach(track => track.stop());
+                meterOcrState.stream = null;
+            }
+            const videoEl = document.getElementById('ocr-camera-video');
+            if (videoEl) {
+                videoEl.srcObject = null;
+                videoEl.classList.add('hidden');
+            }
+        }
+
+        function captureOcrSnapshot() {
+            const videoEl = document.getElementById('ocr-camera-video');
+            const canvas = document.getElementById('ocr-capture-canvas');
+            const previewImg = document.getElementById('ocr-image-preview');
+
+            if (!videoEl || videoEl.videoWidth === 0) {
+                alert('Camera chưa sẵn sàng để chụp!');
+                return;
+            }
+
+            canvas.width = videoEl.videoWidth;
+            canvas.height = videoEl.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+            const base64 = canvas.toDataURL('image/jpeg', 0.9);
+            meterOcrState.capturedBase64 = base64;
+
+            // Dừng camera và hiển thị preview
+            stopOcrCamera();
+            previewImg.src = base64;
+            previewImg.classList.remove('hidden');
+
+            document.getElementById('btn-ocr-capture').classList.add('hidden');
+            document.getElementById('btn-ocr-retake').classList.remove('hidden');
+            document.getElementById('btn-ocr-analyze').classList.remove('hidden');
+            
+            // Tự động kích hoạt phân tích ngay
+            submitOcrAnalysis();
+        }
+
+        function resetOcrCapture() {
+            meterOcrState.capturedBase64 = null;
+            meterOcrState.recognizedValue = null;
+            document.getElementById('ocr-image-preview').classList.add('hidden');
+            document.getElementById('ocr-result-box').classList.add('hidden');
+            document.getElementById('btn-ocr-apply').disabled = true;
+
+            if (meterOcrState.activeSource === 'camera') {
+                document.getElementById('btn-ocr-capture').classList.remove('hidden');
+                document.getElementById('btn-ocr-retake').classList.add('hidden');
+                document.getElementById('btn-ocr-analyze').classList.add('hidden');
+                startOcrCamera();
+            } else {
+                document.getElementById('ocr-upload-zone').classList.remove('hidden');
+                document.getElementById('btn-ocr-retake').classList.add('hidden');
+                document.getElementById('btn-ocr-analyze').classList.add('hidden');
+                document.getElementById('ocr-file-input').value = '';
+            }
+        }
+
+        function handleOcrFileSelected(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Ảnh không được vượt quá 5MB!');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    meterOcrState.capturedBase64 = e.target.result;
+                    const previewImg = document.getElementById('ocr-image-preview');
+                    previewImg.src = e.target.result;
+                    previewImg.classList.remove('hidden');
+                    document.getElementById('ocr-upload-zone').classList.add('hidden');
+                    document.getElementById('btn-ocr-retake').classList.remove('hidden');
+                    document.getElementById('btn-ocr-analyze').classList.remove('hidden');
+                    
+                    // Tự động phân tích
+                    submitOcrAnalysis();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function submitOcrAnalysis() {
+            if (!meterOcrState.capturedBase64) {
+                alert('Vui lòng chụp ảnh hoặc tải ảnh công tơ trước!');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('ocr-loading-overlay');
+            const laserLine = document.getElementById('ocr-laser-line');
+            const resultBox = document.getElementById('ocr-result-box');
+            const btnAnalyze = document.getElementById('btn-ocr-analyze');
+            const btnApply = document.getElementById('btn-ocr-apply');
+            const fallbackHint = document.getElementById('ocr-fallback-hint');
+
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('flex');
+            laserLine.classList.remove('hidden');
+            resultBox.classList.add('hidden');
+            fallbackHint.classList.add('hidden');
+            btnAnalyze.disabled = true;
+
+            try {
+                const response = await fetch("{{ route('smartroom.admin.ai.ocr_meter') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: meterOcrState.capturedBase64,
+                        type: meterOcrState.type
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success && data.result) {
+                    const result = data.result;
+                    meterOcrState.recognizedValue = result.value;
+
+                    document.getElementById('ocr-result-value').textContent = result.value.toLocaleString();
+                    
+                    const confPercent = Math.round((result.confidence || 0.95) * 100);
+                    const confBadge = document.getElementById('ocr-confidence-badge');
+                    confBadge.textContent = 'Độ tin cậy: ' + confPercent + '%';
+
+                    if (confPercent >= 85) {
+                        confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                    } else if (confPercent >= 60) {
+                        confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                        fallbackHint.classList.remove('hidden');
+                    } else {
+                        confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                        fallbackHint.classList.remove('hidden');
+                    }
+
+                    if (!result.used_ai) {
+                        fallbackHint.classList.remove('hidden');
+                    }
+
+                    resultBox.classList.remove('hidden');
+                    btnApply.disabled = false;
+                } else {
+                    alert('Không thể nhận diện chỉ số từ ảnh. Vui lòng chụp rõ nét hơn hoặc nhập tay!');
+                }
+            } catch (err) {
+                console.error('OCR Error:', err);
+                alert('Có lỗi xảy ra trong quá trình gửi ảnh tới AI. Vui lòng thử lại hoặc tự nhập tay!');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+                laserLine.classList.add('hidden');
+                btnAnalyze.disabled = false;
+            }
+        }
+
+        function applyOcrResultToInput() {
+            if (meterOcrState.targetInput && meterOcrState.recognizedValue !== null) {
+                meterOcrState.targetInput.value = meterOcrState.recognizedValue;
+                calculateRowCost(meterOcrState.targetInput);
+                
+                // Hiệu ứng nháy xanh xác nhận ô vừa được điền
+                meterOcrState.targetInput.classList.add('ring-2', 'ring-emerald-500');
+                setTimeout(() => {
+                    meterOcrState.targetInput.classList.remove('ring-2', 'ring-emerald-500');
+                }, 1500);
+
+                closeMeterOcrModal();
+            }
+        }
+
+        // ==========================================
+        // AI BULK METER OCR (QUÉT HÀNG LOẠT NHIỀU CÔNG TƠ)
+        // ==========================================
+        let bulkOcrState = {
+            type: 'electricity',
+            files: [], // Array of base64 strings
+            results: [], // { index, image, serial_number, room_id, room_number, value, confidence, is_matched, reason }
+            allRooms: []
+        };
+
+        function openBulkOcrModal(type = 'electricity') {
+            setBulkOcrType(type);
+            clearBulkOcrFiles();
+            const modal = document.getElementById('bulk-meter-ocr-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeBulkOcrModal() {
+            const modal = document.getElementById('bulk-meter-ocr-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function setBulkOcrType(type) {
+            bulkOcrState.type = type;
+            const badge = document.getElementById('bulk-ocr-type-badge');
+            const btnElec = document.getElementById('bulk-type-btn-electricity');
+            const btnWater = document.getElementById('bulk-type-btn-water');
+
+            if (type === 'electricity') {
+                if (badge) {
+                    badge.textContent = 'Điện (kWh)';
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                }
+                if (btnElec) {
+                    btnElec.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm';
+                }
+                if (btnWater) {
+                    btnWater.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200';
+                }
+            } else {
+                if (badge) {
+                    badge.textContent = 'Nước (m3)';
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30';
+                }
+                if (btnWater) {
+                    btnWater.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm';
+                }
+                if (btnElec) {
+                    btnElec.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200';
+                }
+            }
+        }
+
+        function handleBulkOcrFilesSelected(input) {
+            if (!input.files || input.files.length === 0) return;
+            loadBulkOcrFilesList(input.files);
+        }
+
+        function loadBulkOcrFilesList(fileList) {
+            const files = Array.from(fileList).slice(0, 30);
+            bulkOcrState.files = [];
+            bulkOcrState.results = [];
+            document.getElementById('bulk-ocr-results-wrapper')?.classList.add('hidden');
+            const btnApply = document.getElementById('btn-bulk-ocr-apply');
+            if (btnApply) btnApply.disabled = true;
+
+            let loaded = 0;
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    loaded++;
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    bulkOcrState.files.push(e.target.result);
+                    loaded++;
+                    if (loaded === files.length) {
+                        const countEl = document.getElementById('bulk-files-count');
+                        if (countEl) countEl.textContent = bulkOcrState.files.length;
+                        document.getElementById('bulk-ocr-files-bar')?.classList.remove('hidden');
+                        const btnStart = document.getElementById('btn-start-bulk-ocr');
+                        if (btnStart) btnStart.disabled = false;
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function clearBulkOcrFiles() {
+            bulkOcrState.files = [];
+            bulkOcrState.results = [];
+            const fileInput = document.getElementById('bulk-ocr-file-input');
+            if (fileInput) fileInput.value = '';
+            document.getElementById('bulk-ocr-files-bar')?.classList.add('hidden');
+            document.getElementById('bulk-ocr-progress-box')?.classList.add('hidden');
+            document.getElementById('bulk-ocr-results-wrapper')?.classList.add('hidden');
+            const btnApply = document.getElementById('btn-bulk-ocr-apply');
+            if (btnApply) btnApply.disabled = true;
+        }
+
+        async function startBulkOcrAnalysis() {
+            if (!bulkOcrState.files || bulkOcrState.files.length === 0) {
+                alert('Vui lòng chọn ít nhất 1 ảnh công tơ!');
+                return;
+            }
+
+            const progressBox = document.getElementById('bulk-ocr-progress-box');
+            const progressBar = document.getElementById('bulk-ocr-progress-bar');
+            const progressText = document.getElementById('bulk-ocr-progress-text');
+            const btnStart = document.getElementById('btn-start-bulk-ocr');
+
+            progressBox.classList.remove('hidden');
+            if (btnStart) btnStart.disabled = true;
+            if (progressBar) progressBar.style.width = '30%';
+            if (progressText) progressText.textContent = '30%';
+
+            try {
+                const response = await fetch("{{ route('smartroom.admin.ai.ocr_meter_bulk') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        images: bulkOcrState.files,
+                        type: bulkOcrState.type
+                    })
+                });
+
+                if (progressBar) progressBar.style.width = '75%';
+                if (progressText) progressText.textContent = '75%';
+
+                const data = await response.json();
+                if (data.success) {
+                    if (progressBar) progressBar.style.width = '100%';
+                    if (progressText) progressText.textContent = '100%';
+                    bulkOcrState.allRooms = data.all_rooms || [];
+                    
+                    bulkOcrState.results = [];
+                    (data.matched || []).forEach(item => {
+                        bulkOcrState.results.push({
+                            index: item.index,
+                            image: bulkOcrState.files[item.index],
+                            serial_number: item.serial_number,
+                            room_id: item.room_id,
+                            room_number: item.room_number,
+                            value: item.value,
+                            confidence: item.confidence,
+                            is_matched: true,
+                            reason: ''
+                        });
+                    });
+                    (data.unmatched || []).forEach(item => {
+                        bulkOcrState.results.push({
+                            index: item.index,
+                            image: bulkOcrState.files[item.index],
+                            serial_number: item.serial_number,
+                            room_id: null,
+                            room_number: null,
+                            value: item.value,
+                            confidence: item.confidence,
+                            is_matched: false,
+                            reason: item.reason || 'Chưa khớp phòng'
+                        });
+                    });
+
+                    renderBulkOcrResults();
+                } else {
+                    alert('Lỗi phân tích: ' + (data.message || 'Không thể quét ảnh hàng loạt.'));
+                }
+            } catch (err) {
+                console.error('Bulk OCR Error:', err);
+                alert('Có lỗi xảy ra khi gửi dữ liệu tới AI. Vui lòng thử lại!');
+            } finally {
+                if (btnStart) btnStart.disabled = false;
+                setTimeout(() => {
+                    progressBox.classList.add('hidden');
+                }, 600);
+            }
+        }
+
+        function renderBulkOcrResults() {
+            const tbody = document.getElementById('bulk-ocr-results-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let matchedCount = 0;
+            bulkOcrState.results.forEach((item, idx) => {
+                if (item.is_matched && item.room_id) matchedCount++;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/40 transition-colors border-b border-slate-900';
+                
+                let roomOptionsHtml = `<option value="">-- Chọn phòng gán tay --</option>`;
+                bulkOcrState.allRooms.forEach(r => {
+                    const selected = item.room_id == r.id ? 'selected' : '';
+                    roomOptionsHtml += `<option value="${r.id}" ${selected}>Phòng ${r.room_number}</option>`;
+                });
+
+                const serialDisplay = item.serial_number 
+                    ? `<span class="font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-[11px]">${item.serial_number}</span>`
+                    : `<span class="text-slate-500 italic text-[10px]">Không tìm thấy Số SX</span>`;
+
+                const statusBadge = item.is_matched && item.room_id
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-circle-check"></i> Khớp tự động</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20" title="${item.reason}"><i class="fa-solid fa-circle-exclamation"></i> Cần gán phòng</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3">
+                        <img src="${item.image}" class="w-10 h-10 object-cover rounded-lg border border-slate-800 cursor-pointer hover:scale-110 transition-transform shadow-sm" onclick="window.open('${item.image}')" title="Bấm xem ảnh gốc">
+                    </td>
+                    <td class="px-4 py-3 font-semibold">${serialDisplay}</td>
+                    <td class="px-4 py-3">
+                        <select onchange="updateBulkItemRoom(${idx}, this.value)" class="w-36 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none transition-colors">
+                            ${roomOptionsHtml}
+                        </select>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                            <input type="number" value="${item.value ?? 0}" onchange="updateBulkItemValue(${idx}, this.value)" class="w-20 px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-emerald-400 focus:border-indigo-500 focus:outline-none">
+                            <span class="text-[10px] text-slate-400">${bulkOcrState.type === 'electricity' ? 'kWh' : 'm3'}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">${statusBadge}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button type="button" onclick="removeBulkItem(${idx})" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 text-xs transition-all flex items-center justify-center mx-auto" title="Bỏ qua ảnh này">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const statsBadge = document.getElementById('bulk-match-stats-badge');
+            if (statsBadge) {
+                statsBadge.textContent = `Khớp thành công ${matchedCount}/${bulkOcrState.results.length}`;
+            }
+
+            document.getElementById('bulk-ocr-results-wrapper')?.classList.remove('hidden');
+            const btnApply = document.getElementById('btn-bulk-ocr-apply');
+            if (btnApply) btnApply.disabled = (matchedCount === 0);
+        }
+
+        function updateBulkItemRoom(idx, roomId) {
+            if (bulkOcrState.results[idx]) {
+                bulkOcrState.results[idx].room_id = roomId ? parseInt(roomId) : null;
+                const room = bulkOcrState.allRooms.find(r => r.id == roomId);
+                bulkOcrState.results[idx].room_number = room ? room.room_number : null;
+                bulkOcrState.results[idx].is_matched = !!roomId;
+                
+                const matchedCount = bulkOcrState.results.filter(r => r.room_id).length;
+                const statsBadge = document.getElementById('bulk-match-stats-badge');
+                if (statsBadge) {
+                    statsBadge.textContent = `Khớp thành công ${matchedCount}/${bulkOcrState.results.length}`;
+                }
+                const btnApply = document.getElementById('btn-bulk-ocr-apply');
+                if (btnApply) btnApply.disabled = (matchedCount === 0);
+            }
+        }
+
+        function updateBulkItemValue(idx, val) {
+            if (bulkOcrState.results[idx]) {
+                bulkOcrState.results[idx].value = parseInt(val) || 0;
+            }
+        }
+
+        function removeBulkItem(idx) {
+            bulkOcrState.results.splice(idx, 1);
+            renderBulkOcrResults();
+        }
+
+        function applyBulkOcrToTable() {
+            const validItems = bulkOcrState.results.filter(item => item.room_id && item.value !== null);
+            if (validItems.length === 0) {
+                alert('Không có phòng nào được chọn để áp dụng!');
+                return;
+            }
+
+            let appliedCount = 0;
+            validItems.forEach(item => {
+                const tr = document.querySelector(`tr[data-room-id="${item.room_id}"]`);
+                if (tr) {
+                    let input = null;
+                    if (bulkOcrState.type === 'electricity') {
+                        input = tr.querySelector('.new-elec-input');
+                    } else {
+                        input = tr.querySelector('.new-water-input');
+                    }
+
+                    if (input) {
+                        input.value = item.value;
+                        calculateRowCost(input);
+                        
+                        const ringClass = bulkOcrState.type === 'electricity' ? 'ring-emerald-500' : 'ring-cyan-500';
+                        input.classList.add('ring-2', ringClass);
+                        setTimeout(() => {
+                            input.classList.remove('ring-2', ringClass);
+                        }, 2500);
+
+                        appliedCount++;
+                    }
+                }
+            });
+
+            closeBulkOcrModal();
+            alert(`🎉 Đã áp dụng thành công chỉ số cho ${appliedCount} phòng trên bảng chốt số!`);
+        }
+
+        // Kéo thả Dropzone listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone = document.getElementById('bulk-ocr-dropzone');
+            if (dropzone) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.add('border-indigo-500', 'bg-indigo-500/10');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('border-indigo-500', 'bg-indigo-500/10');
+                    }, false);
+                });
+
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files && files.length > 0) {
+                        loadBulkOcrFilesList(files);
+                    }
+                }, false);
+            }
+        });
 
         // Resident search
         function searchResidentTable() {
@@ -4518,10 +5734,216 @@
             }
         }
 
+        // ==========================================
+        // REALTIME ROOM MATRIX & HOUSEKEEPING
+        // ==========================================
+        let lastEventTimestamp = Math.floor(Date.now() / 1000);
+
+        function applyRoomCardUpdate(roomData) {
+            const card = document.getElementById('room-card-' + roomData.id);
+            if (!card) return;
+
+            // 1. Cập nhật thuộc tính trong dataset
+            card.setAttribute('data-room-status', roomData.status);
+            if (roomData.room_number) {
+                card.setAttribute('data-room-number', roomData.room_number);
+            }
+
+            // 2. Cập nhật thông tin cư dân trên thẻ & dataset
+            const resH4 = card.querySelector('.room-resident');
+            if (roomData.has_resident && roomData.resident_name && (roomData.status === 'occupied' || roomData.status === 'overdue')) {
+                card.setAttribute('data-resident-name', roomData.resident_name);
+                if (roomData.resident_phone) card.setAttribute('data-resident-phone', roomData.resident_phone);
+                if (resH4) {
+                    resH4.textContent = 'Cư dân: ' + roomData.resident_name;
+                    resH4.className = 'room-resident text-xs font-bold text-slate-400 truncate mb-1';
+                }
+            } else if (['empty', 'cleaning', 'maintenance'].includes(roomData.status)) {
+                card.setAttribute('data-resident-name', '');
+                card.setAttribute('data-resident-phone', '');
+                if (resH4) {
+                    resH4.textContent = 'Chưa có cư dân';
+                    resH4.className = 'room-resident text-xs font-bold text-slate-500 italic mb-1';
+                }
+            }
+
+            // 3. Cập nhật class viền/nền CSS
+            card.className = card.className.replace(/room-(empty|occupied|overdue|cleaning|maintenance)/g, '');
+            card.className = card.className.replace(/border-(emerald|red|amber|orange|slate)-500\/20/g, '');
+            
+            const newStatusClass = roomData.status_class || ('room-' + roomData.status);
+            card.classList.add(...newStatusClass.split(' ').filter(c => c));
+
+            // 4. Cập nhật Badge trên card
+            const badge = card.querySelector('.room-badge');
+            if (badge) {
+                badge.textContent = roomData.status_label;
+                badge.className = "room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border " + (roomData.badge_class || 'border-slate-700 text-slate-400');
+            }
+
+            // 5. Ẩn/hiện card ngay theo tab bộ lọc hiện tại (nếu đang chọn tab)
+            applyCurrentFilterToCard(card);
+
+            // 6. Cập nhật số đếm tất cả các nút filter
+            updateRoomFilterCounts();
+
+            // 7. Đồng bộ trực tiếp nếu Modal của phòng này đang mở
+            if (currentActiveRoomId == roomData.id) {
+                currentActiveRoomStatus = roomData.status;
+                const modalBadge = document.getElementById('modal-room-status-badge');
+                if (modalBadge) {
+                    modalBadge.textContent = roomData.status_label;
+                    modalBadge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + (roomData.badge_class || 'bg-slate-500/10 text-slate-400 border-slate-500/20');
+                }
+                updateQuickStatusButtons(roomData.status);
+
+                const resDetails = document.getElementById('modal-resident-details');
+                const billDetails = document.getElementById('modal-billing-details');
+                const actionBtn = document.getElementById('modal-btn-action');
+                const payBtn = document.getElementById('modal-btn-pay');
+                const printBtn = document.getElementById('modal-btn-print');
+                const qrBtn = document.getElementById('modal-btn-qr');
+
+                if (['empty', 'cleaning', 'maintenance'].includes(roomData.status)) {
+                    if (resDetails) resDetails.classList.add('hidden');
+                    if (billDetails) billDetails.classList.add('hidden');
+                    if (actionBtn) actionBtn.classList.add('hidden');
+                    if (payBtn) payBtn.classList.add('hidden');
+                    if (printBtn) printBtn.classList.add('hidden');
+                    if (qrBtn) qrBtn.classList.add('hidden');
+                } else if (roomData.has_resident) {
+                    if (resDetails) resDetails.classList.remove('hidden');
+                    const resNameEl = document.getElementById('modal-resident-name');
+                    if (resNameEl && roomData.resident_name) {
+                        resNameEl.textContent = roomData.resident_name;
+                    }
+                    const resPhoneEl = document.getElementById('modal-resident-phone');
+                    if (resPhoneEl && roomData.resident_phone) {
+                        resPhoneEl.textContent = roomData.resident_phone;
+                    }
+                }
+            }
+
+            // 8. Hiệu ứng Pulse Flash Realtime
+            card.classList.add('ring-4', 'ring-emerald-400', 'scale-[1.03]');
+            setTimeout(() => {
+                card.classList.remove('ring-4', 'ring-emerald-400', 'scale-[1.03]');
+            }, 1800);
+        }
+
+        function showRealtimeToast(title, subtitle = '', type = 'room') {
+            let container = document.getElementById('realtime-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'realtime-toast-container';
+                container.className = 'fixed top-20 right-8 z-50 flex flex-col gap-3 pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const isTicket = type === 'ticket';
+            const iconBg = isTicket ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400';
+            const icon = isTicket ? 'fa-triangle-exclamation' : 'fa-bolt';
+            const borderColor = isTicket ? 'border-rose-500/40' : 'border-emerald-500/40';
+            const tagLabel = isTicket ? 'Sự cố cư dân (Realtime Echo)' : 'Sơ đồ phòng (Realtime Reverb)';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 border ${borderColor} text-slate-100 shadow-2xl shadow-indigo-500/20 backdrop-blur-md text-xs font-semibold animate-slide-in transition-all duration-300`;
+            toast.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-sm shrink-0">
+                    <i class="fa-solid ${icon} animate-bounce"></i>
+                </div>
+                <div class="min-w-[180px]">
+                    <div class="text-[10px] ${isTicket ? 'text-rose-400' : 'text-emerald-400'} font-bold uppercase tracking-wider">${tagLabel}</div>
+                    <div class="text-slate-100 font-bold mt-0.5">${title}</div>
+                    ${subtitle ? `<div class="text-[11px] text-slate-400 mt-0.5 leading-snug">${subtitle}</div>` : ''}
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-8');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        @php
+            $activeTenantId = $tenant->id ?? (Auth::user()?->tenant_id ?? ($rooms->first()?->tenant_id ?? 1));
+        @endphp
+        const tenantId = {{ $activeTenantId }};
+        let lastProcessedEventKey = '';
+
+        function handleIncomingRoomUpdate(data) {
+            if (!data || !data.id) return;
+            const eventKey = `${data.id}_${data.status}_${data.updated_at || ''}`;
+            if (eventKey === lastProcessedEventKey) {
+                return; // Tránh xử lý trùng lặp từ 2 channel
+            }
+            lastProcessedEventKey = eventKey;
+            lastEventTimestamp = Math.floor(Date.now() / 1000);
+            applyRoomCardUpdate(data);
+            showRealtimeToast(
+                `P.${data.room_number}: ${data.status_label}`,
+                'Đồng bộ trạng thái phòng tức thời qua WebSocket Reverb!',
+                'room'
+            );
+        }
+
+        function initRoomMatrixRealtime() {
+            // 1. Kết nối chính thức qua Laravel Echo + Reverb (WebSocket)
+            if (window.Echo) {
+                try {
+                    // Lắng nghe trên kênh tenant cụ thể
+                    window.Echo.channel(`tenant.${tenantId}.room-matrix`)
+                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
+
+                    // Lắng nghe trên kênh toàn cục để các tab Admin luôn nhận được tức thì
+                    window.Echo.channel('room-matrix')
+                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
+
+                    // Lắng nghe báo hỏng sự cố tức thời từ cư dân
+                    window.Echo.channel(`tenant.${tenantId}.dashboard`)
+                        .listen('.ticket.created', (data) => {
+                            if (data && data.id) {
+                                showRealtimeToast(
+                                    `🚨 Sự cố mới: P.${data.room_number}`,
+                                    `[${data.category}] ${data.title}`,
+                                    'ticket'
+                                );
+                                const bellBadge = document.querySelector('.fa-bell + span');
+                                if (bellBadge) bellBadge.classList.add('animate-ping');
+                            }
+                        });
+                } catch (err) {
+                    console.warn('Echo Reverb subscription error: ', err);
+                }
+            }
+
+            // 2. Thăm dò phụ (Polling fallback nhẹ nhàng) mỗi 25s khi tab đang hiển thị
+            setInterval(async () => {
+                if (document.hidden) return; // Không poll khi tab ẩn để tiết kiệm tài nguyên
+                try {
+                    const res = await fetch("{{ route('admin.rooms.matrix.poll') }}?since=" + lastEventTimestamp);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.has_update && json.event) {
+                            lastEventTimestamp = json.event.updated_at;
+                            applyRoomCardUpdate(json.event);
+                        }
+                    }
+                } catch (e) {
+                    // im lặng bỏ qua lỗi mạng tạm thời
+                }
+            }, 25000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initRoomMatrixRealtime, 250);
+        });
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeKycTermsModal();
-                closeRenewContractModal();
+                closeRoomDetail();
             }
         });
     </script>

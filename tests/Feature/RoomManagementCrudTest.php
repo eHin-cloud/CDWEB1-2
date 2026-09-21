@@ -293,4 +293,48 @@ class RoomManagementCrudTest extends TestCase
             'id' => $room->id,
         ]);
     }
+
+    public function test_ai_generate_room_description_validates_required_fields(): void
+    {
+        [$admin] = $this->setupTenantAdminAndBuilding();
+
+        // Gửi thiếu price và area
+        $response = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.description.ai'), [
+                'room_number' => 'P.101',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['price', 'area']);
+    }
+
+    public function test_ai_generate_room_description_returns_description_successfully(): void
+    {
+        [$admin] = $this->setupTenantAdminAndBuilding();
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.description.ai'), [
+                'room_number' => 'P.205',
+                'floor' => 2,
+                'room_type' => 'deluxe',
+                'rental_type' => 'month',
+                'price' => 4500000,
+                'deposit' => 2000000,
+                'area' => 28,
+                'status' => 'empty',
+                'amenities' => ['Máy lạnh', 'Ban công', 'Tủ lạnh'],
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'description' => [
+                    'description',
+                ],
+            ]);
+
+        $data = $response->json();
+        $this->assertTrue($data['success']);
+        $this->assertNotEmpty($data['description']['description']);
+    }
 }

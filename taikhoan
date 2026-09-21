@@ -90,3 +90,20 @@ Danh sách Tài khoản Hệ thống Renty & SmartRoom:
 * Email: guest@demo.smartroom.local
 * Mật khẩu (password): password
 * Phân quyền (role): guest
+
+================================================================================
+6. TÀI KHOẢN VẬN HÀNH KHÁCH SẠN (RECEPTIONIST & HOUSEKEEPER)
+================================================================================
+* Lễ tân khách sạn:
+  - Tên đăng nhập (username): demo-receptionist
+  - Số điện thoại (phone): 0777888111
+  - Email: receptionist@demo.smartroom.local
+  - Mật khẩu (password): password
+  - Vai trò (role): receptionist (Check-in/out, Minibar, Folio)
+
+* Nhân viên Buồng phòng:
+  - Tên đăng nhập (username): demo-housekeeper
+  - Số điện thoại (phone): 0777888222
+  - Email: housekeeper@demo.smartroom.local
+  - Mật khẩu (password): password
+  - Vai trò (role): housekeeper (Tiếp nhận phòng bẩn, bấm Đã dọn xong)

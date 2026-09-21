@@ -25,20 +25,37 @@ class Aes256GcmEncrypted implements CastsAttributes
         $ciphertext = base64_decode($payload['data'] ?? '', true);
 
         if ($iv === false || $tag === false || $ciphertext === false) {
-            throw new \RuntimeException("Invalid encrypted payload for {$key}.");
+            \Illuminate\Support\Facades\Log::warning("Invalid encrypted payload for {$key}.");
+            return null;
         }
 
+        $keyMaterial = SensitiveData::encryptionKey();
         $aad = $this->aad($model, $key);
         $plaintext = openssl_decrypt(
             $ciphertext,
             'aes-256-gcm',
-            SensitiveData::encryptionKey(),
+            $keyMaterial,
             OPENSSL_RAW_DATA,
             $iv,
             $tag,
             $aad
         );
 
+        // Fallback 1: Thử với AAD 'platform' nếu model có tenant_id nhưng decrypt thất bại
+        if ($plaintext === false && $model->getAttribute('tenant_id') !== null) {
+            $fallbackAad = $model->getTable() . ':platform:' . $key;
+            $plaintext = openssl_decrypt(
+                $ciphertext,
+                'aes-256-gcm',
+                $keyMaterial,
+                OPENSSL_RAW_DATA,
+                $iv,
+                $tag,
+                $fallbackAad
+            );
+        }
+
+        // Fallback 2: Thử với AAD không có tenantId nếu decrypt thất bại
         if ($plaintext === false) {
             $fallbackAad = $model->getTable() . ':platform:' . $key;
             if ($fallbackAad !== $aad) {
@@ -55,7 +72,7 @@ class Aes256GcmEncrypted implements CastsAttributes
         }
 
         if ($plaintext === false) {
-            \Illuminate\Support\Facades\Log::warning("Unable to decrypt sensitive attribute {$key} for model " . get_class($model) . " id: " . ($model->getKey() ?? 'unknown'));
+            \Illuminate\Support\Facades\Log::warning("Unable to decrypt sensitive attribute {$key} on " . get_class($model) . " #{$model->getKey()}. Returning fallback null.");
             return null;
         }
 

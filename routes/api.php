@@ -10,6 +10,8 @@ use App\Http\Controllers\VerificationDocumentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\SystemAdminController;
 
+use App\Http\Controllers\Api\SmartSearchController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -30,6 +32,8 @@ Route::post('/auth/check-availability', [AuthController::class, 'checkAvailabili
 Route::post('/webhooks/payments', [PaymentWebhookController::class, 'handleWebhook']);
 
 Route::get('/renty/rooms', [VisitorController::class, 'index']);
+Route::get('/renty/rooms/smart-search', [SmartSearchController::class, 'search']);
+Route::get('/renty/rooms/suggest', [SmartSearchController::class, 'suggestions']);
 Route::get('/renty/rooms/map', [VisitorController::class, 'map']);
 Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);

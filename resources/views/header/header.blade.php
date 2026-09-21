@@ -34,20 +34,62 @@
                 </button>
                 
                 <div id="renty-search-suggestions" class="renty-search-suggestions">
-                    <div class="flex items-center justify-between gap-3 mb-2.5">
-                        <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Gợi ý nhanh</span>
-                        <span class="text-[9px] font-bold text-emerald-400">Nhấn để tìm ngay</span>
+                    <!-- Hộp gợi ý sửa lỗi (Did you mean) -->
+                    <div id="renty-did-you-mean-box" class="hidden mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 text-xs">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5 text-slate-200">
+                                <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-xs animate-pulse shrink-0"></i>
+                                <span class="text-[11px] text-slate-400">Có phải bạn muốn tìm:</span>
+                                <button type="button" id="renty-did-you-mean-btn" onclick="applySearchCorrection()" class="font-bold text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"></button>
+                            </div>
+                            <span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">Gợi ý sửa</span>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-1.5">
-                        <button type="button" onclick="applySearchSuggestion('Cầu Giấy')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                            <i class="fa-solid fa-location-dot text-[9px]"></i> Cầu Giấy
-                        </button>
-                        <button type="button" onclick="applySearchSuggestion('Bách Khoa')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                            <i class="fa-solid fa-graduation-cap text-[9px]"></i> Bách Khoa
-                        </button>
-                        <button type="button" onclick="applySearchSuggestion('phòng dưới 3 triệu')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                            <i class="fa-solid fa-tags text-[9px]"></i> Dưới 3 triệu
-                        </button>
+
+                    <!-- Kết quả phòng tìm thấy nhanh (Live Results) -->
+                    <div id="renty-live-results-section" class="hidden mb-3">
+                        <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-slate-800/60">
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-bolt text-emerald-400"></i> Phòng phù hợp (<span id="renty-live-count">0</span>)
+                            </span>
+                            <span class="text-[9px] text-emerald-400/80 font-bold">Xem phòng ngay</span>
+                        </div>
+                        <div id="renty-live-rooms-list" class="space-y-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+                            <!-- Danh sách phòng được chèn bằng JS -->
+                        </div>
+                    </div>
+
+                    <!-- Trạng thái đang tải -->
+                    <div id="renty-search-loading" class="hidden py-3 text-center text-xs text-slate-400">
+                        <i class="fa-solid fa-circle-notch animate-spin text-emerald-400 mr-2"></i> Đang tìm kiếm thông minh...
+                    </div>
+
+                    <!-- Nhóm gợi ý nhanh mặc định -->
+                    <div id="renty-default-chips-section">
+                        <div class="flex items-center justify-between gap-3 mb-2.5">
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Gợi ý nhanh</span>
+                            <span class="text-[9px] font-bold text-emerald-400">Nhấn để tìm ngay</span>
+                        </div>
+                        <div id="renty-quick-chips-container" class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="applySearchSuggestion('Cầu Giấy')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
+                                <i class="fa-solid fa-location-dot text-[9px]"></i> Cầu Giấy
+                            </button>
+                            <button type="button" onclick="applySearchSuggestion('Bách Khoa')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
+                                <i class="fa-solid fa-graduation-cap text-[9px]"></i> Bách Khoa
+                            </button>
+                            <button type="button" onclick="applySearchSuggestion('Thủ Đức')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
+                                <i class="fa-solid fa-location-dot text-[9px]"></i> Thủ Đức
+                            </button>
+                            <button type="button" onclick="applySearchSuggestion('Bình Thạnh')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
+                                <i class="fa-solid fa-location-dot text-[9px]"></i> Bình Thạnh
+                            </button>
+                            <button type="button" onclick="applySearchSuggestion('dưới 3 triệu')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
+                                <i class="fa-solid fa-tags text-[9px]"></i> Dưới 3 triệu
+                            </button>
+                            <button type="button" onclick="applySearchSuggestion('gác lửng')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
+                                <i class="fa-solid fa-stairs text-[9px]"></i> Gác lửng
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
