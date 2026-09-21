@@ -11,34 +11,48 @@ echo    [ KHOI CHAY ] Dang phat hien moi truong he thong...
 echo    --------------------------------------------------
 
 :: Phat hien PHP.exe tu dong
+set "PHP_CMD="
 where php >nul 2>&1
 if %errorlevel% equ 0 (
-    set PHP_CMD=php
+    set "PHP_CMD=php"
     echo    [+] Phien ban PHP: Da bat dau voi bien moi truong he thong [PATH].
-) else (
-    echo    [!] Canh bao: Khong tim thay PHP trong PATH. Dang quet thu muc thong dung...
-    if exist "C:\xampp\php\php.exe" (
-        set PHP_CMD="C:\xampp\php\php.exe"
-        echo    [+] Phat hien PHP tu XAMPP: C:\xampp\php\php.exe
-    ) else (
-        set PHP_FOUND=0
-        for /d %%d in (C:\laragon\bin\php\php-*) do (
-            if exist "%%d\php.exe" (
-                set PHP_CMD="%%d\php.exe"
-                set PHP_FOUND=1
-            )
-        )
-        if !PHP_FOUND! equ 1 (
-            echo    [+] Phat hien PHP tu Laragon: !PHP_CMD!
-        ) else (
-            color 0c
-            echo    [LOI CRITICAL] Khong tim thay PHP tren he thong!
-            echo    Vui long cai dat PHP [XAMPP/Laragon] va them vao PATH.
-            pause
-            exit
-        )
+    goto PHP_DETECTED
+)
+
+echo    [!] Canh bao: Khong tim thay PHP trong PATH. Dang quet thu muc thong dung...
+if exist "C:\xampp\php\php.exe" (
+    set PHP_CMD="C:\xampp\php\php.exe"
+    echo    [+] Phat hien PHP tu XAMPP: C:\xampp\php\php.exe
+    goto PHP_DETECTED
+)
+
+for /d %%d in (C:\laragon\bin\php\php-*) do (
+    if exist "%%d\php.exe" (
+        set PHP_CMD="%%d\php.exe"
+        echo    [+] Phat hien PHP tu Laragon: %%d\php.exe
+        goto PHP_DETECTED
     )
 )
+
+:: Neu khong tim thay PHP, kiem tra Docker
+where docker >nul 2>&1
+if %errorlevel% equ 0 (
+    color 0e
+    echo    [!] Khong tim thay PHP tren he thong, nhung da phat hien DOCKER!
+    echo    Ban co the khoi chay du an hoan toan bang Docker Compose.
+    echo.
+    set /p use_docker_choice="   >> Ban co muon khoi chay du an bang DOCKER ngay khong? [y/n]: "
+    if /i "!use_docker_choice!"=="y" goto DOCKER_RUN
+)
+
+color 0c
+echo    [LOI CRITICAL] Khong tim thay PHP tren he thong!
+echo    Vui long cai dat PHP [XAMPP/Laragon] va them vao PATH hoac su dung Docker.
+pause
+exit /b 1
+
+:PHP_DETECTED
+
 
 :: Phat hien Composer tu dong
 where composer >nul 2>&1
@@ -165,40 +179,205 @@ cls
 color 0b
 echo.
 echo    +======================================================================================+
-echo    ^|                    SmartRoom DOCKER RUNNER - CHAY MOI TRUONG DOCKER                  ^|
+echo    ^|             SmartRoom ^& Renty DOCKER RUNNER - MOI TRUONG DOCKER COMPOSE              ^|
 echo    +======================================================================================+
 echo.
-echo    [!] Che do nay se chay Laravel tren Docker Compose kem MySQL rieng.
-echo        - Website: http://localhost:8088
-echo        - MySQL tren may host: localhost:3309
-echo        - Database: quan_ly_nha_tro / User: smartroom / Password: smartroom
+echo    [!] Thong tin moi truong Docker:
+echo        - Website nguoi thue:   http://localhost:8088/renty
+echo        - Admin Portal:         http://localhost:8088/smartroom/admin
+echo        - Reverb WebSocket:     ws://127.0.0.1:8085
+echo        - MySQL Port tren host: localhost:3309 (User: smartroom / Pass: smartroom)
 echo.
+echo    [1] KHOI CHAY DOCKER (Background)  - Build ^& chay ngam, tu dong doi web va mo trinh duyet
+echo    [2] KHOI CHAY TRUC TIEP (Logs)     - Chay hien thi log thoi gian thuc (Nhan Ctrl+C de dung)
+echo    [3] XEM NHAT KY LOGS               - Theo doi nhat ky container dang chay (docker compose logs)
+echo    [4] MIGRATE ^& SEED DATABASE        - Lam moi va nap du lieu gia lap trong Docker container
+echo    [5] KHOI DONG LAI (Restart)        - Khoi dong lai toan bo cac containers
+echo    [6] DUNG DOCKER (Stop / Down)      - Dung va giai phong cac container Docker
+echo    [7] Quay lai Menu chinh
+echo.
+echo    ----------------------------------------------------------------------------------------
+set /p docker_choice="   >> Nhap lua chon Docker cua ban (1-7): "
 
+if "!docker_choice!"=="7" goto DOCKER_BACK_TO_MENU
+if "!docker_choice!"=="1" goto DOCKER_AUTO_RUN
+if "!docker_choice!"=="2" goto DOCKER_FOREGROUND_RUN
+if "!docker_choice!"=="3" goto DOCKER_LOGS
+if "!docker_choice!"=="4" goto DOCKER_SEED
+if "!docker_choice!"=="5" goto DOCKER_RESTART
+if "!docker_choice!"=="6" goto DOCKER_DOWN
+goto DOCKER_RUN
+
+:DOCKER_BACK_TO_MENU
+if defined PHP_CMD (goto MENU) else (exit /b 0)
+
+:DOCKER_CHECK_CLI
 where docker >nul 2>&1
 if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong tim thay Docker CLI. Vui long cai Docker Desktop truoc.
     pause
-    goto MENU
+    goto DOCKER_RUN
 )
+exit /b 0
 
-if not exist docker-start.ps1 (
+:DOCKER_CHECK_DAEMON
+call :DOCKER_CHECK_CLI
+docker info >nul 2>&1
+if %errorlevel% neq 0 (
     color 0c
-    echo    [ LOI ] Khong tim thay tep docker-start.ps1 trong thu muc du an.
+    echo    [ LOI ] Docker Daemon chua chay! Vui long bat Docker Desktop tren Windows.
     pause
-    goto MENU
+    goto DOCKER_RUN
+)
+if not exist ".docker-config" (
+    mkdir ".docker-config" >nul 2>&1
+)
+set "DOCKER_CONFIG=%~dp0.docker-config"
+exit /b 0
+
+:DOCKER_AUTO_RUN
+cls
+color 0a
+echo.
+echo    ====================================================================
+echo    [ DOCKER AUTO RUN ] DANG KHOI DONG MOI TRUONG DOCKER COMPOSE...
+echo    ====================================================================
+echo.
+call :DOCKER_CHECK_DAEMON
+if not exist .env (
+    if exist .env.docker (
+        copy .env.docker .env >nul
+    ) else (
+        copy .env.example .env >nul
+    )
+    echo    [+] Da khoi tao .env cho Docker.
+)
+echo    [1/3] Dang khoi chay cac container (Build ^& Run Background)...
+docker compose up -d --build
+if %errorlevel% neq 0 (
+    color 0c
+    echo    [ LOI ] Khong the khoi chay Docker Compose. Hay kiem tra logs.
+    pause
+    goto DOCKER_RUN
 )
 
-echo    [ HANH DONG ] Dang goi Docker Compose. Neu gap loi permission, hay mo terminal bang Run as administrator
-echo                 hoac them user Windows vao nhom docker-users.
 echo.
-echo    [ GOI Y ] Nhan Ctrl+C de dung Docker Compose va quay lai menu.
+echo    [2/3] Dang cho ung dung tren Docker san sang (Cong 8088)...
+set "DOCKER_READY=0"
+for /l %%i in (1,1,30) do (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8088/' -TimeoutSec 1; if ($r.StatusCode -ge 200) { exit 0 } } catch { exit 1 }" > nul 2>&1
+    if !errorlevel! equ 0 (
+        set "DOCKER_READY=1"
+        goto DOCKER_READY_LAUNCH
+    )
+    timeout /t 2 > nul
+)
+
+:DOCKER_READY_LAUNCH
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\docker-start.ps1"
+echo    [3/3] Dang mo website tren trinh duyet...
+start "" "http://localhost:8088/renty"
+
+cls
+color 0b
+echo.
+echo    +======================================================================================+
+echo    ^|                 SmartRoom ^& Renty DOCKER DA KHOI CHAY THANH CONG                      ^|
+echo    +======================================================================================+
+echo    ^|                                                                                      ^|
+echo    ^|  [+] Website nguoi thue:  http://localhost:8088/renty                                ^|
+echo    ^|  [+] Admin Portal:        http://localhost:8088/smartroom/admin                      ^|
+echo    ^|  [+] Localhost URL:       http://localhost:8088/                                     ^|
+echo    ^|  [+] Reverb WebSocket:    ws://127.0.0.1:8085                                        ^|
+echo    ^|  [+] MySQL Port (Host):   localhost:3309                                             ^|
+echo    ^|      User: smartroom  /  Password: smartroom  /  Database: quan_ly_nha_tro           ^|
+echo    ^|                                                                                      ^|
+echo    +======================================================================================+
+echo.
+echo    [ THONG TIN ] Containers dang chay ngam on dinh.
+echo    [ GOI Y ] De dung Docker, hay vao menu Docker va chon [6] DUNG DOCKER.
+echo.
+pause
+goto DOCKER_RUN
+
+:DOCKER_FOREGROUND_RUN
+cls
+color 0b
+echo.
+echo    ====================================================================
+echo    [ DOCKER FOREGROUND ] CHAY DOCKER HIEN THI LOG TRUC TIEP
+echo    ====================================================================
+echo.
+call :DOCKER_CHECK_DAEMON
+if exist docker-start.ps1 (
+    powershell -NoProfile -ExecutionPolicy Bypass -File ".\docker-start.ps1"
+) else (
+    docker compose up --build
+)
 echo.
 echo    [ INFO ] Docker Compose da dung hoac thoat.
 pause
-goto MENU
+goto DOCKER_RUN
+
+:DOCKER_LOGS
+cls
+color 0b
+echo.
+echo    ====================================================================
+echo    [ DOCKER LOGS ] THEO DOI NHAT KY HOAT DONG CONTAINER (Nhan Ctrl+C de thoat)
+echo    ====================================================================
+echo.
+call :DOCKER_CHECK_DAEMON
+docker compose logs -f
+pause
+goto DOCKER_RUN
+
+:DOCKER_SEED
+cls
+color 0e
+echo.
+echo    ====================================================================
+echo    [ DOCKER MIGRATE ^& SEED ] LAM MOI VA NAP DU LIEU DATABASE TRONG DOCKER
+echo    ====================================================================
+echo.
+call :DOCKER_CHECK_DAEMON
+set /p confirm_seed="   >> Ban co chac muon xoa va seed lai CSDL Docker? [y/n]: "
+if /i "!confirm_seed!" neq "y" goto DOCKER_RUN
+echo.
+echo    [ HANH DONG ] Dang chay artisan migrate:fresh --seed ben trong container app...
+docker compose exec -T app php artisan migrate:fresh --seed
+docker compose exec -T app php artisan optimize:clear
+echo.
+echo    [ OK ] Da migrate va seed CSDL Docker thanh cong!
+pause
+goto DOCKER_RUN
+
+:DOCKER_RESTART
+cls
+color 0b
+echo.
+echo    [ HANH DONG ] Dang khoi dong lai cac containers Docker...
+call :DOCKER_CHECK_DAEMON
+docker compose restart
+echo    [ OK ] Da khoi dong lai cac containers thanh cong!
+pause
+goto DOCKER_RUN
+
+:DOCKER_DOWN
+cls
+color 0c
+echo.
+echo    ====================================================================
+echo    [ DOCKER STOP ] DUNG VA GIAI PHONG MOI TRUONG DOCKER COMPOSE
+echo    ====================================================================
+echo.
+call :DOCKER_CHECK_DAEMON
+docker compose down
+echo.
+echo    [ OK ] Toan bo cac container SmartRoom da duoc dung va giai phong.
+pause
+goto DOCKER_RUN
 
 :INITIALIZE_FAST
 cls

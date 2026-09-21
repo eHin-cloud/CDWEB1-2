@@ -82,6 +82,8 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return match ($this->role) {
             'admin' => 'admin',
             'manager', 'staff' => 'manager',
+            'receptionist' => 'receptionist',
+            'housekeeper' => 'housekeeper',
             'user' => 'resident',
             'guest' => 'guest',
             default => $this->role,
@@ -103,6 +105,8 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
             'unverified_landlord' => 'Chu tro chua xac minh',
             'landlord' => 'Chu tro',
             'manager' => 'Nhan vien quan ly',
+            'receptionist' => 'Le tan khach san',
+            'housekeeper' => 'Nhan vien buong phong',
             'resident' => 'Cu dan',
             'guest' => 'Khach xem phong',
             default => 'Nguoi dung',
@@ -131,7 +135,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
 
     public function canAccessLandlordDashboard(): bool
     {
-        return in_array($this->roleSlug(), ['landlord', 'unverified_landlord', 'manager'], true);
+        return in_array($this->roleSlug(), ['landlord', 'unverified_landlord', 'manager', 'receptionist'], true);
     }
 
     public function isAdmin(): bool
@@ -142,6 +146,16 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
     public function isManager(): bool
     {
         return $this->roleSlug() === 'manager';
+    }
+
+    public function isReceptionist(): bool
+    {
+        return $this->roleSlug() === 'receptionist';
+    }
+
+    public function isHousekeeper(): bool
+    {
+        return $this->roleSlug() === 'housekeeper';
     }
 
     public function isResident(): bool

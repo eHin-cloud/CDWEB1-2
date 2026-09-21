@@ -14,6 +14,9 @@ use App\Http\Controllers\LandlordOnboardingController;
 use App\Http\Controllers\LandlordVerificationController;
 use App\Http\Controllers\VerificationDocumentController;
 use App\Http\Controllers\BuildingController;
+use App\Http\Controllers\RoomMatrixRealtimeController;
+use App\Http\Controllers\HotelReceptionController;
+use App\Http\Controllers\HousekeepingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,12 +142,15 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/utility/{id}/notify', [AdminDashboardController::class, 'notifyUtility'])->name('smartroom.admin.utility.notify');
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
+    Route::post('/smartroom/admin/ticket/{id}/update', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.ticket.update');
+    Route::get('/smartroom/admin/tickets/poll', [AdminDashboardController::class, 'pollTickets'])->name('smartroom.admin.tickets.poll');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');
         Route::post('/smartroom/admin/ai/assistant', [AdminDashboardController::class, 'aiAssistant'])->name('smartroom.admin.ai.assistant');
         Route::post('/smartroom/admin/ai/contract-terms', [AdminDashboardController::class, 'aiContractTerms'])->name('smartroom.admin.ai.contract_terms');
         Route::post('/smartroom/admin/ai/ocr-meter', [AdminDashboardController::class, 'aiOcrMeter'])->name('smartroom.admin.ai.ocr_meter');
+        Route::post('/smartroom/admin/ai/ocr-meter-bulk', [AdminDashboardController::class, 'aiOcrMeterBulk'])->name('smartroom.admin.ai.ocr_meter_bulk');
         Route::get('/smartroom/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
         Route::post('/smartroom/admin/reports/transactions', [ReportController::class, 'storeTransaction'])->name('admin.reports.transaction.store');
         Route::get('/smartroom/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity_logs.index');
@@ -173,6 +179,9 @@ Route::middleware('admin')->group(function () {
         Route::post('/store', [RoomController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::post('/{id}/update', [RoomController::class, 'update'])->name('update');
+        Route::post('/{id}/quick-status', [RoomMatrixRealtimeController::class, 'updateStatus'])->name('quick_status');
+        Route::get('/matrix/stream', [RoomMatrixRealtimeController::class, 'stream'])->name('matrix.stream');
+        Route::get('/matrix/poll', [RoomMatrixRealtimeController::class, 'checkUpdates'])->name('matrix.poll');
         Route::post('/description/ai', [RoomController::class, 'generateDescription'])->middleware('role:landlord')->name('description.ai');
         Route::delete('/{id}/delete', [RoomController::class, 'destroy'])->middleware('role:landlord')->name('destroy');
     });
@@ -203,7 +212,22 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/resident/{residentId}/relative', [AdminDashboardController::class, 'storeRelative'])->name('smartroom.admin.resident.relative.store');
     Route::put('/smartroom/admin/relative/{id}', [AdminDashboardController::class, 'updateRelative'])->name('smartroom.admin.relative.update');
     Route::delete('/smartroom/admin/relative/{id}', [AdminDashboardController::class, 'deleteRelative'])->middleware('role:landlord')->name('smartroom.admin.relative.delete');
+
+    // Phân hệ Khách sạn / Lễ tân (Reception & Hospitality)
+    Route::prefix('smartroom/admin/hotel')->name('admin.hotel.')->group(function () {
+        Route::post('/check-in', [HotelReceptionController::class, 'checkIn'])->name('checkin');
+        Route::post('/folio/{bookingId}/items', [HotelReceptionController::class, 'addFolioItem'])->name('folio.add_item');
+        Route::post('/check-out/{bookingId}', [HotelReceptionController::class, 'checkOut'])->name('checkout');
+        Route::get('/folio/{bookingId}', [HotelReceptionController::class, 'printFolio'])->name('folio');
+    });
 });
+
+// Phân hệ Buồng phòng (Housekeeping) - Tối ưu di động
+Route::middleware('auth')->prefix('smartroom/housekeeping')->name('admin.housekeeping.')->group(function () {
+    Route::get('/', [HousekeepingController::class, 'index'])->name('index');
+    Route::post('/{roomId}/status', [HousekeepingController::class, 'updateStatus'])->name('update');
+});
+
 Route::get('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContractView'])->name('smartroom.contract.sign_view');
 Route::get('/smartroom/contract/{id}/pdf', [AdminDashboardController::class, 'printContractPdf'])->name('smartroom.contract.pdf');
 Route::post('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContract'])->name('smartroom.contract.sign');

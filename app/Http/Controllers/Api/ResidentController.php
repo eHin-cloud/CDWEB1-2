@@ -144,6 +144,7 @@ class ResidentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|in:điện,nước,nội thất,khác',
+            'specific_location' => 'nullable|string|max:150',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
@@ -159,9 +160,16 @@ class ResidentController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'category' => $request->category,
+            'specific_location' => $request->specific_location,
             'image_path' => $imagePath ? '/storage/' . $imagePath : null,
             'status' => 'pending'
         ]);
+
+        try {
+            event(new \App\Events\TicketCreated($ticket));
+        } catch (\Throwable $e) {
+            Log::warning('TicketCreated broadcast failed: ' . $e->getMessage());
+        }
 
         // Gửi thông báo tự động cho chủ trọ qua Telegram Bot khi có ticket mới
         $botToken = config('services.telegram.bot_token');

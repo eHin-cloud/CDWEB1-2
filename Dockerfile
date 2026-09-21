@@ -16,6 +16,7 @@ RUN apt-get update \
         intl \
         pdo_mysql \
         zip \
+        pcntl \
     && docker-php-ext-enable opcache \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

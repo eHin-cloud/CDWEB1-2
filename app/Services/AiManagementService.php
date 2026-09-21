@@ -152,8 +152,8 @@ class AiManagementService
                 [
                     'role' => 'user',
                     'content' => implode("\n", [
-                        'Phan tich su co bao tri tu mo ta cua cu dan.',
-                        'Chi tra ve JSON dang {"title":"...","category":"electric|water|furniture|maintenance|other","priority":"low|medium|high","suggestion":"...","normalized_description":"..."}.',
+                        'Phan tich su co bao tri hoac yeu cau don phong tu mo ta cua cu dan.',
+                        'Chi tra ve JSON dang {"title":"...","category":"electric|water|furniture|maintenance|housekeeping|other","priority":"low|medium|high","suggestion":"...","normalized_description":"..."}.',
                         'Khong bia thong tin. Neu mo ta khong ro, de category la other.',
                         '',
                         'Tieu de hien co: ' . ($title ?: 'Chua co'),
@@ -163,7 +163,7 @@ class AiManagementService
             ]);
 
             $category = (string) ($content['category'] ?? $fallback['category']);
-            if (!in_array($category, ['electric', 'water', 'furniture', 'maintenance', 'other'], true)) {
+            if (!in_array($category, ['electric', 'water', 'furniture', 'maintenance', 'housekeeping', 'other'], true)) {
                 $category = 'other';
             }
 
@@ -557,6 +557,7 @@ class AiManagementService
             str_contains($text, 'điện') || str_contains($text, 'dien') || str_contains($text, 'ổ cắm') || str_contains($text, 'den') => 'electric',
             str_contains($text, 'nước') || str_contains($text, 'nuoc') || str_contains($text, 'rò') || str_contains($text, 'ống') => 'water',
             str_contains($text, 'giường') || str_contains($text, 'tu') || str_contains($text, 'tủ') || str_contains($text, 'bàn') => 'furniture',
+            str_contains($text, 'dọn') || str_contains($text, 'don') || str_contains($text, 'vệ sinh') || str_contains($text, 've sinh') || str_contains($text, 'lau') || str_contains($text, 'buồng') || str_contains($text, 'rác') || str_contains($text, 'ga') => 'housekeeping',
             default => 'maintenance',
         };
 
@@ -564,11 +565,15 @@ class AiManagementService
             ? 'high'
             : 'medium';
 
+        $suggestion = $category === 'housekeeping'
+            ? 'Ban quan ly nen sap xep nhan vien buong phong don dep theo dung thoi gian cu dan yeu cau.'
+            : 'Ban quan ly nen kiem tra hien trang, xac nhan muc do anh huong va phan cong tho phu hop.';
+
         return [
             'title' => $title ?: mb_substr('Su co bao tri: ' . $description, 0, 150),
             'category' => $category,
             'priority' => $priority,
-            'suggestion' => 'Ban quan ly nen kiem tra hien trang, xac nhan muc do anh huong va phan cong tho phu hop.',
+            'suggestion' => $suggestion,
             'normalized_description' => $description,
         ];
     }
@@ -649,12 +654,13 @@ class AiManagementService
     }
 
     /**
-     * Nhận diện chỉ số công tơ điện nước qua hình ảnh sử dụng Gemini AI.
+     * Nhận diện chỉ số và số sản xuất (Số SX) công tơ điện nước qua hình ảnh sử dụng Gemini AI.
      */
     public function analyzeMeterImage(string $base64Image, string $type = 'electricity'): array
     {
         $fallback = [
             'value' => 120, // giá trị giả định mẫu
+            'serial_number' => null,
             'confidence' => 0.5,
             'used_ai' => false,
             'fallback_reason' => 'ai_not_configured',
@@ -673,14 +679,17 @@ class AiManagementService
             $messages = [
                 [
                     'role' => 'system',
-                    'content' => 'Bạn là trợ lý nhận diện số công tơ điện nước qua hình ảnh chuyên nghiệp. Phân tích hình ảnh và trả về kết quả dưới dạng JSON.',
+                    'content' => 'Bạn là chuyên gia thị giác máy tính nhận diện đồng hồ công tơ điện nước đo lường. Luôn đọc kỹ số nguyên và số sản xuất (Số SX/Serial) để trả về định dạng JSON.',
                 ],
                 [
                     'role' => 'user',
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => "Hãy đọc số chỉ số hiển thị trên mặt công tơ điện/nước ({$type}) từ bức ảnh này. Chỉ lấy phần số nguyên. Trả về JSON dạng {\"value\": 1234, \"confidence\": 0.95}."
+                            'text' => "Hãy phân tích ảnh chụp mặt công tơ ({$type}) và trích xuất 2 thông tin: "
+                                    . "1. Chỉ số tiêu thụ hiện tại: CHỈ lấy các chữ số nguyên màu đen (BỎ QUA chữ số màu đỏ hoặc viền đỏ hàng thập phân 1/10). "
+                                    . "2. Số sản xuất công tơ (Số SX / Serial Number): Mã số định danh in/dập trên mặt đồng hồ (thường nằm cạnh chữ 'Số SX:', 'No.', 'S/N:'). Nếu không thấy hãy trả về null. "
+                                    . "Trả về định dạng JSON chuẩn: {\"value\": 5818, \"serial_number\": \"16258817\", \"confidence\": 0.95}."
                         ],
                         [
                             'type' => 'image_url',
@@ -694,8 +703,15 @@ class AiManagementService
 
             $content = $this->chatJson($messages);
 
+            $serialNumber = null;
+            if (!empty($content['serial_number']) && $content['serial_number'] !== 'null') {
+                // Chuẩn hóa loại bỏ ký tự rác nếu có
+                $serialNumber = preg_replace('/[^a-zA-Z0-9\-_]/', '', (string) $content['serial_number']);
+            }
+
             return [
                 'value' => (int) ($content['value'] ?? 0),
+                'serial_number' => $serialNumber ?: null,
                 'confidence' => (float) ($content['confidence'] ?? 1.0),
                 'used_ai' => true,
                 'fallback_reason' => null,

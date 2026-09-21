@@ -189,8 +189,8 @@ class CrudUserController extends Controller
     {
         if (Auth::check()) {
             $users = User::with(['roleRecord', 'tenant'])->orderByDesc('id')->paginate(10);
-            $roles = Role::whereIn('slug', ['admin', 'unverified_landlord', 'landlord', 'manager', 'resident', 'guest'])
-                ->orderByRaw("field(slug, 'admin', 'unverified_landlord', 'landlord', 'manager', 'resident', 'guest')")
+            $roles = Role::whereIn('slug', ['admin', 'unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper', 'resident', 'guest'])
+                ->orderByRaw("field(slug, 'admin', 'unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper', 'resident', 'guest')")
                 ->get();
             $tenants = Tenant::orderBy('name')->get();
 
@@ -209,12 +209,12 @@ class CrudUserController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
-            'role_slug' => 'required|in:admin,unverified_landlord,landlord,manager,resident,guest',
+            'role_slug' => 'required|in:admin,unverified_landlord,landlord,manager,receptionist,housekeeper,resident,guest',
             'tenant_id' => 'nullable|integer|exists:tenants,id',
         ]);
 
-        if (in_array($validated['role_slug'], ['unverified_landlord', 'landlord', 'manager'], true) && empty($validated['tenant_id'])) {
-            return back()->with('error', 'Chu tro hoac nhan vien quan ly phai duoc gan nha tro/tenant.');
+        if (in_array($validated['role_slug'], ['unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper'], true) && empty($validated['tenant_id'])) {
+            return back()->with('error', 'Chu tro, quan ly hoac nhan vien van hanh phai duoc gan nha tro/tenant.');
         }
 
         $role = Role::where('slug', $validated['role_slug'])->firstOrFail();
@@ -229,6 +229,8 @@ class CrudUserController extends Controller
             'unverified_landlord' => 'unverified_landlord',
             'landlord' => 'admin',
             'manager' => 'manager',
+            'receptionist' => 'receptionist',
+            'housekeeper' => 'housekeeper',
             'resident' => 'user',
             'guest' => 'guest',
         };

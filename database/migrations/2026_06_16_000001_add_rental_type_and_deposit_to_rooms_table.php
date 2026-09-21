@@ -10,8 +10,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->string('rental_type', 20)->default('month')->after('room_type');
-            $table->unsignedInteger('deposit')->default(0)->after('price');
+            if (!Schema::hasColumn('rooms', 'rental_type')) {
+                $table->string('rental_type', 20)->default('month')->after('room_type');
+            }
+            if (!Schema::hasColumn('rooms', 'deposit')) {
+                $table->unsignedInteger('deposit')->default(0)->after('price');
+            }
         });
 
         // Chuyển đổi dữ liệu cũ: 'normal' -> 'standard'

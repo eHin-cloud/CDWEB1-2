@@ -77,6 +77,53 @@ class RealWorldFeaturesTest extends TestCase
     }
 
     /**
+     * Test AI Bulk OCR meter matching with room meter serials
+     */
+    public function test_ai_ocr_meter_bulk_matching(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'SmartRoom Test',
+            'email' => 'tenant@example.com',
+        ]);
+        $user = $this->createLandlordUser($tenant);
+
+        $building = \App\Models\Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Toà Nhà Test',
+            'address' => 'Hà Nội',
+        ]);
+
+        $room = Room::create([
+            'tenant_id' => $tenant->id,
+            'building_id' => $building->id,
+            'room_number' => '101',
+            'floor' => 1,
+            'status' => 'overdue',
+            'price' => 2000000,
+            'electric_meter_serial' => '16258817',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('smartroom.admin.ai.ocr_meter_bulk'), [
+            'images' => [
+                'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+            ],
+            'type' => 'electricity'
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'success',
+            'type',
+            'total_scanned',
+            'matched_count',
+            'unmatched_count',
+            'matched',
+            'unmatched',
+            'all_rooms'
+        ]);
+    }
+
+    /**
      * Test Secure Contract Signing Flow via OTP
      */
     public function test_contract_otp_secure_signature_flow(): void

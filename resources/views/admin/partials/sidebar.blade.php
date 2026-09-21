@@ -3,6 +3,12 @@
     $isDashboardRoute = request()->routeIs('smartroom.admin');
     $isLandlord = Auth::user()?->isLandlord();
     $sidebarContactCount = \App\Models\ContactRequest::where('status', 'pending')->count();
+    $tenantIdForTickets = Auth::user()?->tenant_id;
+    $sidebarTicketQuery = \App\Models\Ticket::where('status', 'pending');
+    if ($tenantIdForTickets) {
+        $sidebarTicketQuery->where('tenant_id', $tenantIdForTickets);
+    }
+    $sidebarPendingTickets = $sidebarTicketQuery->count();
     $userInitials = '';
     $userName = '';
     $userRoleLabel = 'Quản trị viên';
@@ -121,6 +127,16 @@
                class="sidebar-nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ ($isDashboardRoute && $currentTab === 'resident-section') ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent hover:border-slate-800' }}">
                 <i class="fa-solid fa-users text-lg"></i>
                 <span>Quản Lý Cư Dân</span>
+            </a>
+
+            <a href="{{ route('smartroom.admin') }}?tab=ticket-section" 
+               data-section="ticket-section" 
+               class="sidebar-nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ ($isDashboardRoute && $currentTab === 'ticket-section') ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent hover:border-slate-800' }}">
+                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                <span>Sự Cố & Báo Hỏng</span>
+                <span id="sidebar-ticket-badge" class="sidebar-badge ml-auto bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse {{ $sidebarPendingTickets > 0 ? '' : 'hidden' }}">
+                    {{ $sidebarPendingTickets }}
+                </span>
             </a>
             
             <a href="{{ route('smartroom.admin') }}?tab=contract-section" 

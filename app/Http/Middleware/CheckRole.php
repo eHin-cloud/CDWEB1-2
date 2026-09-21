@@ -50,6 +50,10 @@ class CheckRole
             return 'user.list';
         }
 
+        if ($user->isHousekeeper()) {
+            return 'admin.housekeeping.index';
+        }
+
         if ($user->canAccessLandlordDashboard()) {
             return 'smartroom.admin';
         }
