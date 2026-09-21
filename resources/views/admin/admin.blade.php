@@ -4244,6 +4244,7 @@
                     document.getElementById('iot-stat-cost-val').textContent = (data.consumption_today.estimated_cost || 0).toLocaleString('vi-VN') + 'đ';
 
                     iotState.chartData = data.series;
+                    iotState.latestData = data.latest;
                     renderIotCanvasChart(data.series.electricity || [], data.series.water || []);
                 }
             } catch (e) {
@@ -4644,6 +4645,14 @@
                     tooltip.style.top = `${topPos}px`;
                 }
 
+                // Đồng bộ cập nhật các ô thống kê bên dưới theo mốc thời gian chuột đang trỏ
+                const statElec = document.getElementById('iot-stat-elec-val');
+                const statWater = document.getElementById('iot-stat-water-val');
+                const statFlow = document.getElementById('iot-stat-water-flow');
+                if (statElec && closest.reading) statElec.textContent = `${Number(closest.reading).toFixed(2)} kWh`;
+                if (statWater && closest.water_reading) statWater.textContent = `${Number(closest.water_reading).toFixed(2)} m3`;
+                if (statFlow && closest.flow_rate !== undefined) statFlow.textContent = `${Number(closest.flow_rate).toFixed(1)} L/m`;
+
                 if (iotState.hoveredIndex !== closest.idx) {
                     iotState.hoveredIndex = closest.idx;
                     renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], closest.idx);
@@ -4655,6 +4664,22 @@
                 if (iotState.hoveredIndex !== null) {
                     iotState.hoveredIndex = null;
                     renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], null);
+                }
+
+                // Khôi phục giá trị tức thời mới nhất ở các thẻ thống kê
+                if (iotState.latestData) {
+                    const statElec = document.getElementById('iot-stat-elec-val');
+                    const statWater = document.getElementById('iot-stat-water-val');
+                    const statFlow = document.getElementById('iot-stat-water-flow');
+                    if (statElec && iotState.latestData.electric_reading !== null) {
+                        statElec.textContent = `${Number(iotState.latestData.electric_reading).toFixed(2)} kWh`;
+                    }
+                    if (statWater && iotState.latestData.water_reading !== null) {
+                        statWater.textContent = `${Number(iotState.latestData.water_reading).toFixed(2)} m3`;
+                    }
+                    if (statFlow && iotState.latestData.water_flow_rate !== null) {
+                        statFlow.textContent = `${Number(iotState.latestData.water_flow_rate).toFixed(1)} L/m`;
+                    }
                 }
             });
         }

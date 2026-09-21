@@ -238,25 +238,98 @@ class IotSmartMeteringService
                 ->get();
         }
 
-        $electricData = [];
+        // Đồng bộ hóa chuỗi thời gian giữa Điện và Nước (Timeline Alignment & Forward-Fill)
+        $timeFormat = ($range === '7d' || $range === '30d') ? 'd/m H:i' : ($range === '24h' ? 'H:i' : 'H:i:s');
+        
+        // Tìm baseline giá trị gần nhất trước khoảng thời gian nếu có
+        $prevElec = IotMeterTelemetry::where('room_id', $roomId)
+            ->where('meter_type', 'electricity')
+            ->where('recorded_at', '<', $startTime)
+            ->orderByDesc('recorded_at')
+            ->first();
 
+        $prevWater = IotMeterTelemetry::where('room_id', $roomId)
+            ->where('meter_type', 'water')
+            ->where('recorded_at', '<', $startTime)
+            ->orderByDesc('recorded_at')
+            ->first();
+
+        $lastElec = [
+            'reading' => $prevElec ? (float)$prevElec->reading : 0.0,
+            'power' => $prevElec ? (float)$prevElec->power : 0.0,
+            'voltage' => $prevElec ? (float)$prevElec->voltage : 220.0,
+            'current' => $prevElec ? (float)$prevElec->current : 0.0,
+        ];
+
+        $lastWater = [
+            'reading' => $prevWater ? (float)$prevWater->reading : 0.0,
+            'flow_rate' => $prevWater ? (float)$prevWater->flow_rate : 0.0,
+        ];
+
+        // Nếu chưa có baseline trước khoảng, lấy giá trị bản ghi đầu tiên trong chu kỳ
+        $firstElecItem = $telemetries->firstWhere('meter_type', 'electricity');
+        if ($firstElecItem && $lastElec['reading'] == 0) {
+            $lastElec['reading'] = (float)$firstElecItem->reading;
+            $lastElec['power'] = (float)$firstElecItem->power;
+            $lastElec['voltage'] = (float)$firstElecItem->voltage;
+            $lastElec['current'] = (float)$firstElecItem->current;
+        }
+
+        $firstWaterItem = $telemetries->firstWhere('meter_type', 'water');
+        if ($firstWaterItem && $lastWater['reading'] == 0) {
+            $lastWater['reading'] = (float)$firstWaterItem->reading;
+            $lastWater['flow_rate'] = (float)$firstWaterItem->flow_rate;
+        }
+
+        $timeMap = [];
+        foreach ($telemetries as $item) {
+            $timeKey = $item->recorded_at->format($timeFormat);
+            if (!isset($timeMap[$timeKey])) {
+                $timeMap[$timeKey] = [
+                    'time' => $timeKey,
+                    'elec' => null,
+                    'water' => null,
+                ];
+            }
+            if ($item->meter_type === 'electricity') {
+                $timeMap[$timeKey]['elec'] = $item;
+            } else {
+                $timeMap[$timeKey]['water'] = $item;
+            }
+        }
+
+        $electricData = [];
         $waterData = [];
 
-        foreach ($telemetries as $item) {
-            $point = [
-                'time' => $item->recorded_at->format('H:i:s'),
-                'reading' => (float) $item->reading,
-                'power' => (float) $item->power,
-                'voltage' => (float) $item->voltage,
-                'current' => (float) $item->current,
-                'flow_rate' => (float) $item->flow_rate,
+        foreach ($timeMap as $timeKey => $slot) {
+            if ($slot['elec']) {
+                $lastElec['reading'] = (float)$slot['elec']->reading;
+                $lastElec['power'] = (float)$slot['elec']->power;
+                $lastElec['voltage'] = (float)$slot['elec']->voltage;
+                $lastElec['current'] = (float)$slot['elec']->current;
+            }
+            if ($slot['water']) {
+                $lastWater['reading'] = (float)$slot['water']->reading;
+                $lastWater['flow_rate'] = (float)$slot['water']->flow_rate;
+            }
+
+            $electricData[] = [
+                'time' => $timeKey,
+                'reading' => $lastElec['reading'],
+                'power' => $lastElec['power'],
+                'voltage' => $lastElec['voltage'],
+                'current' => $lastElec['current'],
+                'flow_rate' => 0,
             ];
 
-            if ($item->meter_type === 'electricity') {
-                $electricData[] = $point;
-            } else {
-                $waterData[] = $point;
-            }
+            $waterData[] = [
+                'time' => $timeKey,
+                'reading' => $lastWater['reading'],
+                'power' => 0,
+                'voltage' => 0,
+                'current' => 0,
+                'flow_rate' => $lastWater['flow_rate'],
+            ];
         }
 
 
