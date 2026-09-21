@@ -1746,7 +1746,351 @@
                 </div>
             </section>
 
+            <!-- SECTION TICKET: QUẢN LÝ SỰ CỐ & BÁO HỎNG -->
+            <section id="ticket-section" class="tab-content hidden space-y-8 animate-fade-in">
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Tổng số sự cố</p>
+                                <h3 id="ticket-stat-total" class="text-3xl font-extrabold text-white mt-2 tracking-tight">{{ $ticketStats['total'] }}</h3>
+                                <span class="text-[11px] text-slate-500 mt-1 block">Tất cả báo hỏng đã ghi nhận</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(244,63,94,0.15)] transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-rose-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Chờ xử lý (Mới)</p>
+                                <h3 id="ticket-stat-pending" class="text-3xl font-extrabold text-rose-400 mt-2 tracking-tight">{{ $ticketStats['pending'] }}</h3>
+                                <span class="text-[11px] text-rose-400/80 mt-1 block font-medium">Cần điều phối thợ sửa</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
+                                <i class="fa-solid fa-hourglass-start text-xl animate-pulse"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-amber-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Đang khắc phục</p>
+                                <h3 id="ticket-stat-processing" class="text-3xl font-extrabold text-amber-400 mt-2 tracking-tight">{{ $ticketStats['processing'] }}</h3>
+                                <span class="text-[11px] text-amber-400/80 mt-1 block font-medium">Thợ đang kiểm tra & sửa</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                <i class="fa-solid fa-screwdriver-wrench text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500"></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Đã hoàn thành</p>
+                                <h3 id="ticket-stat-resolved" class="text-3xl font-extrabold text-emerald-400 mt-2 tracking-tight">{{ $ticketStats['resolved'] }}</h3>
+                                <span class="text-[11px] text-emerald-400/80 mt-1 block font-medium">Đã giải quyết dứt điểm</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tickets Main Table Panel -->
+                <div class="glass-card rounded-3xl border border-slate-900 overflow-hidden shadow-2xl">
+                    <div class="p-6 border-b border-slate-900 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-lg font-bold text-slate-200">Danh sách báo hỏng & sự cố</h2>
+                                <span id="ticket-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                    {{ count($tickets) }} sự cố
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Theo dõi chi tiết số phòng, vị trí hư hỏng, ảnh chụp thực tế và phân công thợ sửa chữa</p>
+                        </div>
+
+                        <!-- Filter Controls -->
+                        <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                            <!-- Status Filter -->
+                            <select id="ticket-filter-status" onchange="filterAdminTickets()" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="pending">Chờ xử lý</option>
+                                <option value="processing">Đang khắc phục</option>
+                                <option value="resolved">Đã hoàn thành</option>
+                            </select>
+
+                            <!-- Category Filter -->
+                            <select id="ticket-filter-category" onchange="filterAdminTickets()" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                                <option value="all">Tất cả danh mục</option>
+                                <option value="electric">Điện</option>
+                                <option value="water">Nước</option>
+                                <option value="furniture">Nội thất</option>
+                                <option value="maintenance">Bảo trì</option>
+                                <option value="housekeeping">Dọn phòng (Housekeeping)</option>
+                                <option value="other">Khác</option>
+                            </select>
+
+                            <!-- Search Input -->
+                            <div class="relative flex-1 sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                                <input type="text" id="ticket-search-input" oninput="filterAdminTickets()" placeholder="Tìm phòng, vị trí, cư dân..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-900">
+                                <tr>
+                                    <th class="px-6 py-4">Mã & Ngày</th>
+                                    <th class="px-6 py-4">Phòng & Vị trí</th>
+                                    <th class="px-6 py-4">Cư dân báo</th>
+                                    <th class="px-6 py-4">Nội dung & Hình ảnh</th>
+                                    <th class="px-6 py-4">Phụ trách</th>
+                                    <th class="px-6 py-4">Trạng thái</th>
+                                    <th class="px-6 py-4 text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-ticket-table-body" class="divide-y divide-slate-900">
+                                @forelse($tickets as $ticket)
+                                    @php
+                                        $categoryLabels = [
+                                            'electric' => ['Điện', 'bg-amber-500/10 text-amber-300 border-amber-500/20', 'fa-bolt'],
+                                            'water' => ['Nước', 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20', 'fa-droplet'],
+                                            'furniture' => ['Nội thất', 'bg-purple-500/10 text-purple-300 border-purple-500/20', 'fa-couch'],
+                                            'maintenance' => ['Bảo trì', 'bg-blue-500/10 text-blue-300 border-blue-500/20', 'fa-wrench'],
+                                            'housekeeping' => ['Dọn phòng', 'bg-teal-500/10 text-teal-300 border-teal-500/20', 'fa-broom'],
+                                            'other' => ['Khác', 'bg-slate-500/10 text-slate-300 border-slate-500/20', 'fa-circle-exclamation'],
+                                        ];
+                                        $catInfo = $categoryLabels[$ticket->category] ?? [$ticket->category, 'bg-slate-500/10 text-slate-300 border-slate-500/20', 'fa-info-circle'];
+
+                                        $statusClass = match($ticket->status) {
+                                            'pending' => 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+                                            'processing' => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                            'resolved' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                                            default => 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+                                        };
+                                        $statusText = match($ticket->status) {
+                                            'pending' => 'Chờ tiếp nhận',
+                                            'processing' => 'Đang xử lý',
+                                            'resolved' => 'Đã hoàn thành',
+                                            default => $ticket->status,
+                                        };
+                                    @endphp
+                                    <tr class="ticket-row hover:bg-slate-900/40 transition-colors"
+                                        data-ticket-id="{{ $ticket->id }}"
+                                        data-ticket-status="{{ $ticket->status }}"
+                                        data-ticket-category="{{ $ticket->category }}"
+                                        data-ticket-search="{{ mb_strtolower(($ticket->room->room_number ?? '') . ' ' . ($ticket->specific_location ?? '') . ' ' . ($ticket->resident->name ?? '') . ' ' . ($ticket->resident->phone ?? '') . ' ' . $ticket->title . ' ' . ($ticket->room->building->name ?? '')) }}">
+                                        
+                                        <!-- ID & Date -->
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="font-mono text-xs font-bold text-slate-400">#{{ $ticket->id }}</span>
+                                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                                <i class="fa-regular fa-clock mr-1"></i>{{ $ticket->created_at->format('d/m/Y H:i') }}
+                                            </div>
+                                        </td>
+
+                                        <!-- Room & Location -->
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-black text-indigo-400">
+                                                    P.{{ $ticket->room->room_number ?? 'N/A' }}
+                                                </span>
+                                                @if(optional($ticket->room)->floor)
+                                                    <span class="text-[11px] text-slate-500">Tầng {{ $ticket->room->floor }}</span>
+                                                @endif
+                                                @if(optional($ticket->room)->building)
+                                                    <span class="text-[10px] text-slate-500">({{ $ticket->room->building->name }})</span>
+                                                @endif
+                                            </div>
+                                            <div class="mt-1.5 flex items-center gap-1.5">
+                                                @if($ticket->specific_location)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-semibold text-rose-300">
+                                                        <i class="fa-solid fa-location-dot text-rose-400 text-[10px]"></i>
+                                                        <span>{{ $ticket->specific_location }}</span>
+                                                    </span>
+                                                @else
+                                                    <span class="inline-block px-2 py-0.5 rounded-md bg-slate-900/50 text-[11px] text-slate-500 italic">
+                                                        Toàn bộ phòng
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+
+                                        <!-- Resident Info -->
+                                        <td class="px-6 py-4">
+                                            <div class="font-semibold text-slate-200 text-xs">
+                                                {{ $ticket->resident->name ?? 'Cư dân hệ thống' }}
+                                            </div>
+                                            @if(optional($ticket->resident)->phone)
+                                                <a href="tel:{{ $ticket->resident->phone }}" class="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 font-mono mt-0.5">
+                                                    <i class="fa-solid fa-phone text-[9px]"></i> {{ $ticket->resident->phone }}
+                                                </a>
+                                            @endif
+                                        </td>
+
+                                        <!-- Content & Image -->
+                                        <td class="px-6 py-4 max-w-xs">
+                                            <div class="flex items-center gap-1.5 mb-1">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border {{ $catInfo[1] }}">
+                                                    <i class="fa-solid {{ $catInfo[2] }}"></i> {{ $catInfo[0] }}
+                                                </span>
+                                            </div>
+                                            <div class="font-bold text-xs text-slate-200 line-clamp-1">{{ $ticket->title }}</div>
+                                            <div class="text-[11px] text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">{{ $ticket->description }}</div>
+                                            @if($ticket->image_path)
+                                                <div class="mt-2 flex items-center gap-2">
+                                                    <img src="{{ $ticket->image_path }}" onclick="viewTicketImage('{{ $ticket->image_path }}')" alt="Ảnh lỗi" class="w-10 h-10 object-cover rounded-lg border border-slate-700 hover:border-indigo-500 cursor-pointer transition-all hover:scale-105 shadow">
+                                                    <button type="button" onclick="viewTicketImage('{{ $ticket->image_path }}')" class="text-[11px] text-indigo-400 hover:underline flex items-center gap-1">
+                                                        <i class="fa-regular fa-image"></i> Xem ảnh
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        </td>
+
+                                        <!-- Assigned Technician -->
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if($ticket->assigned_to)
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 font-medium">
+                                                    <i class="fa-solid fa-user-gear text-indigo-400"></i> {{ $ticket->assigned_to }}
+                                                </span>
+                                            @else
+                                                <span class="text-xs text-slate-500 italic">Chưa chỉ định</span>
+                                            @endif
+                                        </td>
+
+                                        <!-- Status Badge -->
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $statusClass }}">
+                                                {{ $statusText }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                                            <button type="button" 
+                                                    onclick="openTicketUpdateModal({
+                                                        id: {{ $ticket->id }},
+                                                        room: '{{ $ticket->room->room_number ?? 'N/A' }}',
+                                                        location: '{{ addslashes($ticket->specific_location ?? 'Toàn phòng') }}',
+                                                        title: '{{ addslashes($ticket->title) }}',
+                                                        resident: '{{ addslashes($ticket->resident->name ?? 'Cư dân') }}',
+                                                        status: '{{ $ticket->status }}',
+                                                        assigned_to: '{{ addslashes($ticket->assigned_to ?? '') }}',
+                                                        image_path: '{{ $ticket->image_path ?? '' }}'
+                                                    })" 
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 text-indigo-400 text-xs font-bold transition-all">
+                                                <i class="fa-solid fa-pen-to-square"></i> Cập nhật
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr id="ticket-empty-row">
+                                        <td colspan="7" class="px-6 py-12 text-center text-xs text-slate-500">
+                                            <div class="flex flex-col items-center justify-center gap-3">
+                                                <i class="fa-solid fa-clipboard-check text-3xl text-slate-700"></i>
+                                                <span class="text-slate-400 font-medium">Không có sự cố nào cần xử lý.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                                <tr id="ticket-no-search-match" class="hidden">
+                                    <td colspan="7" class="px-6 py-12 text-center text-xs text-slate-500">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <i class="fa-solid fa-filter-circle-xmark text-3xl text-slate-700"></i>
+                                            <span class="text-slate-400 font-medium">Không tìm thấy sự cố nào phù hợp với bộ lọc hiện tại.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
+    </div>
+
+    <!-- TICKET UPDATE MODAL -->
+    <div id="ticket-update-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-sm hidden flex items-center justify-center transition-opacity duration-300">
+        <div class="w-full max-w-lg bg-[#0a0f1d] border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl relative animate-fade-in mx-4 max-h-[90vh] overflow-y-auto">
+            <button type="button" onclick="closeTicketUpdateModal()" class="absolute top-6 right-6 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-4 text-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-screwdriver-wrench text-indigo-400"></i> Xử Lý Sự Cố Báo Hỏng
+            </h2>
+            <div class="mb-4 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs space-y-1.5">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Mã sự cố:</span>
+                    <span id="modal-ticket-id" class="font-mono font-bold text-slate-200">#</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Phòng & Vị trí:</span>
+                    <span id="modal-ticket-room-location" class="font-bold text-indigo-400">P. -</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Cư dân báo:</span>
+                    <span id="modal-ticket-resident" class="font-semibold text-slate-300">-</span>
+                </div>
+                <div class="pt-1 text-slate-300 font-medium" id="modal-ticket-title">-</div>
+            </div>
+
+            <form id="ticket-update-form" method="POST" action="" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Trạng thái sự cố</label>
+                    <select name="status" id="modal-ticket-status" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <option value="pending">Chờ tiếp nhận (Pending)</option>
+                        <option value="processing">Đang xử lý / Đã giao việc (Processing)</option>
+                        <option value="resolved">Đã giải quyết xong (Resolved)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Kỹ thuật viên / Thợ phụ trách</label>
+                    <input type="text" name="assigned_to" id="modal-ticket-assigned-to" placeholder="VD: Thợ điện Tuấn, KTV Nam..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+                    <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                        <input type="checkbox" name="send_telegram" value="1" checked class="rounded bg-slate-900 border-slate-800 text-indigo-600 focus:ring-0">
+                        <span>Gửi thông báo tiến độ qua Telegram Bot cho BQL</span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeTicketUpdateModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-all">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TICKET IMAGE VIEWER MODAL -->
+    <div id="ticket-image-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4" onclick="closeTicketImageModal()">
+        <div class="relative max-w-4xl max-h-[90vh]" onclick="event.stopPropagation()">
+            <button type="button" onclick="closeTicketImageModal()" class="absolute -top-12 right-0 text-white hover:text-rose-400 text-2xl font-bold transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <img id="ticket-image-modal-src" src="" alt="Ảnh lỗi phóng to" class="max-h-[85vh] max-w-full rounded-2xl shadow-2xl object-contain border border-slate-800">
+        </div>
     </div>
 
     <!-- ADD RESIDENT MODAL (POPUP) - Mở rộng thêm thông tin cá nhân & tạm trú -->
@@ -2412,6 +2756,7 @@
             else if(tabId === 'resident-section') title = "Quản Lý Cư Dân";
             else if(tabId === 'contract-section') title = "Quản Lý Hợp Đồng Online";
             else if(tabId === 'contact-section') title = "Yêu Cầu Tư Vấn & Xem Phòng";
+            else if(tabId === 'ticket-section') title = "Quản Lý Sự Cố & Báo Hỏng";
             
             const titleEl = document.getElementById('section-title');
             if (titleEl) {
@@ -2451,6 +2796,96 @@
                 switchTab(currentTab);
             });
         });
+
+        // ==========================================
+        // TICKET MANAGEMENT (SỰ CỐ & BÁO HỎNG)
+        // ==========================================
+        function filterAdminTickets() {
+            const statusFilter = document.getElementById('ticket-filter-status')?.value || 'all';
+            const categoryFilter = document.getElementById('ticket-filter-category')?.value || 'all';
+            const searchInput = (document.getElementById('ticket-search-input')?.value || '').toLowerCase().trim();
+
+            const rows = document.querySelectorAll('.ticket-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const status = row.getAttribute('data-ticket-status');
+                const category = row.getAttribute('data-ticket-category');
+                const searchData = (row.getAttribute('data-ticket-search') || '').toLowerCase();
+
+                const matchStatus = (statusFilter === 'all' || status === statusFilter);
+                const matchCategory = (categoryFilter === 'all' || category === categoryFilter);
+                const matchSearch = (!searchInput || searchData.includes(searchInput));
+
+                if (matchStatus && matchCategory && matchSearch) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            const noMatchRow = document.getElementById('ticket-no-search-match');
+            if (noMatchRow) {
+                if (rows.length > 0 && visibleCount === 0) {
+                    noMatchRow.classList.remove('hidden');
+                } else {
+                    noMatchRow.classList.add('hidden');
+                }
+            }
+        }
+
+        function openTicketUpdateModal(data) {
+            const modal = document.getElementById('ticket-update-modal');
+            if (!modal) return;
+
+            document.getElementById('modal-ticket-id').textContent = '#' + data.id;
+            document.getElementById('modal-ticket-room-location').textContent = `P.${data.room || 'N/A'} • ${data.location || 'Toàn phòng'}`;
+            document.getElementById('modal-ticket-resident').textContent = data.resident || 'Cư dân';
+            document.getElementById('modal-ticket-title').textContent = data.title || '';
+
+            const statusSelect = document.getElementById('modal-ticket-status');
+            if (statusSelect) statusSelect.value = data.status || 'pending';
+
+            const assignedInput = document.getElementById('modal-ticket-assigned-to');
+            if (assignedInput) assignedInput.value = data.assigned_to || '';
+
+            const form = document.getElementById('ticket-update-form');
+            if (form) form.action = `/smartroom/admin/ticket/${data.id}/update`;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTicketUpdateModal() {
+            const modal = document.getElementById('ticket-update-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function viewTicketImage(src) {
+            const modal = document.getElementById('ticket-image-modal');
+            const img = document.getElementById('ticket-image-modal-src');
+            if (modal && img) {
+                img.src = src;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeTicketImageModal() {
+            const modal = document.getElementById('ticket-image-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
 
         // Room filter state & functions
         let currentRoomFilter = 'all';
@@ -5624,27 +6059,171 @@
                     window.Echo.channel('room-matrix')
                         .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
 
-                    // Lắng nghe báo hỏng sự cố tức thời từ cư dân
+        let adminMaxTicketId = {{ (int) ($tickets->max('id') ?? 0) }};
+
+        // Hàm phát chuông thông báo Ding-dong qua Web Audio API
+        function playTicketAlertSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const now = ctx.currentTime;
+
+                // Nốt 1 (D5 - 587Hz)
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, now);
+                gain1.gain.setValueAtTime(0.12, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.3);
+
+                // Nốt 2 (A5 - 880Hz) âm thanh trong trẻo, vui tai
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880, now + 0.16);
+                gain2.gain.setValueAtTime(0.15, now + 0.16);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.16);
+                osc2.stop(now + 0.6);
+            } catch (e) {
+                // Trình duyệt có thể chặn âm thanh nếu chưa có tương tác
+            }
+        }
+
+        // Cập nhật số liệu thống kê sự cố trên toàn bộ Dashboard & Sidebar
+        function updateTicketStatsCounters(stats) {
+            if (!stats) return;
+            const totalStatEl = document.getElementById('ticket-stat-total');
+            if (totalStatEl) totalStatEl.textContent = stats.total ?? totalStatEl.textContent;
+
+            const pendingStatEl = document.getElementById('ticket-stat-pending');
+            if (pendingStatEl) pendingStatEl.textContent = stats.pending ?? pendingStatEl.textContent;
+
+            const processingStatEl = document.getElementById('ticket-stat-processing');
+            if (processingStatEl) processingStatEl.textContent = stats.processing ?? processingStatEl.textContent;
+
+            const resolvedStatEl = document.getElementById('ticket-stat-resolved');
+            if (resolvedStatEl) resolvedStatEl.textContent = stats.resolved ?? resolvedStatEl.textContent;
+
+            const countBadge = document.getElementById('ticket-count-badge');
+            if (countBadge && stats.total !== undefined) {
+                countBadge.textContent = `${stats.total} sự cố`;
+            }
+
+            const sidebarTicketBadge = document.getElementById('sidebar-ticket-badge');
+            if (sidebarTicketBadge && stats.pending !== undefined) {
+                sidebarTicketBadge.textContent = stats.pending;
+                if (parseInt(stats.pending) > 0) {
+                    sidebarTicketBadge.classList.remove('hidden');
+                } else {
+                    sidebarTicketBadge.classList.add('hidden');
+                }
+            }
+        }
+
+        let isReloadingPageForTicket = false;
+
+        // Xử lý khi có sự cố mới bay vào (Dùng chung cho cả WebSocket & Polling)
+        function handleIncomingTicket(data, stats = null) {
+            if (!data || !data.id) return;
+
+            // Nếu sự cố này đã có trên bảng và không phải mới hơn ID hiện tại
+            if (data.id <= adminMaxTicketId && document.querySelector(`.ticket-row[data-ticket-id="${data.id}"]`)) {
+                if (stats) updateTicketStatsCounters(stats);
+                return;
+            }
+
+            if (isReloadingPageForTicket) return;
+            isReloadingPageForTicket = true;
+
+            if (data.id > adminMaxTicketId) {
+                adminMaxTicketId = data.id;
+            }
+
+            // 1. Âm thanh chuông báo
+            playTicketAlertSound();
+
+            // 2. Toast thông báo thời gian thực
+            const locationText = data.specific_location ? ` • ${data.specific_location}` : '';
+            showRealtimeToast(
+                `🚨 Sự cố mới: P.${data.room_number || 'N/A'}${locationText}`,
+                `Khách hàng vừa báo cáo sự cố! Đang tự động tải lại trang...`,
+                'ticket'
+            );
+
+            // 3. Hiệu ứng nhấp nháy chuông header
+            const bellBadge = document.querySelector('.fa-bell + span');
+            if (bellBadge) bellBadge.classList.add('animate-ping');
+
+            // 4. Tự động load trang lại sau 500ms về tab ticket-section
+            setTimeout(() => {
+                window.location.href = "{{ route('smartroom.admin') }}?tab=ticket-section";
+            }, 500);
+        }
+
+        // Thăm dò kiểm tra sự cố mới định kỳ (Smart Polling 2.5s)
+        let isPollingTickets = false;
+        async function pollNewAdminTickets() {
+            if (isPollingTickets) return;
+            isPollingTickets = true;
+            try {
+                const res = await fetch("{{ route('smartroom.admin.tickets.poll') }}?last_id=" + adminMaxTicketId, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.success) {
+                        if (json.has_new && Array.isArray(json.tickets)) {
+                            json.tickets.forEach(ticket => {
+                                handleIncomingTicket(ticket, json.stats);
+                            });
+                        } else if (json.stats) {
+                            updateTicketStatsCounters(json.stats);
+                        }
+                        if (json.latest_id && json.latest_id > adminMaxTicketId) {
+                            adminMaxTicketId = json.latest_id;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Im lặng bỏ qua lỗi mạng tạm thời
+            } finally {
+                isPollingTickets = false;
+            }
+        }
+
+        function initRoomMatrixRealtime() {
+            // 1. Kết nối Laravel Echo + Reverb (WebSocket)
+            if (window.Echo) {
+                try {
+                    // Lắng nghe trạng thái phòng
+                    window.Echo.channel(`tenant.${tenantId}.room-matrix`)
+                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
+
+                    window.Echo.channel('room-matrix')
+                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
+
+                    // Lắng nghe sự cố tức thời từ cư dân qua WebSocket Reverb
                     window.Echo.channel(`tenant.${tenantId}.dashboard`)
-                        .listen('.ticket.created', (data) => {
-                            if (data && data.id) {
-                                showRealtimeToast(
-                                    `🚨 Sự cố mới: P.${data.room_number}`,
-                                    `[${data.category}] ${data.title}`,
-                                    'ticket'
-                                );
-                                const bellBadge = document.querySelector('.fa-bell + span');
-                                if (bellBadge) bellBadge.classList.add('animate-ping');
-                            }
-                        });
+                        .listen('.ticket.created', (data) => handleIncomingTicket(data));
                 } catch (err) {
                     console.warn('Echo Reverb subscription error: ', err);
                 }
             }
 
-            // 2. Thăm dò phụ (Polling fallback nhẹ nhàng) mỗi 25s khi tab đang hiển thị
+            // 2. Thăm dò phụ (Smart Polling Fallback) mỗi 2.5s để đảm bảo 100% sự cố bay vào ngay lập tức
+            setInterval(pollNewAdminTickets, 2500);
+
+            // 3. Thăm dò phòng matrix mỗi 25s
             setInterval(async () => {
-                if (document.hidden) return; // Không poll khi tab ẩn để tiết kiệm tài nguyên
+                if (document.hidden) return;
                 try {
                     const res = await fetch("{{ route('admin.rooms.matrix.poll') }}?since=" + lastEventTimestamp);
                     if (res.ok) {
@@ -5655,7 +6234,7 @@
                         }
                     }
                 } catch (e) {
-                    // im lặng bỏ qua lỗi mạng tạm thời
+                    // im lặng
                 }
             }, 25000);
         }

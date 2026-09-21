@@ -142,6 +142,8 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/utility/{id}/notify', [AdminDashboardController::class, 'notifyUtility'])->name('smartroom.admin.utility.notify');
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
+    Route::post('/smartroom/admin/ticket/{id}/update', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.ticket.update');
+    Route::get('/smartroom/admin/tickets/poll', [AdminDashboardController::class, 'pollTickets'])->name('smartroom.admin.tickets.poll');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');

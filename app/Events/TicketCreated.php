@@ -29,12 +29,18 @@ class TicketCreated implements ShouldBroadcastNow
             'id' => $ticket->id,
             'title' => $ticket->title,
             'category' => $ticket->category,
+            'specific_location' => $ticket->specific_location,
             'description' => $ticket->description,
+            'image_path' => $ticket->image_path,
             'room_id' => $ticket->room_id,
             'room_number' => $room ? $room->room_number : 'N/A',
+            'building_name' => $room && $room->building ? $room->building->name : 'N/A',
+            'floor' => $room ? $room->floor : 'N/A',
             'resident_name' => $resident ? $resident->name : 'N/A',
+            'resident_phone' => $resident ? $resident->phone : 'N/A',
             'tenant_id' => $ticket->tenant_id,
             'status' => $ticket->status,
+            'assigned_to' => $ticket->assigned_to,
             'created_at' => $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i'),
         ];
     }

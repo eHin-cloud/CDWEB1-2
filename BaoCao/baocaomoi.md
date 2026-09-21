@@ -783,10 +783,13 @@ Bảng 17: Mô tả cấu trúc bảng Tickets (Sự cố kỹ thuật & Dịch 
 | resident_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng residents(id) |
 | title | VARCHAR(255) | Tiêu đề ngắn gọn phản ánh sự cố |
 | description | TEXT | Mô tả chi tiết tình trạng hư hỏng thiết bị |
-| category | ENUM | Danh mục phân loại: electric, water, furniture, maintenance, other |
+| category | ENUM | Danh mục phân loại: electric, water, furniture, maintenance, housekeeping, other |
+| specific_location | VARCHAR(255), NULL | Vị trí chi tiết hỏng hóc trong phòng (VD: bồn rửa mặt, ban công, góc bếp) |
+| image_path | VARCHAR(255), NULL | Đường dẫn ảnh chụp hiện trạng đính kèm (giới hạn tối đa 10MB) |
 | priority | ENUM | Mức độ khẩn cấp (AI phân tích): low, medium, high |
-| suggestion | TEXT, NULL | Gợi ý biện pháp khắc phục nhanh từ AI |
-| status | ENUM | Trạng thái xử lý: pending (Tiếp nhận), in_progress (Đang sửa), resolved (Đã xong) |
+| suggestion | TEXT, NULL | Gợi ý biện pháp khắc phục nhanh an toàn từ AI |
+| assigned_to | VARCHAR(255), NULL | Nhân viên kỹ thuật / thợ sửa chữa được phân công phụ trách |
+| status | ENUM | Trạng thái xử lý: pending (Chờ tiếp nhận), processing (Đang sửa), resolved (Đã xong) |
 | created_at | TIMESTAMP, NULL | Thời điểm gửi phiếu sự cố |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
@@ -1210,18 +1213,32 @@ Bảng 27: Kịch bản xử lý lỗi Trang Cổng thông tin Cư dân & Khách
 | Bấm mở VietQR khi hóa đơn tháng đã được thanh toán hoàn tất | Toast xanh thông báo: "Hóa đơn tháng này của bạn đã được thanh toán đầy đủ. Cảm ơn bạn!". |
 | Gửi yêu cầu gia hạn hợp đồng khi hợp đồng hiện tại vẫn còn hạn trên 60 ngày | Toast thông báo: "Hợp đồng của bạn vẫn còn thời hạn dài (> 60 ngày). Hệ thống chỉ mở tính năng xin gia hạn trước khi hết hạn 30 ngày". |
 
-8. Lập trình module Tiếp nhận & Xử lý sự cố kỹ thuật và Yêu cầu dịch vụ buồng phòng (Smart Tickets)
+8. Lập trình module Tiếp nhận & Xử lý sự cố kỹ thuật, Dịch vụ buồng phòng và Cơ chế Tự động đồng bộ thời gian thực (Smart Tickets & Real-time Auto-Reload)
 
-Mô tả chi tiết chức năng: Hệ thống tiếp nhận phản ánh trực tuyến: cư dân gửi yêu cầu sửa chữa hỏng hóc (cháy bóng đèn, rò rỉ ống nước, tắc bồn cầu) kèm ảnh chụp hiện trạng hoặc đặt lịch dọn phòng (Housekeeping). Ban quản trị tiếp nhận, phân công kỹ thuật viên và cập nhật tiến độ xử lý.
+Mô tả chi tiết chức năng: Hệ thống cung cấp kênh tương tác phản ánh sự cố hai chiều hoàn chỉnh giữa Khách thuê / Cư dân và Ban quản lý / Chủ trọ với độ trễ cực thấp:
+- **Phía Khách thuê & Cư dân (Resident Portal):** Khách thuê truy cập Cổng cư dân để gửi báo hỏng thiết bị (chập cháy điện, rò rỉ nước, gãy khóa, tắc cống...) hoặc đặt lịch dịch vụ buồng phòng (Housekeeping). Biểu mẫu hỗ trợ phân loại danh mục đa dạng (Điện, Nước, Nội thất, Bảo trì, Dọn phòng, Khác), cho phép chỉ định chính xác vị trí cụ thể trong phòng (`specific_location` như: ban công, bồn rửa mặt, góc bếp...), đính kèm ảnh chụp hiện trạng (hỗ trợ định dạng jpeg/png/webp, dung lượng tối đa 10MB). Tích hợp Google Gemini AI tự động phân tích độ khẩn cấp (Low, Medium, High) và đưa ra lời khuyên an toàn tạm thời cho cư dân trong lúc chờ thợ.
+- **Cơ chế Đồng bộ Kép thời gian thực (Dual Real-time Engine):** 
+  + *Kênh chính (WebSocket Reverb):* Khi phiếu sự cố được khởi tạo thành công, hệ thống lập tức phát sóng sự kiện `TicketCreated` (kế thừa `ShouldBroadcastNow`) lên kênh private/tenant qua Laravel Echo và WebSocket Reverb server (`tenant.{tenant_id}.dashboard`).
+  + *Kênh dự phòng thông minh (Smart Polling Fallback 2.5s):* Thiết lập endpoint chuyên dụng `GET /smartroom/admin/tickets/poll` định kỳ kiểm tra sự cố mới theo `tenant_id` và `last_id` mỗi 2.5 giây, đảm bảo 100% không bao giờ bị trượt hoặc mất thông tin báo cáo kể cả trong điều kiện mạng chập chờn.
+- **Phía Ban quản trị & Chủ trọ (Admin Portal - `tab=ticket-section`):**
+  + *Tự động tải lại trang (Auto-Reload Page):* Ngay khi nhận được tín hiệu báo cáo sự cố mới từ cư dân, hệ thống lập tức kích hoạt chuông cảnh báo âm thanh *"Ding-dong!"* bằng Web Audio API Synthesizer (tần số 587Hz -> 880Hz), đồng thời hiển thị Toast thông báo khẩn màu đỏ góc trên màn hình: `🚨 Sự cố mới: P.[Số phòng] • [Vị trí]`. Sau 0.5 giây, trang quản trị tự động tải lại (Reload) đưa thẳng về tab Quản lý Sự Cố & Báo Hỏng, hiển thị ngay phiếu báo hỏng mới nhất lên đầu bảng.
+  + *Cơ chế chống lặp tải trang (Anti-loop Logic):* Quản lý trạng thái thông qua biến định danh `adminMaxTicketId`, đảm bảo trang chỉ tự động reload đúng 1 lần duy nhất khi có ID sự cố mới phát sinh từ khách hàng.
+  + *Quản lý & Phân công kỹ thuật viên:* Bảng danh sách hiển thị đầy đủ thông tin: Mã phiếu, tag `Vừa gửi`, số phòng & tầng, vị trí hư hỏng, họ tên & số điện thoại cư dân, ảnh chụp đính kèm (hỗ trợ popup xem ảnh phóng to). Chủ trọ có thể mở modal cập nhật trạng thái (`pending` -> `processing` -> `resolved`), nhập tên thợ phụ trách (`assigned_to`), và tự động kích hoạt thông báo tiến độ về Telegram Bot của ban quản lý.
+  + *Chỉ số thống kê động:* Các thẻ đếm chỉ số (Tổng số sự cố, Chờ xử lý, Đang khắc phục, Đã hoàn thành) và huy hiệu số lượng sự cố màu đỏ trên Sidebar menu (`sidebar-ticket-badge`) tự động nhảy số theo thời gian thực.
+- **Kiểm thử tự động hoàn chỉnh (Automated Feature Tests):** Toàn bộ module được kiểm chứng tự động qua bộ test suite `TicketManagementTest.php` với 7/7 ca kiểm thử (100% PASS), bao gồm kiểm thử gửi kèm vị trí cụ thể, hiển thị tại cổng cư dân, phân công kỹ thuật viên & trạng thái, dịch vụ buồng phòng, xác thực rỗng mô tả, chặn ảnh vượt quá 10MB, và endpoint polling thời gian thực.
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Tiếp nhận sự cố kỹ thuật & buồng phòng (Smart Ticket)
+Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Tiếp nhận sự cố kỹ thuật & buồng phòng (Smart Ticket & Real-time Sync)
 
-Bảng: Kịch bản xử lý lỗi Tiếp nhận sự cố và Dịch vụ buồng phòng
+Bảng: Kịch bản xử lý lỗi Tiếp nhận sự cố, Dịch vụ buồng phòng và Đồng bộ thời gian thực
 
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
 | --- | --- |
-| Cư dân gửi ticket báo hỏng nhưng để trống phần mô tả chi tiết sự cố | Ô mô tả bôi đỏ. Hiển thị: "Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng". |
+| Cư dân gửi ticket báo hỏng nhưng để trống phần mô tả chi tiết sự cố | Ô mô tả bôi đỏ viền. Hiển thị: "Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng". |
 | Tải ảnh chụp sự cố bị lỗi vượt dung lượng cho phép (> 10MB) | Thông báo lỗi: "Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 10MB". |
+| Tải lên tệp không đúng định dạng hình ảnh (PDF, DOCX, EXE...) | Thông báo lỗi: "Hình ảnh chỉ chấp nhận định dạng jpeg, jpg, png hoặc webp". |
+| Chọn danh mục dịch vụ không tồn tại trong hệ thống | Báo lỗi validation: "Danh mục sự cố hoặc dịch vụ không hợp lệ". |
+| Kết nối mạng hoặc WebSocket gián đoạn giữa chừng | Cơ chế Smart Polling 2.5s tự động kích hoạt ngầm, tiếp tục đồng bộ và phát chuông báo hiệu khi có sự cố mới mà không làm gián đoạn trải nghiệm người dùng. |
+| Trang admin nhận nhiều sự kiện liên tiếp của cùng một sự cố | Cơ chế Deduplication & Anti-loop tự động lọc ID, loại bỏ xử lý trùng lặp và ngăn chặn tình trạng reload trang lặp vô tận. |
 
 9. Lập trình module Quản lý thông tin Cư dân & Thân nhân lưu trú theo phòng
 

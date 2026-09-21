@@ -65,7 +65,8 @@ class ResidentPortalController extends Controller
             ->orderByDesc('end_date')
             ->first();
 
-        $tickets = Ticket::where('resident_id', $resident->id)
+        $tickets = Ticket::with('room')
+            ->where('resident_id', $resident->id)
             ->where('room_id', $room->id)
             ->latest()
             ->get();
@@ -99,8 +100,16 @@ class ResidentPortalController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:150',
             'description' => 'required|string|max:1000',
-            'category' => 'required|in:electric,water,furniture,maintenance,other',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
+            'category' => 'required|in:electric,water,furniture,maintenance,housekeeping,other',
+            'specific_location' => 'nullable|string|max:150',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:10240',
+        ], [
+            'title.required' => 'Vui lòng nhập tiêu đề sự cố.',
+            'description.required' => 'Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng.',
+            'image.max' => 'Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 10MB.',
+            'image.image' => 'Tệp tải lên phải là hình ảnh hợp lệ (jpeg, jpg, png, webp).',
+            'image.mimes' => 'Hình ảnh chỉ chấp nhận định dạng jpeg, jpg, png hoặc webp.',
+            'category.in' => 'Danh mục sự cố hoặc dịch vụ không hợp lệ.',
         ]);
 
         $imagePath = null;
@@ -115,6 +124,7 @@ class ResidentPortalController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'],
             'category' => $validated['category'],
+            'specific_location' => $validated['specific_location'] ?? null,
             'image_path' => $imagePath,
             'status' => 'pending',
         ]);

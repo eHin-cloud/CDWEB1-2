@@ -144,6 +144,7 @@ class ResidentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|in:điện,nước,nội thất,khác',
+            'specific_location' => 'nullable|string|max:150',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
@@ -159,6 +160,7 @@ class ResidentController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'category' => $request->category,
+            'specific_location' => $request->specific_location,
             'image_path' => $imagePath ? '/storage/' . $imagePath : null,
             'status' => 'pending'
         ]);

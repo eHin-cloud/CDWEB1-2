@@ -306,6 +306,18 @@ class AdminDashboardController extends Controller
             ['time' => '1 ngày trước', 'icon' => 'fa-check text-indigo-400', 'desc' => 'Phòng 201 đã thanh toán hóa đơn tháng 05'],
         ];
 
+        // 8. Tickets (Quản lý sự cố & Báo hỏng cư dân)
+        $tickets = Ticket::where('tenant_id', $tenantId)
+            ->with(['room.building', 'resident'])
+            ->orderByDesc('created_at')
+            ->get();
+        $ticketStats = [
+            'total' => $tickets->count(),
+            'pending' => $tickets->where('status', 'pending')->count(),
+            'processing' => $tickets->where('status', 'processing')->count(),
+            'resolved' => $tickets->where('status', 'resolved')->count(),
+        ];
+
         return view('admin.admin', compact(
             'totalRooms',
             'occupiedRooms',
@@ -333,7 +345,9 @@ class AdminDashboardController extends Controller
             'notificationSummary',
             'tenant',
             'kycRequest',
-            'premiumRequest'
+            'premiumRequest',
+            'tickets',
+            'ticketStats'
         ));
     }
 
@@ -1726,5 +1740,120 @@ class AdminDashboardController extends Controller
         );
 
         return redirect()->route('smartroom.admin', ['tab' => 'contact-section'])->with('success', 'Xóa yêu cầu tư vấn thành công!');
+    }
+
+    public function updateTicketStatus(Request $request, $id)
+    {
+        $tenantId = $this->currentTenantId();
+        $ticket = Ticket::where('tenant_id', $tenantId)->with(['room.building', 'resident'])->findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,processing,resolved',
+            'assigned_to' => 'nullable|string|max:255',
+        ]);
+
+        $oldStatus = $ticket->status;
+        $ticket->update([
+            'status' => $validated['status'],
+            'assigned_to' => $validated['assigned_to'] ?? null,
+        ]);
+
+        AdminActivityLogger::log(
+            'update',
+            'tickets',
+            "Cập nhật sự cố #{$ticket->id} (Phòng " . ($ticket->room->room_number ?? 'N/A') . "): {$oldStatus} -> {$ticket->status}" . ($ticket->assigned_to ? " (Phân công: {$ticket->assigned_to})" : ''),
+            $ticket,
+            ['status' => $ticket->status, 'assigned_to' => $ticket->assigned_to]
+        );
+
+        // Gửi thông báo tự động cho chủ trọ qua Telegram Bot nếu có cấu hình
+        $botToken = config('services.telegram.bot_token');
+        $chatId = config('services.telegram.chat_id');
+        if ($botToken && $chatId) {
+            $statusLabels = [
+                'pending' => 'Chờ xử lý',
+                'processing' => 'Đang sửa chữa',
+                'resolved' => 'Đã hoàn tất',
+            ];
+            $msg = "🛠️ [SmartRoom] Cập nhật tiến độ sự cố #{$ticket->id}\n"
+                 . "Phòng: " . ($ticket->room->room_number ?? 'N/A') . " (" . ($ticket->room->building->name ?? 'N/A') . ")\n"
+                 . ($ticket->specific_location ? "Vị trí: {$ticket->specific_location}\n" : "")
+                 . "Sự cố: {$ticket->title}\n"
+                 . "Trạng thái mới: " . ($statusLabels[$ticket->status] ?? $ticket->status) . "\n"
+                 . "Kỹ thuật phụ trách: " . ($ticket->assigned_to ?: 'Chưa phân công');
+            try {
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $msg
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Telegram ticket notification failed: ' . $e->getMessage());
+            }
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật trạng thái sự cố thành công!',
+                'ticket' => $ticket->fresh(['room.building', 'resident']),
+            ]);
+        }
+
+        return redirect()->route('smartroom.admin', ['tab' => 'ticket-section'])
+            ->with('success', "Đã cập nhật sự cố #{$ticket->id} thành công.");
+    }
+
+    public function pollTickets(Request $request)
+    {
+        $tenantId = $this->currentTenantId();
+        $lastId = (int) $request->query('last_id', 0);
+
+        $newTickets = Ticket::where('tenant_id', $tenantId)
+            ->where('id', '>', $lastId)
+            ->with(['room.building', 'resident'])
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $allTickets = Ticket::where('tenant_id', $tenantId)->get();
+        $stats = [
+            'total' => $allTickets->count(),
+            'pending' => $allTickets->where('status', 'pending')->count(),
+            'processing' => $allTickets->where('status', 'processing')->count(),
+            'resolved' => $allTickets->where('status', 'resolved')->count(),
+        ];
+
+        $latestId = (int) (Ticket::where('tenant_id', $tenantId)->max('id') ?? 0);
+
+        $ticketData = $newTickets->map(function ($ticket) {
+            $room = $ticket->room;
+            $resident = $ticket->resident;
+
+            return [
+                'id' => $ticket->id,
+                'title' => $ticket->title,
+                'category' => $ticket->category,
+                'specific_location' => $ticket->specific_location,
+                'description' => $ticket->description,
+                'image_path' => $ticket->image_path,
+                'room_id' => $ticket->room_id,
+                'room_number' => $room ? $room->room_number : 'N/A',
+                'building_name' => $room && $room->building ? $room->building->name : 'N/A',
+                'floor' => $room ? $room->floor : 'N/A',
+                'resident_name' => $resident ? $resident->name : 'N/A',
+                'resident_phone' => $resident ? $resident->phone : 'N/A',
+                'tenant_id' => $ticket->tenant_id,
+                'status' => $ticket->status,
+                'assigned_to' => $ticket->assigned_to,
+                'created_at' => $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'has_new' => $ticketData->isNotEmpty(),
+            'tickets' => $ticketData,
+            'latest_id' => $latestId,
+            'stats' => $stats,
+        ]);
     }
 }

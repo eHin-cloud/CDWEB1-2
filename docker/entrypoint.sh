@@ -33,6 +33,8 @@ fi
 
 php artisan migrate --force
 
+php -r "require 'vendor/autoload.php'; \$app = require_once 'bootstrap/app.php'; \$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); if (\App\Models\User::count() === 0) { echo '>> Database moi, bat dau khoi tao du lieu mau...\n'; passthru('php artisan db:seed --force'); }"
+
 # Khoi dong Reverb WebSocket Server chay nen
 php artisan reverb:start --host=0.0.0.0 --port=8085 &
 
