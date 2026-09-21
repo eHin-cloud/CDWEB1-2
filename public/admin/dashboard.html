@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển Hệ Thống - Admin SmartRoom &amp; Renty</title>
+
+    <!-- Google Fonts & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="css/admin.css">
+
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-val {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-top: 0.5rem;
+        }
+        .stat-icon {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- Navigation Header -->
+    <header class="admin-nav">
+        <a href="dashboard.html" class="brand-badge">
+            <div class="brand-icon">
+                <i class="fa-solid fa-hotel"></i>
+            </div>
+            <span>SmartRoom <span style="color: var(--primary);">&amp; Renty</span> <span style="font-size: 0.75rem; color: #818cf8; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.3); padding: 0.15rem 0.5rem; border-radius: 999px;">Admin</span></span>
+        </a>
+
+        <nav>
+            <ul class="nav-links">
+                <li><a href="dashboard.html" class="nav-item active"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+                <li><a href="landlords.html" class="nav-item"><i class="fa-solid fa-users-gear"></i> Quản lý Chủ Trọ</a></li>
+                <li><a href="properties.html" class="nav-item"><i class="fa-solid fa-house-circle-check"></i> Kiểm duyệt Tin Đăng</a></li>
+            </ul>
+        </nav>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="text-align: right; display: flex; align-items: center; gap: 0.6rem;">
+                <div style="width: 2rem; height: 2rem; border-radius: 50%; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #818cf8;">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <span id="admin-display-name" style="font-size: 0.85rem; font-weight: 700;">Admin</span>
+            </div>
+            <button onclick="adminLogout()" class="btn btn-secondary btn-sm" title="Đăng xuất">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main style="padding: 2rem; max-width: 1300px; margin: 0 auto; width: 100%;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.5px;">Bảng Điều Khiển Hệ Thống</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Tổng hợp số liệu thời gian thực và quản lý các hoạt động toàn nền tảng
+                </p>
+            </div>
+            <button onclick="loadDashboardStats()" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-rotate-right"></i> Làm mới số liệu
+            </button>
+        </div>
+
+        <!-- 5 Stats Cards Grid -->
+        <div class="stats-grid">
+            
+            <!-- Card 1: Tổng chủ trọ -->
+            <div class="admin-card stat-card">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
+                    <i class="fa-solid fa-house-user"></i>
+                </div>
+                <span class="form-label">Tổng Chủ Trọ</span>
+                <div class="stat-val" id="stat-total-landlords">--</div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                    Toàn bộ tài khoản đối tác
+                </div>
+            </div>
+
+            <!-- Card 2: Chủ trọ đã Verify -->
+            <div class="admin-card stat-card">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                    <i class="fa-solid fa-shield-check"></i>
+                </div>
+                <span class="form-label">Chủ Trọ Đã Xác Minh</span>
+                <div class="stat-val" id="stat-verified-landlords" style="color: #34d399;">--</div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                    Đã duyệt MST &amp; CCCD
+                </div>
+            </div>
+
+            <!-- Card 3: Tổng số nhà trọ -->
+            <div class="admin-card stat-card">
+                <div class="stat-icon" style="background: rgba(6, 182, 212, 0.15); color: #22d3ee;">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+                <span class="form-label">Tổng Nhà Trọ / BĐS</span>
+                <div class="stat-val" id="stat-total-properties">--</div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                    Bất động sản trong hệ thống
+                </div>
+            </div>
+
+            <!-- Card 4: Tin đang chờ duyệt -->
+            <div class="admin-card stat-card">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <span class="form-label">Tin Chờ Kiểm Duyệt</span>
+                <div class="stat-val" id="stat-pending-properties" style="color: #fbbf24;">--</div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                    Cần xem xét và duyệt
+                </div>
+            </div>
+
+            <!-- Card 5: Đăng ký mới 7 ngày -->
+            <div class="admin-card stat-card">
+                <div class="stat-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <span class="form-label">ĐK Mới (7 Ngày)</span>
+                <div class="stat-val" id="stat-recent-registrations" style="color: #c084fc;">--</div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                    Người dùng mới tham gia
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Quick Access Actions Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+            
+            <div class="admin-card" style="padding: 1.75rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;">
+                        <i class="fa-solid fa-users-gear text-indigo-400"></i> Quản Lý Chủ Trọ
+                    </h2>
+                    <a href="landlords.html" class="btn btn-secondary btn-sm">Xem tất cả <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+                    Kiểm tra và phê duyệt hồ sơ pháp lý (CCCD, Mã số thuế, Giấy phép kinh doanh) của chủ trọ và quản lý trạng thái khóa/mở khóa tài khoản đối tác.
+                </p>
+                <div style="display: flex; gap: 0.75rem;">
+                    <a href="landlords.html?status=pending" class="btn btn-warning btn-sm">
+                        <i class="fa-solid fa-clock"></i> Hồ sơ chờ duyệt
+                    </a>
+                    <a href="landlords.html" class="btn btn-secondary btn-sm">
+                        <i class="fa-solid fa-list"></i> Danh sách chủ trọ
+                    </a>
+                </div>
+            </div>
+
+            <div class="admin-card" style="padding: 1.75rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem;">
+                        <i class="fa-solid fa-house-circle-check text-emerald-400"></i> Kiểm Duyệt Tin Đăng
+                    </h2>
+                    <a href="properties.html" class="btn btn-secondary btn-sm">Xem tất cả <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+                    Kiểm tra các tin đăng nhà trọ mới gửi lên hệ thống Renty trước khi cho phép hiển thị công khai tới khách thuê trọ.
+                </p>
+                <div style="display: flex; gap: 0.75rem;">
+                    <a href="properties.html?status=pending" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-clipboard-check"></i> Duyệt tin chờ
+                    </a>
+                    <a href="properties.html" class="btn btn-secondary btn-sm">
+                        <i class="fa-solid fa-layer-group"></i> Tất cả tin đăng
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/admin.js"></script>
+    <script>
+        // Kiểm tra quyền admin
+        checkAdminAuth(true);
+
+        async function loadDashboardStats() {
+            try {
+                const res = await adminFetch('/admin/stats');
+                if (res.success && res.data) {
+                    document.getElementById('stat-total-landlords').textContent = res.data.total_landlords ?? 0;
+                    document.getElementById('stat-verified-landlords').textContent = res.data.verified_landlords ?? 0;
+                    document.getElementById('stat-total-properties').textContent = res.data.total_properties ?? 0;
+                    document.getElementById('stat-pending-properties').textContent = res.data.pending_properties ?? 0;
+                    document.getElementById('stat-recent-registrations').textContent = res.data.recent_registrations_7days ?? 0;
+                }
+            } catch (err) {
+                showToast('Không thể tải số liệu thống kê: ' + err.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardStats();
+        });
+    </script>
+</body>
+</html>

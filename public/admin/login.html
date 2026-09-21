@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập Quản Trị Hệ Thống - SmartRoom &amp; Renty</title>
+    
+    <!-- Google Fonts & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="css/admin.css">
+
+    <style>
+        .login-wrapper {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+            padding: 2.5rem 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div class="login-wrapper">
+        <div class="admin-card login-box">
+            
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="brand-icon" style="margin: 0 auto 1.25rem auto; width: 3.5rem; height: 3.5rem; font-size: 1.5rem;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px;">Quản Trị Hệ Thống</h1>
+                <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 0.35rem;">
+                    Cổng điều hành &amp; kiểm duyệt SmartRoom &amp; Renty
+                </p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">
+                        <i class="fa-solid fa-lock text-[10px]"></i> Khu Vực Giới Hạn Admin
+                    </span>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Email Quản Trị Viên</label>
+                    <div style="position: relative;">
+                        <input type="email" id="login-email" required class="form-control" placeholder="admin@smartroom.com" autofocus autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Mật khẩu bảo vệ</label>
+                    <div style="position: relative;">
+                        <input type="password" id="login-password" required class="form-control" placeholder="••••••••" autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div id="login-error-msg" style="display: none; padding: 0.75rem; border-radius: 0.75rem; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; font-size: 0.8rem;">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> <span id="login-error-text"></span>
+                </div>
+
+                <button type="submit" id="btn-login-submit" class="btn btn-primary" style="padding: 0.85rem; margin-top: 0.5rem; font-size: 0.9rem;">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span id="btn-login-text">Đăng Nhập Quản Trị</span>
+                </button>
+            </form>
+
+            <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); text-align: center;">
+                <p style="font-size: 0.75rem; color: var(--text-dim); line-height: 1.5;">
+                    Tài khoản Quản trị viên được khởi tạo qua terminal (lệnh <code>seed-admin.js</code> hoặc <code>php artisan make:admin</code>). Không mở đăng ký công khai.
+                </p>
+                <div style="margin-top: 1rem;">
+                    <a href="/renty" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+                        <i class="fa-solid fa-arrow-left text-xs"></i> Quay về Trang chủ Renty
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/admin.js"></script>
+    <script>
+        // Nếu đã có token admin hợp lệ, chuyển thẳng vào dashboard
+        if (checkAdminAuth(false)) {
+            window.location.href = '/admin/dashboard.html';
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('login-email');
+            const passwordInput = document.getElementById('login-password');
+            const btnSubmit = document.getElementById('btn-login-submit');
+            const btnText = document.getElementById('btn-login-text');
+            const errorBox = document.getElementById('login-error-msg');
+            const errorText = document.getElementById('login-error-text');
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) return;
+
+            errorBox.style.display = 'none';
+            btnSubmit.disabled = true;
+            btnText.textContent = 'Đang xác thực...';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Email hoặc mật khẩu không chính xác');
+                }
+
+                // KIỂM TRA PHÂN QUYỀN: Chỉ cho phép role 'admin'
+                if (!data.user || data.user.role !== 'admin') {
+                    // Nếu là tài khoản khác (landlord hoặc tenant), lập tức từ chối
+                    throw new Error('Truy cập bị từ chối! Tài khoản của bạn không có vai trò Quản trị viên hệ thống (Admin).');
+                }
+
+                // Lưu thông tin đăng nhập admin
+                localStorage.setItem('admin_token', data.access_token);
+                localStorage.setItem('admin_user', JSON.stringify(data.user));
+
+                showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin/dashboard.html';
+                }, 800);
+
+            } catch (err) {
+                errorBox.style.display = 'block';
+                errorText.textContent = err.message || 'Lỗi kết nối máy chủ';
+                btnSubmit.disabled = false;
+                btnText.textContent = 'Đăng Nhập Quản Trị';
+            }
+        }
+    </script>
+</body>
+</html>

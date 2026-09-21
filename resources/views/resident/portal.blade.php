@@ -17,7 +17,7 @@
     <div class="min-h-screen">
         <header class="sticky top-0 z-20 border-b border-slate-900 bg-[#080b11]/90 backdrop-blur">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-                <a href="{{ route('smartroom.portal') }}" class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="flex items-center gap-3">
                     <span class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
                         <i class="fa-solid fa-hotel"></i>
                     </span>

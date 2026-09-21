@@ -25,7 +25,7 @@
     <div>
         <!-- Sidebar Header -->
         <div class="p-6 border-b border-slate-900 flex items-center justify-between">
-            <a href="{{ route('smartroom.portal') }}" class="sidebar-brand flex items-center gap-3 min-w-0">
+            <a href="{{ route('home') }}" class="sidebar-brand flex items-center gap-3 min-w-0">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                     <i class="fa-solid fa-hotel text-white text-sm"></i>
                 </div>

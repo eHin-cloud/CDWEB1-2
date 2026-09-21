@@ -40,6 +40,7 @@
     <!-- Leaflet Map Assets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ asset('js/google-maps-renty.js') }}"></script>
 
     <!-- Custom CSS -->
     <!-- Pass Laravel variables to Global JS context -->
@@ -82,9 +83,17 @@
                         Tìm Trọ Đúng Nghĩa - <br class="hidden md:inline"><span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Xem Review Thật</span>
                     </h1>
                     
-                    <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-6 leading-relaxed">
+                    <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-4 leading-relaxed">
                         Tránh bẫy "ảnh mạng một đằng thực tế một nẻo". Xem đánh giá điểm số chủ nhà, an ninh, điện nước trước khi cọc.
                     </p>
+
+                    <div class="flex items-center gap-3 mb-6">
+                        <a href="{{ route('renty.room.3d') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-lg shadow-blue-500/25 transition-all active:scale-95 border border-white/10">
+                            <i class="fa-solid fa-cube text-sky-300 animate-pulse text-sm"></i>
+                            <span>Khám Phá Mô Hình Phòng Trọ Ảo 3D (360° Tour)</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] bg-white/20 uppercase font-bold tracking-wider">Hot</span>
+                        </a>
+                    </div>
                     
                     <!-- Integrated Search Bar -->
                     <div class="relative w-full max-w-2xl mb-6 group/search">
@@ -267,8 +276,96 @@
     <!-- MAIN WORKSPACE -->
     <main class="container mx-auto px-6 py-6 max-w-6xl flex-grow flex flex-col relative z-10">
         <!-- Interactive Map Pane (Left 50% in map mode) -->
-        <div class="renty-split-left">
-            <div id="renty-interactive-map" class="rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl"></div>
+        <div class="renty-split-left relative h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl">
+            <!-- Map Viewport (Fills 100% of left pane) -->
+            <div id="renty-interactive-map" class="w-full h-full"></div>
+
+            <!-- Floating Google Maps Pro HUD Control Bar -->
+            <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] bg-slate-950/92 border border-slate-800/90 rounded-2xl p-3 shadow-2xl backdrop-blur-md flex flex-col gap-2.5 transition-all duration-300">
+                <!-- Top row: Brand & Layer Switchers & Quick Action Controls -->
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-xs font-black tracking-wide bg-gradient-to-r from-blue-400 via-emerald-400 to-teal-300 bg-clip-text text-transparent flex items-center gap-1.5">
+                            <i class="fa-brands fa-google text-blue-400"></i> Google Maps
+                        </span>
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Services Pro</span>
+                    </div>
+
+                    <!-- Layer Switcher Buttons -->
+                    <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+                        <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm">
+                            <i class="fa-solid fa-map"></i> Đường phố
+                        </button>
+                        <button type="button" onclick="setRentyMapLayer('satellite')" id="gm-layer-satellite" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
+                            <i class="fa-solid fa-satellite"></i> Vệ tinh
+                        </button>
+                        <button type="button" onclick="setRentyMapLayer('terrain')" id="gm-layer-terrain" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
+                            <i class="fa-solid fa-mountain"></i> Địa hình
+                        </button>
+                    </div>
+
+                    <!-- Action buttons: Geolocation & Center & Toggle Collapse -->
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="locateUserRentyMap()" title="Định vị vị trí GPS của tôi" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </button>
+                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm khu vực" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                            <i class="fa-solid fa-compass"></i>
+                        </button>
+                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Thu gọn / Mở rộng bộ lọc" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                            <i class="fa-solid fa-chevron-up transition-transform duration-200" id="gm-hud-toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible filter section -->
+                <div id="gm-hud-collapsible" class="flex flex-col gap-2.5 transition-all duration-300">
+                    <!-- Second row: Distance Matrix Commute Calculator & Nearby Places -->
+                    <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-800/80 flex-wrap sm:flex-nowrap">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1">
+                                <i class="fa-solid fa-route text-sky-400"></i> Điểm đến:
+                            </span>
+                            <select id="gm-uni-select" onchange="onUniversityDestinationChange(this.value)" class="w-full sm:w-56 bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-medium">
+                                <option value="">-- Chọn ĐH tính thời gian đi lại --</option>
+                                <optgroup label="Hà Nội">
+                                    <option value="hust">ĐH Bách Khoa Hà Nội</option>
+                                    <option value="neu">ĐH Kinh Tế Quốc Dân</option>
+                                    <option value="vnu">ĐH Quốc Gia Hà Nội (Cầu Giấy)</option>
+                                    <option value="ftu">ĐH Ngoại Thương Hà Nội</option>
+                                    <option value="fpt_hn">ĐH FPT Hà Nội</option>
+                                </optgroup>
+                                <optgroup label="TP. Hồ Chí Minh">
+                                    <option value="hutech">ĐH HUTECH (Điện Biên Phủ)</option>
+                                    <option value="ueh">ĐH Kinh Tế TP.HCM (UEH)</option>
+                                    <option value="vnuhcm">Làng ĐH Quốc Gia TP.HCM (Thủ Đức)</option>
+                                    <option value="rmit">ĐH RMIT (Quận 7)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Nearby Places Filter Chips -->
+                        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+                            <button type="button" onclick="toggleNearbyPlace('supermarket', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🛒 Siêu thị
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('hospital', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🏥 Bệnh viện
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('bus', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🚌 Xe buýt
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('cafe', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                ☕ Cà phê
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Distance Matrix Result Banner (shown when university selected) -->
+                    <div id="gm-commute-box" class="hidden p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Room Cards List Pane (Right 50% in map mode) -->
@@ -1719,6 +1816,63 @@
         </div>
     </div>
 </div>
+
+<!-- RENTY TOAST NOTIFICATION CONTAINER -->
+<div id="renty-toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
+
+<script>
+    function showRentyToast(message, type = 'success') {
+        const container = document.getElementById('renty-toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${
+            type === 'success' 
+                ? 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-500/15' 
+                : 'bg-slate-900/95 border-rose-500/40 text-rose-300 shadow-rose-500/15'
+        }`;
+
+        const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400';
+        const title = type === 'success' ? 'Đăng nhập thành công!' : 'Thông báo';
+
+        toast.innerHTML = `
+            <div class="w-8 h-8 rounded-xl ${type === 'success' ? 'bg-emerald-500/15' : 'bg-rose-500/15'} flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid ${icon} text-base"></i>
+            </div>
+            <div class="flex-grow min-w-0">
+                <h4 class="font-extrabold text-white text-xs tracking-wide">${title}</h4>
+                <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">${message}</p>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-slate-500 hover:text-white transition-colors shrink-0 p-1">
+                <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+        `;
+
+        container.appendChild(toast);
+
+        // Hiệu ứng trượt vào
+        setTimeout(() => {
+            toast.classList.remove('translate-x-10', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+        }, 50);
+
+        // Tự động tắt sau 4.5 giây
+        setTimeout(() => {
+            toast.classList.remove('translate-x-0', 'opacity-100');
+            toast.classList.add('translate-x-10', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 4500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.rentySessionSuccess) {
+            showRentyToast(window.rentySessionSuccess, 'success');
+        }
+        if (window.rentySessionError) {
+            showRentyToast(window.rentySessionError, 'error');
+        }
+    });
+</script>
 
 </body>
 </html>

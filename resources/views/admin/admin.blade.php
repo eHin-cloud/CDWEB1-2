@@ -92,13 +92,157 @@
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
+            @if(session('warning'))
+                <div class="mb-6 p-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm font-semibold flex items-center gap-3 animate-fade-in shadow-lg shadow-amber-500/5">
+                    <i class="fa-solid fa-triangle-exclamation text-base text-amber-400 shrink-0"></i>
+                    <span>{{ session('warning') }}</span>
+                </div>
+            @endif
 
             <!-- SECTION PROFILE: HỒ SƠ & XÁC MINH -->
             <section id="profile-section" class="tab-content space-y-8 animate-fade-in hidden">
                 <div class="glass-card rounded-3xl p-8 border border-slate-800">
-                    <h2 class="text-xl font-bold mb-6 text-slate-100 flex items-center gap-2">
-                        <i class="fa-solid fa-address-card text-indigo-400"></i> Hồ Sơ & Xác Minh Chủ Trọ
-                    </h2>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-800/80 pb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-address-card text-indigo-400"></i> Quản Lý Hồ Sơ &amp; Thông Tin Chủ Trọ
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-1">Cập nhật thông tin định danh, liên hệ và tài khoản ngân hàng nhận tiền</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold self-start">
+                            <i class="fa-solid fa-user-check mr-1"></i> Bảng Dữ Liệu landlord_profiles
+                        </span>
+                    </div>
+
+                    <!-- FORM CẬP NHẬT HỒ SƠ CHỦ TRỌ -->
+                    <form method="POST" action="{{ route('smartroom.admin.profile.update') }}" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-5">
+                        @csrf
+                        <div class="border-b border-slate-800/60 pb-3 flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+                                <i class="fa-solid fa-user-gear"></i> Thông tin cơ bản &amp; Đăng nhập
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tài khoản đăng nhập</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-circle-user absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="username" value="{{ old('username', $landlordProfile->username ?? Auth::user()->username) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-indigo-500 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Họ và tên *</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-user-tie absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="full_name" required value="{{ old('full_name', $landlordProfile->full_name ?? Auth::user()->name) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số điện thoại</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-phone absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="tel" name="phone" pattern="^0[0-9]{9}$" value="{{ old('phone', $landlordProfile->phone ?? Auth::user()->phone) }}" placeholder="0988123456" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ Email</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="email" name="email" value="{{ old('email', $landlordProfile->email ?? Auth::user()->email) }}" placeholder="chutro@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-slate-800/60 pt-2 pb-3 flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved"></i> Thông tin pháp lý &amp; Tài khoản ngân hàng
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- CCCD/CMND -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">CCCD / CMND</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="national_id" value="{{ old('national_id', $landlordProfile->national_id ?? '') }}" placeholder="001203040506" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Địa chỉ thường trú -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ thường trú</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-house-user absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="permanent_address" value="{{ old('permanent_address', $landlordProfile->permanent_address ?? '') }}" placeholder="Địa chỉ theo CCCD" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Giấy phép kinh doanh -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Giấy phép kinh doanh / Mã số thuế</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-file-invoice absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="business_license" value="{{ old('business_license', $landlordProfile->business_license ?? '') }}" placeholder="Số ĐKKD hoặc Mã số thuế" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Tên ngân hàng -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên ngân hàng</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-building-columns absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="bank_name" list="bank-list-admin" value="{{ old('bank_name', $landlordProfile->bank_name ?? $tenant->bank_name ?? '') }}" placeholder="MB Bank, Vietcombank..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <datalist id="bank-list-admin">
+                                        <option value="MB Bank (Quân Đội)">
+                                        <option value="Vietcombank">
+                                        <option value="Techcombank">
+                                        <option value="BIDV">
+                                        <option value="VietinBank">
+                                        <option value="Agribank">
+                                        <option value="ACB">
+                                        <option value="VPBank">
+                                        <option value="TPBank">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <!-- Số tài khoản ngân hàng -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số tài khoản ngân hàng</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-credit-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $landlordProfile->bank_account_number ?? $tenant->bank_account_no ?? '') }}" placeholder="Số tài khoản ngân hàng" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-emerald-500 transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Đổi mật khẩu mới -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Đổi mật khẩu mới</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="password" name="password" minlength="6" placeholder="Để trống nếu không đổi" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                <span>Lưu Thay Đổi Hồ Sơ Chủ Trọ</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="border-t border-slate-800 pt-6">
+                        <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-sky-400"></i> Tiến Trình Xác Minh &amp; Nhận Tiền
+                        </h3>
+                    </div>
 
                     @if(($tenant->verification_status ?? 'unverified') === 'kyc_verified')
                         <div class="mb-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-100 text-sm font-bold flex items-center gap-3">
@@ -268,6 +412,73 @@
 
             <!-- SECTION 1: DASHBOARD OVERVIEW -->
             <section id="dashboard-section" class="tab-content space-y-8 animate-fade-in">
+                @php
+                    $hasLegal = !empty($landlordProfile?->national_id) && !empty($landlordProfile?->business_license);
+                    $isApproved = ($landlordProfile?->status === 'approved') || (($tenant->verification_status ?? '') === 'kyc_verified');
+                    $isPending = ($landlordProfile?->status === 'pending_approval');
+                @endphp
+
+                @if(!$isApproved)
+                    <div class="glass-card rounded-2xl p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-indigo-500/10 mb-6">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3.5">
+                                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="text-sm font-bold text-white">
+                                            @if($isPending)
+                                                Hồ sơ đang chờ Admin phê duyệt
+                                            @else
+                                                Hồ sơ chủ trọ chưa hoàn thiện
+                                            @endif
+                                        </h4>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30' }}">
+                                            {{ $isPending ? 'Chờ duyệt' : 'Chưa đủ MST/CCCD' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        Bạn có thể quản lý phòng nội bộ bình thường. Tuy nhiên để <strong class="text-amber-300">đăng tin công khai lên Renty</strong>, bạn cần <a href="{{ route('smartroom.admin') }}?tab=profile-section" class="text-indigo-400 underline hover:text-indigo-300 font-bold">hoàn thiện hồ sơ (MST/CCCD)</a> và chờ Admin duyệt.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Stepper 3 Bước -->
+                            <div class="flex items-center gap-2 shrink-0 bg-slate-950/70 border border-slate-800 rounded-xl px-4 py-2.5">
+                                <!-- Bước 1: Đã xong (Tick xanh lá nhạt) -->
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-emerald-400">B1: ĐK</span>
+                                </div>
+                                <div class="w-3 h-0.5 bg-emerald-500/40"></div>
+                                <!-- Bước 2: Đã xong (Tick xanh lá nhạt) -->
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 flex items-center justify-center text-[10px]">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-emerald-400">B2: OTP</span>
+                                </div>
+                                <div class="w-3 h-0.5 bg-indigo-500/40"></div>
+                                <!-- Bước 3: Đang làm (Active - Màu tím) -->
+                                <div class="flex items-center gap-1.5">
+                                    <div class="w-5 h-5 rounded-full bg-indigo-600 border border-indigo-400 text-white flex items-center justify-center text-[10px] font-black shadow-sm">
+                                        3
+                                    </div>
+                                    <span class="text-[10px] font-bold text-indigo-300">B3: Hồ Sơ</span>
+                                </div>
+                            </div>
+
+                            <a href="{{ route('smartroom.admin') }}?tab=profile-section" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md shadow-amber-500/10">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                <span>Hoàn thiện ngay</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Stats ribbon -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Total Rooms -->
@@ -1932,20 +2143,32 @@
                     justify-content: center;
                     font-size: 13px;
                 }
+                .custom-toast-success {
+                    border-left: 4px solid #10b981;
+                }
                 .custom-toast-success .custom-toast-icon {
                     background: rgba(16, 185, 129, 0.15);
                     color: #10b981;
                     border: 1px solid rgba(16, 185, 129, 0.2);
+                }
+                .custom-toast-warning {
+                    border-left: 4px solid #f59e0b;
                 }
                 .custom-toast-warning .custom-toast-icon {
                     background: rgba(245, 158, 11, 0.15);
                     color: #f59e0b;
                     border: 1px solid rgba(245, 158, 11, 0.2);
                 }
+                .custom-toast-error {
+                    border-left: 4px solid #ef4444;
+                }
                 .custom-toast-error .custom-toast-icon {
                     background: rgba(239, 68, 68, 0.15);
                     color: #ef4444;
                     border: 1px solid rgba(239, 68, 68, 0.2);
+                }
+                .custom-toast-info {
+                    border-left: 4px solid #3b82f6;
                 }
                 .custom-toast-info .custom-toast-icon {
                     background: rgba(59, 130, 246, 0.15);
@@ -2043,6 +2266,60 @@
                     }
                 }, 4500);
             };
+
+            window.showAdminToast = function(message, type = 'success', title = null) {
+                if (!title) {
+                    if (type === 'success') title = 'Đăng nhập thành công!';
+                    else if (type === 'error') title = 'Thông Báo Lỗi';
+                    else if (type === 'warning') title = 'Cảnh Báo';
+                    else title = 'Thông Báo';
+                }
+                let container = document.querySelector('.custom-toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.className = 'custom-toast-container';
+                    document.body.appendChild(container);
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = `custom-toast custom-toast-${type}`;
+                
+                let iconHtml = '';
+                if (type === 'success') iconHtml = '<i class="fa-solid fa-check"></i>';
+                else if (type === 'warning') iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                else if (type === 'error') iconHtml = '<i class="fa-solid fa-circle-xmark"></i>';
+                else iconHtml = '<i class="fa-solid fa-info"></i>';
+                
+                toast.innerHTML = `
+                    <div class="custom-toast-icon">${iconHtml}</div>
+                    <div class="custom-toast-content">
+                        <div class="custom-toast-title">${title}</div>
+                        <div class="custom-toast-message">${message}</div>
+                    </div>
+                    <div class="custom-toast-close" onclick="this.parentElement.classList.add('hide'); setTimeout(() => this.parentElement.remove(), 400);"><i class="fa-solid fa-xmark"></i></div>
+                `;
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 10);
+                
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.classList.remove('show');
+                        toast.classList.add('hide');
+                        setTimeout(() => toast.remove(), 400);
+                    }
+                }, 4500);
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                @if(session('success'))
+                    window.showAdminToast(@json(session('success')), 'success', 'Đăng nhập thành công!');
+                @endif
+                @if(session('error'))
+                    window.showAdminToast(@json(session('error')), 'error', 'Thông Báo Lỗi');
+                @endif
+            });
         })();
 
         // Tab switching

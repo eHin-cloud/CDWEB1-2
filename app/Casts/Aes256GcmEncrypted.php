@@ -40,7 +40,23 @@ class Aes256GcmEncrypted implements CastsAttributes
         );
 
         if ($plaintext === false) {
-            throw new \RuntimeException("Unable to decrypt sensitive attribute {$key}.");
+            $fallbackAad = $model->getTable() . ':platform:' . $key;
+            if ($fallbackAad !== $aad) {
+                $plaintext = openssl_decrypt(
+                    $ciphertext,
+                    'aes-256-gcm',
+                    SensitiveData::encryptionKey(),
+                    OPENSSL_RAW_DATA,
+                    $iv,
+                    $tag,
+                    $fallbackAad
+                );
+            }
+        }
+
+        if ($plaintext === false) {
+            \Illuminate\Support\Facades\Log::warning("Unable to decrypt sensitive attribute {$key} for model " . get_class($model) . " id: " . ($model->getKey() ?? 'unknown'));
+            return null;
         }
 
         return $plaintext;

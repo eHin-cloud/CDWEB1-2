@@ -34,6 +34,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         'password',
         'like',
         'role',
+        'status',
     ];
 
     protected $hidden = [
@@ -67,6 +68,21 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
     public function roleRecord(): BelongsTo
     {
         return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function landlordProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(LandlordProfile::class);
+    }
+
+    public function properties(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Property::class, 'landlord_id');
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->status === 'locked';
     }
 
     public function roleSlug(): ?string
@@ -152,5 +168,20 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
     public function isGuest(): bool
     {
         return $this->roleSlug() === 'guest';
+    }
+
+    public function isTenant(): bool
+    {
+        return in_array($this->roleSlug(), ['tenant', 'guest'], true);
+    }
+
+    public function tenantProfile()
+    {
+        return $this->hasOne(TenantProfile::class);
+    }
+
+    public function tenantPreference()
+    {
+        return $this->hasOne(TenantPreference::class);
     }
 }

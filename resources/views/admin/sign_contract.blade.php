@@ -87,7 +87,7 @@
         
         <!-- Back to Portal Header -->
         <div class="flex items-center justify-between px-2">
-            <a href="{{ route('smartroom.portal') }}" class="group flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all">
+            <a href="{{ route('home') }}" class="group flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all">
                 <span class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center group-hover:border-slate-700 transition-all">
                     <i class="fa-solid fa-chevron-left"></i>
                 </span>

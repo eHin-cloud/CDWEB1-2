@@ -185,6 +185,12 @@
                         </span>
                     </button>
 
+                    <!-- Nút xem 3D Virtual Tour ở góc trên ảnh -->
+                    <a href="{{ route('renty.room.detail.3d', ['id' => $room['id']]) }}" class="absolute right-4 top-4 px-3.5 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white flex items-center gap-2 text-xs font-bold shadow-xl shadow-blue-500/30 backdrop-blur transition-all active:scale-95 z-10 border border-white/15">
+                        <i class="fa-solid fa-cube text-sky-300 animate-pulse"></i>
+                        <span>Xem Mô Hình 3D 360°</span>
+                    </a>
+
                     <!-- Nút xem đầy đủ ở góc -->
                     <button type="button" onclick="openZoom()" class="renty-zoom-btn absolute right-4 bottom-4 px-3.5 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-emerald-355 hover:text-white flex items-center gap-2 text-xs font-bold backdrop-blur transition-all active:scale-95 shadow-md">
                         <i class="fa-solid fa-images text-emerald-400"></i>
@@ -326,6 +332,24 @@
 
             <!-- Right Sidebar Columns (Sticky cards) -->
             <aside class="lg:sticky lg:top-24 space-y-5">
+                <!-- 3D Virtual Tour Banner Card -->
+                <a href="{{ route('renty.room.detail.3d', ['id' => $room['id']]) }}" class="block group p-4 rounded-2xl bg-gradient-to-br from-blue-900/50 via-indigo-900/30 to-slate-900/60 border border-blue-500/40 hover:border-blue-400/80 shadow-xl shadow-blue-950/50 transition-all hover:scale-[1.02]">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-blue-600/30 border border-blue-400/30 flex items-center justify-center text-blue-300 text-xl group-hover:scale-110 transition-all shadow-inner">
+                                <i class="fa-solid fa-cube animate-pulse"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-extrabold text-white group-hover:text-blue-300 transition-colors">Khám Phá Mô Hình 3D 360°</h3>
+                                <p class="text-[11px] text-slate-400">Xem tiện ích, tháo mái, đổi màu</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 text-[10px] font-extrabold uppercase border border-blue-500/30 flex items-center gap-1 shrink-0">
+                            Trải nghiệm <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                        </span>
+                    </div>
+                </a>
+
                 <!-- Bento box: Thông số phòng -->
                 <section class="tilt-element p-6 rounded-2xl bg-slate-900/30 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                     <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent"></div>

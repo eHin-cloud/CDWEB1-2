@@ -28,6 +28,10 @@ class AdminDashboardController extends Controller
     {
         $tenantId = $this->currentTenantId();
         $tenant = Tenant::find($tenantId);
+        $landlordProfile = \App\Models\LandlordProfile::where('tenant_id', $tenantId)
+            ->orWhere('user_id', Auth::id())
+            ->latest()
+            ->first();
         $kycRequest = LandlordVerificationRequest::with('documents')
             ->where('tenant_id', $tenantId)
             ->where('type', 'kyc')
@@ -328,6 +332,7 @@ class AdminDashboardController extends Controller
             'notificationLogs',
             'notificationSummary',
             'tenant',
+            'landlordProfile',
             'kycRequest',
             'premiumRequest'
         ));
@@ -1653,5 +1658,92 @@ class AdminDashboardController extends Controller
         );
 
         return redirect()->route('smartroom.admin', ['tab' => 'contact-section'])->with('success', 'Xóa yêu cầu tư vấn thành công!');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $tenantId = $this->currentTenantId();
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'username' => ['nullable', 'string', 'alpha_dash:ascii', 'min:3', 'max:50', 'unique:users,username,' . $user->id],
+            'full_name' => ['required', 'string', 'max:120'],
+            'phone' => ['nullable', 'regex:/^0[0-9]{9}$/', 'unique:users,phone,' . $user->id],
+            'email' => ['nullable', 'string', 'email', 'max:150', 'unique:users,email,' . $user->id],
+            'national_id' => ['nullable', 'string', 'max:50'],
+            'permanent_address' => ['nullable', 'string', 'max:500'],
+            'bank_account_number' => ['nullable', 'string', 'max:60'],
+            'bank_name' => ['nullable', 'string', 'max:120'],
+            'business_license' => ['nullable', 'string', 'max:150'],
+            'password' => ['nullable', 'string', 'min:6'],
+        ], [
+            'username.alpha_dash' => 'Tài khoản đăng nhập chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới.',
+            'username.min' => 'Tài khoản đăng nhập tối thiểu 3 ký tự.',
+            'username.unique' => 'Tài khoản đăng nhập này đã được sử dụng bởi tài khoản khác.',
+            'full_name.required' => 'Họ và tên chủ trọ là bắt buộc.',
+            'phone.regex' => 'Số điện thoại phải là định dạng Việt Nam gồm 10 chữ số và bắt đầu bằng số 0 (ví dụ: 0988123456).',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng bởi tài khoản khác.',
+            'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
+            'email.unique' => 'Địa chỉ email này đã được sử dụng bởi tài khoản khác.',
+            'password.min' => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
+        ]);
+
+        if (!empty($validated['username'])) {
+            $user->username = $validated['username'];
+        }
+        $user->name = $validated['full_name'];
+        $user->phone = !empty($validated['phone']) ? $validated['phone'] : null;
+        $user->email = !empty($validated['email']) ? $validated['email'] : null;
+        if (!empty($validated['password'])) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+        $user->save();
+
+        $profile = \App\Models\LandlordProfile::where('tenant_id', $tenantId)
+            ->orWhere('user_id', $user->id)
+            ->first();
+
+        if (!$profile) {
+            $profile = new \App\Models\LandlordProfile();
+            $profile->tenant_id = $tenantId;
+            $profile->user_id = $user->id;
+            $profile->status = 'unverified';
+        }
+
+        if (!empty($validated['username'])) {
+            $profile->username = $validated['username'];
+        }
+        $profile->full_name = $validated['full_name'];
+        $profile->phone = !empty($validated['phone']) ? $validated['phone'] : null;
+        $profile->email = !empty($validated['email']) ? $validated['email'] : null;
+        if (!empty($validated['password'])) {
+            $profile->password = $user->password;
+        }
+        $profile->national_id = $validated['national_id'] ?? null;
+        $profile->permanent_address = $validated['permanent_address'] ?? null;
+        $profile->bank_account_number = $validated['bank_account_number'] ?? null;
+        $profile->bank_name = $validated['bank_name'] ?? null;
+        $profile->business_license = $validated['business_license'] ?? null;
+
+        // Nếu đã điền đủ CCCD và MST/Giấy phép KD và trạng thái là unverified, chuyển sang chờ duyệt
+        if (!empty($profile->national_id) && !empty($profile->business_license) && in_array($profile->status, ['unverified', null], true)) {
+            $profile->status = 'pending_approval';
+        }
+        $profile->save();
+
+        // Đồng bộ thông tin ngân hàng sang Tenant để xuất hóa đơn và QR
+        $tenant = \App\Models\Tenant::find($tenantId);
+        if ($tenant) {
+            if (!empty($validated['bank_name'])) $tenant->bank_name = $validated['bank_name'];
+            if (!empty($validated['bank_account_number'])) $tenant->bank_account_no = $validated['bank_account_number'];
+            $tenant->save();
+        }
+
+        $msg = $profile->status === 'pending_approval' 
+            ? 'Cập nhật hồ sơ thành công! Hồ sơ đã được gửi và đang chờ Admin duyệt để mở quyền đăng tin công khai.'
+            : 'Cập nhật thông tin hồ sơ chủ trọ thành công!';
+
+        return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
+            ->with('success', $msg);
     }
 }

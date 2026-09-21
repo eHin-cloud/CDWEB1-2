@@ -29,12 +29,21 @@ use App\Http\Controllers\BuildingController;
 Route::get('dashboard', [CrudUserController::class, 'dashboard']);
 
 Route::get('login', [CrudUserController::class, 'login'])->name('login');
-Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:5,1')->name('user.authUser');
+Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:30,1')->name('user.authUser');
 
 Route::get('create', [CrudUserController::class, 'createUser'])->name('user.createUser');
-Route::post('create', [CrudUserController::class, 'postUser'])->middleware('throttle:3,1')->name('user.postUser');
+Route::post('create', [CrudUserController::class, 'postUser'])->middleware('throttle:10,1')->name('user.postUser');
+Route::get('guest/verify', [CrudUserController::class, 'showVerifyOtp'])->name('guest.verify');
+Route::post('guest/verify-otp', [CrudUserController::class, 'verifyGuestOtp'])->middleware('throttle:10,1')->name('guest.verifyOtp');
+Route::post('guest/send-otp', [CrudUserController::class, 'sendGuestOtp'])->middleware('throttle:5,1')->name('guest.sendOtp');
+Route::get('tenant/onboarding/preferences', [CrudUserController::class, 'showPreferences'])->middleware('auth')->name('tenant.preferences');
+Route::post('tenant/onboarding/preferences', [CrudUserController::class, 'savePreferences'])->middleware('auth')->name('tenant.preferences.save');
+
 Route::get('landlord/register', [LandlordOnboardingController::class, 'create'])->name('landlord.register');
-Route::post('landlord/register', [LandlordOnboardingController::class, 'store'])->middleware('throttle:3,1')->name('landlord.register.store');
+Route::post('landlord/register', [LandlordOnboardingController::class, 'store'])->middleware('throttle:10,1')->name('landlord.register.store');
+Route::get('landlord/verify', [LandlordOnboardingController::class, 'showVerifyForm'])->name('landlord.verify');
+Route::post('landlord/send-otp', [LandlordOnboardingController::class, 'sendOtp'])->middleware('throttle:5,1')->name('landlord.sendOtp');
+Route::post('landlord/verify-otp', [LandlordOnboardingController::class, 'verifyOtp'])->middleware('throttle:10,1')->name('landlord.verifyOtp');
 
 Route::middleware('role:admin')->group(function () {
     Route::get('read', [CrudUserController::class, 'readUser'])->name('user.readUser');
@@ -64,6 +73,14 @@ Route::get('signout', [CrudUserController::class, 'signOut'])->name('signout');
 \Laragear\WebAuthn\Http\Routes::register();
 
 Route::get('/', function () {
+    return redirect('/renty');
+});
+
+Route::get('/home', function () {
+    return redirect('/renty');
+})->name('home');
+
+Route::get('/portal', function () {
     return view('index');
 })->name('smartroom.portal');
 
@@ -139,6 +156,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/utility/{id}/notify', [AdminDashboardController::class, 'notifyUtility'])->name('smartroom.admin.utility.notify');
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
+    Route::post('/smartroom/admin/profile', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');
@@ -433,6 +451,14 @@ $rentyPage = function () use ($rentyRooms) {
 };
 
 Route::get('/renty', $rentyPage)->name('renty.user');
+
+Route::get('/renty/room-3d', function () {
+    return view('rentry.room_3d');
+})->name('renty.room.3d');
+
+Route::get('/renty/room/{id}/3d', function ($id) {
+    return view('rentry.room_3d', ['roomId' => $id]);
+})->name('renty.room.detail.3d');
 
 Route::get('/renty/room/{id}', function ($id) use ($rentyRooms) {
     $room = $rentyRooms()->firstWhere('id', (int) $id);

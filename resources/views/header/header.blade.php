@@ -6,7 +6,7 @@
     <div class="container mx-auto px-4 md:px-6 flex justify-between items-center gap-2 md:gap-4">
         <!-- Left: Logo and Nav Links -->
         <div class="flex items-center gap-3 md:gap-6 shrink-0">
-            <a href="{{ route('smartroom.portal') }}" class="flex items-center gap-2 md:gap-3">
+            <a href="{{ route('renty.user') }}" class="flex items-center gap-2 md:gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
                     <i class="fa-solid fa-magnifying-glass-location text-white text-lg"></i>
                 </div>
@@ -89,9 +89,17 @@
                         <span class="font-bold text-slate-300 flex items-center gap-1.5">
                             <i class="fa-solid fa-user-circle text-emerald-400"></i> {{ Auth::user()->name }}
                         </span>
-                        @if(Auth::user()->role === 'admin')
-                            <a href="{{ route('smartroom.admin') }}" class="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all font-semibold" title="Cổng Admin">
-                                Admin
+                        @if(Auth::user()->canAccessLandlordDashboard())
+                            <a href="{{ route('smartroom.admin') }}" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all font-bold flex items-center gap-1.5 shadow-sm" title="Trang Quản lý nhà trọ (Admin)">
+                                <i class="fa-solid fa-gauge-high text-xs"></i> Quản lý trọ
+                            </a>
+                        @elseif(Auth::user()->isAdmin())
+                            <a href="{{ route('user.list') }}" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all font-bold flex items-center gap-1.5 shadow-sm" title="Cổng Admin hệ thống">
+                                <i class="fa-solid fa-shield-halved text-xs"></i> Admin
+                            </a>
+                        @elseif(Auth::user()->isResident())
+                            <a href="{{ route('smartroom.resident') }}" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all font-bold flex items-center gap-1.5 shadow-sm" title="Cổng cư dân">
+                                <i class="fa-solid fa-house-user text-xs"></i> Phòng của tôi
                             </a>
                         @endif
                         <span class="w-[1px] h-3 bg-slate-800"></span>

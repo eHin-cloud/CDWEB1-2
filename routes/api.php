@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SensitiveDataController;
 use App\Http\Controllers\VerificationDocumentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
+use App\Http\Controllers\Api\SystemAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\PaymentWebhookController;
 // ==========================================
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/auth/check-availability', [AuthController::class, 'checkAvailability']);
 Route::post('/webhooks/payments', [PaymentWebhookController::class, 'handleWebhook']);
 
 Route::get('/renty/rooms', [VisitorController::class, 'index']);
@@ -47,6 +49,24 @@ Route::middleware('auth:sanctum')->group(function () {
     // ------------------------------------------
     // A. PHÂN HỆ CHỦ TRỌ / QUẢN LÝ (Tenant Admin)
     // ------------------------------------------
+    // ------------------------------------------
+    // SYSTEM ADMIN API (/api/admin/*)
+    // ------------------------------------------
+    Route::middleware('adminMiddleware')->prefix('admin')->group(function () {
+        // Quản lý chủ trọ
+        Route::get('/landlords', [SystemAdminController::class, 'getLandlords']);
+        Route::get('/landlords/{id}', [SystemAdminController::class, 'getLandlordDetail']);
+        Route::patch('/landlords/{id}/verify', [SystemAdminController::class, 'verifyLandlord']);
+        Route::patch('/landlords/{id}/lock', [SystemAdminController::class, 'toggleLockLandlord']);
+
+        // Kiểm duyệt tin đăng nhà trọ
+        Route::get('/properties', [SystemAdminController::class, 'getProperties']);
+        Route::patch('/properties/{id}/moderate', [SystemAdminController::class, 'moderateProperty']);
+
+        // Thống kê tổng quan
+        Route::get('/stats', [SystemAdminController::class, 'getStats']);
+    });
+
     Route::middleware('role:admin')->prefix('platform-admin')->group(function () {
         Route::post('/verification-documents/{document}/unlock', [VerificationDocumentController::class, 'unlock']);
     });

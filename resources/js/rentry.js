@@ -807,6 +807,26 @@ let rentyMap = null;
 let rentyMarkers = {};
 
 function initRentyMap() {
+    if (window.rentyGoogleMap && rentyMap) return;
+
+    if (typeof GoogleMapsRenty !== 'undefined') {
+        window.rentyGoogleMap = new GoogleMapsRenty('renty-interactive-map', {
+            onSelectRoom: (room) => {
+                const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
+                if (roomCard) {
+                    roomCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    roomCard.classList.add('ring-2', 'ring-emerald-500');
+                    setTimeout(() => {
+                        roomCard.classList.remove('ring-2', 'ring-emerald-500');
+                    }, 2000);
+                }
+            }
+        });
+        rentyMap = window.rentyGoogleMap.map;
+        rentyMarkers = window.rentyGoogleMap.markers;
+        return;
+    }
+
     if (rentyMap) return;
 
     const mockRooms = window.rentyRoomsData || {};
@@ -1040,7 +1060,14 @@ function initRentyMap() {
         const roomId = card.getAttribute('data-room-id');
         if (!roomId) return;
 
-        if (rentyMarkers && rentyMarkers[roomId] && rentyMap) {
+        if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[roomId]) {
+            window.rentyGoogleMap.highlightMarker(roomId);
+            window.rentyGoogleMap.markers[roomId].openPopup();
+            window.rentyGoogleMap.map.panTo(window.rentyGoogleMap.markers[roomId].getLatLng(), {
+                animate: true,
+                duration: 0.8
+            });
+        } else if (rentyMarkers && rentyMarkers[roomId] && rentyMap) {
             // Highlight pin
             document.querySelectorAll('.glowing-teal-pin').forEach(pin => {
                 pin.classList.remove('active');
@@ -1062,7 +1089,12 @@ function initRentyMap() {
 
 // Helper to control marker visibility during filtering
 function showMarker(id) {
-    if (rentyMarkers[id] && rentyMap) {
+    if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[id]) {
+        const marker = window.rentyGoogleMap.markers[id];
+        if (window.rentyGoogleMap.map && !window.rentyGoogleMap.map.hasLayer(marker)) {
+            window.rentyGoogleMap.map.addLayer(marker);
+        }
+    } else if (rentyMarkers[id] && rentyMap) {
         if (!rentyMap.hasLayer(rentyMarkers[id])) {
             rentyMap.addLayer(rentyMarkers[id]);
         }
@@ -1070,7 +1102,12 @@ function showMarker(id) {
 }
 
 function hideMarker(id) {
-    if (rentyMarkers[id] && rentyMap) {
+    if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[id]) {
+        const marker = window.rentyGoogleMap.markers[id];
+        if (window.rentyGoogleMap.map && window.rentyGoogleMap.map.hasLayer(marker)) {
+            window.rentyGoogleMap.map.removeLayer(marker);
+        }
+    } else if (rentyMarkers[id] && rentyMap) {
         if (rentyMap.hasLayer(rentyMarkers[id])) {
             rentyMap.removeLayer(rentyMarkers[id]);
         }

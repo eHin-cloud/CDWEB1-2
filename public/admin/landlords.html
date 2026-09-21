@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Chủ Trọ - Admin SmartRoom &amp; Renty</title>
+
+    <!-- Google Fonts & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- Navigation Header -->
+    <header class="admin-nav">
+        <a href="dashboard.html" class="brand-badge">
+            <div class="brand-icon">
+                <i class="fa-solid fa-hotel"></i>
+            </div>
+            <span>SmartRoom <span style="color: var(--primary);">&amp; Renty</span> <span style="font-size: 0.75rem; color: #818cf8; font-weight: 700; border: 1px solid rgba(99, 102, 241, 0.3); padding: 0.15rem 0.5rem; border-radius: 999px;">Admin</span></span>
+        </a>
+
+        <nav>
+            <ul class="nav-links">
+                <li><a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+                <li><a href="landlords.html" class="nav-item active"><i class="fa-solid fa-users-gear"></i> Quản lý Chủ Trọ</a></li>
+                <li><a href="properties.html" class="nav-item"><i class="fa-solid fa-house-circle-check"></i> Kiểm duyệt Tin Đăng</a></li>
+            </ul>
+        </nav>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="text-align: right; display: flex; align-items: center; gap: 0.6rem;">
+                <div style="width: 2rem; height: 2rem; border-radius: 50%; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #818cf8;">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <span id="admin-display-name" style="font-size: 0.85rem; font-weight: 700;">Admin</span>
+            </div>
+            <button onclick="adminLogout()" class="btn btn-secondary btn-sm" title="Đăng xuất">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main style="padding: 2rem; max-width: 1300px; margin: 0 auto; width: 100%;">
+        
+        <!-- Page Title & Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.5px;">Quản Lý Đối Tác Chủ Trọ</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Xác minh hồ sơ pháp lý (MST, CCCD, GPKD) và quản lý tài khoản chủ trọ
+                </p>
+            </div>
+            <button onclick="loadLandlords()" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-rotate-right"></i> Làm mới danh sách
+            </button>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="admin-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                
+                <div style="flex: 1; min-width: 240px;">
+                    <div style="position: relative;">
+                        <input type="text" id="search-input" onkeyup="handleSearchKeyup(event)" class="form-control" placeholder="Tìm theo tên, email, SĐT hoặc username...">
+                    </div>
+                </div>
+
+                <div style="width: 220px;">
+                    <select id="filter-status" onchange="loadLandlords(1)" class="form-control" style="cursor: pointer;">
+                        <option value="all">Tất cả trạng thái hồ sơ</option>
+                        <option value="pending">⏳ Chờ duyệt (Pending)</option>
+                        <option value="verified">✅ Đã xác minh (Verified)</option>
+                        <option value="unverified">⚪ Chưa xác minh (Unverified)</option>
+                        <option value="rejected">❌ Bị từ chối (Rejected)</option>
+                    </select>
+                </div>
+
+                <button onclick="loadLandlords(1)" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm
+                </button>
+            </div>
+        </div>
+
+        <!-- Landlords Table Card -->
+        <div class="admin-card" style="overflow: hidden;">
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Chủ Trọ</th>
+                            <th>Liên Hệ</th>
+                            <th>Khu Trọ / BĐS</th>
+                            <th>Xác Minh Pháp Lý</th>
+                            <th>Tài Khoản</th>
+                            <th style="text-align: right;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="landlords-tbody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                                <i class="fa-solid fa-spinner fa-spin text-lg" style="margin-bottom: 0.5rem; display: block;"></i>
+                                Đang tải danh sách chủ trọ...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Footer -->
+            <div id="pagination-box" style="padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted);">
+                <span id="pagination-info">Hiển thị 0 kết quả</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="btn-prev-page" onclick="changePage(-1)" class="btn btn-secondary btn-sm" disabled>
+                        <i class="fa-solid fa-chevron-left text-xs"></i> Trang trước
+                    </button>
+                    <button id="btn-next-page" onclick="changePage(1)" class="btn btn-secondary btn-sm" disabled>
+                        Trang sau <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Xem Chi Tiết Chủ Trọ -->
+    <div id="modal-detail" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-address-card text-indigo-400"></i> Hồ Sơ Pháp Lý Chủ Trọ
+                </h3>
+                <button onclick="closeModal('modal-detail')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="detail-content" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Content dynamically injected -->
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeModal('modal-detail')" class="btn btn-secondary btn-sm">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Từ Chối Xác Minh -->
+    <div id="modal-reject" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 460px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-circle-exclamation"></i> Từ Chối Hồ Sơ Pháp Lý
+                </h3>
+                <button onclick="closeModal('modal-reject')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="reject-landlord-id">
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Lý do từ chối (Gửi thông báo tới chủ trọ)</label>
+                <textarea id="reject-reason-input" class="form-control" rows="3" placeholder="Ví dụ: Ảnh chụp CCCD bị mờ, không khớp với họ tên đăng ký..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button onclick="closeModal('modal-reject')" class="btn btn-secondary btn-sm">Hủy bỏ</button>
+                <button onclick="submitRejectVerification()" id="btn-confirm-reject" class="btn btn-danger btn-sm">
+                    Xác nhận từ chối
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/admin.js"></script>
+    <script>
+        checkAdminAuth(true);
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Check query param status
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('status')) {
+            const filterEl = document.getElementById('filter-status');
+            if (filterEl) filterEl.value = urlParams.get('status');
+        }
+
+        function handleSearchKeyup(e) {
+            if (e.key === 'Enter') {
+                loadLandlords(1);
+            }
+        }
+
+        function changePage(delta) {
+            const targetPage = currentPage + delta;
+            if (targetPage >= 1 && targetPage <= totalPages) {
+                loadLandlords(targetPage);
+            }
+        }
+
+        async function loadLandlords(page = 1) {
+            currentPage = page;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('search-input').value.trim();
+            const tbody = document.getElementById('landlords-tbody');
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+                        <i class="fa-solid fa-spinner fa-spin text-lg" style="margin-bottom: 0.5rem; display: block;"></i>
+                        Đang tải danh sách chủ trọ...
+                    </td>
+                </tr>
+            `;
+
+            try {
+                let url = `/admin/landlords?page=${page}&limit=10`;
+                if (status && status !== 'all') url += `&verification_status=${encodeURIComponent(status)}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const res = await adminFetch(url);
+
+                if (!res.success || !res.data) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--danger);">Lỗi tải danh sách</td></tr>`;
+                    return;
+                }
+
+                const items = res.data;
+                const pagination = res.pagination || {};
+                totalPages = pagination.total_pages || 1;
+
+                document.getElementById('pagination-info').textContent = 
+                    `Hiển thị ${items.length} trên tổng số ${pagination.total_items || items.length} chủ trọ (Trang ${currentPage}/${totalPages})`;
+
+                document.getElementById('btn-prev-page').disabled = (currentPage <= 1);
+                document.getElementById('btn-next-page').disabled = (currentPage >= totalPages);
+
+                if (items.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                                <i class="fa-solid fa-inbox text-2xl" style="margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+                                Không tìm thấy chủ trọ nào phù hợp với điều kiện lọc.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = items.map(user => {
+                    const profile = user.landlord_profile || {};
+                    const vStatus = profile.verification_status || 'unverified';
+                    const isLocked = (user.status === 'locked');
+
+                    let badgeV = '';
+                    if (vStatus === 'verified') badgeV = `<span class="badge badge-verified"><i class="fa-solid fa-circle-check"></i> Đã Duyệt</span>`;
+                    else if (vStatus === 'pending') badgeV = `<span class="badge badge-pending"><i class="fa-solid fa-clock"></i> Chờ Duyệt</span>`;
+                    else if (vStatus === 'rejected') badgeV = `<span class="badge badge-rejected"><i class="fa-solid fa-circle-xmark"></i> Bị Từ Chối</span>`;
+                    else badgeV = `<span class="badge badge-unverified"><i class="fa-solid fa-circle"></i> Chưa Gửi</span>`;
+
+                    const badgeAccount = isLocked 
+                        ? `<span class="badge badge-locked"><i class="fa-solid fa-lock"></i> Đã Khóa</span>` 
+                        : `<span class="badge badge-active"><i class="fa-solid fa-circle-check"></i> Hoạt Động</span>`;
+
+                    const propertyCount = (user.properties ? user.properties.length : 0);
+
+                    return `
+                        <tr>
+                            <td style="font-weight: 700; color: var(--text-dim);">#${user.id}</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 2.25rem; height: 2.25rem; border-radius: 0.65rem; background: rgba(99, 102, 241, 0.15); color: #818cf8; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
+                                        ${(user.name || 'C').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700; color: #fff;">${user.name || 'Chưa đặt tên'}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">@${user.username || 'unknown'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${user.email || 'Không có email'}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.15rem;">
+                                    <i class="fa-solid fa-phone text-[10px]"></i> ${user.phone || 'Chưa cập nhật SĐT'}
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-weight: 700; color: #fff;">${propertyCount}</span>
+                                <span style="font-size: 0.75rem; color: var(--text-dim);">nhà trọ</span>
+                            </td>
+                            <td>${badgeV}</td>
+                            <td>${badgeAccount}</td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 0.4rem;">
+                                    <button onclick="viewLandlordDetail(${user.id})" class="btn btn-secondary btn-sm" title="Xem chi tiết hồ sơ">
+                                        <i class="fa-solid fa-eye text-xs"></i> Xem
+                                    </button>
+                                    ${vStatus === 'pending' || vStatus === 'unverified' ? `
+                                        <button onclick="approveVerification(${user.id})" class="btn btn-success btn-sm" title="Duyệt hồ sơ pháp lý">
+                                            <i class="fa-solid fa-check text-xs"></i> Duyệt
+                                        </button>
+                                    ` : ''}
+                                    ${vStatus === 'pending' ? `
+                                        <button onclick="openRejectModal(${user.id})" class="btn btn-danger btn-sm" title="Từ chối hồ sơ">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="toggleLock(${user.id}, '${isLocked ? 'unlock' : 'lock'}')" class="btn ${isLocked ? 'btn-success' : 'btn-danger'} btn-sm" title="${isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}">
+                                        <i class="fa-solid ${isLocked ? 'fa-lock-open' : 'fa-lock'} text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--danger);">Lỗi kết nối: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Xem chi tiết hồ sơ
+        async function viewLandlordDetail(id) {
+            try {
+                const res = await adminFetch(`/admin/landlords/${id}`);
+                if (!res.success || !res.data) {
+                    showToast('Không thể tải chi tiết chủ trọ', 'error');
+                    return;
+                }
+
+                const u = res.data;
+                const p = u.landlord_profile || {};
+
+                const contentEl = document.getElementById('detail-content');
+                contentEl.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+                        <div>
+                            <span class="form-label">Họ và tên</span>
+                            <div style="font-weight: 700; color: #fff; margin-top: 0.2rem;">${u.name || '---'}</div>
+                        </div>
+                        <div>
+                            <span class="form-label">Tên đăng nhập</span>
+                            <div style="font-weight: 700; color: #fff; margin-top: 0.2rem;">@${u.username || '---'}</div>
+                        </div>
+                        <div>
+                            <span class="form-label">Số điện thoại</span>
+                            <div style="font-weight: 700; color: #fff; margin-top: 0.2rem;">${u.phone || '---'}</div>
+                        </div>
+                        <div>
+                            <span class="form-label">Email</span>
+                            <div style="font-weight: 700; color: #fff; margin-top: 0.2rem;">${u.email || '---'}</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.75rem;">
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Thông Tin Pháp Lý &amp; Ngân Hàng
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div>
+                                <span class="form-label">Số CCCD / Định danh</span>
+                                <div style="font-weight: 600; color: #e2e8f0; margin-top: 0.2rem;">${p.national_id || 'Chưa cập nhật'}</div>
+                            </div>
+                            <div>
+                                <span class="form-label">Mã số thuế / GPKD</span>
+                                <div style="font-weight: 600; color: #e2e8f0; margin-top: 0.2rem;">${p.business_license || 'Chưa cập nhật'}</div>
+                            </div>
+                            <div>
+                                <span class="form-label">Số tài khoản ngân hàng</span>
+                                <div style="font-weight: 600; color: #e2e8f0; margin-top: 0.2rem;">${p.bank_account_number || 'Chưa cập nhật'}</div>
+                            </div>
+                            <div>
+                                <span class="form-label">Tên ngân hàng</span>
+                                <div style="font-weight: 600; color: #e2e8f0; margin-top: 0.2rem;">${p.bank_name || 'Chưa cập nhật'}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="form-label">Địa chỉ thường trú</span>
+                            <div style="font-weight: 600; color: #e2e8f0; margin-top: 0.2rem;">${p.permanent_address || 'Chưa cập nhật'}</div>
+                        </div>
+                        <div>
+                            <span class="form-label">Trạng thái xác minh hiện tại</span>
+                            <div style="margin-top: 0.35rem;">
+                                <span class="badge badge-${p.verification_status || 'unverified'}">
+                                    ${p.verification_status || 'unverified'}
+                                </span>
+                            </div>
+                        </div>
+                        ${p.reject_reason ? `
+                            <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.25);">
+                                <span class="form-label" style="color: #f87171;">Lý do từ chối trước đó:</span>
+                                <div style="font-size: 0.8rem; color: #fca5a5; margin-top: 0.25rem;">${p.reject_reason}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                            Bất Động Sản Sở Hữu (${u.properties ? u.properties.length : 0})
+                        </h4>
+                        ${u.properties && u.properties.length > 0 ? `
+                            <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+                                ${u.properties.map(pr => `
+                                    <li style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                                        <span><i class="fa-solid fa-building text-indigo-400 mr-1.5"></i> <strong>${pr.name}</strong> (${pr.address})</span>
+                                        <span class="badge badge-${pr.status}">${pr.status}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : `<div style="font-size: 0.8rem; color: var(--text-dim);">Chưa đăng ký bất động sản nào</div>`}
+                    </div>
+                `;
+
+                openModal('modal-detail');
+            } catch (err) {
+                showToast('Lỗi khi tải chi tiết: ' + err.message, 'error');
+            }
+        }
+
+        // Duyệt hồ sơ pháp lý
+        async function approveVerification(id) {
+            if (!confirm(`Bạn có chắc chắn muốn DUYỆT hồ sơ pháp lý cho chủ trọ #${id}? Tài khoản sẽ được cấp quyền chủ trọ chính thức.`)) return;
+
+            try {
+                const res = await adminFetch(`/admin/landlords/${id}/verify`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ action: 'approve' })
+                });
+
+                if (res.success) {
+                    showToast(res.message, 'success');
+                    loadLandlords(currentPage);
+                } else {
+                    showToast(res.message || 'Thất bại khi duyệt', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Mở modal từ chối
+        function openRejectModal(id) {
+            document.getElementById('reject-landlord-id').value = id;
+            document.getElementById('reject-reason-input').value = '';
+            openModal('modal-reject');
+        }
+
+        // Xác nhận từ chối
+        async function submitRejectVerification() {
+            const id = document.getElementById('reject-landlord-id').value;
+            const reason = document.getElementById('reject-reason-input').value.trim();
+
+            if (!reason) {
+                alert('Vui lòng nhập lý do từ chối để thông báo cho chủ trọ!');
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirm-reject');
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
+
+            try {
+                const res = await adminFetch(`/admin/landlords/${id}/verify`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ action: 'reject', reason })
+                });
+
+                if (res.success) {
+                    showToast(res.message, 'success');
+                    closeModal('modal-reject');
+                    loadLandlords(currentPage);
+                } else {
+                    showToast(res.message || 'Thất bại khi từ chối', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Xác nhận từ chối';
+            }
+        }
+
+        // Khóa / Mở khóa tài khoản
+        async function toggleLock(id, action) {
+            const actionText = action === 'lock' ? 'KHÓA' : 'MỞ KHÓA';
+            if (!confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản chủ trọ #${id}?`)) return;
+
+            try {
+                const res = await adminFetch(`/admin/landlords/${id}/lock`, {
+                    method: 'PATCH'
+                });
+
+                if (res.success) {
+                    showToast(res.message, 'success');
+                    loadLandlords(currentPage);
+                } else {
+                    showToast(res.message || 'Thất bại', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('open');
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('open');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLandlords(1);
+        });
+    </script>
+</body>
+</html>
