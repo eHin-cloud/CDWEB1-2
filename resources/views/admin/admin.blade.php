@@ -1164,7 +1164,28 @@
                                 </div>
 
                                 <div class="relative w-full h-64 bg-slate-900/40 rounded-xl border border-slate-800/50 p-2 flex items-center justify-center">
-                                    <canvas id="iot-realtime-chart-canvas" class="w-full h-full block"></canvas>
+                                    <canvas id="iot-realtime-chart-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+                                    <!-- Interactive Hover Tooltip Box -->
+                                    <div id="iot-chart-tooltip" class="absolute pointer-events-none hidden z-20 px-3.5 py-2.5 bg-slate-950/95 border border-slate-700/90 rounded-2xl shadow-2xl shadow-black text-xs backdrop-blur-md transition-all duration-75 space-y-1.5 min-w-[175px]">
+                                        <div class="flex items-center justify-between border-b border-slate-800 pb-1 text-[11px] font-mono">
+                                            <span class="flex items-center gap-1.5 text-slate-200 font-bold"><i class="fa-regular fa-clock text-emerald-400"></i> <span id="iot-tt-time">--:--:--</span></span>
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 font-bold">1 Phút</span>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4 text-xs font-mono">
+                                            <span class="text-amber-400 flex items-center gap-1.5 font-sans"><i class="fa-solid fa-bolt text-[10px]"></i> Công suất:</span>
+                                            <strong id="iot-tt-power" class="text-amber-300 font-bold">0 W</strong>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4 text-xs font-mono">
+                                            <span class="text-cyan-400 flex items-center gap-1.5 font-sans"><i class="fa-solid fa-droplet text-[10px]"></i> Lưu lượng:</span>
+                                            <strong id="iot-tt-water" class="text-cyan-300 font-bold">0 L/m</strong>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4 text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/80">
+                                            <span class="font-sans">Chỉ số tích lũy:</span>
+                                            <span id="iot-tt-reading" class="text-slate-300 font-bold">0 kWh</span>
+                                        </div>
+                                    </div>
+
                                     <div id="iot-chart-empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-500 text-xs bg-slate-950/90 rounded-xl">
                                         <i class="fa-solid fa-chart-area text-3xl text-slate-600"></i>
                                         <span class="text-slate-400">Phòng này chưa có dữ liệu đo đạc nào</span>
@@ -4035,7 +4056,9 @@
             currentTab: 'realtime',
             currentRoomId: null,
             currentRange: '1h',
-            chartData: { electric: [], water: [] },
+            chartData: { electricity: [], water: [] },
+            activePoints: [],
+            hoveredIndex: null,
             autoSimTimer: null,
             autoSimCount: 0,
             autoPollTimer: null
@@ -4239,7 +4262,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        function renderIotCanvasChart(electricData, waterData) {
+        function renderIotCanvasChart(electricData, waterData, highlightIdx = null) {
             const canvas = document.getElementById('iot-realtime-chart-canvas');
             if (!canvas) return;
 
@@ -4301,6 +4324,31 @@
                 return;
             }
 
+            // Ghi nhận toạ độ các điểm đo để phục vụ tra cứu khi hover chuột
+            const totalPoints = Math.max(electricData.length, waterData.length);
+            iotState.activePoints = [];
+            for (let i = 0; i < totalPoints; i++) {
+                const ePt = electricData[i] || null;
+                const wPt = waterData[i] || null;
+                const px = padding.left + (chartW / Math.max(1, totalPoints - 1)) * i;
+                const pyElec = ePt ? (height - padding.bottom - ((ePt.power || 0) / maxPower) * chartH) : null;
+                const pyWater = wPt ? (height - padding.bottom - ((wPt.flow_rate || 0) / maxFlow) * chartH) : null;
+
+                iotState.activePoints.push({
+                    idx: i,
+                    x: px,
+                    elecY: pyElec,
+                    waterY: pyWater,
+                    time: ePt?.time || wPt?.time || '',
+                    power: ePt?.power || 0,
+                    voltage: ePt?.voltage || 220,
+                    current: ePt?.current || 0,
+                    reading: ePt?.reading || 0,
+                    flow_rate: wPt?.flow_rate || 0,
+                    water_reading: wPt?.reading || 0
+                });
+            }
+
             // 2. Vẽ Area Gradient và Đường cong cho Công Suất Điện (Amber)
             if (electricData.length > 0) {
                 const getX = (idx) => padding.left + (chartW / Math.max(1, electricData.length - 1)) * idx;
@@ -4336,7 +4384,7 @@
                 ctx.stroke();
                 ctx.shadowBlur = 0;
 
-                // Vẽ các điểm nút và in nhãn thời gian trục X
+                // Vẽ các điểm nút và nhãn thời gian trục X
                 ctx.fillStyle = '#f59e0b';
                 electricData.forEach((pt, idx) => {
                     const x = getX(idx);
@@ -4355,18 +4403,20 @@
                     }
                 });
 
-                // Hiệu ứng Pulse Glow cho điểm đo mới nhất
-                const lastIdx = electricData.length - 1;
-                const lastX = getX(lastIdx);
-                const lastY = getY(electricData[lastIdx].power);
-                ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
-                ctx.beginPath();
-                ctx.arc(lastX, lastY, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
-                ctx.fill();
+                // Hiệu ứng Pulse Glow cho điểm đo mới nhất (nếu không hover điểm khác)
+                if (highlightIdx === null) {
+                    const lastIdx = electricData.length - 1;
+                    const lastX = getX(lastIdx);
+                    const lastY = getY(electricData[lastIdx].power);
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(lastX, lastY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
 
             // 3. Vẽ Đường cong cho Lưu Lượng Nước (Cyan nét đứt)
@@ -4398,6 +4448,159 @@
                     ctx.fill();
                 });
             }
+
+            // 4. Hiển thị đường dóng dọc và hiệu ứng nổi bật khi rê chuột (Hover Crosshair)
+            if (highlightIdx !== null && iotState.activePoints[highlightIdx]) {
+                const hl = iotState.activePoints[highlightIdx];
+
+                // Đường dóng trục đứng
+                ctx.save();
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(hl.x, padding.top);
+                ctx.lineTo(hl.x, height - padding.bottom);
+                ctx.stroke();
+                ctx.restore();
+
+                // Điểm sáng nổi bật trên đường công suất điện
+                if (hl.elecY !== null) {
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.elecY, 10, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.elecY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.elecY, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Điểm sáng nổi bật trên đường lưu lượng nước
+                if (hl.waterY !== null) {
+                    ctx.fillStyle = 'rgba(6, 182, 212, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.waterY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#22d3ee';
+                    ctx.beginPath();
+                    ctx.arc(hl.x, hl.waterY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Huy hiệu mốc thời gian nổi bật ở trục hoành
+                if (hl.time) {
+                    ctx.save();
+                    const badgeW = 62;
+                    const badgeH = 18;
+                    const bx = hl.x - badgeW / 2;
+                    const by = height - padding.bottom + 4;
+
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(bx, by, badgeW, badgeH);
+
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(bx, by, badgeW, badgeH);
+
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(hl.time, hl.x, by + 13);
+                    ctx.restore();
+                }
+            }
+
+            // Gắn lắng nghe sự kiện rê chuột (chỉ gán 1 lần)
+            setupIotChartHoverEvents();
+        }
+
+        function setupIotChartHoverEvents() {
+            const canvas = document.getElementById('iot-realtime-chart-canvas');
+            const tooltip = document.getElementById('iot-chart-tooltip');
+            if (!canvas || canvas.dataset.hoverBound) return;
+            canvas.dataset.hoverBound = 'true';
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!iotState.activePoints || iotState.activePoints.length === 0) {
+                    if (tooltip) tooltip.classList.add('hidden');
+                    return;
+                }
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+
+                // Tìm điểm đo gần nhất với con trỏ chuột theo trục X
+                let closest = null;
+                let minDiff = Infinity;
+                iotState.activePoints.forEach((pt) => {
+                    const diff = Math.abs(pt.x - mouseX);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = pt;
+                    }
+                });
+
+                if (!closest || minDiff > 55) {
+                    if (tooltip) tooltip.classList.add('hidden');
+                    if (iotState.hoveredIndex !== null) {
+                        iotState.hoveredIndex = null;
+                        renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], null);
+                    }
+                    return;
+                }
+
+                // Điền dữ liệu vào Tooltip hiển thị
+                if (tooltip) {
+                    const timeEl = document.getElementById('iot-tt-time');
+                    const powerEl = document.getElementById('iot-tt-power');
+                    const waterEl = document.getElementById('iot-tt-water');
+                    const readingEl = document.getElementById('iot-tt-reading');
+
+                    if (timeEl) timeEl.textContent = closest.time || '--:--:--';
+                    if (powerEl) powerEl.textContent = `${Math.round(closest.power || 0)} W`;
+                    if (waterEl) waterEl.textContent = `${(closest.flow_rate || 0).toFixed(1)} L/m`;
+                    if (readingEl) readingEl.textContent = `${(closest.reading || 0).toFixed(2)} kWh`;
+
+                    tooltip.classList.remove('hidden');
+
+                    const container = canvas.parentElement;
+                    const containerW = container ? container.clientWidth : 750;
+                    const containerH = container ? container.clientHeight : 250;
+
+                    // Định vị tooltip thông minh tránh bị khuất ở mép phải
+                    let leftPos = closest.x + 16;
+                    if (leftPos + 185 > containerW) {
+                        leftPos = Math.max(10, closest.x - 195);
+                    }
+
+                    const targetY = (closest.elecY !== null ? closest.elecY : (closest.waterY !== null ? closest.waterY : 60)) - 45;
+                    const topPos = Math.max(10, Math.min(targetY, containerH - 120));
+
+                    tooltip.style.left = `${leftPos}px`;
+                    tooltip.style.top = `${topPos}px`;
+                }
+
+                if (iotState.hoveredIndex !== closest.idx) {
+                    iotState.hoveredIndex = closest.idx;
+                    renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], closest.idx);
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                if (tooltip) tooltip.classList.add('hidden');
+                if (iotState.hoveredIndex !== null) {
+                    iotState.hoveredIndex = null;
+                    renderIotCanvasChart(iotState.chartData.electricity || [], iotState.chartData.water || [], null);
+                }
+            });
         }
 
         async function quickInjectDemoData() {
