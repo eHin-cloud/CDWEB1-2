@@ -17,6 +17,7 @@ use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\RoomMatrixRealtimeController;
 use App\Http\Controllers\HotelReceptionController;
 use App\Http\Controllers\HousekeepingController;
+use App\Http\Controllers\EInvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +87,12 @@ Route::get('/home', function () {
 Route::get('/portal', function () {
     return view('index');
 })->name('smartroom.portal');
+
+// Cổng tra cứu Hóa đơn điện tử công khai (Nghị định 123/2020/NĐ-CP & TT 78)
+Route::get('/tra-cuu-hoa-don', [EInvoiceController::class, 'lookup'])->name('einvoice.lookup');
+Route::get('/tra-cuu-hoa-don/{id}/view', [EInvoiceController::class, 'viewRepresentation'])->name('einvoice.public.view');
+Route::get('/tra-cuu-hoa-don/{id}/pdf', [EInvoiceController::class, 'downloadPdf'])->name('einvoice.public.pdf');
+Route::get('/tra-cuu-hoa-don/{id}/xml', [EInvoiceController::class, 'downloadXml'])->name('einvoice.public.xml');
 
 Route::get('/smartroom/resident', [ResidentPortalController::class, 'index'])->name('smartroom.resident');
 Route::post('/smartroom/resident/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
@@ -160,6 +167,15 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
     Route::post('/smartroom/admin/profile', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update');
+
+    // Quản lý Chứng từ & Hóa đơn điện tử có mã Cơ quan Thuế (NĐ 123/2020/NĐ-CP & TT 78)
+    Route::get('/smartroom/admin/einvoices', [EInvoiceController::class, 'index'])->name('smartroom.admin.einvoices.index');
+    Route::get('/smartroom/admin/einvoices/{id}/view', [EInvoiceController::class, 'viewRepresentation'])->name('smartroom.admin.einvoices.view');
+    Route::get('/smartroom/admin/einvoices/{id}/pdf', [EInvoiceController::class, 'downloadPdf'])->name('smartroom.admin.einvoices.pdf');
+    Route::get('/smartroom/admin/einvoices/{id}/xml', [EInvoiceController::class, 'downloadXml'])->name('smartroom.admin.einvoices.xml');
+    Route::post('/smartroom/admin/einvoices/issue', [EInvoiceController::class, 'manualIssue'])->name('smartroom.admin.einvoices.issue');
+    Route::post('/smartroom/admin/einvoices/{id}/notify', [EInvoiceController::class, 'sendNotification'])->name('smartroom.admin.einvoices.notify');
+    Route::post('/smartroom/admin/einvoices/config', [EInvoiceController::class, 'updateConfig'])->name('smartroom.admin.einvoices.config');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');

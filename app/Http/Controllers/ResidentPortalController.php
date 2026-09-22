@@ -53,7 +53,7 @@ class ResidentPortalController extends Controller
         }
 
         $room = $resident->room;
-        $bills = UtilityRecord::with('room')
+        $bills = UtilityRecord::with(['room', 'electronicInvoice'])
             ->where('room_id', $room->id)
             ->orderByDesc('billing_month')
             ->get()
@@ -221,6 +221,9 @@ class ResidentPortalController extends Controller
             'total_amount' => $totalAmount,
             'payment_date' => $record->payment_date,
             'payment_method' => $record->payment_method,
+            'has_einvoice' => !empty($record->electronicInvoice),
+            'einvoice_lookup_code' => $record->electronicInvoice?->lookup_code,
+            'tax_authority_code' => $record->electronicInvoice?->tax_authority_code,
         ];
     }
 

@@ -128,9 +128,15 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-4 text-right">
-                                            <a href="{{ route('smartroom.resident.bills.qr', $bill->id) }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
-                                                <i class="fa-solid fa-qrcode"></i> QR
-                                            </a>
+                                            @if($bill->status === 'paid' && !empty($bill->has_einvoice))
+                                                <a href="{{ route('einvoice.public.view', $bill->einvoice_lookup_code) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20" title="Xem Hóa Đơn Điện Tử Đã Cấp Mã CQT">
+                                                    <i class="fa-solid fa-stamp"></i> HĐĐT CQT
+                                                </a>
+                                            @else
+                                                <a href="{{ route('smartroom.resident.bills.qr', $bill->id) }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+                                                    <i class="fa-solid fa-qrcode"></i> QR
+                                                </a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty

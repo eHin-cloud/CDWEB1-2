@@ -124,6 +124,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Xử lý sự cố (Tickets)
         Route::get('/tickets', [TenantAdminController::class, 'listTickets']);
         Route::put('/tickets/{id}', [TenantAdminController::class, 'updateTicket']);
+
+        // Hóa đơn điện tử có mã Cơ quan Thuế (NĐ 123/2020/NĐ-CP & TT 78)
+        Route::get('/einvoices', [\App\Http\Controllers\EInvoiceController::class, 'index']);
+        Route::post('/einvoices/issue', [\App\Http\Controllers\EInvoiceController::class, 'manualIssue']);
+        Route::post('/einvoices/config', [\App\Http\Controllers\EInvoiceController::class, 'updateConfig']);
+        Route::post('/einvoices/{id}/notify', [\App\Http\Controllers\EInvoiceController::class, 'sendNotification']);
     });
 
     // ------------------------------------------

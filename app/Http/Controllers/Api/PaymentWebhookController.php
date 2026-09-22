@@ -83,7 +83,21 @@ class PaymentWebhookController extends Controller
                 Log::info("Bill {$bill->id} successfully reconciled and marked as paid via webhook.");
             });
 
-            // Ở đây có thể tích hợp gửi tin nhắn Zalo/SMS biên nhận qua SMS service...
+            // Tự động phát hành Hóa đơn điện tử có mã Cơ quan Thuế (Nghị định 123/2020/NĐ-CP & TT 78)
+            try {
+                $eInvoiceService = app(\App\Services\EInvoice\EInvoiceService::class);
+                $tenantConfig = $bill->tenant?->einvoice_config ?? [];
+                $autoIssue = $tenantConfig['auto_issue_on_payment'] ?? true;
+                if ($autoIssue) {
+                    $invoice = $eInvoiceService->issueFromBill($bill->fresh(['tenant', 'room.building']));
+                    if ($invoice) {
+                        Log::info("Electronic Invoice #{$invoice->invoice_number} auto-issued for Bill #{$bill->id} with CQT code {$invoice->tax_authority_code}");
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to auto-issue e-invoice for Bill {$billId}: " . $e->getMessage());
+            }
+
             return response()->json(['success' => true, 'message' => 'Reconciliation successful']);
 
         } catch (\Exception $e) {

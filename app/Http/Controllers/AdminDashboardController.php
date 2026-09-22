@@ -1090,7 +1090,19 @@ class AdminDashboardController extends Controller
             $record->fresh()->only(['status', 'payment_date', 'payment_method'])
         );
 
-        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', 'Xác nhận thanh toán hóa đơn điện nước thành công!');
+        // Tự động phát hành Hóa đơn điện tử có mã Cơ quan Thuế theo NĐ 123/2020/NĐ-CP
+        try {
+            $eInvoiceService = app(\App\Services\EInvoice\EInvoiceService::class);
+            $tenant = $record->tenant ?? Tenant::find($record->tenant_id);
+            $autoIssue = $tenant?->einvoice_config['auto_issue_on_payment'] ?? true;
+            if ($autoIssue) {
+                $eInvoiceService->issueFromUtility($record->fresh(['room.building', 'tenant']));
+            }
+        } catch (\Throwable $e) {
+            Log::error("Failed to auto-issue e-invoice for utility record #{$id}: " . $e->getMessage());
+        }
+
+        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', 'Xác nhận thanh toán và tự động phát hành Hóa đơn điện tử có mã CQT thành công!');
     }
 
     public function printUtility($id)

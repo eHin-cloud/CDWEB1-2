@@ -32,6 +32,7 @@ class Tenant extends Model
         'kyc_verified_at',
         'premium_verified_at',
         'payment_gateway_config',
+        'einvoice_config',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Tenant extends Model
         'kyc_verified_at' => 'datetime',
         'premium_verified_at' => 'datetime',
         'payment_gateway_config' => 'array',
+        'einvoice_config' => 'array',
     ];
 
     protected static function booted(): void
@@ -99,5 +101,10 @@ class Tenant extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function electronicInvoices(): HasMany
+    {
+        return $this->hasMany(ElectronicInvoice::class);
     }
 }
