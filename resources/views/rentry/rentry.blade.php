@@ -96,11 +96,22 @@
                     </div>
                     
                     <!-- Integrated Search Bar -->
-                    <div class="relative w-full max-w-2xl mb-6 group/search">
+                    <div class="relative w-full max-w-2xl mb-4 group/search">
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
                         <div class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
                             <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
                             <input type="text" id="hero-search-input" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
+                        </div>
+
+                        <!-- AI / Smart Search Spell Correction (Did You Mean) Banner -->
+                        <div id="smart-search-suggestion" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between gap-2 animate-fade-in">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 shrink-0"></i>
+                                <span class="truncate">Có phải bạn muốn tìm: <button type="button" id="did-you-mean-btn" onclick="applySuggestedQuery()" class="font-extrabold underline hover:text-white decoration-emerald-400"></button>?</span>
+                            </div>
+                            <button type="button" onclick="closeSuggestion()" class="text-emerald-400 hover:text-white text-xs px-1 shrink-0">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -196,16 +207,35 @@
 
         <!-- Advanced Filters Dropdown (Expandable Filters) -->
         <div id="filter-drawer" class="hidden mt-6 bg-slate-900/35 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-md animate-fade-in">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/60">
+                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> Bộ lọc chi tiết
+                </span>
+                <button type="button" onclick="resetAllFilters()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-rose-500/10 transition-all">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+                </button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Price Range -->
+                <!-- Price Range Section -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giá phòng tối đa</label>
-                    <select id="filter-price" onchange="filterItems()" class="w-full px-4 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
-                        <option value="all">Tất cả khoảng giá</option>
-                        <option value="3000000">Dưới 3.000.000đ</option>
-                        <option value="4000000">Dưới 4.000.000đ</option>
-                        <option value="5000000">Dưới 5.000.000đ</option>
-                    </select>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Khoảng giá (VNĐ)</label>
+                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2 py-1 bg-[#0a0e17] border border-slate-800 rounded-lg text-slate-300 text-[10px] focus:border-emerald-500 focus:outline-none">
+                            <option value="all">Mức giá gợi ý</option>
+                            <option value="3000000">Dưới 3 triệu</option>
+                            <option value="4000000">Dưới 4 triệu</option>
+                            <option value="5000000">Dưới 5 triệu</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="filter-price-min" oninput="debouncedFilterItems()" placeholder="Tối thiểu (vd: 2000000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                        <span class="text-slate-600 text-xs font-bold">-</span>
+                        <input type="number" id="filter-price-max" oninput="debouncedFilterItems()" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                    </div>
+                    <div id="filter-price-error" class="hidden text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
+                    </div>
                 </div>
                 
                 <!-- Ratings -->

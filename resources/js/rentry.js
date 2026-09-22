@@ -1387,13 +1387,32 @@ function filterItems(options = {}) {
         rentyCurrentPage = 1;
     }
     
-    const query = document.getElementById('search-input').value;
+    const query = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
     const parsedSearch = parseNaturalSearch(query);
     const normalizedQuery = normalizeText(query);
-    const filterPrice = document.getElementById('filter-price').value;
-    const filterRating = document.getElementById('filter-rating').value;
+    const filterPrice = document.getElementById('filter-price') ? document.getElementById('filter-price').value : 'all';
+    const filterRating = document.getElementById('filter-rating') ? document.getElementById('filter-rating').value : 'all';
     const distanceSlider = document.getElementById('distance-slider');
     const filterDistance = distanceSlider ? parseFloat(distanceSlider.value) : 3.0;
+
+    // Kiểm tra khoảng giá tùy chỉnh Min - Max
+    const minPriceInput = document.getElementById('filter-price-min');
+    const maxPriceInput = document.getElementById('filter-price-max');
+    const priceErrorEl = document.getElementById('filter-price-error');
+
+    const minPriceVal = minPriceInput && minPriceInput.value.trim() !== '' ? parseInt(minPriceInput.value) : null;
+    const maxPriceVal = maxPriceInput && maxPriceInput.value.trim() !== '' ? parseInt(maxPriceInput.value) : null;
+
+    if (minPriceVal !== null && maxPriceVal !== null && minPriceVal > maxPriceVal) {
+        if (minPriceInput) minPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (maxPriceInput) maxPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (priceErrorEl) priceErrorEl.classList.remove('hidden');
+        return; // Dừng lọc khi khoảng giá không hợp lệ
+    } else {
+        if (minPriceInput) minPriceInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (maxPriceInput) maxPriceInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (priceErrorEl) priceErrorEl.classList.add('hidden');
+    }
 
     const petEl = document.getElementById('tag-pets');
     const petChecked = petEl ? petEl.checked : false;
@@ -1476,7 +1495,6 @@ function filterItems(options = {}) {
                     matchesAllTerms = (matchRatio === 1);
                 } else {
                     // Nếu từ khóa dài (từ 3 từ trở lên), cho phép khớp tối thiểu 70% số từ để hỗ trợ tìm tự do 
-                    // (ví dụ: "truong cao dang thu duc" vẫn khớp nếu phòng chỉ có "cao dang thu duc")
                     matchesAllTerms = (matchRatio >= 0.7);
                 }
             }
@@ -1485,8 +1503,13 @@ function filterItems(options = {}) {
         }
 
         let matchesPrice = true;
-        if (filterPrice !== 'all') {
-            matchesPrice = price <= parseInt(filterPrice);
+        if (minPriceVal !== null) {
+            matchesPrice = matchesPrice && (price >= minPriceVal);
+        }
+        if (maxPriceVal !== null) {
+            matchesPrice = matchesPrice && (price <= maxPriceVal);
+        } else if (filterPrice !== 'all') {
+            matchesPrice = matchesPrice && (price <= parseInt(filterPrice));
         }
         if (parsedSearch.maxPrice) {
             matchesPrice = matchesPrice && price <= parsedSearch.maxPrice;
@@ -1615,9 +1638,16 @@ function fetchLiveSmartSearch(query) {
                     didYouMeanBtn.textContent = data.did_you_mean;
                     didYouMeanBox.classList.remove('hidden');
                 }
+                const heroSugBox = document.getElementById('smart-search-suggestion');
+                const heroSugBtn = document.getElementById('did-you-mean-btn');
+                if (heroSugBox && heroSugBtn) {
+                    heroSugBtn.textContent = data.did_you_mean;
+                    heroSugBox.classList.remove('hidden');
+                }
             } else {
                 currentSmartSearchCorrection = null;
                 if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+                document.getElementById('smart-search-suggestion')?.classList.add('hidden');
             }
 
             // 2. Xử lý hiển thị danh sách phòng xem nhanh (Live Previews)
@@ -1753,6 +1783,214 @@ function handleSearchInput(e) {
     }
 }
 
+// ── BỔ SUNG: CÁC HÀM NÂNG CẤP BỘ LỌC THÔNG MINH CHO HUỲNH VĂN VĨNH EM ──
+
+let rentyFilterDebounceTimer = null;
+
+function debouncedFilterItems(delay = 300) {
+    clearTimeout(rentyFilterDebounceTimer);
+    rentyFilterDebounceTimer = setTimeout(() => {
+        filterItems();
+    }, delay);
+}
+window.debouncedFilterItems = debouncedFilterItems;
+
+function handlePricePresetChange(preset) {
+    const minInput = document.getElementById('filter-price-min');
+    const maxInput = document.getElementById('filter-price-max');
+    const priceSelect = document.getElementById('filter-price');
+
+    if (minInput) minInput.value = '';
+    if (maxInput) {
+        maxInput.value = preset !== 'all' ? preset : '';
+    }
+
+    // Xóa lỗi viền đỏ nếu có
+    const priceErrorEl = document.getElementById('filter-price-error');
+    if (minInput) minInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    if (maxInput) maxInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    if (priceErrorEl) priceErrorEl.classList.add('hidden');
+
+    filterItems();
+}
+window.handlePricePresetChange = handlePricePresetChange;
+
+function resetAllFilters() {
+    // 1. Reset các ô tìm kiếm
+    const searchInput = document.getElementById('search-input');
+    const heroInput = document.getElementById('hero-search-input');
+    if (searchInput) searchInput.value = '';
+    if (heroInput) heroInput.value = '';
+
+    // 2. Reset khoảng giá
+    const filterPrice = document.getElementById('filter-price');
+    const minInput = document.getElementById('filter-price-min');
+    const maxInput = document.getElementById('filter-price-max');
+    const priceErrorEl = document.getElementById('filter-price-error');
+    if (filterPrice) filterPrice.value = 'all';
+    if (minInput) {
+        minInput.value = '';
+        minInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    }
+    if (maxInput) {
+        maxInput.value = '';
+        maxInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    }
+    if (priceErrorEl) priceErrorEl.classList.add('hidden');
+
+    // 3. Reset đánh giá
+    const filterRating = document.getElementById('filter-rating');
+    if (filterRating) filterRating.value = 'all';
+
+    // 4. Reset khoảng cách Slider
+    const distSlider = document.getElementById('distance-slider');
+    if (distSlider) {
+        distSlider.value = 3.0;
+        if (typeof updateDistanceSlider === 'function') {
+            updateDistanceSlider(3.0);
+        }
+    }
+
+    // 5. Reset các tiện ích checkbox & visual buttons
+    ['pets', 'loft', 'balcony', 'wc'].forEach(key => {
+        const checkbox = document.getElementById(`tag-${key}`);
+        if (checkbox) checkbox.checked = false;
+        const vbtn = document.getElementById(`vbtn-${key}`);
+        if (vbtn) vbtn.classList.remove('active');
+    });
+
+    // 6. Reset công tắc ẩn phòng đã thuê
+    const hideRented = document.getElementById('hide-rented-toggle');
+    if (hideRented) hideRented.checked = false;
+
+    // 7. Ẩn gợi ý sửa lỗi & live results
+    closeSuggestion();
+    document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+    document.getElementById('renty-live-results-section')?.classList.add('hidden');
+
+    // 8. Cập nhật lại URL sạch
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // 9. Chạy lại bộ lọc hiển thị đầy đủ
+    filterItems();
+}
+window.resetAllFilters = resetAllFilters;
+
+function applySuggestedQuery() {
+    const btn = document.getElementById('did-you-mean-btn') || document.getElementById('renty-did-you-mean-btn');
+    const suggested = btn ? btn.textContent.trim() : currentSmartSearchCorrection;
+    if (!suggested) return;
+
+    const navInput = document.getElementById('search-input');
+    const heroInput = document.getElementById('hero-search-input');
+    if (navInput) navInput.value = suggested;
+    if (heroInput) heroInput.value = suggested;
+
+    closeSuggestion();
+    document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+
+    filterItems();
+    fetchLiveSmartSearch(suggested);
+}
+window.applySuggestedQuery = applySuggestedQuery;
+
+function closeSuggestion() {
+    document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+}
+window.closeSuggestion = closeSuggestion;
+
+function syncFilterToUrl() {
+    if (typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
+    const params = new URLSearchParams();
+    const query = document.getElementById('search-input')?.value.trim() || document.getElementById('hero-search-input')?.value.trim();
+    if (query) params.set('q', query);
+
+    const minVal = document.getElementById('filter-price-min')?.value.trim();
+    if (minVal) params.set('min_price', minVal);
+
+    const maxVal = document.getElementById('filter-price-max')?.value.trim();
+    if (maxVal) params.set('max_price', maxVal);
+
+    const rating = document.getElementById('filter-rating')?.value;
+    if (rating && rating !== 'all') params.set('rating', rating);
+
+    const dist = document.getElementById('distance-slider')?.value;
+    if (dist && parseFloat(dist) < 3.0) params.set('distance', dist);
+
+    if (document.getElementById('tag-pets')?.checked) params.set('pets', '1');
+    if (document.getElementById('tag-loft')?.checked) params.set('loft', '1');
+    if (document.getElementById('tag-balcony')?.checked) params.set('balcony', '1');
+    if (document.getElementById('tag-wc')?.checked) params.set('wc', '1');
+
+    const newSearch = params.toString();
+    const newUrl = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+    window.history.replaceState({}, '', newUrl);
+}
+window.syncFilterToUrl = syncFilterToUrl;
+
+function initFilterFromUrl() {
+    if (typeof window === 'undefined' || !window.location.search) return;
+    const params = new URLSearchParams(window.location.search);
+    let hasParam = false;
+
+    const q = params.get('q') || params.get('search');
+    if (q) {
+        const hero = document.getElementById('hero-search-input');
+        const nav = document.getElementById('search-input');
+        if (hero) hero.value = q;
+        if (nav) nav.value = q;
+        hasParam = true;
+    }
+
+    const minP = params.get('min_price');
+    if (minP && document.getElementById('filter-price-min')) {
+        document.getElementById('filter-price-min').value = minP;
+        hasParam = true;
+    }
+
+    const maxP = params.get('max_price');
+    if (maxP && document.getElementById('filter-price-max')) {
+        document.getElementById('filter-price-max').value = maxP;
+        hasParam = true;
+    }
+
+    const rating = params.get('rating');
+    if (rating && document.getElementById('filter-rating')) {
+        document.getElementById('filter-rating').value = rating;
+        hasParam = true;
+    }
+
+    const dist = params.get('distance');
+    if (dist && document.getElementById('distance-slider')) {
+        document.getElementById('distance-slider').value = dist;
+        if (typeof updateDistanceSlider === 'function') updateDistanceSlider(dist);
+        hasParam = true;
+    }
+
+    ['pets', 'loft', 'balcony', 'wc'].forEach(tag => {
+        if (params.get(tag) === '1') {
+            const el = document.getElementById(`tag-${tag}`);
+            if (el) el.checked = true;
+            const vbtn = document.getElementById(`vbtn-${tag}`);
+            if (vbtn) vbtn.classList.add('active');
+            hasParam = true;
+        }
+    });
+
+    if (hasParam) {
+        const drawer = document.getElementById('filter-drawer');
+        if (drawer && (minP || maxP || rating || dist)) {
+            drawer.classList.remove('hidden');
+        }
+        if (typeof filterItems === 'function') {
+            filterItems({ keepSkeleton: true });
+        }
+    }
+}
+window.initFilterFromUrl = initFilterFromUrl;
+
 function initSearchListeners() {
     document.addEventListener('click', (event) => {
         const panel = document.getElementById('renty-search-panel');
@@ -1760,6 +1998,9 @@ function initSearchListeners() {
             blurRentySearch();
         }
     });
+
+    // Tự động khôi phục bộ lọc từ URL param khi tải trang
+    initFilterFromUrl();
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSearchListeners);
