@@ -2,7 +2,25 @@
     $currentTab = request()->query('tab', 'dashboard-section');
     $isDashboardRoute = request()->routeIs('smartroom.admin');
     $isLandlord = Auth::user()?->isLandlord();
-    $sidebarContactCount = \App\Models\ContactRequest::where('status', 'pending')->count();
+
+    $user = Auth::user();
+    $tenantId = $user?->tenant_id;
+    if (!$tenantId && $user && !$user->isAdmin()) {
+        $tenantId = \App\Models\Tenant::where('email', 'contact@smartroom-caugiay.vn')->value('id')
+            ?? \App\Models\Tenant::query()->orderBy('id')->value('id');
+    }
+
+    if (isset($contactRequestStats['pending'])) {
+        $sidebarContactCount = (int) $contactRequestStats['pending'];
+    } elseif ($tenantId) {
+        $sidebarContactCount = \App\Models\ContactRequest::whereHas('room', function($q) use ($tenantId) {
+            $q->where('tenant_id', $tenantId);
+        })->where('status', 'pending')->count();
+    } elseif ($user && $user->isAdmin()) {
+        $sidebarContactCount = \App\Models\ContactRequest::where('status', 'pending')->count();
+    } else {
+        $sidebarContactCount = 0;
+    }
     $userInitials = '';
     $userName = '';
     $userRoleLabel = 'Quản trị viên';
