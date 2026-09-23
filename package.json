@@ -2,7 +2,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && node -e \"import('fs').then(fs => { if (!fs.existsSync('dist')) { fs.mkdirSync('dist'); fs.writeFileSync('dist/index.html', '<!DOCTYPE html><html><head><meta http-equiv=\\\"refresh\\\" content=\\\"0;url=/\\\"></head><body>Redirecting...</body></html>'); } })\"",
         "dev": "vite"
     },
     "devDependencies": {
