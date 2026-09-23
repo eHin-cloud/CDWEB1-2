@@ -1387,13 +1387,32 @@ function filterItems(options = {}) {
         rentyCurrentPage = 1;
     }
     
-    const query = document.getElementById('search-input').value;
+    const query = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
     const parsedSearch = parseNaturalSearch(query);
     const normalizedQuery = normalizeText(query);
-    const filterPrice = document.getElementById('filter-price').value;
-    const filterRating = document.getElementById('filter-rating').value;
+    const filterPrice = document.getElementById('filter-price') ? document.getElementById('filter-price').value : 'all';
+    const filterRating = document.getElementById('filter-rating') ? document.getElementById('filter-rating').value : 'all';
     const distanceSlider = document.getElementById('distance-slider');
     const filterDistance = distanceSlider ? parseFloat(distanceSlider.value) : 3.0;
+
+    // Kiểm tra khoảng giá tùy chỉnh Min - Max
+    const minPriceInput = document.getElementById('filter-price-min');
+    const maxPriceInput = document.getElementById('filter-price-max');
+    const priceErrorEl = document.getElementById('filter-price-error');
+
+    const minPriceVal = minPriceInput && minPriceInput.value.trim() !== '' ? parseInt(minPriceInput.value) : null;
+    const maxPriceVal = maxPriceInput && maxPriceInput.value.trim() !== '' ? parseInt(maxPriceInput.value) : null;
+
+    if (minPriceVal !== null && maxPriceVal !== null && minPriceVal > maxPriceVal) {
+        if (minPriceInput) minPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (maxPriceInput) maxPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (priceErrorEl) priceErrorEl.classList.remove('hidden');
+        return; // Dừng lọc khi khoảng giá không hợp lệ
+    } else {
+        if (minPriceInput) minPriceInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (maxPriceInput) maxPriceInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (priceErrorEl) priceErrorEl.classList.add('hidden');
+    }
 
     const petEl = document.getElementById('tag-pets');
     const petChecked = petEl ? petEl.checked : false;
@@ -1476,7 +1495,6 @@ function filterItems(options = {}) {
                     matchesAllTerms = (matchRatio === 1);
                 } else {
                     // Nếu từ khóa dài (từ 3 từ trở lên), cho phép khớp tối thiểu 70% số từ để hỗ trợ tìm tự do 
-                    // (ví dụ: "truong cao dang thu duc" vẫn khớp nếu phòng chỉ có "cao dang thu duc")
                     matchesAllTerms = (matchRatio >= 0.7);
                 }
             }
@@ -1485,8 +1503,13 @@ function filterItems(options = {}) {
         }
 
         let matchesPrice = true;
-        if (filterPrice !== 'all') {
-            matchesPrice = price <= parseInt(filterPrice);
+        if (minPriceVal !== null) {
+            matchesPrice = matchesPrice && (price >= minPriceVal);
+        }
+        if (maxPriceVal !== null) {
+            matchesPrice = matchesPrice && (price <= maxPriceVal);
+        } else if (filterPrice !== 'all') {
+            matchesPrice = matchesPrice && (price <= parseInt(filterPrice));
         }
         if (parsedSearch.maxPrice) {
             matchesPrice = matchesPrice && price <= parsedSearch.maxPrice;
@@ -1615,9 +1638,16 @@ function fetchLiveSmartSearch(query) {
                     didYouMeanBtn.textContent = data.did_you_mean;
                     didYouMeanBox.classList.remove('hidden');
                 }
+                const heroSugBox = document.getElementById('smart-search-suggestion');
+                const heroSugBtn = document.getElementById('did-you-mean-btn');
+                if (heroSugBox && heroSugBtn) {
+                    heroSugBtn.textContent = data.did_you_mean;
+                    heroSugBox.classList.remove('hidden');
+                }
             } else {
                 currentSmartSearchCorrection = null;
                 if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+                document.getElementById('smart-search-suggestion')?.classList.add('hidden');
             }
 
             // 2. Xử lý hiển thị danh sách phòng xem nhanh (Live Previews)
@@ -1753,6 +1783,214 @@ function handleSearchInput(e) {
     }
 }
 
+// ── BỔ SUNG: CÁC HÀM NÂNG CẤP BỘ LỌC THÔNG MINH CHO HUỲNH VĂN VĨNH EM ──
+
+let rentyFilterDebounceTimer = null;
+
+function debouncedFilterItems(delay = 300) {
+    clearTimeout(rentyFilterDebounceTimer);
+    rentyFilterDebounceTimer = setTimeout(() => {
+        filterItems();
+    }, delay);
+}
+window.debouncedFilterItems = debouncedFilterItems;
+
+function handlePricePresetChange(preset) {
+    const minInput = document.getElementById('filter-price-min');
+    const maxInput = document.getElementById('filter-price-max');
+    const priceSelect = document.getElementById('filter-price');
+
+    if (minInput) minInput.value = '';
+    if (maxInput) {
+        maxInput.value = preset !== 'all' ? preset : '';
+    }
+
+    // Xóa lỗi viền đỏ nếu có
+    const priceErrorEl = document.getElementById('filter-price-error');
+    if (minInput) minInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    if (maxInput) maxInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    if (priceErrorEl) priceErrorEl.classList.add('hidden');
+
+    filterItems();
+}
+window.handlePricePresetChange = handlePricePresetChange;
+
+function resetAllFilters() {
+    // 1. Reset các ô tìm kiếm
+    const searchInput = document.getElementById('search-input');
+    const heroInput = document.getElementById('hero-search-input');
+    if (searchInput) searchInput.value = '';
+    if (heroInput) heroInput.value = '';
+
+    // 2. Reset khoảng giá
+    const filterPrice = document.getElementById('filter-price');
+    const minInput = document.getElementById('filter-price-min');
+    const maxInput = document.getElementById('filter-price-max');
+    const priceErrorEl = document.getElementById('filter-price-error');
+    if (filterPrice) filterPrice.value = 'all';
+    if (minInput) {
+        minInput.value = '';
+        minInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    }
+    if (maxInput) {
+        maxInput.value = '';
+        maxInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    }
+    if (priceErrorEl) priceErrorEl.classList.add('hidden');
+
+    // 3. Reset đánh giá
+    const filterRating = document.getElementById('filter-rating');
+    if (filterRating) filterRating.value = 'all';
+
+    // 4. Reset khoảng cách Slider
+    const distSlider = document.getElementById('distance-slider');
+    if (distSlider) {
+        distSlider.value = 3.0;
+        if (typeof updateDistanceSlider === 'function') {
+            updateDistanceSlider(3.0);
+        }
+    }
+
+    // 5. Reset các tiện ích checkbox & visual buttons
+    ['pets', 'loft', 'balcony', 'wc'].forEach(key => {
+        const checkbox = document.getElementById(`tag-${key}`);
+        if (checkbox) checkbox.checked = false;
+        const vbtn = document.getElementById(`vbtn-${key}`);
+        if (vbtn) vbtn.classList.remove('active');
+    });
+
+    // 6. Reset công tắc ẩn phòng đã thuê
+    const hideRented = document.getElementById('hide-rented-toggle');
+    if (hideRented) hideRented.checked = false;
+
+    // 7. Ẩn gợi ý sửa lỗi & live results
+    closeSuggestion();
+    document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+    document.getElementById('renty-live-results-section')?.classList.add('hidden');
+
+    // 8. Cập nhật lại URL sạch
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // 9. Chạy lại bộ lọc hiển thị đầy đủ
+    filterItems();
+}
+window.resetAllFilters = resetAllFilters;
+
+function applySuggestedQuery() {
+    const btn = document.getElementById('did-you-mean-btn') || document.getElementById('renty-did-you-mean-btn');
+    const suggested = btn ? btn.textContent.trim() : currentSmartSearchCorrection;
+    if (!suggested) return;
+
+    const navInput = document.getElementById('search-input');
+    const heroInput = document.getElementById('hero-search-input');
+    if (navInput) navInput.value = suggested;
+    if (heroInput) heroInput.value = suggested;
+
+    closeSuggestion();
+    document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+
+    filterItems();
+    fetchLiveSmartSearch(suggested);
+}
+window.applySuggestedQuery = applySuggestedQuery;
+
+function closeSuggestion() {
+    document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+}
+window.closeSuggestion = closeSuggestion;
+
+function syncFilterToUrl() {
+    if (typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
+    const params = new URLSearchParams();
+    const query = document.getElementById('search-input')?.value.trim() || document.getElementById('hero-search-input')?.value.trim();
+    if (query) params.set('q', query);
+
+    const minVal = document.getElementById('filter-price-min')?.value.trim();
+    if (minVal) params.set('min_price', minVal);
+
+    const maxVal = document.getElementById('filter-price-max')?.value.trim();
+    if (maxVal) params.set('max_price', maxVal);
+
+    const rating = document.getElementById('filter-rating')?.value;
+    if (rating && rating !== 'all') params.set('rating', rating);
+
+    const dist = document.getElementById('distance-slider')?.value;
+    if (dist && parseFloat(dist) < 3.0) params.set('distance', dist);
+
+    if (document.getElementById('tag-pets')?.checked) params.set('pets', '1');
+    if (document.getElementById('tag-loft')?.checked) params.set('loft', '1');
+    if (document.getElementById('tag-balcony')?.checked) params.set('balcony', '1');
+    if (document.getElementById('tag-wc')?.checked) params.set('wc', '1');
+
+    const newSearch = params.toString();
+    const newUrl = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+    window.history.replaceState({}, '', newUrl);
+}
+window.syncFilterToUrl = syncFilterToUrl;
+
+function initFilterFromUrl() {
+    if (typeof window === 'undefined' || !window.location.search) return;
+    const params = new URLSearchParams(window.location.search);
+    let hasParam = false;
+
+    const q = params.get('q') || params.get('search');
+    if (q) {
+        const hero = document.getElementById('hero-search-input');
+        const nav = document.getElementById('search-input');
+        if (hero) hero.value = q;
+        if (nav) nav.value = q;
+        hasParam = true;
+    }
+
+    const minP = params.get('min_price');
+    if (minP && document.getElementById('filter-price-min')) {
+        document.getElementById('filter-price-min').value = minP;
+        hasParam = true;
+    }
+
+    const maxP = params.get('max_price');
+    if (maxP && document.getElementById('filter-price-max')) {
+        document.getElementById('filter-price-max').value = maxP;
+        hasParam = true;
+    }
+
+    const rating = params.get('rating');
+    if (rating && document.getElementById('filter-rating')) {
+        document.getElementById('filter-rating').value = rating;
+        hasParam = true;
+    }
+
+    const dist = params.get('distance');
+    if (dist && document.getElementById('distance-slider')) {
+        document.getElementById('distance-slider').value = dist;
+        if (typeof updateDistanceSlider === 'function') updateDistanceSlider(dist);
+        hasParam = true;
+    }
+
+    ['pets', 'loft', 'balcony', 'wc'].forEach(tag => {
+        if (params.get(tag) === '1') {
+            const el = document.getElementById(`tag-${tag}`);
+            if (el) el.checked = true;
+            const vbtn = document.getElementById(`vbtn-${tag}`);
+            if (vbtn) vbtn.classList.add('active');
+            hasParam = true;
+        }
+    });
+
+    if (hasParam) {
+        const drawer = document.getElementById('filter-drawer');
+        if (drawer && (minP || maxP || rating || dist)) {
+            drawer.classList.remove('hidden');
+        }
+        if (typeof filterItems === 'function') {
+            filterItems({ keepSkeleton: true });
+        }
+    }
+}
+window.initFilterFromUrl = initFilterFromUrl;
+
 function initSearchListeners() {
     document.addEventListener('click', (event) => {
         const panel = document.getElementById('renty-search-panel');
@@ -1760,6 +1998,9 @@ function initSearchListeners() {
             blurRentySearch();
         }
     });
+
+    // Tự động khôi phục bộ lọc từ URL param khi tải trang
+    initFilterFromUrl();
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSearchListeners);
@@ -3548,12 +3789,43 @@ window.sendRentyChatbotMessage = sendRentyChatbotMessage;
 // ── Room Comparison Feature ──────────────────────────────────────────
 let rentyCompareList = [];
 
+// Khôi phục trạng thái so sánh từ sessionStorage nếu có
+try {
+    const saved = sessionStorage.getItem('renty_compare_list');
+    if (saved) {
+        rentyCompareList = JSON.parse(saved).map(id => parseInt(id)).filter(Boolean);
+    }
+} catch (e) {
+    rentyCompareList = [];
+}
+
+function saveCompareState() {
+    try {
+        sessionStorage.setItem('renty_compare_list', JSON.stringify(rentyCompareList));
+    } catch (e) {}
+}
+
+function syncCompareCheckboxes() {
+    document.querySelectorAll('.compare-checkbox').forEach(cb => {
+        const row = cb.closest('[data-id]') || cb.closest('.room-card');
+        const rId = parseInt(cb.getAttribute('data-room-id') || (row ? row.getAttribute('data-id') : null));
+        if (rId && rentyCompareList.includes(rId)) {
+            cb.checked = true;
+        } else {
+            cb.checked = false;
+        }
+    });
+}
+
 function toggleCompare(roomId, checkbox) {
     roomId = parseInt(roomId);
-    if (checkbox.checked) {
+    if (!roomId) return;
+
+    if (checkbox && checkbox.checked) {
         if (rentyCompareList.length >= 3) {
             checkbox.checked = false;
-            alert('Bạn chỉ có thể so sánh tối đa 3 phòng trọ cùng lúc.');
+            const notify = window.showRentyToast || alert;
+            notify('Bạn chỉ có thể so sánh tối đa 3 phòng cùng một lúc.', 'warning', 'Giới hạn so sánh');
             return;
         }
         if (!rentyCompareList.includes(roomId)) {
@@ -3562,12 +3834,39 @@ function toggleCompare(roomId, checkbox) {
     } else {
         rentyCompareList = rentyCompareList.filter(id => id !== roomId);
     }
+
+    saveCompareState();
     updateCompareBar();
 }
 window.toggleCompare = toggleCompare;
 
+function removeCompareItem(roomId) {
+    roomId = parseInt(roomId);
+    rentyCompareList = rentyCompareList.filter(id => id !== roomId);
+    saveCompareState();
+    updateCompareBar();
+
+    // Bỏ check ở card bên ngoài
+    document.querySelectorAll('.compare-checkbox').forEach(cb => {
+        if (parseInt(cb.getAttribute('onchange')?.match(/\d+/)?.[0]) === roomId) {
+            cb.checked = false;
+        }
+    });
+
+    if (rentyCompareList.length < 2) {
+        hideCompareModal();
+        if (window.showRentyToast) {
+            window.showRentyToast('Đã xóa phòng. Danh sách hiện còn dưới 2 phòng nên bảng so sánh đã đóng.', 'warning', 'Bảng so sánh');
+        }
+    } else {
+        showCompareModal();
+    }
+}
+window.removeCompareItem = removeCompareItem;
+
 function clearCompareList() {
     rentyCompareList = [];
+    saveCompareState();
     document.querySelectorAll('.compare-checkbox').forEach(cb => cb.checked = false);
     updateCompareBar();
 }
@@ -3598,23 +3897,60 @@ function showCompareModal() {
     const mockRooms = window.rentyRoomsData || {};
     const roomsToCompare = rentyCompareList.map(id => mockRooms[id]).filter(Boolean);
 
-    if (roomsToCompare.length === 0) {
-        alert('Vui lòng chọn ít nhất 1 phòng trọ để so sánh.');
+    // Kịch bản xử lý lỗi theo Báo cáo: Cần tối thiểu 2 phòng để so sánh
+    if (roomsToCompare.length < 2) {
+        const notify = window.showRentyToast || alert;
+        notify('Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối chiếu.', 'warning', 'Cần thêm phòng so sánh');
         return;
     }
+
+    // Tính toán các giá trị tối ưu để highlight
+    const prices = roomsToCompare.map(r => Number(r.price) || 0).filter(p => p > 0);
+    const minPrice = prices.length ? Math.min(...prices) : null;
+
+    const areas = roomsToCompare.map(r => Number(r.area) || 0).filter(a => a > 0);
+    const maxArea = areas.length ? Math.max(...areas) : null;
+
+    const ratings = roomsToCompare.map(r => Number(r.rating) || 0).filter(rt => rt > 0);
+    const maxRating = ratings.length ? Math.max(...ratings) : null;
+
+    // Reset AI Box
+    const aiBox = document.getElementById('compare-ai-box');
+    if (aiBox) aiBox.classList.add('hidden');
 
     // Generate comparison table HTML
     let html = `
         <thead>
-            <tr class="bg-slate-900/80 border-b border-slate-800">
-                <th class="px-5 py-4 font-bold text-slate-400 w-1/4">Thông số / Tiêu chí</th>
+            <tr class="bg-slate-900/90 border-b border-slate-800">
+                <th class="px-5 py-4 font-bold text-slate-400 w-1/4 text-xs uppercase tracking-wider">Tiêu chí đối chiếu</th>
     `;
     roomsToCompare.forEach(room => {
+        const isBestPrice = minPrice && Number(room.price) === minPrice;
+        const isLargest = maxArea && Number(room.area) === maxArea;
+        const isTopRated = maxRating && Number(room.rating) === maxRating;
+
+        let badges = '';
+        if (isBestPrice) {
+            badges += `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">💰 Giá tốt nhất</span> `;
+        }
+        if (isLargest) {
+            badges += `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">📐 Rộng nhất</span> `;
+        }
+        if (isTopRated) {
+            badges += `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">⭐ Đánh giá cao nhất</span>`;
+        }
+
         html += `
-            <th class="px-5 py-4 font-bold text-center w-[25%]">
-                <div class="flex flex-col items-center gap-2">
+            <th class="px-5 py-4 font-bold text-center w-[25%] relative group">
+                <button type="button" onclick="removeCompareItem(${room.id})" title="Bỏ phòng này" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-slate-900/80 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all opacity-80 hover:opacity-100 shadow-sm">
+                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                </button>
+                <div class="flex flex-col items-center gap-2 mt-1">
                     <img src="${room.cover_image}" alt="Ảnh ${room.room_number}" class="w-24 h-16 object-cover rounded-xl border border-slate-800 shadow-md">
-                    <span class="block text-xs text-slate-200 font-extrabold line-clamp-1">${room.title}</span>
+                    <span class="block text-xs text-slate-100 font-extrabold line-clamp-1">${room.title}</span>
+                    <div class="flex flex-wrap items-center justify-center gap-1 mt-0.5">
+                        ${badges}
+                    </div>
                 </div>
             </th>
         `;
@@ -3624,12 +3960,13 @@ function showCompareModal() {
         </thead>
         <tbody class="divide-y divide-slate-900/60 bg-slate-950/10">
             <!-- Row 1: Giá thuê -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Giá thuê / tháng</td>
     `;
     roomsToCompare.forEach(room => {
+        const isBest = minPrice && Number(room.price) === minPrice;
         html += `
-            <td class="px-5 py-3.5 text-center font-extrabold text-emerald-400 text-sm">
+            <td class="px-5 py-3.5 text-center font-extrabold ${isBest ? 'text-emerald-400 text-base font-black' : 'text-slate-200 text-sm'}">
                 ${formatCurrency(room.price)}
             </td>
         `;
@@ -3637,12 +3974,13 @@ function showCompareModal() {
     html += `
             </tr>
             <!-- Row 2: Diện tích -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Diện tích</td>
     `;
     roomsToCompare.forEach(room => {
+        const isBest = maxArea && Number(room.area) === maxArea;
         html += `
-            <td class="px-5 py-3.5 text-center font-bold text-slate-200">
+            <td class="px-5 py-3.5 text-center font-bold ${isBest ? 'text-indigo-300' : 'text-slate-300'}">
                 ${room.area_text || room.area + ' m²'}
             </td>
         `;
@@ -3650,37 +3988,37 @@ function showCompareModal() {
     html += `
             </tr>
             <!-- Row 3: Khoảng cách -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Khoảng cách</td>
     `;
     roomsToCompare.forEach(room => {
         html += `
             <td class="px-5 py-3.5 text-center text-slate-300 font-semibold">
-                ${room.distance} km
+                ${room.distance || 1.2} km
             </td>
         `;
     });
     html += `
             </tr>
             <!-- Row 4: Điểm đánh giá -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Điểm đánh giá</td>
     `;
     roomsToCompare.forEach(room => {
         html += `
             <td class="px-5 py-3.5 text-center font-extrabold text-amber-400">
-                <i class="fa-solid fa-star text-[10px] mr-1"></i>${room.rating} / 5
+                <i class="fa-solid fa-star text-[10px] mr-1"></i>${room.rating || 5} / 5
             </td>
         `;
     });
     html += `
             </tr>
             <!-- Row 5: Thú cưng -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Nuôi thú cưng</td>
     `;
     roomsToCompare.forEach(room => {
-        const hasPets = room.pets === 'true';
+        const hasPets = room.pets === 'true' || room.pets === true;
         html += `
             <td class="px-5 py-3.5 text-center">
                 <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasPets ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
@@ -3692,11 +4030,11 @@ function showCompareModal() {
     html += `
             </tr>
             <!-- Row 6: Gác lửng -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Gác lửng</td>
     `;
     roomsToCompare.forEach(room => {
-        const hasLoft = room.loft === 'true';
+        const hasLoft = room.loft === 'true' || room.loft === true;
         html += `
             <td class="px-5 py-3.5 text-center">
                 <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasLoft ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
@@ -3708,11 +4046,11 @@ function showCompareModal() {
     html += `
             </tr>
             <!-- Row 7: Ban công -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Ban công</td>
     `;
     roomsToCompare.forEach(room => {
-        const hasBalcony = room.balcony === 'true';
+        const hasBalcony = room.balcony === 'true' || room.balcony === true;
         html += `
             <td class="px-5 py-3.5 text-center">
                 <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasBalcony ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
@@ -3724,11 +4062,11 @@ function showCompareModal() {
     html += `
             </tr>
             <!-- Row 8: Nhà vệ sinh -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Vệ sinh (WC)</td>
     `;
     roomsToCompare.forEach(room => {
-        const hasWc = room.wc === 'true';
+        const hasWc = room.wc === 'true' || room.wc === true;
         html += `
             <td class="px-5 py-3.5 text-center">
                 <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasWc ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
@@ -3740,26 +4078,26 @@ function showCompareModal() {
     html += `
             </tr>
             <!-- Row 9: Đánh giá chủ trọ -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-3.5 font-bold text-slate-400">Đánh giá chủ trọ</td>
     `;
     roomsToCompare.forEach(room => {
         html += `
             <td class="px-5 py-3.5 text-center text-[10px] font-semibold text-slate-350">
-                ${room.owner}
+                ${room.owner || 'Chủ trọ thân thiện'}
             </td>
         `;
     });
     html += `
             </tr>
             <!-- Row 10: Xem chi tiết -->
-            <tr class="hover:bg-slate-900/20 transition-all">
+            <tr class="hover:bg-slate-900/30 transition-all">
                 <td class="px-5 py-4 font-bold text-slate-400">Thao tác</td>
     `;
     roomsToCompare.forEach(room => {
         html += `
             <td class="px-5 py-4 text-center">
-                <a href="/renty/room/${room.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-emerald-500/40 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold transition-all">
+                <a href="/renty/room/${room.id}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold transition-all shadow-md">
                     Xem review <i class="fa-solid fa-angle-right"></i>
                 </a>
             </td>
@@ -3784,5 +4122,58 @@ function hideCompareModal() {
     }
 }
 window.hideCompareModal = hideCompareModal;
+
+function generateAiComparison() {
+    const mockRooms = window.rentyRoomsData || {};
+    const roomsToCompare = rentyCompareList.map(id => mockRooms[id]).filter(Boolean);
+    const aiBox = document.getElementById('compare-ai-box');
+    const aiContent = document.getElementById('compare-ai-content');
+    const aiBtn = document.getElementById('compare-ai-btn');
+
+    if (!aiBox || !aiContent || roomsToCompare.length < 2) return;
+
+    aiBox.classList.remove('hidden');
+    aiContent.innerHTML = `<div class="flex items-center gap-2 text-emerald-400 py-1"><i class="fa-solid fa-circle-notch fa-spin text-xs"></i> <span>Đang tổng hợp thông số và đối chiếu AI...</span></div>`;
+
+    setTimeout(() => {
+        // Phân tích logic so sánh
+        const sortedByPrice = [...roomsToCompare].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+        const cheapest = sortedByPrice[0];
+        const mostExpensive = sortedByPrice[sortedByPrice.length - 1];
+
+        const sortedByArea = [...roomsToCompare].sort((a, b) => (Number(b.area) || 0) - (Number(a.area) || 0));
+        const largest = sortedByArea[0];
+
+        const priceDiff = Math.abs((Number(mostExpensive.price) || 0) - (Number(cheapest.price) || 0));
+
+        let insightHtml = `
+            <div class="space-y-1.5">
+                <p>💡 <strong>Lời khuyên lựa chọn từ Renty AI:</strong></p>
+                <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                    <li><strong>Lựa chọn kinh tế nhất:</strong> <span class="text-emerald-400 font-bold">${cheapest.title}</span> với mức giá chỉ <strong>${formatCurrency(cheapest.price)}/tháng</strong> (tiết kiệm hơn <em>${formatCurrency(priceDiff)}/tháng</em> so với phòng cao nhất).</li>
+                    <li><strong>Không gian rộng rãi nhất:</strong> <span class="text-indigo-300 font-bold">${largest.title}</span> với diện tích <strong>${largest.area_text || largest.area + ' m²'}</strong>, rất thích hợp ở từ 2 người hoặc cần không gian học tập, làm việc thoải mái.</li>
+        `;
+
+        const petRooms = roomsToCompare.filter(r => r.pets === 'true' || r.pets === true);
+        if (petRooms.length > 0) {
+            insightHtml += `<li><strong>Nuôi thú cưng:</strong> Nếu bạn có nuôi chó/mèo, hãy ưu tiên <strong>${petRooms.map(r => r.title).join(', ')}</strong> vì các phòng này cho phép nuôi pet.</li>`;
+        }
+
+        insightHtml += `
+                </ul>
+                <p class="mt-2 text-slate-400 text-[10px] italic">📌 Mẹo: Bạn có thể bấm vào "Xem review" để kiểm tra đánh giá an ninh thực tế từ cư dân đã từng ở trước khi quyết định đặt cọc.</p>
+            </div>
+        `;
+
+        aiContent.innerHTML = insightHtml;
+    }, 600);
+}
+window.generateAiComparison = generateAiComparison;
+
+// Tự động đồng bộ trạng thái khi tải trang
+document.addEventListener('DOMContentLoaded', () => {
+    updateCompareBar();
+    syncCompareCheckboxes();
+});
 
 

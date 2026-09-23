@@ -96,11 +96,22 @@
                     </div>
                     
                     <!-- Integrated Search Bar -->
-                    <div class="relative w-full max-w-2xl mb-6 group/search">
+                    <div class="relative w-full max-w-2xl mb-4 group/search">
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
                         <div class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
                             <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
                             <input type="text" id="hero-search-input" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
+                        </div>
+
+                        <!-- AI / Smart Search Spell Correction (Did You Mean) Banner -->
+                        <div id="smart-search-suggestion" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between gap-2 animate-fade-in">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 shrink-0"></i>
+                                <span class="truncate">Có phải bạn muốn tìm: <button type="button" id="did-you-mean-btn" onclick="applySuggestedQuery()" class="font-extrabold underline hover:text-white decoration-emerald-400"></button>?</span>
+                            </div>
+                            <button type="button" onclick="closeSuggestion()" class="text-emerald-400 hover:text-white text-xs px-1 shrink-0">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -196,16 +207,35 @@
 
         <!-- Advanced Filters Dropdown (Expandable Filters) -->
         <div id="filter-drawer" class="hidden mt-6 bg-slate-900/35 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-md animate-fade-in">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/60">
+                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> Bộ lọc chi tiết
+                </span>
+                <button type="button" onclick="resetAllFilters()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-rose-500/10 transition-all">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+                </button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Price Range -->
+                <!-- Price Range Section -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giá phòng tối đa</label>
-                    <select id="filter-price" onchange="filterItems()" class="w-full px-4 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
-                        <option value="all">Tất cả khoảng giá</option>
-                        <option value="3000000">Dưới 3.000.000đ</option>
-                        <option value="4000000">Dưới 4.000.000đ</option>
-                        <option value="5000000">Dưới 5.000.000đ</option>
-                    </select>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Khoảng giá (VNĐ)</label>
+                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2 py-1 bg-[#0a0e17] border border-slate-800 rounded-lg text-slate-300 text-[10px] focus:border-emerald-500 focus:outline-none">
+                            <option value="all">Mức giá gợi ý</option>
+                            <option value="3000000">Dưới 3 triệu</option>
+                            <option value="4000000">Dưới 4 triệu</option>
+                            <option value="5000000">Dưới 5 triệu</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="filter-price-min" oninput="debouncedFilterItems()" placeholder="Tối thiểu (vd: 2000000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                        <span class="text-slate-600 text-xs font-bold">-</span>
+                        <input type="number" id="filter-price-max" oninput="debouncedFilterItems()" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                    </div>
+                    <div id="filter-price-error" class="hidden text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
+                    </div>
                 </div>
                 
                 <!-- Ratings -->
@@ -1800,7 +1830,31 @@
         </div>
         
         <!-- Table Container -->
-        <div class="p-6 overflow-auto flex-grow">
+        <div class="p-6 overflow-auto flex-grow flex flex-col gap-4">
+            <!-- AI Recommendation Insight Box -->
+            <div id="compare-ai-box" class="hidden p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-slate-900/60 border border-emerald-500/30 text-xs text-slate-200 shadow-xl backdrop-blur-md relative animate-fade-in">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
+                        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-extrabold text-emerald-400 text-xs tracking-wider uppercase flex items-center gap-1.5">
+                                <span>Phân Tích So Sánh Thông Minh Bằng AI</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">Gemini RAG</span>
+                            </h4>
+                            <button type="button" onclick="document.getElementById('compare-ai-box').classList.add('hidden')" class="text-slate-500 hover:text-white transition-colors">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+                        <div id="compare-ai-content" class="mt-2 text-[11px] text-slate-300 leading-relaxed">
+                            <!-- AI insight will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Comparison Table -->
             <div class="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/20">
                 <table class="w-full text-left text-xs text-slate-300 min-w-[600px] border-collapse" id="compare-table">
                     <!-- Dynamic comparison table will be populated by JS -->
@@ -1809,7 +1863,16 @@
         </div>
         
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/20 flex justify-end gap-3">
+        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/20 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="generateAiComparison()" id="compare-ai-btn" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 hover:from-emerald-600/30 hover:to-teal-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all shadow-lg shadow-emerald-500/10">
+                    <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                    <span>Tư vấn so sánh bằng AI</span>
+                </button>
+                <button type="button" onclick="clearCompareList(); hideCompareModal();" class="px-3 py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Xóa tất cả
+                </button>
+            </div>
             <button type="button" onclick="hideCompareModal()" class="px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-bold text-slate-350 hover:bg-slate-850 hover:text-white transition-all">
                 Đóng
             </button>
@@ -1821,22 +1884,33 @@
 <div id="renty-toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
 
 <script>
-    function showRentyToast(message, type = 'success') {
+    function showRentyToast(message, type = 'success', customTitle = null) {
         const container = document.getElementById('renty-toast-container');
         if (!container) return;
 
-        const toast = document.createElement('div');
-        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${
-            type === 'success' 
-                ? 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-500/15' 
-                : 'bg-slate-900/95 border-rose-500/40 text-rose-300 shadow-rose-500/15'
-        }`;
+        let styleClasses = 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-500/15';
+        let iconBg = 'bg-emerald-500/15';
+        let icon = 'fa-circle-check text-emerald-400';
+        let defaultTitle = 'Đăng nhập thành công!';
 
-        const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400';
-        const title = type === 'success' ? 'Đăng nhập thành công!' : 'Thông báo';
+        if (type === 'warning') {
+            styleClasses = 'bg-slate-900/95 border-amber-500/40 text-amber-300 shadow-amber-500/15';
+            iconBg = 'bg-amber-500/15';
+            icon = 'fa-triangle-exclamation text-amber-400';
+            defaultTitle = 'Cảnh báo';
+        } else if (type === 'error') {
+            styleClasses = 'bg-slate-900/95 border-rose-500/40 text-rose-300 shadow-rose-500/15';
+            iconBg = 'bg-rose-500/15';
+            icon = 'fa-circle-exclamation text-rose-400';
+            defaultTitle = 'Thông báo';
+        }
+
+        const title = customTitle || defaultTitle;
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${styleClasses}`;
 
         toast.innerHTML = `
-            <div class="w-8 h-8 rounded-xl ${type === 'success' ? 'bg-emerald-500/15' : 'bg-rose-500/15'} flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded-xl ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
                 <i class="fa-solid ${icon} text-base"></i>
             </div>
             <div class="flex-grow min-w-0">
@@ -1863,6 +1937,7 @@
             setTimeout(() => toast.remove(), 300);
         }, 4500);
     }
+    window.showRentyToast = showRentyToast;
 
     document.addEventListener('DOMContentLoaded', () => {
         if (window.rentySessionSuccess) {
