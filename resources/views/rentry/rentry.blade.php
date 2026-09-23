@@ -1830,7 +1830,31 @@
         </div>
         
         <!-- Table Container -->
-        <div class="p-6 overflow-auto flex-grow">
+        <div class="p-6 overflow-auto flex-grow flex flex-col gap-4">
+            <!-- AI Recommendation Insight Box -->
+            <div id="compare-ai-box" class="hidden p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-slate-900/60 border border-emerald-500/30 text-xs text-slate-200 shadow-xl backdrop-blur-md relative animate-fade-in">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
+                        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-extrabold text-emerald-400 text-xs tracking-wider uppercase flex items-center gap-1.5">
+                                <span>Phân Tích So Sánh Thông Minh Bằng AI</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">Gemini RAG</span>
+                            </h4>
+                            <button type="button" onclick="document.getElementById('compare-ai-box').classList.add('hidden')" class="text-slate-500 hover:text-white transition-colors">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+                        <div id="compare-ai-content" class="mt-2 text-[11px] text-slate-300 leading-relaxed">
+                            <!-- AI insight will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Comparison Table -->
             <div class="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/20">
                 <table class="w-full text-left text-xs text-slate-300 min-w-[600px] border-collapse" id="compare-table">
                     <!-- Dynamic comparison table will be populated by JS -->
@@ -1839,7 +1863,16 @@
         </div>
         
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/20 flex justify-end gap-3">
+        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/20 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="generateAiComparison()" id="compare-ai-btn" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 hover:from-emerald-600/30 hover:to-teal-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all shadow-lg shadow-emerald-500/10">
+                    <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                    <span>Tư vấn so sánh bằng AI</span>
+                </button>
+                <button type="button" onclick="clearCompareList(); hideCompareModal();" class="px-3 py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Xóa tất cả
+                </button>
+            </div>
             <button type="button" onclick="hideCompareModal()" class="px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-bold text-slate-350 hover:bg-slate-850 hover:text-white transition-all">
                 Đóng
             </button>
@@ -1851,22 +1884,33 @@
 <div id="renty-toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
 
 <script>
-    function showRentyToast(message, type = 'success') {
+    function showRentyToast(message, type = 'success', customTitle = null) {
         const container = document.getElementById('renty-toast-container');
         if (!container) return;
 
-        const toast = document.createElement('div');
-        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${
-            type === 'success' 
-                ? 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-500/15' 
-                : 'bg-slate-900/95 border-rose-500/40 text-rose-300 shadow-rose-500/15'
-        }`;
+        let styleClasses = 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-500/15';
+        let iconBg = 'bg-emerald-500/15';
+        let icon = 'fa-circle-check text-emerald-400';
+        let defaultTitle = 'Đăng nhập thành công!';
 
-        const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400';
-        const title = type === 'success' ? 'Đăng nhập thành công!' : 'Thông báo';
+        if (type === 'warning') {
+            styleClasses = 'bg-slate-900/95 border-amber-500/40 text-amber-300 shadow-amber-500/15';
+            iconBg = 'bg-amber-500/15';
+            icon = 'fa-triangle-exclamation text-amber-400';
+            defaultTitle = 'Cảnh báo';
+        } else if (type === 'error') {
+            styleClasses = 'bg-slate-900/95 border-rose-500/40 text-rose-300 shadow-rose-500/15';
+            iconBg = 'bg-rose-500/15';
+            icon = 'fa-circle-exclamation text-rose-400';
+            defaultTitle = 'Thông báo';
+        }
+
+        const title = customTitle || defaultTitle;
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${styleClasses}`;
 
         toast.innerHTML = `
-            <div class="w-8 h-8 rounded-xl ${type === 'success' ? 'bg-emerald-500/15' : 'bg-rose-500/15'} flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded-xl ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
                 <i class="fa-solid ${icon} text-base"></i>
             </div>
             <div class="flex-grow min-w-0">
@@ -1893,6 +1937,7 @@
             setTimeout(() => toast.remove(), 300);
         }, 4500);
     }
+    window.showRentyToast = showRentyToast;
 
     document.addEventListener('DOMContentLoaded', () => {
         if (window.rentySessionSuccess) {
