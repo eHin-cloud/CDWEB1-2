@@ -33,7 +33,9 @@ fi
 
 php artisan migrate --force
 
-# Khoi dong Reverb WebSocket Server chay nen
-php artisan reverb:start --host=0.0.0.0 --port=8085 &
+# Khoi dong Reverb WebSocket Server chay nen (neu package da cai dat)
+if php artisan list | grep -q "reverb:start"; then
+    php artisan reverb:start --host=0.0.0.0 --port=8085 &
+fi
 
 exec "$@"

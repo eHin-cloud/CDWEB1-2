@@ -10,6 +10,8 @@ services:
       - "8085:8085"
     volumes:
       - .:/var/www/html
+      - ./docker/entrypoint.sh:/usr/local/bin/smartroom-entrypoint:ro
+      - ./.env.docker:/var/www/html/.env
       - composer_cache:/tmp/composer-cache
     environment:
       COMPOSER_CACHE_DIR: /tmp/composer-cache
