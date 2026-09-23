@@ -11,7 +11,7 @@ Add-Type -AssemblyName System.Drawing
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="SmartRoom &amp; Renty - Trình Khởi Chạy Ứng Dụng"
-        Height="540" Width="600"
+        Height="580" Width="660"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="#0f172a"
@@ -49,7 +49,7 @@ Add-Type -AssemblyName System.Drawing
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -57,23 +57,58 @@ Add-Type -AssemblyName System.Drawing
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Margin="0,0,0,16" Padding="12,8" Background="#1e293b" CornerRadius="10">
+        <!-- Brand Header with SmartRoom x Renty Logo -->
+        <Border Grid.Row="0" Margin="0,0,0,14" Padding="14,10" Background="#1e293b" CornerRadius="12" BorderThickness="1" BorderBrush="#334155">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="🏠" FontSize="26" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="SmartRoom &amp; Renty Launcher" FontSize="16" FontWeight="Bold" Foreground="#38bdf8"/>
-                    <TextBlock Text="Chọn môi trường để khởi chạy ứng dụng phòng trọ thông minh" FontSize="11" Foreground="#94a3b8"/>
+
+                <!-- Left: SmartRoom Logo Badge -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#4f46e5" Offset="0"/>
+                                <GradientStop Color="#7c3aed" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="🏢" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="SmartRoom" FontSize="16" FontWeight="ExtraBold" Foreground="#a5b4fc"/>
+                        <TextBlock Text="Quản Trị Nhà Trọ" FontSize="10" FontWeight="SemiBold" Foreground="#94a3b8"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Middle: Connect Badge -->
+                <Border Grid.Column="1" Background="#0f172a" CornerRadius="12" Padding="8,4" VerticalAlignment="Center" Margin="10,0">
+                    <TextBlock Text="⚡" FontSize="12" Foreground="#38bdf8"/>
+                </Border>
+
+                <!-- Right: Renty Logo Badge -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#059669" Offset="0"/>
+                                <GradientStop Color="#0d9488" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="🔍" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Renty" FontSize="16" FontWeight="ExtraBold" Foreground="#6ee7b7"/>
+                        <TextBlock Text="Thuê Trọ Thông Minh" FontSize="10" FontWeight="SemiBold" Foreground="#94a3b8"/>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Tab Selection Control -->
-        <TabControl Grid.Row="1" Background="#1e293b" BorderThickness="0" Margin="0,0,0,12">
+        <TabControl Name="mainTabControl" Grid.Row="1" Background="#1e293b" BorderThickness="0" Margin="0,0,0,12">
             <!-- TAB 1: DOCKER -->
             <TabItem Header="🐳 Tab Docker">
                 <Border Background="#1e293b" CornerRadius="0,8,8,8" Padding="16">
@@ -179,6 +214,90 @@ Add-Type -AssemblyName System.Drawing
                     </StackPanel>
                 </Border>
             </TabItem>
+
+            <!-- TAB 4: ADVANCED MENU (MENU NÂNG CAO CÓ LOGO) -->
+            <TabItem Header="⚙️ Menu Nâng Cao">
+                <Border Background="#1e293b" CornerRadius="0,8,8,8" Padding="16">
+                    <StackPanel>
+                        <!-- Banner Logo in Advanced Menu -->
+                        <Border Background="#0f172a" CornerRadius="10" Padding="12,10" Margin="0,0,0,12" BorderThickness="1" BorderBrush="#334155">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="🏢" FontSize="24" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="✕" FontSize="14" Foreground="#64748b" VerticalAlignment="Center" Margin="4,0"/>
+                                    <TextBlock Text="🔍" FontSize="24" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="SMARTROOM &amp; RENTY - SYSTEM SUITE" FontSize="13" FontWeight="Bold" Foreground="#38bdf8"/>
+                                    <TextBlock Text="Bộ công cụ quản trị, bảo trì CSDL, dọn dẹp cache và điều hướng sitemap" FontSize="10" Foreground="#94a3b8"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Grid of Advanced Quick Actions -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Button: Reset DB -->
+                            <Button Name="btnAdvResetDb" Grid.Row="0" Grid.Column="0" Height="36" Margin="0,0,4,6"
+                                    Background="#1e1e38" Foreground="#c084fc" BorderThickness="1" BorderBrush="#4f46e5" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🔄 " FontSize="12"/>
+                                    <TextBlock Text="Làm mới CSDL (Reset &amp; Seed)" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Button: Clear Cache -->
+                            <Button Name="btnAdvClearCache" Grid.Row="0" Grid.Column="1" Height="36" Margin="4,0,0,6"
+                                    Background="#0f2b24" Foreground="#6ee7b7" BorderThickness="1" BorderBrush="#059669" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🧹 " FontSize="12"/>
+                                    <TextBlock Text="Dọn Cache &amp; Tối Ưu Hóa" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Button: Sitemap -->
+                            <Button Name="btnAdvSitemap" Grid.Row="1" Grid.Column="0" Height="36" Margin="0,0,4,6"
+                                    Background="#172554" Foreground="#93c5fd" BorderThickness="1" BorderBrush="#1d4ed8" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🗺️ " FontSize="12"/>
+                                    <TextBlock Text="Mở Sitemap Navigator" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Button: Diagnostics -->
+                            <Button Name="btnAdvDiag" Grid.Row="1" Grid.Column="1" Height="36" Margin="4,0,0,6"
+                                    Background="#2d1537" Foreground="#f472b6" BorderThickness="1" BorderBrush="#db2777" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🩺 " FontSize="12"/>
+                                    <TextBlock Text="Chẩn Đoán Sức Khỏe" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Button: Full Console CLI -->
+                            <Button Name="btnAdvOpenCli" Grid.Row="2" Grid.ColumnSpan="2" Height="36" Margin="0,2,0,0"
+                                    Background="#334155" Foreground="#f8fafc" BorderThickness="1" BorderBrush="#475569" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="💻 " FontSize="12"/>
+                                    <TextBlock Text="Mở Toàn Bộ 11 Chức Năng Bằng Menu Console CMD" FontSize="11" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </TabItem>
         </TabControl>
 
         <!-- Status & App-mode row -->
@@ -199,8 +318,8 @@ Add-Type -AssemblyName System.Drawing
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="SmartRoom v8.0 • Super Auto-Pilot" FontSize="11" Foreground="#475569" VerticalAlignment="Center"/>
-                <Button Name="btnAdvancedCli" Grid.Column="1" Content="⚙️ Menu Nâng Cao" Height="28" Padding="12,0" FontSize="11"
+                <TextBlock Grid.Column="0" Text="SmartRoom x Renty • System Orchestrator v8.0" FontSize="11" Foreground="#475569" VerticalAlignment="Center"/>
+                <Button Name="btnOpenAdvTab" Grid.Column="1" Content="⚙️ Menu Nâng Cao" Height="28" Padding="12,0" FontSize="11"
                         Background="#1e293b" Foreground="#cbd5e1" BorderThickness="1" BorderBrush="#334155" Cursor="Hand" Margin="0,0,8,0"/>
                 <Button Name="btnExit" Grid.Column="2" Content="Thoát" Height="28" Padding="16,0" FontSize="11"
                         Background="#334155" Foreground="#f8fafc" BorderThickness="0" Cursor="Hand"/>
@@ -214,16 +333,22 @@ $nodeReader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [System.Windows.Markup.XamlReader]::Load($nodeReader)
 
 # Get element controls
-$btnRunDocker   = $window.FindName("btnRunDocker")
-$btnDockerLogs  = $window.FindName("btnDockerLogs")
-$btnDockerSeed  = $window.FindName("btnDockerSeed")
-$btnDockerStop  = $window.FindName("btnDockerStop")
-$btnRunXampp    = $window.FindName("btnRunXampp")
-$btnRunWampp    = $window.FindName("btnRunWampp")
-$btnAdvancedCli = $window.FindName("btnAdvancedCli")
-$btnExit        = $window.FindName("btnExit")
-$txtStatus      = $window.FindName("txtStatus")
-$chkAppMode     = $window.FindName("chkAppMode")
+$mainTabControl  = $window.FindName("mainTabControl")
+$btnRunDocker    = $window.FindName("btnRunDocker")
+$btnDockerLogs   = $window.FindName("btnDockerLogs")
+$btnDockerSeed   = $window.FindName("btnDockerSeed")
+$btnDockerStop   = $window.FindName("btnDockerStop")
+$btnRunXampp     = $window.FindName("btnRunXampp")
+$btnRunWampp     = $window.FindName("btnRunWampp")
+$btnAdvResetDb   = $window.FindName("btnAdvResetDb")
+$btnAdvClearCache= $window.FindName("btnAdvClearCache")
+$btnAdvSitemap   = $window.FindName("btnAdvSitemap")
+$btnAdvDiag      = $window.FindName("btnAdvDiag")
+$btnAdvOpenCli   = $window.FindName("btnAdvOpenCli")
+$btnOpenAdvTab   = $window.FindName("btnOpenAdvTab")
+$btnExit         = $window.FindName("btnExit")
+$txtStatus       = $window.FindName("txtStatus")
+$chkAppMode      = $window.FindName("chkAppMode")
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -423,12 +548,38 @@ $btnRunWampp.Add_Click({
     $btnRunWampp.IsEnabled = $true
 })
 
-# ADVANCED CLI
-$btnAdvancedCli.Add_Click({
+# ADVANCED ACTIONS
+$btnAdvResetDb.Add_Click({
+    $txtStatus.Text = "⏳ Đang làm mới CSDL (migrate:fresh --seed)..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Reset DB & cd /d `"$scriptDir`" & php artisan migrate:fresh --seed & pause"
+    $txtStatus.Text = "✅ Đã chạy lệnh làm mới CSDL."
+})
+
+$btnAdvClearCache.Add_Click({
+    $txtStatus.Text = "⏳ Đang dọn dẹp cache & optimize hệ thống..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Optimize Clear & cd /d `"$scriptDir`" & php artisan optimize:clear & pause"
+    $txtStatus.Text = "✅ Đã dọn sạch cache hệ thống."
+})
+
+$btnAdvSitemap.Add_Click({
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Sitemap Navigator & cd /d `"$scriptDir`" & start.bat --cli"
+})
+
+$btnAdvDiag.Add_Click({
+    $txtStatus.Text = "⏳ Đang mở báo cáo chẩn đoán..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Health Diagnostic & cd /d `"$scriptDir`" & php artisan about & pause"
+    $txtStatus.Text = "✅ Đã mở báo cáo hệ thống."
+})
+
+$btnAdvOpenCli.Add_Click({
     Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & start.bat --cli"
 })
 
-# EXIT
+# FOOTER BUTTONS
+$btnOpenAdvTab.Add_Click({
+    $mainTabControl.SelectedIndex = 3
+})
+
 $btnExit.Add_Click({
     $window.Close()
 })
