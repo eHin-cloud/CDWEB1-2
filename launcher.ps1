@@ -441,61 +441,139 @@ function Open-AppWindow($url) {
     # Neu bo chon hoac khong co trinh duyet tren, mo mac dinh
     Start-Process $url
 }
+# Ham cap nhat UI ngay lap tuc
+function Update-UI {
+    [System.Windows.Threading.Dispatcher]::CurrentDispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Background)
+}
+
+# Ham dam bao Docker CLI & Docker Desktop da bat va Engine san sang
+function Ensure-Docker {
+    # 1. Bo sung cac duong dan Docker CLI pho bien vao PATH neu chua co
+    $dockerBinPaths = @(
+        "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin",
+        "$env:ProgramFiles\Docker\Docker\resources\bin",
+        "${env:ProgramFiles(x86)}\Docker\Docker\resources\bin",
+        "C:\Users\Thanh Hien\AppData\Local\Programs\DockerDesktop\resources\bin"
+    )
+    foreach ($bin in $dockerBinPaths) {
+        if (Test-Path "$bin\docker.exe") {
+            if ($env:PATH -notlike "*$bin*") {
+                $env:PATH = "$bin;$env:PATH"
+            }
+            break
+        }
+    }
+
+    # 2. Kiem tra xem Docker CLI co hoat dong khong
+    $dockerCmd = Get-Command "docker" -ErrorAction SilentlyContinue
+    if (-not $dockerCmd) {
+        [System.Windows.MessageBox]::Show("Không tìm thấy lệnh Docker CLI trên máy! Vui lòng kiểm tra Docker Desktop đã được cài đặt.", "Lỗi Docker", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+        return $false
+    }
+
+    # 3. Kiem tra Docker Daemon da chay chua
+    $check = & docker info 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        return $true
+    }
+
+    # 4. Neu Daemon chua chay, tu dong tim va khoi dong Docker Desktop
+    $txtStatus.Text = "⏳ Docker Desktop chưa bật. Đang tự động kích hoạt Docker Desktop..."
+    Update-UI
+
+    $dockerAppPaths = @(
+        "$env:LOCALAPPDATA\Programs\DockerDesktop\Docker Desktop.exe",
+        "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+        "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe",
+        "C:\Users\Thanh Hien\AppData\Local\Programs\DockerDesktop\Docker Desktop.exe"
+    )
+
+    $appFound = $null
+    foreach ($app in $dockerAppPaths) {
+        if (Test-Path $app) {
+            $appFound = $app
+            break
+        }
+    }
+
+    if ($appFound) {
+        Start-Process -FilePath $appFound
+    } else {
+        Start-Process "Docker Desktop" -ErrorAction SilentlyContinue
+    }
+
+    # 5. Vong lap cho Docker Engine san sang (toi da 60 giay)
+    for ($i = 1; $i -le 30; $i++) {
+        $txtStatus.Text = "⏳ Đang đợi Docker Engine khởi động... ($($i * 2)s / 60s)"
+        Update-UI
+        Start-Sleep -Seconds 2
+
+        $check = & docker info 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $txtStatus.Text = "✅ Docker Desktop đã sẵn sàng hoạt động!"
+            Update-UI
+            return $true
+        }
+    }
+
+    [System.Windows.MessageBox]::Show("Docker Desktop đang trong quá trình khởi động. Vui lòng kiểm tra biểu tượng cá voi ở khay hệ thống (System Tray) và thử lại sau ít giây!", "Docker Chưa Sẵn Sàng", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+    return $false
+}
 
 # 1. RUN DOCKER
 $btnRunDocker.Add_Click({
-    $txtStatus.Text = "⏳ Đang kiểm tra Docker & khởi chạy containers..."
     $btnRunDocker.IsEnabled = $false
+    $txtStatus.Text = "⏳ Đang kiểm tra môi trường Docker..."
+    Update-UI
 
-    # Kiem tra Docker Daemon
-    $dockerCheck = docker info 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        [System.Windows.MessageBox]::Show("Docker Desktop chưa bật! Vui lòng khởi động Docker Desktop trên máy trước.", "Lỗi Docker", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
-        $txtStatus.Text = "❌ Docker Desktop chưa chạy."
+    # Dam bao Docker Daemon hoat dong
+    if (-not (Ensure-Docker)) {
+        $txtStatus.Text = "❌ Docker Desktop chưa sẵn sàng."
         $btnRunDocker.IsEnabled = $true
         return
     }
 
     # Chay docker compose up -d
-    $txtStatus.Text = "⏳ Đang build và chạy Docker Compose (App + Database)..."
+    $txtStatus.Text = "⏳ Đang khởi chạy Docker Compose (App + Database MySQL 8.4)..."
+    Update-UI
     Start-Process -FilePath "docker" -ArgumentList "compose up -d" -WorkingDirectory $scriptDir -Wait -NoNewWindow
 
-    # Cho web san sang
+    # Cho web san sang (kiem tra cong 8088)
     $txtStatus.Text = "⏳ Đang đợi dịch vụ trên cổng 8088 sẵn sàng..."
+    Update-UI
     $ready = $false
-    for ($i = 0; $i -lt 30; $i++) {
-        try {
-            $resp = Invoke-WebRequest -Uri "http://127.0.0.1:8088/" -UseBasicParsing -TimeoutSec 1 -ErrorAction SilentlyContinue
-            if ($resp.StatusCode -ge 200) {
-                $ready = $true
-                break
-            }
-        } catch { }
+    for ($i = 0; $i -lt 40; $i++) {
+        $isOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 8088 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if ($isOpen) {
+            $ready = $true
+            break
+        }
         Start-Sleep -Seconds 1
     }
 
     # Mo website dang cua so app
     $targetUrl = "http://localhost:8088/renty"
     Open-AppWindow $targetUrl
-    $txtStatus.Text = "✅ Docker đã khởi chạy thành công! Đã mở cửa sổ ứng dụng."
+    $txtStatus.Text = "✅ Docker đã khởi chạy thành công! Đã mở cửa sổ ứng dụng (Port 8088 & Reverb 8085)."
     $btnRunDocker.IsEnabled = $true
 })
 
 # DOCKER LOGS
 $btnDockerLogs.Add_Click({
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Docker Logs & cd /d `"$scriptDir`" & docker compose logs -f"
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Docker Logs & cd /d `"$scriptDir`" & docker compose logs -f"
 })
 
 # DOCKER SEED
 $btnDockerSeed.Add_Click({
-    $txtStatus.Text = "⏳ Đang migrate & seed CSDL Docker..."
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Docker Seed & cd /d `"$scriptDir`" & docker compose exec app php artisan migrate:fresh --seed & pause"
-    $txtStatus.Text = "✅ Đã gửi lệnh Seed CSDL vào container Docker."
+    $txtStatus.Text = "⏳ Đang gửi lệnh nạp CSDL (Seed) vào container Docker..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Docker Seeder & cd /d `"$scriptDir`" & echo [*] Dang thuc hien nap du lieu CSDL Docker... & docker compose exec app php artisan db:seed --force & echo. & echo [OK] Hoan tat! Nhan phim bat ky de dong cua so nay. & pause"
+    $txtStatus.Text = "✅ Đã mở tiến trình nạp CSDL Docker trong cửa sổ riêng."
 })
 
 # DOCKER STOP
 $btnDockerStop.Add_Click({
     $txtStatus.Text = "⏳ Đang dừng toàn bộ container Docker..."
+    Update-UI
     Start-Process -FilePath "docker" -ArgumentList "compose down" -WorkingDirectory $scriptDir -Wait -NoNewWindow
     $txtStatus.Text = "⏹️ Đã dừng toàn bộ dịch vụ Docker thành công."
 })

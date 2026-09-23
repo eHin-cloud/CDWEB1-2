@@ -2,9 +2,9 @@
 setlocal enabledelayedexpansion
 title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
 
-:: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher nho gon
+:: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher
 if "%1" neq "--cli" (
-    start "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    start "" powershell -WindowStyle Normal -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
     exit /b 0
 )
 
@@ -186,7 +186,7 @@ if exist .env (
     findstr /C:"DB_HOST=mysql" .env > nul
     if !errorlevel! equ 0 (
         echo    [!] Phat hien .env dang tro Docker. Dang chuyen sang MySQL XAMPP (127.0.0.1:3306)...
-        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=quan_ly_nha_tro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
+        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=qlphongtro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
         call !PHP_CMD! artisan config:clear > nul 2>&1
     )
 )
@@ -265,7 +265,7 @@ if exist .env (
     findstr /C:"DB_HOST=mysql" .env > nul
     if !errorlevel! equ 0 (
         echo    [!] Phat hien .env dang tro Docker. Dang chuyen sang MySQL WAMP (127.0.0.1:3306)...
-        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=quan_ly_nha_tro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
+        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=qlphongtro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
         call !PHP_CMD! artisan config:clear > nul 2>&1
     )
 )
@@ -387,6 +387,14 @@ goto TAB_MENU
 :DOCKER_CHECK_CLI
 where docker >nul 2>&1
 if %errorlevel% neq 0 (
+    if exist "%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin\docker.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin;!PATH!"
+    ) else if exist "%ProgramFiles%\Docker\Docker\resources\bin\docker.exe" (
+        set "PATH=%ProgramFiles%\Docker\Docker\resources\bin;!PATH!"
+    )
+)
+where docker >nul 2>&1
+if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong tim thay Docker CLI. Vui long cai Docker Desktop truoc.
     pause
@@ -398,11 +406,33 @@ exit /b 0
 call :DOCKER_CHECK_CLI
 docker info >nul 2>&1
 if %errorlevel% neq 0 (
+    echo    [!] Docker Desktop chua bat. Dang tu dong khoi dong Docker Desktop...
+    set "DOCKER_APP="
+    if exist "%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe" (
+        set "DOCKER_APP=%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe"
+    ) else if exist "%ProgramFiles%\Docker\Docker\Docker Desktop.exe" (
+        set "DOCKER_APP=%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
+    )
+    if defined DOCKER_APP (
+        start "" "!DOCKER_APP!"
+    ) else (
+        start "" "Docker Desktop" >nul 2>&1
+    )
+    echo    [!] Dang doi Docker Engine khoi dong hoan tat...
+    for /l %%k in (1,1,20) do (
+        timeout /t 2 > nul
+        docker info >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo    ^|---^> [OK] Docker Desktop da khoi dong va san sang.
+            goto DOCKER_DAEMON_READY
+        )
+    )
     color 0c
-    echo    [ LOI ] Docker Daemon chua chay! Vui long bat Docker Desktop tren Windows.
+    echo    [ LOI ] Docker Daemon chua chay xong! Vui long kiem tra Docker Desktop tren Windows.
     pause
     goto DOCKER_RUN
 )
+:DOCKER_DAEMON_READY
 if not exist ".docker-config" (
     mkdir ".docker-config" >nul 2>&1
 )
@@ -426,8 +456,8 @@ if not exist .env (
     )
     echo    [+] Da khoi tao .env cho Docker.
 )
-echo    [1/3] Dang khoi chay cac container (Build ^& Run Background)...
-docker compose up -d --build
+echo    [1/3] Dang khoi chay cac container (Background)...
+docker compose up -d
 if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong the khoi chay Docker Compose. Hay kiem tra logs.
