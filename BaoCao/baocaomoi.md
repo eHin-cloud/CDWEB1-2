@@ -13,8 +13,8 @@ HỆ THỐNG QUẢN LÝ NHÀ TRỌ, CHUNG CƯ, CĂN HỘ DỊCH VỤ VÀ KHÁCH 
 | STT | Họ và Tên Sinh Viên | Mã Số Sinh Viên | Chức Vụ |
 | --- | --- | --- | --- |
 | 01 | Nguyễn Thanh Hiền | 23211TT4102 | Nhóm Trưởng |
-| 02 | Nguyễn Anh Quý | 23211TT4188 | Nhóm Phó |
-| 03 | Huỳnh Văn Vĩnh Em | 23211TT4256 | Thành Viên |
+| 02 | Nguyễn Anh Quý | 23211TT4188 | Thành Viên |
+| 03 | Huỳnh Văn Vĩnh Em | 23211TT4256 | Nhóm Phó |
 
 GIẢNG VIÊN HƯỚNG DẪN: PHAN THANH NHUẦN
 
@@ -96,6 +96,89 @@ i. Bảng LandlordProfiles & VerificationRequests (Hồ sơ & Yêu cầu duyệt
 
 j. Bảng AdminActivityLogs & AuditLogs (Nhật ký truy vết & Kiểm toán bất biến)37
 
+k. Bảng IotDevices & IotMeterTelemetries (Thiết bị IoT và Dữ liệu đo đạc chỉ số vi mô)
+
+Hệ sinh thái bảng dữ liệu IoT bao gồm bảng iot_devices (quản lý định danh thiết bị gateway, công tơ thông minh, loại giao thức kết nối, khóa bảo mật API Key và trạng thái hoạt động) và bảng iot_meter_telemetries (lưu trữ toàn bộ chuỗi dữ liệu đo đạc thời gian thực chu kỳ 15 phút: công suất P(kW), lưu lượng nước Q(m³/h), điện áp, dòng điện và chỉ số lũy kế).
+
+Bảng 20a: Mô tả cấu trúc bảng IotDevices (Thiết bị IoT & Công tơ thông minh)
+
+| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
+| --- | --- | --- |
+| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh duy nhất của thiết bị công tơ IoT |
+| tenant_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết chủ trọ / ban quản trị (tenants.id) |
+| room_id | BIGINT, UNSIGNED, FOREIGN KEY, NULL | Khóa ngoại liên kết phòng lưu trú được lắp đặt công tơ (rooms.id) |
+| device_code | VARCHAR(100), UNIQUE | Mã định danh duy nhất của thiết bị phần cứng (vd: ESP32_ELEC_P101) |
+| meter_serial | VARCHAR(100) | Số sản xuất (Số SX) dập trên mặt đồng hồ đo |
+| meter_type | ENUM('electricity', 'water') | Loại công tơ đo lường: điện sinh hoạt hoặc nước sạch |
+| protocol | ENUM('esp32_wifi', 'lorawan', 'modbus_rs485', 'zigbee', 'mqtt') | Giao thức truyền thông không dây/có dây kết nối Gateway |
+| api_key | VARCHAR(64), UNIQUE | Khóa token xác thực bảo mật khi thiết bị gửi dữ liệu lên Webhook |
+| status | VARCHAR(30), DEFAULT 'active' | Trạng thái hoạt động của thiết bị ('active', 'warning', 'inactive') |
+| last_reading | DECIMAL(12,2), DEFAULT 0 | Chỉ số tiêu thụ lũy kế ghi nhận ở chu kỳ đo gần nhất |
+| last_seen_at | DATETIME, NULL | Thời điểm thiết bị gửi gói tin gần nhất (phục vụ cảnh báo Offline > 3 phút) |
+| firmware_version | VARCHAR(50), NULL | Phiên bản phần mềm nhúng (Firmware) cài đặt trên vi điều khiển |
+
+Bảng 20b: Mô tả cấu trúc bảng IotMeterTelemetries (Gói tin dữ liệu đo đạc thời gian thực)
+
+| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
+| --- | --- | --- |
+| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh gói tin telemetry |
+| iot_device_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết thiết bị công tơ đo lường (iot_devices.id) |
+| room_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết phòng lưu trú (rooms.id) |
+| meter_type | ENUM('electricity', 'water') | Loại công tơ (điện / nước) |
+| reading | DECIMAL(12,2) | Chỉ số tiêu thụ lũy kế tức thời tại thời điểm đo (kWh hoặc m³) |
+| voltage | DECIMAL(8,2), NULL | Điện áp tức thời đo được trên đường dây (Vôn - V) |
+| current | DECIMAL(8,3), NULL | Cường độ dòng điện tiêu thụ (Ampe - A) |
+| power | DECIMAL(10,2), NULL | Công suất tiêu thụ tức thời của phòng (Watt / Kilowatt - kW) |
+| flow_rate | DECIMAL(10,3), NULL | Lưu lượng dòng chảy nước tức thời (m³/h hoặc lít/phút) |
+| signal_quality | INTEGER, NULL | Chỉ số chất lượng sóng vô tuyến thu phát (RSSI / CSQ) |
+| battery_level | INTEGER, NULL | Mức dung lượng pin dự phòng của cảm biến (0 - 100%) |
+| recorded_at | DATETIME | Thời điểm thiết bị ghi nhận dữ liệu đo lường tại hiện trường |
+
+l. Bảng ElectronicInvoices (Hóa đơn điện tử chuẩn CQT Nghị định 123/2020/NĐ-CP)
+
+Lưu trữ toàn bộ thông tin hóa đơn điện tử hợp pháp được phát hành tự động khi cư dân hoàn tất thanh toán tiền phòng/tiện ích, bao gồm mã Cơ quan Thuế (CQT), chuỗi ký số XML, bản thể hiện PDF và nhật ký truyền nhận với cổng Thuế.
+
+Bảng 20c: Mô tả cấu trúc bảng ElectronicInvoices (Hóa đơn điện tử CQT)
+
+| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
+| --- | --- | --- |
+| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh hóa đơn điện tử |
+| tenant_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết chủ cơ sở lưu trú (tenants.id) |
+| bill_id | BIGINT, UNSIGNED, FOREIGN KEY, UNIQUE | Khóa ngoại duy nhất liên kết hóa đơn tiền phòng/dịch vụ (bills.id) |
+| invoice_template | VARCHAR(20) | Ký hiệu mẫu số hóa đơn (vd: 1/001, C26TAA) |
+| invoice_series | VARCHAR(20) | Ký hiệu sê-ri hóa đơn điện tử theo quy chuẩn Thông tư 78 |
+| invoice_number | VARCHAR(20) | Số thứ tự hóa đơn điện tử được cấp tự động liên tục |
+| cqt_code | VARCHAR(50), NULL | Mã của Cơ quan Thuế cấp cho hóa đơn điện tử hợp lệ |
+| status | VARCHAR(30) | Trạng thái: 'draft', 'signed', 'cqt_approved', 'sent', 'canceled' |
+| buyer_tax_code | VARCHAR(20), NULL | Mã số thuế của cá nhân/doanh nghiệp thuê phòng (nếu có) |
+| buyer_id_card | VARCHAR(30), NULL | Số CCCD/Hộ chiếu người mua (được mã hóa AES-256-GCM) |
+| lookup_code | VARCHAR(32), UNIQUE | Mã tra cứu bí mật giúp người mua tra cứu hóa đơn trực tuyến |
+| xml_url | VARCHAR(255), NULL | Đường dẫn tệp tin hóa đơn gốc định dạng XML có chữ ký số điện tử |
+| pdf_url | VARCHAR(255), NULL | Đường dẫn bản thể hiện hóa đơn điện tử định dạng PDF |
+| issued_at | DATETIME, NULL | Thời điểm phát hành và ký số hóa đơn điện tử thành công |
+
+m. Bảng HotelBookings & HotelFolioItems (Đặt phòng khách sạn & Bảng kê thanh toán Folio)
+
+Phân hệ lưu trú ngắn hạn theo giờ và theo ngày: Quản lý chi tiết giao dịch đặt phòng khách sạn (check-in/check-out thực tế, tiền cọc) và bảng kê thanh toán chi tiết Folio (tổng hợp tiền phòng lũy tiến, phụ thu Minibar, nước uống, giặt ủi và các dịch vụ phòng phát sinh).
+
+Bảng 20d: Mô tả cấu trúc bảng HotelBookings (Phiếu đặt phòng khách sạn)
+
+| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
+| --- | --- | --- |
+| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh phiếu đặt phòng khách sạn |
+| tenant_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết cơ sở kinh doanh (tenants.id) |
+| room_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết phòng khách sạn (rooms.id) |
+| booking_code | VARCHAR(50), UNIQUE | Mã đặt phòng duy nhất (vd: HTL-BK-202609-001) |
+| guest_name | VARCHAR(150) | Họ và tên khách lưu trú chính |
+| guest_phone | VARCHAR(255) | Số điện thoại liên hệ (mã hóa cấp ứng dụng AES-256-GCM) |
+| guest_cccd | VARCHAR(255) | Số CCCD/Hộ chiếu khách lưu trú (mã hóa cấp ứng dụng AES-256-GCM) |
+| rental_type | ENUM('day', 'hour') | Hình thức thuê: theo ngày hoặc theo giờ |
+| check_in_at | DATETIME | Thời điểm khách nhận phòng thực tế tại quầy lễ tân |
+| check_out_at | DATETIME, NULL | Thời điểm khách trả phòng thực tế khi hoàn tất thanh toán |
+| deposit_amount | DECIMAL(12,2), DEFAULT 0 | Tiền cọc nhận phòng tạm giữ |
+| total_amount | DECIMAL(12,2), DEFAULT 0 | Tổng tiền thanh toán cuối cùng bao gồm tiền phòng và Folio dịch vụ |
+| status | VARCHAR(30) | Trạng thái: 'checked_in', 'checked_out', 'canceled' |
+
 IV. THIẾT KẾ GIAO DIỆN DEMO VÀ KỊCH BẢN XỬ LÝ LỖI (UI/UX)39
 
 1. Trang Đăng nhập & Đăng ký (WebAuthn Passkey + Mật khẩu)39
@@ -118,10 +201,56 @@ IV. THIẾT KẾ GIAO DIỆN DEMO VÀ KỊCH BẢN XỬ LÝ LỖI (UI/UX)39
 
 10. Trang Quản lý Tài sản - Trang thiết bị & Minibar (Asset & Minibar Management)
 
+12. Hệ sinh thái IoT Smart Metering & Telemetry 15 phút theo dõi điện nước thời gian thực
+
+Mô tả chi tiết chức năng: Hệ thống tích hợp IoT Gateway và các công tơ thông minh đa chuẩn (ESP32 WiFi/4G, LoRaWAN, Modbus RS485 và MQTT Broker Bridge). Thu thập tự động chuỗi dữ liệu đo đạc định kỳ 15 phút/lần bao gồm: Công suất tiêu thụ P(kW), Lưu lượng nước chảy Q(m³/h), Điện áp U(V), Cường độ dòng điện I(A) và chỉ số lũy kế. Giao diện trực quan hóa dữ liệu bằng Chart Canvas cố định chiều rộng chống giật khung hình, Tooltip tương tác hiển thị chi tiết thời điểm đo, công suất và lưu lượng nước. Hệ thống tự động phát hiện thiết bị Offline khi không nhận được tín hiệu quá 3 chu kỳ đo (3 phút đối với chế độ kiểm thử hoặc 45 phút đối với thực tế) và hiển thị huy hiệu trạng thái. Đặc biệt, tích hợp tính năng Chốt số tự động 1-click: Động cơ tự động quét chỉ số mới nhất của toàn bộ phòng, tính chênh lệch sản lượng, điền trực tiếp vào bảng hóa đơn tháng và tính tiền tức thì.
+
+Bảng: Kịch bản xử lý lỗi Hệ sinh thái IoT Smart Metering
+
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+| --- | --- |
+| Thiết bị công tơ IoT bị mất nguồn điện hoặc mất kết nối WiFi/LoRaWAN quá 3 chu kỳ đo liên tiếp | Huy hiệu thiết bị trên sơ đồ phòng tự động chuyển sang màu xám với nhãn cảnh báo 'Mất kết nối (Offline)'. Hệ thống ghi nhận nhật ký cảnh báo và tạm thời giữ nguyên chỉ số đo lường hợp lệ gần nhất. |
+| Gói tin đo đạc gửi về từ vi điều khiển chứa chỉ số âm hoặc chỉ số lũy kế nhỏ hơn chỉ số chu kỳ trước đó | API trả về mã lỗi HTTP 422: 'Dữ liệu đo đạc không hợp lệ: Chỉ số mới không được nhỏ hơn chỉ số trước đó'. Gói tin lỗi bị đưa vào hàng đợi kiểm toán để kỹ thuật viên kiểm tra. |
+| Mã thiết bị hoặc Số sản xuất gửi về từ Gateway chưa được liên kết cấu hình với bất kỳ phòng nào | Hệ thống lưu gói tin vào bảng dữ liệu chờ và hiển thị cảnh báo trên Dashboard: 'Phát hiện thiết bị chưa gán phòng. Vui lòng vào Cấu hình thiết bị để liên kết công tơ với phòng tương ứng'. |
+
+13. AI Dự đoán bảo trì & Cảnh báo bất thường (AI Predictive Maintenance & Anomaly Detection)
+
+Mô tả chi tiết chức năng: Ứng dụng mô hình phân tích chuỗi thời gian kết hợp trí tuệ nhân tạo Google Gemini AI để giám sát liên tục các chỉ số vi mô điện nước: (1) Phát hiện rò rỉ nước ngầm: Thuật toán nhận diện dòng chảy nước liên tục > 0.05 m³/h vào khung giờ ban đêm (01:00 - 05:00) khi phòng không có người hoạt động; (2) Cảnh báo quá tải phụ tải điện: Phát hiện công suất điện tức thời vượt 80% công suất thiết kế đường dây hoặc dòng điện tăng đột biến, tiềm ẩn nguy cơ chập cháy nổ theo tiêu chuẩn PCCC; (3) Hệ thống kích hoạt Cảnh báo khẩn cấp (Emergency Landlord Alert) với huy hiệu nhấp nháy đỏ trên thanh điều hướng và tự động gửi gợi ý hành động khắc phục cho chủ cơ sở.
+
+Bảng: Kịch bản xử lý lỗi AI Dự đoán bảo trì & Cảnh báo bất thường
+
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+| --- | --- |
+| Lưu lượng nước phát sinh liên tục trong khung giờ nghỉ ngơi (01:00 - 05:00) vượt ngưỡng rò rỉ an toàn | Dashboard hiển thị cảnh báo đỏ khẩn cấp: 'Cảnh báo rò rỉ nước: Phát hiện lưu lượng nước chảy liên tục tại Phòng [Tên]. Khuyến nghị kiểm tra ngay van xả bồn cầu và đường ống ngầm'. |
+| Phụ tải điện tức thời vượt ngưỡng an toàn PCCC (> 4.5 kW đối với phòng trọ thông thường) | Hệ thống phát chuông cảnh báo trên Dashboard và gửi tin nhắn cảnh báo: 'Nguy cơ quá tải điện: Phòng [Tên] đang sử dụng công suất vượt mức an toàn. Đề nghị kiểm tra thiết bị sinh nhiệt cao'. |
+| Mất kết nối API với mô hình AI Gemini trong lúc chạy phân tích dự đoán định kỳ | Hệ thống tự động chuyển sang thuật toán Fallback dự phòng dựa trên ngưỡng thống kê cơ sở dữ liệu nội bộ (Rule-based Thresholds), đảm bảo không bị gián đoạn cảnh báo an toàn. |
+
+14. Tích hợp Hóa đơn điện tử e-Invoice chuẩn Nghị định 123/2020/NĐ-CP & Cổng tra cứu CQT
+
+Mô tả chi tiết chức năng: Đáp ứng toàn diện quy định về hóa đơn điện tử cho hoạt động kinh doanh cho thuê bất động sản lưu trú theo Nghị định số 123/2020/NĐ-CP và Thông tư số 78/2021/TT-BTC. Khi hóa đơn tiền phòng/dịch vụ chuyển sang trạng thái đã thanh toán (qua chuyển khoản VietQR tự động hoặc xác nhận tiền mặt), hệ thống tự động ký số điện tử và gửi dữ liệu hóa đơn lên hệ thống Cơ quan Thuế (CQT) để cấp mã. Hỗ trợ xuất bản thể hiện hóa đơn điện tử chuẩn PDF có mã QR CQT, tự động gửi email/Zalo OTT thông báo kèm link tra cứu cho người thuê, và cung cấp Cổng tra cứu hóa đơn trực tuyến độc lập bằng Mã tra cứu và Mã số thuế.
+
+Bảng: Kịch bản xử lý lỗi Tích hợp Hóa đơn điện tử e-Invoice
+
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+| --- | --- |
+| Thông tin Mã số thuế hoặc CCCD người mua nhập sai định dạng khi phát hành hóa đơn có mã CQT | Hệ thống chặn gửi và hiển thị thông báo lỗi: 'Mã số thuế hoặc số CCCD của người mua không đúng quy chuẩn Tổng cục Thuế. Vui lòng kiểm tra lại thông tin khách thuê'. |
+| Cổng kết nối dịch vụ Hóa đơn điện tử (VNPT / Viettel / MISA) phản hồi chậm hoặc đang bảo trì định kỳ | Hóa đơn chuyển sang trạng thái 'Chờ cấp mã (Queued)' và hệ thống tự động đưa vào hàng đợi Retry với cơ chế Exponential Backoff để cấp mã lại khi dịch vụ thông suốt. |
+| Người thuê tra cứu hóa đơn trên cổng công khai với Mã tra cứu sai hoặc không tồn tại | Giao diện tra cứu phản hồi: 'Không tìm thấy hóa đơn điện tử tương ứng với mã tra cứu đã cung cấp. Vui lòng kiểm tra lại mã trên biên lai thanh toán hoặc liên hệ ban quản lý'. |
+
+15. Bộ Khởi Chạy Ứng Dụng GUI Launcher & Hệ Thống Vận Hành Kép Docker / XAMPP
+
+Mô tả chi tiết chức năng: Công cụ Launcher GUI trực quan phát triển trên nền PowerShell và Batch Script (start.bat và launcher.ps1), cho phép người dùng khởi động toàn bộ hệ thống (Web server, MySQL, Queue worker, Reverb WebSocket) chỉ với một cú nhấp chuột. Cơ chế tự động quét phát hiện dịch vụ MySQL, tự động kiểm tra và giải phóng xung đột cổng 3306 trước khi chạy migrations, hỗ trợ chuyển đổi linh hoạt giữa môi trường Docker Container và môi trường Local XAMPP/WAMPP, có cơ chế fallback thông minh tự kích hoạt container khi máy trạm chưa cài đặt PHP cục bộ.
+
+Bảng: Kịch bản xử lý lỗi Bộ Khởi Chạy Launcher & Môi Trường
+
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+| --- | --- |
+| Cổng 3306 bị chiếm dụng bởi một tiến trình MySQL khác đang chạy ngầm trên Windows | Launcher tự động kiểm tra cổng 3306, hiển thị thông báo: 'Phát hiện dịch vụ MySQL đang chạy trên cổng 3306. Tự động liên kết cơ sở dữ liệu và tiếp tục khởi chạy ứng dụng'. |
+| Máy tính của người dùng chưa cài đặt môi trường PHP CLI khi lựa chọn khởi chạy cục bộ | Bộ khởi chạy tự động phát hiện thiếu binary PHP và chuyển hướng thông minh sang chế độ Docker Runner: 'Không tìm thấy PHP cục bộ. Hệ thống tự động chuyển sang chế độ Docker Container'. |
+
 TÀI LIỆU THAM KHẢO46
 
-
-# DANH MỤC HÌNH ẢNH
+DANH MỤC HÌNH ẢNH
 
 Hình 1: Sơ đồ mô hình thực thể quan hệ (ERD) hệ thống Quản lý Nhà trọ, Chung cư, Căn hộ dịch vụ & Khách sạn25
 
@@ -161,8 +290,7 @@ Hình 18: Giao diện Quản lý Tài sản - Trang thiết bị & Minibar lưu 
 
 Hình 19: Giao diện Quản lý Sổ quỹ thu chi và ghi nhận dòng tiền phát sinh45
 
-
-# DANH MỤC BẢNG SỐ LIỆU
+DANH MỤC BẢNG SỐ LIỆU
 
 Bảng 1: Bảng danh mục từ viết tắt5
 
@@ -224,8 +352,7 @@ Bảng 29: Kịch bản xử lý lỗi Trang Kiểm duyệt Hồ sơ Định dan
 
 Bảng 30: Kịch bản xử lý lỗi Trang Quản lý Tài sản - Trang thiết bị & Minibar45
 
-
-# DANH MỤC TỪ VIẾT TẮT
+DANH MỤC TỪ VIẾT TẮT
 
 | STT | Chữ Viết Tắt | Ý Nghĩa Tiếng Việt | Thuật Ngữ Tiếng Anh |
 | --- | --- | --- | --- |
@@ -247,9 +374,14 @@ Bảng 30: Kịch bản xử lý lỗi Trang Quản lý Tài sản - Trang thi�
 | 7 | RBAC | Kiểm soát truy cập phân quyền theo vai trò | Role-Based Access Control |
 | 6 | UI / UX | Giao diện và Trải nghiệm người dùng | User Interface / User Experience |
 | 16 | VietQR | Chuẩn nhận diện thanh toán mã QR ngân hàng | Vietnam Quick Response Code |
+| 19 | IoT | Mạng lưới vạn vật kết nối Internet | Internet of Things |
+| 20 | CQT | Cơ quan Thuế Việt Nam | General Department of Taxation |
+| 21 | e-Invoice | Hóa đơn điện tử có mã CQT (NĐ 123/2020 & TT 78/2021) | Electronic Invoice |
+| 22 | PdM | Bảo trì dự đoán dựa trên AI và dữ liệu cảm biến | Predictive Maintenance |
+| 23 | WebSocket / Reverb | Giao thức truyền thông hai chiều thời gian thực | Laravel Reverb WebSocket Engine |
+| 24 | LoRaWAN / ESP32 | Chuẩn mạng vô tuyến tầm xa & Vi điều khiển công tơ IoT | Low Power Wide Area Network / ESP32 SoC |
 
-
-# LỜI MỞ ĐẦU
+LỜI MỞ ĐẦU
 
 Trong tiến trình chuyển đổi số và tốc độ đô thị hóa nhanh chóng tại Việt Nam hiện nay, nhu cầu tìm kiếm và thuê nhà trọ, căn hộ dịch vụ, chung cư mini của học sinh, sinh viên và người lao động tại các đô thị lớn không ngừng gia tăng. Tuy nhiên, công tác quản lý và thị trường thuê trọ truyền thống đang bộc lộ rất nhiều bất cập mang tính cố hữu:
 
@@ -261,15 +393,13 @@ Trong tiến trình chuyển đổi số và tốc độ đô thị hóa nhanh c
 
 Nhận thức rõ những bài toán thực tiễn nêu trên, nhóm chúng em đã nghiên cứu và phát triển đề tài: "HỆ THỐNG QUẢN LÝ NHÀ TRỌ, CHUNG CƯ, CĂN HỘ DỊCH VỤ VÀ KHÁCH SẠN THÔNG MINH (RENTRY & SMARTROOM)" trong khuôn khổ môn học Chuyên đề phát triển Web 1 (năm 2026).
 
-Hệ thống là sự kết hợp chặt chẽ giữa nền tảng tìm kiếm, đặt phòng và đánh giá lưu trú minh bạch (Renty) với hệ sinh thái quản trị vận hành toàn diện cho Nhà trọ, Chung cư, Căn hộ dịch vụ và Khách sạn (SmartRoom), tích hợp sâu các công nghệ tiên tiến: Trí tuệ nhân tạo (Google Gemini AI) hỗ trợ tư vấn và OCR nhận diện chỉ số đồng hồ điện nước, cơ chế xác thực sinh trắc học WebAuthn Passkey, Ký số hợp đồng điện tử bằng Canvas, Quản lý sơ đồ buồng phòng Housekeeping thời gian thực, Phí quản lý chung cư tự động và Mã hóa dữ liệu nhạy cảm AES-256-GCM.
+Hệ thống là sự kết hợp chặt chẽ giữa nền tảng tìm kiếm, đặt phòng và đánh giá lưu trú minh bạch (Renty) với hệ sinh thái quản trị vận hành toàn diện cho Nhà trọ, Chung cư, Căn hộ dịch vụ và Khách sạn (SmartRoom). Hệ thống tích hợp sâu chuỗi công nghệ hiện đại hàng đầu: Trí tuệ nhân tạo (Google Gemini AI) hỗ trợ tư vấn ngôn ngữ tự nhiên (RAG), AI Vision OCR nhận diện công tơ đơn lẻ và hàng loạt (Bulk Match OCR), AI Dự đoán bảo trì thiết bị (Predictive Maintenance); Hệ sinh thái IoT Smart Metering thu thập vi mô phụ tải điện nước chu kỳ 15 phút; Cơ chế truyền thông thời gian thực bằng Laravel Reverb WebSockets; Hóa đơn điện tử e-Invoice chuẩn Nghị định 123/2020/NĐ-CP và Thông tư 78/2021/TT-BTC có mã Cơ quan Thuế (CQT); Xác thực sinh trắc học không mật khẩu WebAuthn Passkey (FIDO2); Ký số hợp đồng điện tử Canvas; và Mã hóa bảo vệ dữ liệu nhạy cảm PII bằng chuẩn quân sự AES-256-GCM kết hợp HMAC Blind Index.
 
 Nhóm chúng em xin bày tỏ lòng biết ơn chân thành và sâu sắc nhất đến Thầy Phan Thanh Nhuần – Giảng viên phụ trách môn học. Trong suốt quá trình thực hiện đề tài, Thầy đã tận tình hướng dẫn, định hướng kiến trúc hệ thống và đóng góp nhiều ý kiến chuyên môn quý báu giúp nhóm hoàn thành đồ án một cách hoàn thiện nhất.
 
+I. KẾ HOẠCH LÀM VIỆC NHÓM
 
-# I. KẾ HOẠCH LÀM VIỆC NHÓM
-
-
-## 1. Bảng phân chia công việc (Bảng 2)
+1. Bảng phân chia công việc (Bảng 2)
 
 | Họ và tên | STT | Công việc | Ngày bắt đầu | Hạn hoàn thành | Sinh viên đánh giá | Đánh giá của GV |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -288,7 +418,7 @@ Nhóm chúng em xin bày tỏ lòng biết ơn chân thành và sâu sắc nhấ
 | Nguyễn Anh Quý(Nhóm Phó) | 1 | Quản lý Tòa nhà & Cơ sở lưu trú | 07/09/2026 | 09/09/2026 | 0.75 |  |
 |  | 2 | Sơ đồ ma trận phòng (Room Matrix) | 07/09/2026 | 12/09/2026 | 0.75 |  |
 |  | 3 | Chốt số Điện - Nước định kỳ | 07/09/2026 | 14/09/2026 | 1 |  |
-|  | 4 | AI Quét số công tơ điện nước (OCR) | 07/09/2026 | 16/09/2026 | 0.75 |  |
+|  | 4 | AI Quét số công tơ điện nước (OCR) & Quét hàng loạt khớp phòng (Bulk Match OCR) | 07/09/2026 | 16/09/2026 | 0.75 |  |
 |  | 5 | Tính tiền phòng & Hóa đơn tự động | 07/09/2026 | 18/09/2026 | 2 |  |
 |  | 6 | Xuất Hóa đơn PDF & Mã VietQR | 07/09/2026 | 21/09/2026 | 0.75 |  |
 |  | 7 | Nhắc nợ tự động qua Zalo/SMS | 07/09/2026 | 23/09/2026 | 1.5 |  |
@@ -307,9 +437,16 @@ Nhóm chúng em xin bày tỏ lòng biết ơn chân thành và sâu sắc nhấ
 |  | 9 | Quản lý Cư dân & Người ở cùng | 07/09/2026 | 27/09/2026 | 0.75 |  |
 |  | 10 | Xuất tờ khai tạm trú Mẫu CT01 | 07/09/2026 | 30/09/2026 | 1 |  |
 |  | 11 | Chuông báo phòng trống (Room Alert) | 07/09/2026 | 02/10/2026 | 0.75 |  |
+| Nguyễn Anh Quý(Nhóm Phó) | 12 | IoT Smart Metering & Telemetry 15 phút giám sát điện nước thời gian thực | 07/09/2026 | 21/09/2026 | 1.5 |  |
+| Nguyễn Anh Quý(Nhóm Phó) | 13 | AI Dự đoán bảo trì & Cảnh báo bất thường (AI Predictive Maintenance) | 15/09/2026 | 22/09/2026 | 1.5 |  |
+| Nguyễn Anh Quý(Nhóm Phó) | 14 | Tích hợp Hóa đơn điện tử e-Invoice chuẩn CQT Nghị định 123 & Thông tư 78 | 18/09/2026 | 22/09/2026 | 1.5 |  |
+| Nguyễn Anh Quý(Nhóm Phó) | 15 | Bộ khởi chạy App Launcher GUI & Tự động kết nối CSDL đa môi trường Docker/XAMPP | 20/09/2026 | 23/09/2026 | 0.75 |  |
+| Nguyễn Thanh Hiền(Nhóm Trưởng) | 13 | Đăng nhập 3 phương thức linh hoạt (Passkey FIDO2 + Email OTP + Password) | 07/09/2026 | 20/09/2026 | 1.0 |  |
+| Nguyễn Thanh Hiền(Nhóm Trưởng) | 14 | Phân hệ Khách sạn: Tiếp nhận đặt phòng (Hotel Bookings) & Bảng kê Folio | 12/09/2026 | 21/09/2026 | 1.25 |  |
+| Huỳnh Văn Vĩnh Em(Thành Viên) | 12 | Bộ lọc tìm kiếm phòng thông minh sửa lỗi chính tả (Typo Tolerance & Live Suggestion) | 10/09/2026 | 21/09/2026 | 1.0 |  |
+| Huỳnh Văn Vĩnh Em(Thành Viên) | 13 | Phân hệ Buồng phòng (Housekeeping) cập nhật thời gian thực qua WebSocket Reverb | 14/09/2026 | 21/09/2026 | 1.0 |  |
 
-
-## 2. Bảng báo cáo phiên họp nhóm (Bảng 3)
+2. Bảng báo cáo phiên họp nhóm (Bảng 3)
 
 | STT | Ngày Họp | Thời Gian | Địa Điểm | Thành Phần | Nội Dung Phiên Họp | Kết Quả Đạt Được | Ghi Chú |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -318,14 +455,11 @@ Nhóm chúng em xin bày tỏ lòng biết ơn chân thành và sâu sắc nhấ
 | 03 | 12/04/2026 | 09:00 | Thư viện trường | Cả nhóm (3/3) | Review tiến độ Sprint 1: Nghiệm thu các chức năng Auth, WebAuthn, CRUD phòng và sơ đồ ma trận. | Ghép nối thành công module tài khoản và phòng trọ. | Tốt |
 | 04 | 03/05/2026 | 15:00 | Google Meet | Cả nhóm (3/3) | Review tiến độ Sprint 2: Kiểm thử module Chốt điện nước, xuất VietQR và ký hợp đồng Canvas. | Khắc phục các lỗi cảm ứng trên thiết bị di động khi vẽ chữ ký. | Tốt |
 
+II. GIỚI THIỆU ĐỀ TÀI VÀ MÔ TẢ CHỨC NĂNG
 
-# II. GIỚI THIỆU ĐỀ TÀI VÀ MÔ TẢ CHỨC NĂNG
+1. Giới thiệu đề tài
 
-
-## 1. Giới thiệu đề tài
-
-
-### a. Hiện trạng và vấn đề
+a. Hiện trạng và vấn đề
 
 Thực tế quản lý vận hành cơ sở lưu trú và tìm kiếm nhà trọ hiện nay đang bộc lộ 4 nhóm vấn đề nghiêm trọng:
 
@@ -337,8 +471,7 @@ Thực tế quản lý vận hành cơ sở lưu trú và tìm kiếm nhà trọ
 
 • Nguy cơ rò rỉ dữ liệu cá nhân theo Nghị định 13/2023/NĐ-CP: Thông tin số điện thoại, số Căn cước công dân và tài khoản ngân hàng của người thuê đang bị lưu trữ công khai trong các sổ sách, file excel không mã hóa, rất dễ bị khai thác trái phép cho các hành vi lừa đảo tài chính.
 
-
-### b. Mục tiêu của đề tài
+b. Mục tiêu của đề tài
 
 Hệ thống được xây dựng nhằm đạt được các mục tiêu trọng tâm sau:
 
@@ -348,8 +481,7 @@ Hệ thống được xây dựng nhằm đạt được các mục tiêu trọn
 
 • Đối với quản trị viên sàn (Platform Admin): Thiết lập quy trình Xác minh chủ cơ sở lưu trú lũy tiến (Progressive Verification) gồm 3 cấp độ (Cơ bản -> KYC định danh -> Premium Tích Xanh thẩm định), đảm bảo mọi cơ sở nhà trọ, chung cư, căn hộ và khách sạn đăng tải trên nền tảng đều có nguồn gốc pháp lý rõ ràng, minh bạch về giá cả và an toàn về PCCC, ANTT.
 
-
-### c. Công nghệ sử dụng
+c. Công nghệ sử dụng
 
 Để đáp ứng yêu cầu về độ tin cậy, hiệu năng và tính bảo mật cao, hệ thống áp dụng các công nghệ sau:
 
@@ -363,22 +495,15 @@ Hệ thống được xây dựng nhằm đạt được các mục tiêu trọn
 
 • Trí tuệ nhân tạo (AI Integration): Tích hợp Google Gemini API (gemini-3.1-flash-lite / gemini-2.5-flash): Cơ chế RAG (Retrieval-Augmented Generation) truy vấn dữ liệu phòng thực tế đưa vào ngữ cảnh Prompt, triệt tiêu hiện tượng AI bịa đặt thông tin; AI Vision OCR phân tích ảnh chụp mặt đồng hồ điện/nước để trích xuất chỉ số công tơ; AI NLP phân loại độ khẩn cấp sự cố bảo trì của cư dân và tự động sinh điều khoản hợp đồng thuê.
 
+• Môi trường Vận hành & GUI Launcher (Docker / XAMPP Dual Engine): Xây dựng bộ công cụ khởi chạy một chạm Launcher GUI trên nền PowerShell/Batch Script, tự động kiểm tra xung đột và kích hoạt dịch vụ MySQL trên cổng 3306, hỗ trợ cơ chế vận hành kép linh hoạt giữa Docker Container và môi trường cục bộ (XAMPP/WAMPP/PHP CLI) với khả năng tự phục hồi khi thiếu PHP môi trường.
 
-### d. Kiến trúc Đa mô hình lưu trú & Động cơ Tính tiền (Billing Engine)
+• Trí tuệ nhân tạo nâng cao & Dự đoán bảo trì (AI Predictive Maintenance & Bulk OCR): Nâng cấp công nghệ AI Vision Bulk Match OCR cho phép tải lên cùng lúc 5 – 30 ảnh công tơ để bóc tách song song Số SX (Serial) và chỉ số tiêu thụ rồi tự động khớp phòng; kết hợp mô hình AI phân tích chuỗi thời gian telemetry để phát hiện sớm rò rỉ nước ngầm, cảnh báo quá tải phụ tải điện và kích hoạt cảnh báo khẩn cấp (Emergency Landlord Alert) ngăn ngừa chập cháy và thất thoát tài nguyên.
 
-Hệ thống được thiết kế theo kiến trúc lai (Hybrid Hospitality & Rental PMS) nhằm đáp ứng đồng thời cả 2 luồng vận hành đặc thù:
+• Hóa đơn điện tử & Tuân thủ Pháp lý Thuế (e-Invoice & Tax Compliance): Tích hợp chuẩn hóa đơn điện tử có mã của Cơ quan Thuế (CQT) theo Nghị định số 123/2020/NĐ-CP và Thông tư số 78/2021/TT-BTC. Cơ chế tự động ký số XML, xuất bản thể hiện PDF hợp pháp khi người thuê hoàn tất thanh toán, tích hợp sẵn API kết nối các nhà cung cấp (VNPT-Invoice, Viettel S-Invoice, MISA meInvoice) và cung cấp cổng tra cứu hóa đơn trực tuyến độc lập bằng Mã tra cứu và Mã số thuế.
 
-1. **Mô hình Thuê dài hạn theo tháng (Nhà trọ truyền thống & Chung cư mini)**:
-   - **Đối tượng**: Cư dân (Resident) thuê dài hạn từ 6 - 12 tháng, ký kết hợp đồng điện tử xác thực OTP và chữ ký vẽ tay Canvas.
-   - **Động cơ tính tiền định kỳ**: Vào cuối tháng, hệ thống tổng hợp: `Tiền phòng/tháng + (Điện mới - Điện cũ) * Giá điện + (Nước mới - Nước cũ) * Giá nước + Phí dịch vụ cố định (Thang máy, rác, wifi, gửi xe)`. Hóa đơn được xuất tự động kèm mã VietQR và gửi tin nhắn nhắc nợ qua Zalo. Đồng thời, hệ thống hỗ trợ xuất dữ liệu khai báo cư trú Mẫu CT01 theo quy chuẩn Bộ Công An.
+• Internet of Things (IoT) & Truyền thông Thời Gian Thực (Real-time WebSockets): Hệ sinh thái thu thập dữ liệu đo đạc chỉ số điện nước tự động chu kỳ 15 phút từ các thiết bị thông minh qua vi điều khiển ESP32, chuẩn truyền thông vô tuyến tầm xa LoRaWAN, giao thức công nghiệp Modbus RS485 và cầu nối MQTT Broker. Hệ thống truyền phát sự kiện thời gian thực (Real-time Event Broadcasting) dựa trên máy chủ Laravel Reverb WebSockets, tự động đồng bộ phụ tải điện nước, cảnh báo khẩn cấp và trạng thái dọn dẹp buồng phòng Housekeeping lên màn hình quản trị và Resident Portal mà không cần tải lại trang.
 
-2. **Mô hình Thuê ngắn hạn theo ngày / giờ (Khách sạn & Homestay nghỉ dưỡng)**:
-   - **Đối tượng**: Khách lưu trú (Guest) thuê theo block giờ (2 giờ đầu cố định + đơn giá giờ phụ trội) hoặc thuê theo ngày/đêm (Check-in 14:00, Check-out 12:00 hôm sau).
-   - **Động cơ tính tiền tức thời (Folio Engine)**: Tại thời điểm Check-out, hệ thống tự động tính toán: `(Số ngày/đêm * Giá ngày) hoặc [Giá block 2h đầu + (Số giờ thêm * Đơn giá giờ thêm)] + Phụ thu nhận phòng sớm / trả phòng trễ + Chi phí Minibar (đồ uống, thức ăn nhẹ tiêu thụ) - Tiền đặt cọc`. Hóa đơn Bảng kê Folio tích hợp mã VietQR động được in ngay tại quầy lễ tân.
-   - **Quy trình Xoay vòng buồng phòng thời gian thực (Realtime Room Flow)**: Khi khách Check-out, phòng tự động chuyển sang trạng thái **Cần dọn dẹp** (`cleaning` / `dirty`). Nhân viên Buồng phòng (Housekeeper) nhận danh sách trên thiết bị di động, sau khi vệ sinh xong bấm **"Đã dọn xong"** ➔ Phòng lập tức chuyển sang trạng thái **Sạch** (`clean` / `empty`), phát tín hiệu Realtime qua Server-Sent Events (SSE) để Sơ đồ ma trận phòng của Lễ tân đổi màu xanh đón khách mới ngay lập tức.
-
-
-## 2. Bảng danh mục chức năng và Endpoint API hệ thống (Bảng 4)
+2. Bảng danh mục chức năng và Endpoint API hệ thống (Bảng 4)
 
 Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được trích xuất trực tiếp từ routes/web.php và routes/api.php:
 
@@ -420,6 +545,7 @@ Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được tr
 | Chủ trọ | Chốt số Điện - Nước | POST | /smartroom/admin/utility | Nhập chỉ số điện nước cuối tháng, tự động tính tiền theo đơn giá |
 | Chủ trọ | Chốt điện nước hàng loạt | POST | /smartroom/admin/utility/bulk | Lưu dữ liệu chỉ số công tơ của toàn bộ các phòng trong một thao tác |
 | Chủ trọ | AI OCR Quét số công tơ | POST | /smartroom/admin/ai/ocr-meter | Nhận ảnh chụp mặt đồng hồ từ điện thoại, AI Vision đọc ra chỉ số |
+| Chủ trọ | AI Quét công tơ hàng loạt | POST | /smartroom/admin/ai/ocr-meter-bulk | Tải lên cùng lúc nhiều ảnh công tơ, AI Gemini bóc tách Số SX và Chỉ số để tự động khớp và điền vào từng phòng |
 | Chủ trọ | In Hóa đơn PDF & VietQR | GET | /smartroom/admin/utility/{id}/print | Xuất bản in phiếu thanh toán điện nước có nhúng mã VietQR động |
 | Chủ trọ | Xác nhận đã đóng tiền | POST | /smartroom/admin/utility/{id}/pay | Chuyển trạng thái hóa đơn sang Đã thanh toán, ghi nhận dòng tiền |
 | Chủ trọ | Nhắc nợ tự động qua Zalo/SMS | POST | /smartroom/admin/utility/auto-remind | Quét các phòng chưa nộp tiền và gửi tin nhắn Zalo kèm link quét VietQR |
@@ -443,12 +569,6 @@ Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được tr
 | Cư dân | Gửi mã OTP xác thực ký | POST | /smartroom/contract/{id}/send-otp | Gửi mã OTP về số điện thoại cư dân trước khi cho phép ký số |
 | Cư dân | Cư dân xác nhận ký hợp đồng | POST | /smartroom/contract/{id}/sign | Lưu chữ ký Base64 và mã OTP xác nhận hợp đồng có hiệu lực |
 | Cư dân | Tải file PDF Hợp đồng | GET | /smartroom/contract/{id}/pdf | Tải bản PDF hợp đồng có chữ ký số của cả hai bên để lưu trữ |
-| Lễ tân | Check-in nhận phòng nhanh | POST | /smartroom/admin/hotel/check-in | Tiếp nhận thông tin khách lưu trú ngắn hạn (ngày/giờ), đổi phòng sang Đang ở (occupied) |
-| Lễ tân | Ghi nhận sử dụng Minibar | POST | /smartroom/admin/hotel/folio/{id}/items | Tích chọn đồ uống minibar và dịch vụ phòng khách đã tiêu thụ vào hóa đơn phòng |
-| Lễ tân | Check-out trả phòng tức thì | POST | /smartroom/admin/hotel/check-out/{id} | Tính tiền giờ/ngày + phụ thu + minibar, chuyển trạng thái phòng sang Cần dọn (cleaning) |
-| Lễ tân | Xuất Bảng kê Folio VietQR | GET | /smartroom/admin/hotel/folio/{id} | Xuất hóa đơn Folio chi tiết tích hợp mã VietQR động để khách thanh toán tại quầy |
-| Buồng phòng | Danh sách phòng chờ dọn | GET | /smartroom/housekeeping | Giao diện tối ưu di động hiển thị danh sách các phòng bẩn khách vừa trả |
-| Buồng phòng | Cập nhật trạng thái vệ sinh | POST | /smartroom/housekeeping/{id}/status | Buồng phòng bấm Đã dọn xong, chuyển phòng sang Sạch (clean) và bắn tín hiệu Realtime |
 | Admin | Danh sách duyệt xác minh | GET | /admin/verifications | Xem danh sách các hồ sơ KYC và Premium đang chờ phê duyệt |
 | Admin | Phê duyệt hồ sơ xác minh | POST | /admin/verifications/{id}/approve | Duyệt hồ sơ: thăng cấp quyền chủ trọ, cấp Tích Xanh, mở cổng VietQR |
 | Admin | Từ chối hồ sơ xác minh | POST | /admin/verifications/{id}/reject | Từ chối hồ sơ kèm lý do phản hồi cho chủ trọ bổ sung lại |
@@ -457,14 +577,26 @@ Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được tr
 | Admin | Nhật ký kiểm toán Audit Log | GET | /admin/audit-logs | Xem lịch sử truy cập dữ liệu nhạy cảm bất biến (chống sửa xóa) |
 | Admin | Nhật ký hoạt động Admin | GET | /smartroom/admin/activity-logs | Theo dõi toàn bộ lịch sử thao tác đăng nhập, tạo sửa xóa của hệ thống |
 | Admin | Quản lý người dùng hệ thống | GET | /list | Xem danh sách toàn bộ tài khoản người dùng trên hệ thống |
-| Admin | Phân quyền vai trò | POST | /users/role | Cập nhật vai trò quản trị (Admin, Landlord, Manager, Receptionist, Housekeeper, Resident, Guest) |
+| Admin | Phân quyền vai trò | POST | /users/role | Cập nhật vai trò quản trị (Admin, Landlord, Manager, Resident, Guest) |
 | Admin | Khóa / Xóa tài khoản | DELETE | /delete/{id} | Vô hiệu hóa hoặc xóa người dùng vi phạm quy chế hoạt động |
+| IoT Smart Metering | Tiếp nhận Telemetry từ Gateway/ESP32 | POST | /api/iot/telemetry/ingest | Tiếp nhận gói tin công suất kW, lưu lượng m3/h, điện áp, dòng điện chu kỳ 15 phút từ vi điều khiển qua Token xác thực |
+| IoT Smart Metering | Chỉ số Realtime và Phụ tải phòng | GET | /smartroom/admin/iot/room/{roomId}/realtime | Truy xuất dữ liệu telemetry thời gian thực và lịch sử phụ tải 24h/7d của phòng để vẽ biểu đồ canvas và tooltip |
+| IoT Smart Metering | Tổng quan mạng lưới IoT cơ sở | GET | /smartroom/admin/iot/facility-summary | Thống kê tổng công tơ Online/Offline, cảnh báo rò rỉ, tổng công suất tức thời toàn cơ sở lưu trú |
+| IoT Smart Metering | Tự động chốt số hóa đơn từ IoT | POST | /smartroom/admin/iot/sync-billing | Một chạm tự động lấy chỉ số công tơ điện nước mới nhất điền vào hóa đơn tháng của các phòng và tính tiền |
+| AI & Bảo Trì PdM | Bảng cảnh báo bất thường & PdM | GET | /smartroom/admin/iot/anomalies | AI Gemini phân tích chuỗi thời gian, phát hiện rò rỉ nước ngầm, quá tải phụ tải điện và đề xuất giải pháp bảo trì |
+| AI & Bảo Trì PdM | Xử lý cảnh báo sự cố bất thường | POST | /smartroom/admin/iot/anomalies/{id}/resolve | Chủ trọ hoặc kỹ thuật viên ghi nhận khắc phục sự cố rủi ro theo khuyến nghị chi tiết của AI |
+| Tài Chính & Thuế | Phát hành Hóa đơn điện tử e-Invoice | POST | /smartroom/admin/einvoice/issue | Tự động sinh số hóa đơn, ký số điện tử XML/PDF và cấp mã Cơ quan Thuế theo Nghị định 123/2020/NĐ-CP |
+| Tài Chính & Thuế | Cổng tra cứu hóa đơn điện tử công khai | GET | /smartroom/admin/einvoice/lookup | Người thuê hoặc kế toán tra cứu chi tiết hóa đơn điện tử hợp pháp bằng Mã tra cứu và Mã số thuế |
+| Khách Sạn & Lễ Tân | Tiếp nhận Check-in khách lưu trú | POST | /smartroom/admin/hotel/checkin | Tiếp nhận khách thuê theo giờ/theo ngày, lưu thông tin CCCD, tạm thu tiền cọc và tự động phân bổ phòng |
+| Khách Sạn & Lễ Tân | Check-out & Bảng kê thanh toán Folio | POST | /smartroom/admin/hotel/checkout/{bookingId} | Tính cước phòng lũy tiến theo giờ/ngày, tổng hợp chi phí tiêu thụ Minibar, xuất bảng kê Folio PDF |
+| Buồng Phòng | Màn hình dọn dẹp buồng phòng di động | GET | /smartroom/admin/housekeeping | Hiển thị danh sách phòng cần dọn dẹp (Dirty/Cleaning), tối ưu giao diện thao tác nhanh trên điện thoại |
+| Buồng Phòng | Cập nhật trạng thái dọn dẹp realtime | POST | /smartroom/admin/housekeeping/status/{roomId} | Nhân viên cập nhật trạng thái phòng (Clean, Inspected) và phát sóng sự kiện qua Laravel Reverb |
+| Public & Renty | Gợi ý tìm kiếm trực tiếp & Sửa lỗi chính tả | GET | /api/search/suggestions | Thuật toán Levenshtein gợi ý từ khóa khu vực, tiện ích và tự động nhận diện sửa lỗi gõ sai (Did you mean) |
+| Cư Dân | Cổng dịch vụ cư dân trực tuyến | GET | /resident/portal | Cư dân tra cứu hóa đơn tiền phòng, chỉ số điện nước realtime, xem hợp đồng và gửi phản ánh sự cố kỹ thuật |
 
+III. DATABASE VÀ MÔ HÌNH ERD
 
-# III. DATABASE VÀ MÔ HÌNH ERD
-
-
-## 1. Mô hình ERD (Entity Relationship Diagram)
+1. Mô hình ERD (Entity Relationship Diagram)
 
 Hệ thống Renty & SmartRoom được thiết kế theo kiến trúc Đa chủ trọ (Multi-tenancy) với mô hình quan hệ chặt chẽ giữa các thực thể cốt lõi:
 
@@ -484,11 +616,9 @@ Hệ thống Renty & SmartRoom được thiết kế theo kiến trúc Đa chủ
 
 Hình 1: Sơ đồ mô hình thực thể quan hệ (ERD) hệ thống Quản lý Nhà trọ, Chung cư, Căn hộ dịch vụ & Khách sạn (Renty - SmartRoom)
 
+2. Từ điển dữ liệu (Data Dictionary - 10 Thực thể cốt lõi)
 
-## 2. Từ điển dữ liệu (Data Dictionary - 10 Thực thể cốt lõi)
-
-
-### a. Bảng Users & Roles (Tài khoản và Vai trò)
+a. Bảng Users & Roles (Tài khoản và Vai trò)
 
 Bảng users lưu trữ thông tin đăng nhập, xác thực WebAuthn Passkey và phân quyền. Trường phone được mã hóa AES-256-GCM kết hợp Blind Index.
 
@@ -505,23 +635,22 @@ Bảng 5: Mô tả cấu trúc bảng Users (Tài khoản người dùng)
 | phone_blind_index | VARCHAR(64), NULL | Chỉ mục mù HMAC-SHA256 phục vụ tra cứu số điện thoại |
 | email | VARCHAR(255), NULL | Địa chỉ thư điện tử người dùng |
 | password | VARCHAR(255) | Mật khẩu đã được băm (Bcrypt hash) |
-| role | VARCHAR(50) | Tên vai trò: admin, landlord, unverified_landlord, manager, receptionist, housekeeper, resident, guest |
+| role | VARCHAR(50) | Tên vai trò: admin, landlord, unverified_landlord, manager, resident, guest |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo tài khoản |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-Bảng 6: Mô tả cấu trúc bảng Roles (Vai trò và phân quyền 8 Roles)
+Bảng 6: Mô tả cấu trúc bảng Roles (Vai trò và phân quyền)
 
 | Tên Trường | Kiểu Dữ Liệu | Mô Tả |
 | --- | --- | --- |
 | id | BIGINT UNSIGNED | Khóa chính, tự động tăng |
-| name | VARCHAR(100) | Tên hiển thị vai trò (Ví dụ: Chủ trọ, Quản lý, Lễ tân, Buồng phòng, Cư dân) |
-| slug | VARCHAR(50), UNIQUE | Mã định danh vai trò: admin, landlord, unverified_landlord, manager, receptionist, housekeeper, resident, guest |
+| name | VARCHAR(100) | Tên hiển thị vai trò (Ví dụ: Chủ trọ, Quản lý, Cư dân) |
+| slug | VARCHAR(50), UNIQUE | Mã định danh vai trò: admin, landlord, manager, resident, guest |
 | description | VARCHAR(255), NULL | Mô tả phạm vi quyền hạn của vai trò |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo vai trò |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### b. Bảng Properties / Buildings (Cơ sở lưu trú: Nhà trọ, Chung cư, Tòa nhà, Khách sạn)
+b. Bảng Properties / Buildings (Cơ sở lưu trú: Nhà trọ, Chung cư, Tòa nhà, Khách sạn)
 
 Bảng properties (buildings) đại diện cho các cơ sở bất động sản lưu trú trực thuộc quyền quản lý của một Tenant. Hỗ trợ phân loại loại hình cơ sở kinh doanh (property_type: nhà trọ truyền thống, chung cư / căn hộ mini, tòa nhà căn hộ dịch vụ, hoặc khách sạn/homestay), quản lý số tầng, tổng số căn hộ/phòng, cấu hình phí quản lý chung cư (management_fee_rate), quy chuẩn giờ nhận/trả phòng khách sạn (check-in/check-out) và biểu giá điện nước.
 
@@ -534,10 +663,7 @@ Bảng 7: Mô tả cấu trúc bảng Properties / Buildings (Cơ sở lưu trú
 | name | VARCHAR(255) | Tên cơ sở lưu trú (Ví dụ: Dãy trọ A, Khách sạn Renty Star, Căn hộ dịch vụ Landmark) |
 | address | VARCHAR(255) | Địa chỉ cụ thể của tòa nhà |
 | total_floors | INT UNSIGNED, DEFAULT 1 | Tổng số tầng của cơ sở lưu trú |
-| description | TEXT, NULL | Thông tin mô tả đặc điểm, vị trí và dịch vụ của cơ sở |
-| property_type | VARCHAR(30), DEFAULT 'boarding' | Phân loại mô hình cơ sở lưu trú: boarding (nhà trọ), apartment (chung cư mini), hotel (khách sạn) |
-| checkin_time | TIME, DEFAULT '14:00:00' | Giờ quy chuẩn nhận phòng tiêu chuẩn khách sạn |
-| checkout_time | TIME, DEFAULT '12:00:00' | Giờ quy chuẩn trả phòng tiêu chuẩn khách sạn |
+| description | TEXT, NULL | Loại hình cơ sở (property_type: boarding, apartment, hotel), giờ check-in/out, tiện ích chung |
 | phone | VARCHAR(50), NULL | Số điện thoại hotline / liên hệ quản lý cơ sở lưu trú |
 | status | VARCHAR(30), DEFAULT 'active' | Trạng thái hoạt động: active (hoạt động), maintenance (bảo trì), inactive (tạm ngưng) |
 | image | VARCHAR(255), NULL | Đường dẫn ảnh đại diện tòa nhà / cơ sở lưu trú |
@@ -546,10 +672,9 @@ Bảng 7: Mô tả cấu trúc bảng Properties / Buildings (Cơ sở lưu trú
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 | deleted_at | TIMESTAMP, NULL | Thời điểm xóa mềm cơ sở lưu trú (phục vụ SoftDeletes) |
 
+c. Bảng Rooms & Condos (Phòng trọ, Căn hộ chung cư, Phòng khách sạn & Minibar)
 
-### c. Bảng Rooms & Condos (Phòng trọ, Căn hộ chung cư, Phòng khách sạn & Minibar)
-
-Quản lý chi tiết từng căn phòng trọ hoặc căn hộ chung cư: số phòng/mã căn (P.101, Căn 12A.03), phân loại phòng (Studio, 1PN, 2PN, 3PN, Deluxe, VIP), hình thức thuê linh hoạt (theo tháng cho trọ/chung cư, theo ngày hoặc theo giờ cho khách sạn), đa khung giá (giá tháng, giá ngày/đêm, giá giờ đầu và giờ phụ trội), trạng thái phòng (trống, đang ở, nợ cước, đang dọn dẹp, bảo trì), trạng thái vệ sinh buồng phòng (clean, dirty, cleaning, inspected), danh mục tiện ích (WC, ban công, thang máy, thẻ từ) và danh mục tài sản/minibar bàn giao.
+Quản lý chi tiết từng căn phòng trọ hoặc căn hộ chung cư: số phòng/mã căn (P.101, Căn 12A.03), phân loại phòng (Studio, 1PN, 2PN, 3PN, Deluxe, VIP), hình thức thuê linh hoạt (theo tháng cho trọ/chung cư, theo ngày hoặc theo giờ cho khách sạn), đa khung giá (giá tháng, giá đêm, giá giờ), trạng thái phòng (trống, đang ở, đang dọn dẹp vệ sinh - Housekeeping, bảo trì), danh mục tiện ích (WC, ban công, thang máy, thẻ từ) và danh mục tài sản/minibar bàn giao.
 
 Bảng 8: Mô tả cấu trúc bảng Rooms & Condos (Phòng lưu trú, Căn hộ chung cư & Minibar)
 
@@ -560,14 +685,12 @@ Bảng 8: Mô tả cấu trúc bảng Rooms & Condos (Phòng lưu trú, Căn h�
 | building_id | BIGINT UNSIGNED, NULL | Khóa ngoại tham chiếu bảng buildings(id) |
 | room_number | VARCHAR(50) | Mã hoặc số phòng (Ví dụ: P.101, Phòng Deluxe 202, VIP Suite) |
 | floor | INT | Tầng mà phòng trọ đang tọa lạc |
-| price | DECIMAL(12,2) | Giá thuê phòng theo tháng (VNĐ) |
-| price_per_day | DECIMAL(12,2), NULL | Giá thuê phòng theo ngày / đêm khách sạn (VNĐ) |
-| price_per_hour | DECIMAL(12,2), NULL | Giá thuê phòng block 2 giờ đầu khách sạn (VNĐ) |
-| price_extra_hour | DECIMAL(12,2), NULL | Giá phụ trội mỗi giờ tiếp theo khi thuê theo giờ (VNĐ) |
+| price | DECIMAL(12,2) | Giá thuê phòng (Theo tháng với trọ/căn hộ, hoặc theo ngày/giờ với khách sạn) |
 | area | INT | Diện tích sử dụng của phòng (m2) |
-| status | VARCHAR(30) | Trạng thái phòng: Trống (empty), Đang ở (occupied), Nợ cước (overdue), Đang dọn dẹp (cleaning), Bảo trì (maintenance) |
-| cleaning_status | VARCHAR(30) | Trạng thái vệ sinh buồng phòng: Sạch (clean), Bẩn cần dọn (dirty), Đang dọn (cleaning), Đã kiểm tra (inspected) |
-| amenities | JSON, NULL | Mảng JSON lưu các tiện ích: WC khép kín, ban công, gác lửng, minibar, khóa từ, thú cưng |
+| electric_meter_serial | VARCHAR(100), NULL | Số sản xuất (Số SX) dập trên mặt công tơ điện (hỗ trợ AI Vision Bulk OCR quét và khớp phòng tự động) |
+| water_meter_serial | VARCHAR(100), NULL | Số sản xuất (Số SX) dập trên mặt đồng hồ nước (hỗ trợ AI Vision Bulk OCR quét và khớp phòng tự động) |
+| status | ENUM | Trạng thái phòng: Trống (empty), Đang ở (occupied), Nợ cước (overdue), Bảo trì (maintenance) |
+| amenities | JSON, NULL | Mảng JSON lưu các tiện ích: WC khép kín, ban công, gác lửng, thú cưng |
 | image | VARCHAR(255), NULL | Đường dẫn ảnh đại diện phòng |
 | images | JSON, NULL | Mảng JSON danh sách ảnh thực tế các góc chụp trong phòng |
 | video | VARCHAR(255), NULL | Đường dẫn video thực tế không gian phòng |
@@ -578,6 +701,9 @@ Bảng 8: Mô tả cấu trúc bảng Rooms & Condos (Phòng lưu trú, Căn h�
 | version | INT UNSIGNED, DEFAULT 1 | Phiên bản phục vụ Optimistic Locking (chống xung đột ghi đè khi đặt phòng) |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo phòng |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
+| price_per_day | DECIMAL(12,2), NULL | Đơn giá thuê phòng theo ngày đối với mô hình khách sạn / homestay ngắn hạn |
+| price_per_hour | DECIMAL(12,2), NULL | Đơn giá thuê phòng theo giờ phục vụ khách nghỉ chặng ngắn hoặc dịch vụ linh hoạt |
+| cleaning_status | VARCHAR(30), DEFAULT 'clean' | Trạng thái buồng phòng: 'clean' (sạch), 'dirty' (bẩn), 'cleaning' (đang dọn), 'inspected' (đã kiểm tra) |
 
 Bảng 9: Mô tả cấu trúc bảng Equipment (Danh mục tài sản - Trang thiết bị)
 
@@ -605,50 +731,7 @@ Bảng 10: Mô tả cấu trúc bảng RoomEquipment (Phân bổ trang thiết b
 | created_at | TIMESTAMP, NULL | Thời điểm tạo bản ghi |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-Bảng 10b: Mô tả cấu trúc bảng HotelBookings (Phiếu đặt phòng & Lưu trú khách sạn ngắn hạn)
-
-| Tên Trường | Kiểu Dữ Liệu | Mô Tả |
-| --- | --- | --- |
-| id | BIGINT UNSIGNED | Khóa chính, tự động tăng |
-| tenant_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng tenants(id) |
-| room_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng rooms(id) |
-| booking_code | VARCHAR(30), UNIQUE | Mã phiếu đặt phòng duy nhất (Ví dụ: HB-RENTY01) |
-| guest_name | VARCHAR(255) | Họ và tên khách lưu trú |
-| guest_phone | TEXT, NULL | Số điện thoại liên hệ (Mã hóa AES-256-GCM) |
-| guest_cccd | TEXT, NULL | Số Căn cước công dân khách (Mã hóa AES-256-GCM) |
-| rental_type | VARCHAR(20), DEFAULT 'day' | Hình thức thuê phòng: day (theo ngày/đêm), hour (theo giờ) |
-| check_in_at | TIMESTAMP | Thời điểm nhận phòng thực tế |
-| expected_check_out_at | TIMESTAMP, NULL | Thời điểm dự kiến trả phòng |
-| actual_check_out_at | TIMESTAMP, NULL | Thời điểm thực tế trả phòng (Check-out) |
-| unit_rate | DECIMAL(12,2) | Đơn giá phòng áp dụng theo giờ hoặc ngày |
-| room_amount | DECIMAL(12,2) | Tổng tiền phòng sau tính toán thời gian lưu trú |
-| service_amount | DECIMAL(12,2) | Tổng tiền dịch vụ minibar và tiện ích phòng |
-| surcharge_amount | DECIMAL(12,2) | Tiền phụ thu trả phòng muộn hoặc nhận phòng sớm |
-| deposit_amount | DECIMAL(12,2) | Tiền đặt cọc giữ phòng của khách |
-| total_amount | DECIMAL(12,2) | Tổng số tiền thanh toán cuối cùng trên hóa đơn Folio |
-| payment_status | VARCHAR(20), DEFAULT 'unpaid' | Trạng thái thanh toán: unpaid (chưa thanh toán), paid (đã thanh toán) |
-| payment_method | VARCHAR(30), NULL | Phương thức thanh toán: cash (tiền mặt), vietqr, transfer |
-| status | VARCHAR(20), DEFAULT 'checked_in' | Trạng thái lượt ở: checked_in (đang ở), checked_out (đã trả phòng), cancelled |
-| note | TEXT, NULL | Ghi chú yêu cầu đặc biệt của khách |
-| created_at | TIMESTAMP, NULL | Thời điểm tạo bản ghi |
-| updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
-
-Bảng 10c: Mô tả cấu trúc bảng HotelFolioItems (Chi tiết Bảng kê Dịch vụ & Minibar Khách sạn)
-
-| Tên Trường | Kiểu Dữ Liệu | Mô Tả |
-| --- | --- | --- |
-| id | BIGINT UNSIGNED | Khóa chính, tự động tăng |
-| booking_id | BIGINT UNSIGNED | Khóa ngoại tham chiếu bảng hotel_bookings(id) |
-| item_name | VARCHAR(255) | Tên sản phẩm/dịch vụ (Bia Heineken, Nước suối, Snack, Giặt ủi...) |
-| item_type | VARCHAR(30), DEFAULT 'minibar' | Phân loại: minibar, service (dịch vụ), surcharge (phụ thu) |
-| quantity | INT, DEFAULT 1 | Số lượng tiêu thụ |
-| unit_price | DECIMAL(12,2) | Đơn giá niêm yết của dịch vụ / sản phẩm minibar (VNĐ) |
-| subtotal | DECIMAL(12,2) | Thành tiền chi tiết = Số lượng * Đơn giá (VNĐ) |
-| created_at | TIMESTAMP, NULL | Thời điểm thêm dịch vụ |
-| updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
-
-
-### d. Bảng Residents & Guests (Cư dân thuê trọ & Khách lưu trú khách sạn)
+d. Bảng Residents & Guests (Cư dân thuê trọ & Khách lưu trú khách sạn)
 
 Quản lý thông tin nhân thân của cư dân thuê trọ dài hạn và khách lưu trú khách sạn/homestay ngắn hạn. Phân loại đối tượng (resident, hotel_guest), quản lý người đi cùng / ở ghép, phục vụ xuất biểu mẫu đăng ký tạm trú CT01 và khai báo lưu trú du lịch. Toàn bộ thông tin CCCD, hộ chiếu và SĐT được mã hóa chuẩn ứng dụng AES-256-GCM.
 
@@ -686,8 +769,7 @@ Bảng 12: Mô tả cấu trúc bảng ResidentRelatives (Thân nhân & Người
 | created_at | TIMESTAMP, NULL | Thời điểm thêm bản ghi |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### e. Bảng Contracts & Bookings (Hợp đồng thuê dài hạn & Đặt phòng khách sạn)
+e. Bảng Contracts & Bookings (Hợp đồng thuê dài hạn & Đặt phòng khách sạn)
 
 Lưu trữ thông tin giao dịch lưu trú: Hợp đồng thuê trọ dài hạn có tiền cọc, chu kỳ thu và chuỗi Base64 chữ ký vẽ tay điện tử của hai bên; hoặc Phiếu đặt phòng khách sạn (Booking) với mã đặt phòng, thời điểm check-in/check-out chi tiết theo giờ, tổng cước phòng và trạng thái thanh toán.
 
@@ -711,8 +793,7 @@ Bảng 13: Mô tả cấu trúc bảng Contracts & Bookings (Hợp đồng thuê
 | created_at | TIMESTAMP, NULL | Thời điểm khởi tạo hợp đồng |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### f. Bảng Utility & Services (Chốt Điện - Nước & Dịch vụ Khách sạn)
+f. Bảng Utility & Services (Chốt Điện - Nước & Dịch vụ Khách sạn)
 
 Ghi nhận chỉ số tiêu thụ điện nước hàng tháng bằng AI OCR (cho trọ/căn hộ) và theo dõi các chi phí dịch vụ buồng phòng, tiêu thụ đồ uống/đồ ăn vặt minibar, giặt ủi và cước phòng theo giờ/ngày (cho khách sạn).
 
@@ -736,8 +817,7 @@ Bảng 14: Mô tả cấu trúc bảng Utility & Services (Chốt Điện - Nư�
 | created_at | TIMESTAMP, NULL | Thời điểm chốt số |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### g. Bảng Bills & Transactions (Hóa đơn thu tiền, Bảng kê Folio & Sổ quỹ)
+g. Bảng Bills & Transactions (Hóa đơn thu tiền, Bảng kê Folio & Sổ quỹ)
 
 Quản lý toàn bộ hóa đơn tiền phòng định kỳ hàng tháng của nhà trọ và bảng kê thanh toán trả phòng (Hotel Folio) của khách sạn. Tự động sinh mã VietQR thanh toán chuẩn NAPAS247 và ghi nhận dòng tiền đối soát sổ quỹ thu chi.
 
@@ -768,8 +848,7 @@ Bảng 16: Mô tả cấu trúc bảng CashFlows / Transactions (Sổ quỹ thu 
 | created_at | TIMESTAMP, NULL | Thời điểm ghi sổ kế toán |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### h. Bảng Tickets & RoomReports (Sự cố kỹ thuật, Dịch vụ phòng & Khiếu nại)
+h. Bảng Tickets & RoomReports (Sự cố kỹ thuật, Dịch vụ phòng & Khiếu nại)
 
 Tiếp nhận và xử lý yêu cầu báo hỏng thiết bị từ cư dân trọ, đồng thời tiếp nhận các yêu cầu dịch vụ phòng (Housekeeping, dọn phòng, tiếp nước, đổi khăn) từ khách lưu trú khách sạn có AI phân loại mức độ khẩn cấp.
 
@@ -804,8 +883,7 @@ Bảng 18: Mô tả cấu trúc bảng RoomReports (Báo cáo phòng vi phạm /
 | created_at | TIMESTAMP, NULL | Thời điểm gửi báo cáo |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### i. Bảng LandlordProfiles & VerificationRequests (Hồ sơ & Yêu cầu duyệt chủ trọ)
+i. Bảng LandlordProfiles & VerificationRequests (Hồ sơ & Yêu cầu duyệt chủ trọ)
 
 Phục vụ luồng xác minh chủ trọ lũy tiến (Progressive Verification) và lưu trữ chứng chỉ PCCC, ANTT, ĐKKD.
 
@@ -826,8 +904,7 @@ Bảng 19: Mô tả cấu trúc bảng LandlordProfiles & VerificationRequests (
 | created_at | TIMESTAMP, NULL | Thời điểm gửi hồ sơ |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-
-### j. Bảng AdminActivityLogs & AuditLogs (Nhật ký truy vết & Kiểm toán bất biến)
+j. Bảng AdminActivityLogs & AuditLogs (Nhật ký truy vết & Kiểm toán bất biến)
 
 Bảo đảm tuân thủ Nghị định 13: Ghi nhận mọi thao tác truy cập dữ liệu cá nhân nhạy cảm, chống sửa xóa bằng trigger CSDL.
 
@@ -847,8 +924,7 @@ Bảng 20: Mô tả cấu trúc bảng AdminActivityLogs & AuditLogs (Nhật ký
 | row_hash | VARCHAR(64) | Mã băm SHA-256 xác thực tính toàn vẹn của bản ghi hiện tại |
 | created_at | TIMESTAMP | Thời điểm phát sinh hành vi kiểm toán |
 
-
-# IV. THIẾT KẾ GIAO DIỆN DEMO VÀ KỊCH BẢN XỬ LÝ LỖI (UI/UX)
+IV. THIẾT KẾ GIAO DIỆN DEMO VÀ KỊCH BẢN XỬ LÝ LỖI (UI/UX)
 
 Quy ước chung khi thiết kế giao diện và xử lý lỗi người dùng:
 
@@ -1026,7 +1102,7 @@ Bảng: Kịch bản xử lý lỗi Quản lý Cơ sở lưu trú (Properties/Ho
 
 2. Lập trình module CRUD Quản lý Phòng lưu trú (Rooms)
 
-Mô tả chi tiết chức năng: Quản lý danh sách chi tiết các phòng trong cơ sở: phân loại theo tầng, phân hạng phòng chuẩn hóa (Standard, Deluxe, VIP, Studio), hình thức cho thuê linh hoạt (Theo tháng - month, Theo ngày - day, Theo giờ - hour), cấu hình diện tích, đơn giá thuê, thiết lập tiền đặt cọc giữ phòng (deposit), mô tả chi tiết phòng, cơ chế khóa lạc quan (Optimistic Locking với trường version) và danh mục tiện ích phòng (Máy lạnh, Nóng lạnh, Minibar, SmartLock, Ban công). Hỗ trợ tải lên cùng lúc tối đa 10 ảnh thực tế và 1 video không gian phòng.
+Mô tả chi tiết chức năng: Quản lý danh sách chi tiết các phòng trong cơ sở: phân loại theo tầng, phân hạng phòng chuẩn hóa (Standard, Deluxe, VIP, Studio), hình thức cho thuê linh hoạt (Theo tháng - month, Theo ngày - day, Theo giờ - hour), cấu hình diện tích, đơn giá thuê, thiết lập tiền đặt cọc giữ phòng (deposit), mô tả chi tiết phòng, cơ chế khóa lạc quan (Optimistic Locking với trường version) và danh mục tiện ích phòng (Máy lạnh, Nóng lạnh, Minibar, SmartLock, Ban công). Hỗ trợ tải lên cùng lúc tối đa 10 ảnh thực tế và 1 video không gian phòng (định dạng MP4/WebM/MOV ≤ 30MB). Đặc biệt, tích hợp cấu hình Số sản xuất (Số SX / Serial Number) công tơ điện và đồng hồ nước dập trên mặt thiết bị (electric_meter_serial, water_meter_serial) phục vụ cơ chế AI Vision quét hàng loạt tự động khớp phòng.
 
 Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Thêm mới và cập nhật thông tin phòng lưu trú
 
@@ -1063,7 +1139,7 @@ Bảng: Kịch bản xử lý lỗi Sơ đồ Ma trận phòng trực quan
 
 4 & 5. Chốt số Điện - Nước định kỳ hàng tháng & AI Vision OCR nhận diện công tơ từ camera
 
-Mô tả chi tiết chức năng: Bảng chốt số tiện ích tập trung cuối tháng: tự động nạp chỉ số cũ của tháng trước (khóa không cho sửa), ô nhập chỉ số mới của tháng này, tự động tính chênh lệch sản lượng tiêu thụ và thành tiền tương ứng. Tích hợp AI thị giác: người ghi số chụp ảnh đồng hồ điện/nước, Google Gemini Vision API tự động phân tích và điền chỉ số vào ô tương ứng.
+Mô tả chi tiết chức năng: Bảng chốt số tiện ích tập trung cuối tháng: tự động nạp chỉ số cũ của tháng trước (khóa không cho sửa), ô nhập chỉ số mới của tháng này, tự động tính chênh lệch sản lượng tiêu thụ và thành tiền tương ứng. Tích hợp AI thị giác kép: (1) Quét đơn lẻ từng phòng qua Camera/Tải ảnh có sẵn với hiệu ứng laser scan và huy hiệu độ tin cậy; (2) AI Quét hàng loạt & Khớp phòng tự động (Bulk Match OCR): Cho phép chủ trọ tải lên cùng lúc 5 – 30 ảnh công tơ, Google Gemini Vision API tự động bóc tách song song Số SX (Serial Number) và Chỉ số tiêu thụ mới, tự động đối chiếu với cơ sở dữ liệu để điền chính xác vào từng phòng và tính tiền tức thì chỉ trong một thao tác.
 
 Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Chốt số Điện - Nước định kỳ & AI Vision OCR Camera
 
@@ -1078,6 +1154,8 @@ Bảng 25: Kịch bản xử lý lỗi Trang Ghi chỉ số Điện - Nước đ
 | Mức tiêu thụ tăng đột biến bất thường (Ví dụ dùng hơn 1000 số điện/tháng) | Hiển thị cảnh báo vàng (Warning): "Lượng điện tiêu thụ tăng đột biến (+1200 kWh). Vui lòng kiểm tra lại công tơ xem có bị nhầm số không!". |
 | Ảnh chụp đồng hồ quá mờ hoặc bị lóa sáng khiến AI không đọc được số | Toast thông báo: "AI không nhận diện rõ số trên mặt đồng hồ do ảnh mờ/thiếu sáng. Vui lòng chụp lại rõ nét hoặc tự nhập tay". |
 | Lưu bản ghi chốt số của phòng đã được chốt trong tháng đó rồi | Thông báo: "Hóa đơn điện nước tháng này của phòng đã được lập. Bạn chỉ có thể cập nhật chỉnh sửa lại bản ghi cũ". |
+| Quét hàng loạt: Ảnh công tơ không tìm thấy Số SX trùng khớp với phòng nào của cơ sở lưu trú | Dòng kết quả hiển thị nhãn trạng thái màu vàng 'Cần gán phòng' kèm dropdown danh sách phòng để chủ trọ lựa chọn gán tay nhanh chóng trước khi áp dụng. |
+| Tải lên vượt quá số lượng ảnh cho phép (> 30 ảnh) hoặc file tải lên không phải ảnh hợp lệ | Modal quét hàng loạt hiển thị thông báo: 'Hệ thống hỗ trợ quét tối đa 30 ảnh công tơ trong một lượt và chỉ chấp nhận định dạng ảnh JPG, PNG, WEBP'. |
 
 6 & 7. Bộ máy tính toán cước tự động & Xuất hóa đơn tháng / Bảng kê Folio PDF kèm mã VietQR Check-out
 
@@ -1259,8 +1337,7 @@ Bảng: Kịch bản xử lý lỗi Đăng ký nhận chuông báo phòng trốn
 | Bỏ trống số điện thoại nhận thông báo chuông báo | Viền đỏ ô SĐT: "Vui lòng nhập số điện thoại để hệ thống gửi thông báo". |
 | Số điện thoại đã đăng ký nhận thông báo phòng này trước đó | Toast thông báo: "Bạn đã đăng ký nhận chuông báo cho phòng này rồi. Hệ thống sẽ nhắn tin ngay khi phòng trống!". |
 
-
-# TÀI LIỆU THAM KHẢO
+TÀI LIỆU THAM KHẢO
 
 1. Laravel Documentation (v11.x): The PHP Framework for Web Artisans. Truy cập tại: https://laravel.com/docs/11.x
 
