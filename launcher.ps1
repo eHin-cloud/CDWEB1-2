@@ -352,6 +352,65 @@ $chkAppMode      = $window.FindName("chkAppMode")
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# Ham dam bao MySQL da bat va san sang tiep nhan ket noi
+function Ensure-MySQL {
+    # 1. Kiem tra xem port 3306 da mo chua
+    $isOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet -WarningAction SilentlyContinue
+    if ($isOpen) {
+        # Kiem tra & tu dong tao DB qlphongtro neu chua co
+        $xamppDirs = @("D:\xampp", "C:\xampp", "E:\xampp")
+        foreach ($d in $xamppDirs) {
+            if (Test-Path "$d\mysql\bin\mysql.exe") {
+                Start-Process -FilePath "$d\mysql\bin\mysql.exe" -ArgumentList "-u root -e `"CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`"" -WindowStyle Hidden -Wait
+                break
+            }
+        }
+        return $true
+    }
+
+    $txtStatus.Text = "⏳ MySQL chưa bật. Đang tự động kích hoạt CSDL MySQL XAMPP..."
+
+    # 2. Tim mysqld.exe
+    $xamppDirs = @("D:\xampp", "C:\xampp", "E:\xampp")
+    $mysqldPath = $null
+    $xamppRoot = $null
+    foreach ($d in $xamppDirs) {
+        if (Test-Path "$d\mysql\bin\mysqld.exe") {
+            $mysqldPath = "$d\mysql\bin\mysqld.exe"
+            $xamppRoot = $d
+            break
+        }
+    }
+
+    if ($mysqldPath) {
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$xamppRoot`" & mysql\bin\mysqld.exe --defaults-file=mysql\bin\my.ini --standalone" -WindowStyle Hidden
+    } else {
+        foreach ($w in @("C:\wamp64", "D:\wamp64")) {
+            if (Test-Path "$w\bin\mysql") {
+                $wMysql = Get-ChildItem "$w\bin\mysql\mysql*\bin\mysqld.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($wMysql) {
+                    Start-Process -FilePath $wMysql.FullName -ArgumentList "--standalone" -WindowStyle Hidden
+                    break
+                }
+            }
+        }
+    }
+
+    # 3. Cho port 3306 mo
+    for ($i = 0; $i -lt 12; $i++) {
+        Start-Sleep -Seconds 1
+        $isOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if ($isOpen) {
+            if ($xamppRoot -and (Test-Path "$xamppRoot\mysql\bin\mysql.exe")) {
+                Start-Process -FilePath "$xamppRoot\mysql\bin\mysql.exe" -ArgumentList "-u root -e `"CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`"" -WindowStyle Hidden -Wait
+            }
+            return $true
+        }
+    }
+
+    return $false
+}
+
 # Ham mo website dang App Window
 function Open-AppWindow($url) {
     if ($chkAppMode.IsChecked) {
@@ -469,14 +528,10 @@ $btnRunXampp.Add_Click({
         return
     }
 
-    # Kiem tra MySQL
-    $mysqlRunning = Get-Process mysqld -ErrorAction SilentlyContinue
-    if (-not $mysqlRunning) {
-        if ($xamppDir -and (Test-Path "$xamppDir\mysql_start.bat")) {
-            $txtStatus.Text = "⏳ Đang tự động kích hoạt MySQL XAMPP..."
-            Start-Process -FilePath "$xamppDir\mysql_start.bat" -WindowStyle Hidden
-            Start-Sleep -Seconds 3
-        }
+    # Kiem tra & khoi dong MySQL
+    $dbOk = Ensure-MySQL
+    if (-not $dbOk) {
+        [System.Windows.MessageBox]::Show("Không thể kết nối hoặc khởi động MySQL trên cổng 3306! Vui lòng kiểm tra XAMPP Control Panel.", "Cảnh báo CSDL", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
     }
 
     # Chuan hoa .env cho XAMPP
@@ -550,6 +605,13 @@ $btnRunWampp.Add_Click({
 
 # ADVANCED ACTIONS
 $btnAdvResetDb.Add_Click({
+    $txtStatus.Text = "⏳ Đang kiểm tra CSDL MySQL trước khi làm mới..."
+    $dbOk = Ensure-MySQL
+    if (-not $dbOk) {
+        [System.Windows.MessageBox]::Show("Không thể kết nối hoặc khởi động MySQL (Port 3306)! Vui lòng mở XAMPP Control Panel và nhấn Start MySQL.", "Lỗi CSDL", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+        $txtStatus.Text = "❌ CSDL MySQL chưa sẵn sàng."
+        return
+    }
     $txtStatus.Text = "⏳ Đang làm mới CSDL (migrate:fresh --seed)..."
     Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Reset DB & cd /d `"$scriptDir`" & php artisan migrate:fresh --seed & pause"
     $txtStatus.Text = "✅ Đã chạy lệnh làm mới CSDL."

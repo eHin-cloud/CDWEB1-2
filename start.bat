@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal enabledelayedexpansion
 title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
 
@@ -1348,6 +1348,10 @@ color 0c
 echo    [!] Canh bao: Toan bo du lieu cu trong Database (!DB_NAME!) se bi xoa sach!
 set /p confirm="    >> Ban co chac chan muon tiep tuc? (y/n): "
 if /i "%confirm%" neq "y" goto MENU
+
+call :ENSURE_MYSQL
+if !errorlevel! neq 0 goto MENU
+
 call !PHP_CMD! artisan migrate:fresh --seed
 call !PHP_CMD! artisan optimize:clear
 echo    [ OK ] Database va Seeders da lam moi thanh cong!
@@ -1375,13 +1379,8 @@ if !errorlevel! equ 0 (
     )
     echo    [+] Dang dung SQLite, bo qua kiem tra MySQL.
 ) else (
-    tasklist /fi "imagename eq mysqld.exe" | findstr /i "mysqld.exe" > nul
-    if !errorlevel! neq 0 (
-        color 0c
-        echo    [ LOI ] Co so du lieu MySQL chua bat! Vui long bat MySQL tren XAMPP/Laragon.
-        pause
-        goto MENU
-    )
+    call :ENSURE_MYSQL
+    if !errorlevel! neq 0 goto MENU
     echo    [+] MySQL dang ket noi tot - CSDL: !DB_NAME!, Cong CSDL: !DB_PORT!.
 )
 
@@ -1467,6 +1466,48 @@ pause > nul
 echo    [!] Dang giai phong va tat toan bo tien trinh ngam php/node...
 taskkill /f /im php.exe >nul 2>&1
 taskkill /f /im node.exe >nul 2>&1
+:: ======================================================================
+:: HELPER: DAM BAO MYSQL DA KHOI DONG VA SAN SANG
+:: ======================================================================
+:ENSURE_MYSQL
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
+if !errorlevel! equ 0 (
+    if exist "D:\xampp\mysql\bin\mysql.exe" (
+        "D:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+    ) else if exist "C:\xampp\mysql\bin\mysql.exe" (
+        "C:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+    )
+    exit /b 0
+)
+
+echo.
+echo    [!] MySQL (Port 3306) chua mo. Dang tu dong khoi dong MySQL XAMPP...
+if exist "D:\xampp\mysql\bin\mysqld.exe" (
+    start "" /b "cmd.exe" /c "cd /d D:\xampp && mysql\bin\mysqld.exe --defaults-file=mysql\bin\my.ini --standalone"
+) else if exist "C:\xampp\mysql\bin\mysqld.exe" (
+    start "" /b "cmd.exe" /c "cd /d C:\xampp && mysql\bin\mysqld.exe --defaults-file=mysql\bin\my.ini --standalone"
+)
+
+for /l %%i in (1,1,10) do (
+    timeout /t 1 > nul
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
+    if !errorlevel! equ 0 (
+        echo    ^|---^> [OK] MySQL da khoi dong thanh cong va san sang tren cong 3306!
+        if exist "D:\xampp\mysql\bin\mysql.exe" (
+            "D:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+        ) else if exist "C:\xampp\mysql\bin\mysql.exe" (
+            "C:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+        )
+        exit /b 0
+    )
+)
+
+color 0c
+echo    [ LOI CRITICAL ] Khong the ket noi CSDL MySQL (Port 3306)!
+echo    Vui long mo XAMPP Control Panel va nhan Start ben canh MySQL.
+pause
+exit /b 1
+
 :: ======================================================================
 :: EXIT SYSTEM CLEANLY (THOAT CO CHE AN TOAN TRA VE MA 0)
 :: ======================================================================
