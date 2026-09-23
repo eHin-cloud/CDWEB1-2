@@ -353,7 +353,7 @@ $chkAppMode      = $window.FindName("chkAppMode")
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Ham dam bao MySQL da bat va san sang tiep nhan ket noi
-function Ensure-MySQL {
+function Start-MySqlServer {
     # 1. Kiem tra xem port 3306 da mo chua
     $isOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($isOpen) {
@@ -447,7 +447,7 @@ function Update-UI {
 }
 
 # Ham dam bao Docker CLI & Docker Desktop da bat va Engine san sang
-function Ensure-Docker {
+function Start-DockerEngine {
     # 1. Bo sung cac duong dan Docker CLI pho bien vao PATH neu chua co
     $dockerBinPaths = @(
         "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin",
@@ -472,7 +472,7 @@ function Ensure-Docker {
     }
 
     # 3. Kiem tra Docker Daemon da chay chua
-    $check = & docker info 2>&1
+    & docker info 2>&1 | Out-Null
     if ($LASTEXITCODE -eq 0) {
         return $true
     }
@@ -508,7 +508,7 @@ function Ensure-Docker {
         Update-UI
         Start-Sleep -Seconds 2
 
-        $check = & docker info 2>&1
+        & docker info 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
             $txtStatus.Text = "✅ Docker Desktop đã sẵn sàng hoạt động!"
             Update-UI
@@ -527,7 +527,7 @@ $btnRunDocker.Add_Click({
     Update-UI
 
     # Dam bao Docker Daemon hoat dong
-    if (-not (Ensure-Docker)) {
+    if (-not (Start-DockerEngine)) {
         $txtStatus.Text = "❌ Docker Desktop chưa sẵn sàng."
         $btnRunDocker.IsEnabled = $true
         return
@@ -541,11 +541,9 @@ $btnRunDocker.Add_Click({
     # Cho web san sang (kiem tra cong 8088)
     $txtStatus.Text = "⏳ Đang đợi dịch vụ trên cổng 8088 sẵn sàng..."
     Update-UI
-    $ready = $false
     for ($i = 0; $i -lt 40; $i++) {
         $isOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 8088 -InformationLevel Quiet -WarningAction SilentlyContinue
         if ($isOpen) {
-            $ready = $true
             break
         }
         Start-Sleep -Seconds 1
@@ -585,12 +583,10 @@ $btnRunXampp.Add_Click({
 
     # Phat hien PHP XAMPP
     $phpPath = $null
-    $xamppDir = $null
     $candidates = @("D:\xampp", "C:\xampp", "E:\xampp")
     foreach ($cand in $candidates) {
         if (Test-Path "$cand\php\php.exe") {
             $phpPath = "$cand\php\php.exe"
-            $xamppDir = $cand
             break
         }
     }
@@ -607,7 +603,7 @@ $btnRunXampp.Add_Click({
     }
 
     # Kiem tra & khoi dong MySQL
-    $dbOk = Ensure-MySQL
+    $dbOk = Start-MySqlServer
     if (-not $dbOk) {
         [System.Windows.MessageBox]::Show("Không thể kết nối hoặc khởi động MySQL trên cổng 3306! Vui lòng kiểm tra XAMPP Control Panel.", "Cảnh báo CSDL", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
     }
@@ -684,7 +680,7 @@ $btnRunWampp.Add_Click({
 # ADVANCED ACTIONS
 $btnAdvResetDb.Add_Click({
     $txtStatus.Text = "⏳ Đang kiểm tra CSDL MySQL trước khi làm mới..."
-    $dbOk = Ensure-MySQL
+    $dbOk = Start-MySqlServer
     if (-not $dbOk) {
         [System.Windows.MessageBox]::Show("Không thể kết nối hoặc khởi động MySQL (Port 3306)! Vui lòng mở XAMPP Control Panel và nhấn Start MySQL.", "Lỗi CSDL", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
         $txtStatus.Text = "❌ CSDL MySQL chưa sẵn sàng."
