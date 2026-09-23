@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 setlocal enabledelayedexpansion
 title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
 
@@ -67,29 +68,29 @@ if exist .env (
 cls
 color 0b
 echo.
-echo    +==================================================================================================+
-echo    ^|                SMARTROOM ^& RENTY - TRINH KHOI CHAY HE THONG [RUN SELECTOR]                        ^|
-echo    +==================================================================================================+
-echo    ^|  [TAB 1: DOCKER COMPOSE]       ^|  [TAB 2: XAMPP STACK]          ^|  [TAB 3: WAMPP STACK]           ^|
-echo    ^|--------------------------------+---------------------------------+-------------------------------^|
-echo    ^|  * Container hoa toan dien     ^|  * May chu cuc bo XAMPP        ^|  * May chu cuc bo WampServer    ^|
-echo    ^|  * Web App: Port 8088          ^|  * Web App: Port 8000          ^|  * Web App: Port 8000           ^|
-echo    ^|  * MySQL Docker: Port 3309     ^|  * MySQL XAMPP: Port 3306      ^|  * MySQL WAMPP: Port 3306/3308  ^|
-echo    ^|  * Reverb WS: Port 8085        ^|  * Vite Dev Hot-Reload         ^|  * Vite Dev Hot-Reload          ^|
-echo    ^|  * Khong lo xung dot moi truong^|  * Nhan dien D:\, C:\xampp...  ^|  * Tu dong quet WampServer      ^|
-echo    +==================================================================================================+
-echo    ^|                                                                                                  ^|
-echo    ^|   >> VUI LONG CHON PHUONG THUC BAN MUON KHOI CHAY DU AN:                                         ^|
-echo    ^|                                                                                                  ^|
-echo    ^|      [1] CHAY BANG DOCKER    ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)       ^|
-echo    ^|      [2] CHAY BANG XAMPP     ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)       ^|
-echo    ^|      [3] CHAY BANG WAMPP     ---^> Khoi chay bang PHP ^& MySQL cua WampServer                     ^|
-echo    ^|                                                                                                  ^|
-echo    ^|   --------------------------------------------------------------------------------------------   ^|
-echo    ^|      [4] MENU NANG CAO       ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan^|
-echo    ^|      [0] THOAT CHUONG TRINH                                                                      ^|
-echo    ^|                                                                                                  ^|
-echo    +==================================================================================================+
+echo    ====================================================================================================
+echo                     SMARTROOM ^& RENTY - TRINH KHOI CHAY HE THONG [RUN SELECTOR]
+echo    ====================================================================================================
+echo      [TAB 1: DOCKER COMPOSE]       ^|  [TAB 2: XAMPP STACK]          ^|  [TAB 3: WAMPP STACK]
+echo    --------------------------------+---------------------------------+---------------------------------
+echo      * Container hoa toan dien     ^|  * May chu cuc bo XAMPP        ^|  * May chu cuc bo WampServer
+echo      * Web App: Port 8088          ^|  * Web App: Port 8000          ^|  * Web App: Port 8000
+echo      * MySQL Docker: Port 3309     ^|  * MySQL XAMPP: Port 3306      ^|  * MySQL WAMPP: Port 3306/3308
+echo      * Reverb WS: Port 8085        ^|  * Vite Dev Hot-Reload         ^|  * Vite Dev Hot-Reload
+echo      * Khong lo xung dot moi truong^|  * Nhan dien D:\, C:\xampp...  ^|  * Tu dong quet WampServer
+echo    ====================================================================================================
+echo.
+echo      >> VUI LONG CHON PHUONG THUC BAN MUON KHOI CHAY DU AN:
+echo.
+echo         [1] CHAY BANG DOCKER    ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)
+echo         [2] CHAY BANG XAMPP     ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)
+echo         [3] CHAY BANG WAMPP     ---^> Khoi chay bang PHP ^& MySQL cua WampServer
+echo.
+echo      ----------------------------------------------------------------------------------------------
+echo         [4] MENU NANG CAO       ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan
+echo         [0] THOAT CHUONG TRINH
+echo.
+echo    ====================================================================================================
 echo.
 set /p tab_choice="   >> Nhap lua chon cua ban (1-4 hoac 0 de thoat): "
 

@@ -15,7 +15,7 @@ body.sidebar-collapsed #admin-sidebar .sidebar-logout {
     padding-right: 0;
 }
 
-body.sidebar-collapsed #admin-sidebar > div:first-child > div:first-child {
+body.sidebar-collapsed #admin-sidebar > div:first-child {
     justify-content: center;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
@@ -34,11 +34,34 @@ body.sidebar-collapsed #admin-sidebar .sidebar-badge {
     display: none;
 }
 
+body.sidebar-collapsed #admin-sidebar .sidebar-group-title {
+    display: none;
+}
+
+body.sidebar-collapsed #admin-sidebar .sidebar-group-divider {
+    display: block;
+}
+
 body.sidebar-collapsed #admin-sidebar .sidebar-footer {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 body.sidebar-collapsed #sidebar-toggle i {
     transform: rotate(180deg);
+}
+
+/* Custom scrollbar mỏng tinh tế cho Navigation */
+#admin-sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+#admin-sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+#admin-sidebar-nav::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 4px;
+}
+#admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: #334155;
 }
