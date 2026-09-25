@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # SmartRoom & Renty - GUI App Launcher
 # ==============================================================================
 
@@ -239,6 +239,7 @@ Add-Type -AssemblyName System.Drawing
                         </Border>
 
                         <!-- Grid of Advanced Quick Actions -->
+                        <Grid Margin="0,0,0,10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
