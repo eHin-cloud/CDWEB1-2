@@ -27,6 +27,10 @@ if [ -f artisan ] && [ "$is_server_cmd" -eq 1 ]; then
         npm install
     fi
 
+    if [ ! -f public/build/manifest.json ] && [ -f package.json ]; then
+        npm run build || true
+    fi
+
     if [ -f .env ] && ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
         php artisan key:generate --force
     fi
