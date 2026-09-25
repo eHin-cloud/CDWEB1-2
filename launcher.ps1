@@ -239,8 +239,8 @@ Add-Type -AssemblyName System.Drawing
                         </Border>
 
                         <!-- Grid of Advanced Quick Actions -->
-                        <Grid Margin="0,0,0,10">
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -286,12 +286,21 @@ Add-Type -AssemblyName System.Drawing
                                 </StackPanel>
                             </Button>
 
+                            <!-- Button: Auto-Sync Git Daemon -->
+                            <Button Name="btnAdvAutoSync" Grid.Row="2" Grid.ColumnSpan="2" Height="36" Margin="0,2,0,6"
+                                    Background="#1e1b4b" Foreground="#a5b4fc" BorderThickness="1" BorderBrush="#6366f1" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🔄 " FontSize="12"/>
+                                    <TextBlock Text="Bật Tự Động Kéo Code Từ Git (Auto-Sync Git Daemon)" FontSize="11" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+
                             <!-- Button: Full Console CLI -->
-                            <Button Name="btnAdvOpenCli" Grid.Row="2" Grid.ColumnSpan="2" Height="36" Margin="0,2,0,0"
+                            <Button Name="btnAdvOpenCli" Grid.Row="3" Grid.ColumnSpan="2" Height="36" Margin="0,2,0,0"
                                     Background="#334155" Foreground="#f8fafc" BorderThickness="1" BorderBrush="#475569" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="💻 " FontSize="12"/>
-                                    <TextBlock Text="Mở Toàn Bộ 11 Chức Năng Bằng Menu Console CMD" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Text="Mở Toàn Bộ Chức Năng Bằng Menu Console CMD" FontSize="11" FontWeight="Bold"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
@@ -344,6 +353,7 @@ $btnAdvResetDb   = $window.FindName("btnAdvResetDb")
 $btnAdvClearCache= $window.FindName("btnAdvClearCache")
 $btnAdvSitemap   = $window.FindName("btnAdvSitemap")
 $btnAdvDiag      = $window.FindName("btnAdvDiag")
+$btnAdvAutoSync  = $window.FindName("btnAdvAutoSync")
 $btnAdvOpenCli   = $window.FindName("btnAdvOpenCli")
 $btnOpenAdvTab   = $window.FindName("btnOpenAdvTab")
 $btnExit         = $window.FindName("btnExit")
@@ -631,6 +641,12 @@ $btnAdvDiag.Add_Click({
     $txtStatus.Text = "⏳ Đang mở báo cáo chẩn đoán..."
     Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Health Diagnostic & cd /d `"$scriptDir`" & php artisan about & pause"
     $txtStatus.Text = "✅ Đã mở báo cáo hệ thống."
+})
+
+$btnAdvAutoSync.Add_Click({
+    $txtStatus.Text = "⏳ Đang khởi chạy Auto-Sync Git Daemon trong cửa sổ mới..."
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$scriptDir\auto-sync.ps1`""
+    $txtStatus.Text = "✅ Đã bật Auto-Sync Git Daemon. Cửa sổ đang tự động quét commit mới!"
 })
 
 $btnAdvOpenCli.Add_Click({

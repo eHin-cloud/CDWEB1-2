@@ -9,6 +9,7 @@ if "%1" neq "--cli" (
 )
 
 mode con: cols=110 lines=42
+chcp 65001 >nul
 
 :: ======================================================================
 :: INITIAL ENVIRONMENT SCAN (AUTO-PILOT)
@@ -304,10 +305,11 @@ echo    [8] HEALTH DIAGNOSTIC - [MOI] Kiem tra suc khoe toan dien he thong du an
 echo    [9] LOG MANAGEMENT    - [MOI] Xem, theo doi va xoa sach nhat ky loi Laravel
 echo    [10] DOCKER CONTROL   - [MOI] Bang dieu khien chuyen sau Docker Compose
 echo    [11] QUAY LAI BANG TAB- Quay lai man hinh chon moi truong (Docker / XAMPP / WAMPP)
+echo    [12] AUTO-SYNC GIT    - [MOI] Bat tien trinh tu dong lang nghe va keo code tu Git
 echo    [0]  EXIT             - Thoat
 echo.
 echo    ----------------------------------------------------------------------------------------
-set /p choice="   >> Nhap lua chon cua ban (0-11): "
+set /p choice="   >> Nhap lua chon cua ban (0-12): "
 
 if "%choice%"=="1" goto DEV_MODE
 if "%choice%"=="2" goto STABLE_RUN
@@ -320,7 +322,24 @@ if "%choice%"=="8" goto DIAGNOSTICS
 if "%choice%"=="9" goto LOG_MGMT
 if "%choice%"=="10" goto DOCKER_RUN
 if "%choice%"=="11" goto TAB_MENU
+if "%choice%"=="12" goto AUTO_SYNC
 if "%choice%"=="0" goto EXIT_CLEAN
+goto ADVANCED_MENU
+
+:AUTO_SYNC
+cls
+color 0b
+echo.
+echo    ====================================================================
+echo    [ AUTO-SYNC ] KHOI CHAY TIEN TRINH TU DONG DONG BO GIT (DAEMON)
+echo    ====================================================================
+echo.
+start "SmartRoom Auto-Sync Daemon" powershell -ExecutionPolicy Bypass -NoExit -File "%~dp0auto-sync.ps1"
+echo    [+] Da kich hoat tien trinh Auto-Sync Git Daemon trong mot cua so moi!
+echo    Cua so se dinh ky kiem tra commit moi tu GitHub.
+echo    Khi May 1 push code, May 2 se tu dong pull, migrate va build tai nguyen.
+echo.
+pause
 goto ADVANCED_MENU
 
 :INITIALIZE
