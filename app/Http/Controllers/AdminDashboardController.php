@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Bill;
+use App\Models\Building;
 use App\Models\Contract;
 use App\Models\Equipment;
 use App\Models\LandlordVerificationRequest;
@@ -83,12 +84,19 @@ class AdminDashboardController extends Controller
             $chartRevenue = [31500000, 34200000, 38100000];
         }
 
-        // 3. Room Map (with active residents and latest billing information)
-        $rooms = Room::where('tenant_id', $tenantId)->with(['residents' => function($q) {
-            $q->where('status', 'active');
-        }, 'utilityRecords' => function($q) {
-            $q->orderBy('billing_month', 'desc');
-        }])->orderBy('room_number')->get();
+        // 3. Buildings & Room Map (with active residents and latest billing information)
+        $buildings = Building::where('tenant_id', $tenantId)->get();
+        $primaryBuilding = $buildings->first();
+
+        $rooms = Room::where('tenant_id', $tenantId)->with([
+            'building',
+            'residents' => function($q) {
+                $q->where('status', 'active');
+            }, 
+            'utilityRecords' => function($q) {
+                $q->orderBy('billing_month', 'desc');
+            }
+        ])->orderBy('room_number')->get();
 
         $roomsByFloor = $rooms->groupBy('floor');
 
