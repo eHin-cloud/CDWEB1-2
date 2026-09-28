@@ -47,8 +47,14 @@ jobs:
           tags: smartroom-app:ci-test
           load: true
 
-      - name: Kiểm tra Container khởi động và phiên bản PHP/Artisan
+      - name: Kiểm tra Container khởi động và phiên bản PHP/Node/Composer
         run: |
+          docker run --rm --entrypoint php smartroom-app:ci-test -v
+          docker run --rm --entrypoint node smartroom-app:ci-test -v
+          docker run --rm --entrypoint composer smartroom-app:ci-test --version
           docker run --rm smartroom-app:ci-test php -v
-          docker run --rm smartroom-app:ci-test node -v
-          echo " Docker Image đã sẵn sàng triển khai môi trường Production / Staging!"
+
+      - name: Kiểm tra Container kết hợp mã nguồn ứng dụng
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/var/www/html --entrypoint php smartroom-app:ci-test artisan --version
+          echo " Docker Image đã build và kiểm thử thành công, sẵn sàng triển khai!"
