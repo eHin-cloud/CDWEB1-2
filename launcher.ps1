@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # SmartRoom & Renty - GUI App Launcher
 # ==============================================================================
 
@@ -317,7 +317,7 @@ Add-Type -AssemblyName System.Drawing
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Name="txtStatus" Grid.Column="0" Text="💡 Hãy chọn 1 Tab ở trên và nhấn nút để bắt đầu." FontSize="12" Foreground="#38bdf8" VerticalAlignment="Center"/>
-            <CheckBox Name="chkAppMode" Grid.Column="1" Content="Mở tab nhỏ như App (App Mode)" IsChecked="True" FontSize="12" Foreground="#cbd5e1" VerticalAlignment="Center"/>
+            <CheckBox Name="chkAppMode" Grid.Column="1" Content="Mở tab nhỏ như App (App Mode)" IsChecked="False" FontSize="12" Foreground="#cbd5e1" VerticalAlignment="Center"/>
         </Grid>
 
         <!-- Footer Actions -->

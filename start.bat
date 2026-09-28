@@ -468,8 +468,8 @@ for /l %%i in (1,1,30) do (
 
 :DOCKER_READY_LAUNCH
 echo.
-echo    [3/3] Dang mo website duoi dang cua so ung dung...
-start chrome --app="http://localhost:8088/renty" >nul 2>&1 || start msedge --app="http://localhost:8088/renty" >nul 2>&1 || start "" "http://localhost:8088/renty"
+echo    [3/3] Dang mo website tren trinh duyet...
+call :LAUNCH_APP_WINDOW "http://localhost:8088/renty"
 
 cls
 color 0b
@@ -1459,7 +1459,7 @@ if "!SERVER_READY!"=="1" (
 ) else (
     echo    [!] Chua xac nhan duoc server san sang, van mo web de ban kiem tra.
 )
-start chrome --app="!AUTO_OPEN_URL!" >nul 2>&1 || start msedge --app="!AUTO_OPEN_URL!" >nul 2>&1 || start "" "!AUTO_OPEN_URL!"
+call :LAUNCH_APP_WINDOW "!AUTO_OPEN_URL!"
 
 cls
 color 0b
@@ -1534,3 +1534,12 @@ exit /b 1
 :: Reset lai errorlevel ve 0 tranh lỗi do cac lenh taskkill truoc do de lai
 cmd /c "exit /b 0"
 exit /b 0
+
+:: ======================================================================
+:: MO TRANG WEB TREN TRINH DUYET MAC DINH (CO TAB VA THANH DIA CHI)
+:: ======================================================================
+:LAUNCH_APP_WINDOW
+set "APP_URL=%~1"
+start "" "%APP_URL%"
+exit /b 0
+

@@ -50,6 +50,8 @@ if [ -f artisan ] && [ "$is_server_cmd" -eq 1 ]; then
         php artisan migrate --force || true
     fi
 
+    php artisan config:cache || true
+
     # Khoi dong Reverb WebSocket Server chay nen
     php artisan reverb:start --host=0.0.0.0 --port=8085 &
 fi
