@@ -149,4 +149,37 @@ class SmartSearchApiTest extends TestCase
             ]);
         $this->assertNotEmpty($emptyResponse->json('suggestions'));
     }
+
+    /**
+     * Test lọc theo khoảng giá tùy chỉnh min_price và max_price
+     */
+    public function test_smart_search_with_custom_price_filters(): void
+    {
+        $response = $this->getJson('/api/renty/rooms/smart-search?min_price=3600000&max_price=4000000');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $rooms = $response->json('rooms');
+        foreach ($rooms as $room) {
+            $this->assertGreaterThanOrEqual(3600000, $room['price']);
+            $this->assertLessThanOrEqual(4000000, $room['price']);
+        }
+    }
+
+    /**
+     * Test kịch bản bẫy lỗi: Giá tối thiểu lớn hơn giá tối đa (422)
+     */
+    public function test_smart_search_fails_when_min_price_greater_than_max_price(): void
+    {
+        $response = $this->getJson('/api/renty/rooms/smart-search?min_price=5000000&max_price=2000000');
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).',
+            ]);
+    }
 }

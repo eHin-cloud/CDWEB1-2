@@ -430,6 +430,29 @@
             </div>
         </div>
 
+        <!-- SMART SEARCH DID YOU MEAN BANNER -->
+        <div id="smart-search-did-you-mean-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs backdrop-blur-md">
+            <div class="flex items-center gap-2.5 text-emerald-300">
+                <i class="fa-solid fa-wand-magic-sparkles text-sm text-emerald-400 animate-pulse"></i>
+                <span>Có phải bạn muốn tìm: <strong id="smart-search-did-you-mean-text" onclick="applyDidYouMeanSearch()" class="text-white cursor-pointer underline underline-offset-4 font-bold hover:text-emerald-300 transition-colors"></strong>?</span>
+            </div>
+            <button type="button" onclick="applyDidYouMeanSearch()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-[11px] shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-check"></i> Áp dụng ngay
+            </button>
+        </div>
+
+        <!-- SMART SEARCH EMPTY STATE -->
+        <div id="smart-search-empty-state" class="hidden mb-16 py-16 px-4 text-center rounded-3xl bg-slate-900/30 border border-slate-800/60 backdrop-blur-md">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl shadow-xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-200 mb-1.5">Không tìm thấy phòng trọ phù hợp</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
+            <button type="button" onclick="resetAllSearchFilters()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+            </button>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16" id="rooms-grid">
             @foreach($rooms as $room)
                 @include('rentry.partials.room_card', ['room' => $room])
@@ -1490,6 +1513,7 @@
     </div>
 
     <!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
+    <script src="{{ asset('js/rentry.js') }}"></script>
 
     <!-- HOT AREAS MODAL -->
     <div id="hot-areas-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
