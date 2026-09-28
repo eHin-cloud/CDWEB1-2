@@ -341,6 +341,8 @@ class AdminDashboardController extends Controller
             'smartAlertTotal',
             'notificationLogs',
             'notificationSummary',
+            'buildings',
+            'primaryBuilding',
             'tenant',
             'landlordProfile',
             'kycRequest',

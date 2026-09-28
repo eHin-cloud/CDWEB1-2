@@ -1037,6 +1037,64 @@
 
             <!-- SECTION 2: VISUAL ROOM MAP -->
             <section id="room-map-section" class="tab-content hidden space-y-8 animate-fade-in">
+                <!-- PROPERTY LOCATION & BUILDING INFO BANNER -->
+                <div class="glass-card rounded-2xl p-5 border border-slate-800/80 bg-gradient-to-r from-slate-900/90 via-[#0d121f]/95 to-indigo-950/40 relative overflow-hidden shadow-xl">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 text-xl shadow-lg shadow-indigo-500/10">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                                        Vị trí cơ sở trọ
+                                    </span>
+                                    @if(isset($buildings) && $buildings->count() > 1)
+                                        <span class="text-[10px] text-slate-400">({{ $buildings->count() }} tòa nhà)</span>
+                                    @endif
+                                </div>
+                                <h3 id="current-building-name-display" class="text-base sm:text-lg font-black text-white mt-1">
+                                    {{ $primaryBuilding?->name ?? ($tenant?->name ?? 'Cơ sở lưu trú SmartRoom') }}
+                                </h3>
+                                <p id="current-building-address-display" class="text-xs text-slate-300 mt-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-location-dot text-rose-400 text-sm shrink-0"></i>
+                                    <span>{{ $primaryBuilding?->address ?? ($tenant?->address ?? 'Số 12 Ngõ 105 Xuân Thủy, Cầu Giấy, Hà Nội') }}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Action controls: Open Google Maps & Building selector if multiple -->
+                        <div class="flex flex-wrap items-center gap-3">
+                            @php
+                                $mapQuery = urlencode($primaryBuilding?->address ?? ($primaryBuilding?->name ?? 'Hà Nội'));
+                            @endphp
+                            <a id="current-building-gmaps-btn" href="https://www.google.com/maps/search/?api=1&query={{ $mapQuery }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                                <i class="fa-brands fa-google text-sm"></i>
+                                <span>Xem trên Google Maps</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+
+                            @if(isset($buildings) && $buildings->count() > 1)
+                                <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
+                                    <button type="button" onclick="filterByBuilding('all', this)" class="building-tab-btn px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold transition-all">
+                                        Tất cả tòa
+                                    </button>
+                                    @foreach($buildings as $b)
+                                        <button type="button" 
+                                                data-building-id="{{ $b->id }}"
+                                                data-building-name="{{ $b->name }}"
+                                                data-building-address="{{ $b->address }}"
+                                                onclick="filterByBuilding({{ $b->id }}, this)" 
+                                                class="building-tab-btn px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
+                                            {{ $b->name }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filter buttons and color legend -->
                 <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl">
                     <div class="flex flex-wrap items-center gap-2">
@@ -1107,6 +1165,9 @@
                                  data-room-id="{{ $room->id }}"
                                  data-room-number="{{ $room->room_number }}"
                                  data-room-status="{{ $room->status }}"
+                                 data-building-id="{{ $room->building_id }}"
+                                 data-building-name="{{ $room->building->name ?? '' }}"
+                                 data-building-address="{{ $room->building->address ?? '' }}"
                                  data-resident-name="{{ $resident ? $resident->name : '' }}"
                                  data-resident-phone="{{ $resident ? $resident->phone : '' }}"
                                  data-price="{{ number_format($room->price) }}đ"
@@ -1116,9 +1177,13 @@
                                  data-latest-bill-id="{{ $latestBill ? $latestBill->id : '' }}"
                                  onclick="openRoomDetailById({{ $room->id }})" 
                                  class="room-card {{ $statusClass }} glass-card rounded-2xl p-5 cursor-pointer relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10">
-                                <div class="flex justify-between items-start mb-4">
+                                <div class="flex justify-between items-start mb-3">
                                     <span class="text-lg font-extrabold text-slate-200">P. {{ $room->room_number }}</span>
                                     <span class="room-badge px-2 py-0.5 rounded text-[10px] font-extrabold border {{ $badgeClass }}">{{ $statusLabel }}</span>
+                                </div>
+                                <div class="text-[10px] text-indigo-400 font-semibold truncate flex items-center gap-1 mb-2" title="{{ $room->building->name ?? '' }} - {{ $room->building->address ?? '' }}">
+                                    <i class="fa-solid fa-location-dot text-rose-400 text-[9px] shrink-0"></i>
+                                    <span class="truncate">{{ $room->building->name ?? 'Tòa nhà' }}</span>
                                 </div>
                                 @if($resident && in_array($room->status, ['occupied', 'overdue']))
                                     <h4 class="room-resident text-xs font-bold text-slate-400 truncate mb-1">Cư dân: {{ $resident->name }}</h4>
@@ -1145,6 +1210,23 @@
                             <div class="pr-8">
                                 <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold uppercase" id="modal-room-status-badge">Đã thuê</span>
                                 <h2 class="text-2xl font-extrabold text-slate-100 mt-2" id="modal-room-title">Phòng 202</h2>
+                            </div>
+
+                            <!-- Vị trí cơ sở lưu trú cụ thể của phòng -->
+                            <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1.5">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                                    <span class="flex items-center gap-1.5 uppercase tracking-wider text-indigo-400">
+                                        <i class="fa-solid fa-building"></i> Cơ sở & Vị trí cụ thể
+                                    </span>
+                                    <a id="modal-room-maps-link" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-[11px] font-bold transition-colors">
+                                        <i class="fa-brands fa-google text-[10px]"></i> Bản đồ <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                    </a>
+                                </div>
+                                <div class="text-xs font-bold text-slate-200" id="modal-room-building-name">-</div>
+                                <div class="text-xs text-slate-400 flex items-start gap-1.5">
+                                    <i class="fa-solid fa-location-dot text-rose-400 text-xs shrink-0 mt-0.5"></i>
+                                    <span id="modal-room-building-address">-</span>
+                                </div>
                             </div>
 
                             <!-- Housekeeping Quick Action Selector -->
@@ -3176,14 +3258,21 @@
 
         // Room filter state & functions
         let currentRoomFilter = 'all';
+        let currentBuildingFilter = 'all';
 
         function applyCurrentFilterToCard(card) {
             if (!card) return;
             const status = card.getAttribute('data-room-status') || '';
-            if (currentRoomFilter === 'all' || currentRoomFilter === status) {
+            const buildingId = card.getAttribute('data-building-id') || '';
+            const statusMatch = (currentRoomFilter === 'all' || currentRoomFilter === status);
+            const buildingMatch = (currentBuildingFilter === 'all' || String(buildingId) === String(currentBuildingFilter));
+
+            if (statusMatch && buildingMatch) {
                 card.classList.remove('hidden');
+                card.style.display = '';
             } else {
                 card.classList.add('hidden');
+                card.style.display = 'none';
             }
         }
 
@@ -3404,6 +3493,35 @@
         let currentActiveRoomStatus = null;
         let currentActiveRoomNumber = null;
 
+        function filterByBuilding(buildingId, btn) {
+            currentBuildingFilter = buildingId;
+            document.querySelectorAll('.building-tab-btn').forEach(b => {
+                b.className = 'building-tab-btn px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all';
+            });
+            btn.className = 'building-tab-btn px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold transition-all';
+
+            const nameDisplay = document.getElementById('current-building-name-display');
+            const addrDisplay = document.getElementById('current-building-address-display');
+            const gmapsBtn = document.getElementById('current-building-gmaps-btn');
+
+            if (buildingId === 'all') {
+                if (nameDisplay) nameDisplay.textContent = 'Tất cả cơ sở quản lý';
+                if (addrDisplay && addrDisplay.querySelector('span')) addrDisplay.querySelector('span').textContent = 'Hiển thị danh sách phòng thuộc tất cả các tòa nhà';
+                const defaultAddr = btn.getAttribute('data-building-address') || 'Hà Nội';
+                if (gmapsBtn) gmapsBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(defaultAddr)}`;
+            } else {
+                const bName = btn.getAttribute('data-building-name') || '';
+                const bAddr = btn.getAttribute('data-building-address') || '';
+                if (nameDisplay) nameDisplay.textContent = bName;
+                if (addrDisplay && addrDisplay.querySelector('span')) addrDisplay.querySelector('span').textContent = bAddr;
+                if (gmapsBtn) gmapsBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bAddr || bName)}`;
+            }
+
+            document.querySelectorAll('.room-card').forEach(card => {
+                applyCurrentFilterToCard(card);
+            });
+        }
+
         function openRoomDetailById(roomId) {
             const card = document.getElementById('room-card-' + roomId);
             if (!card) return;
@@ -3446,6 +3564,24 @@
             const badge = document.getElementById('modal-room-status-badge');
             
             title.textContent = "Phòng " + roomNum;
+
+            // Cập nhật vị trí cơ sở cụ thể cho phòng trong modal
+            if (roomId) {
+                const card = document.getElementById('room-card-' + roomId);
+                if (card) {
+                    const bName = card.getAttribute('data-building-name') || '';
+                    const bAddr = card.getAttribute('data-building-address') || '';
+                    const modalBName = document.getElementById('modal-room-building-name');
+                    const modalBAddr = document.getElementById('modal-room-building-address');
+                    const modalBMaps = document.getElementById('modal-room-maps-link');
+                    if (modalBName) modalBName.textContent = bName || 'Cơ sở chính';
+                    if (modalBAddr) modalBAddr.textContent = bAddr || 'Chưa cập nhật địa chỉ cụ thể';
+                    if (modalBMaps) {
+                        const q = encodeURIComponent(bAddr || bName || 'Hà Nội');
+                        modalBMaps.href = `https://www.google.com/maps/search/?api=1&query=${q}`;
+                    }
+                }
+            }
             
             // Set nhãn trạng thái và badge
             const statusLabels = {
