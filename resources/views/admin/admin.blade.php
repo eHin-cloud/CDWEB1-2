@@ -6067,11 +6067,11 @@
             qrModal.classList.remove('hidden');
 
             const amt = parseInt(amount) || 0;
-            const bankId = 'MB';
-            const accountNo = '9999888889999';
-            const accountName = 'NGUYEN VAN CHU NHA';
+            const bankId = 'VCB';
+            const accountNo = '1051572297';
+            const accountName = 'CHU TRO';
             const desc = `Thanh toan Phong ${roomNum} coc hoac tien phong`;
-            const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact.png?amount=${amt}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent(accountName)}`;
+            const qrUrl = `https://img.vietqr.io/image/VCB-1051572297-compact.png?amount=${amt}&addInfo=${encodeURIComponent(desc)}`;
 
             document.getElementById('qr-modal-room').textContent = `Phòng ${roomNum}`;
             document.getElementById('qr-modal-tenant').textContent = 'Khách mới / Cư dân';

@@ -310,13 +310,12 @@ Route::middleware('auth:sanctum')->group(function () {
             + ($waterUsed * (int) $bill->water_price)
             + 150000;
 
-        $bankId = strtoupper((string) ($tenant->bank_name ?: 'MB'));
-        $accountNo = (string) $tenant->bank_account_no;
-        $accountName = mb_strtoupper((string) $tenant->bank_account_name);
+        $bankId = 'VCB';
+        $accountNo = '1051572297';
+        $accountName = mb_strtoupper((string) ($tenant->bank_account_name ?: 'CHU TRO'));
         $description = 'Thanh toan Phong ' . ($room?->room_number ?? 'N/A') . ' thang ' . $bill->billing_month;
-        $qrUrl = "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$amount}&addInfo="
-            . rawurlencode($description)
-            . '&accountName=' . rawurlencode($accountName);
+        $qrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$amount}&addInfo="
+            . rawurlencode($description);
 
         return response()->json([
             'success' => true,
@@ -385,12 +384,10 @@ Route::middleware('auth:sanctum')->group(function () {
             $totalFormatted = number_format($totalAmount, 0, ',', '.') . 'đ';
             
             // QR payment URL
-            $bankId = strtoupper((string) ($tenant->bank_name ?: 'MB'));
-            $accountNo = (string) $tenant->bank_account_no;
-            $accountName = mb_strtoupper((string) $tenant->bank_account_name);
+            $bankId = 'VCB';
+            $accountNo = '1051572297';
             $addInfo = rawurlencode("Thanh toan Phong " . $room->room_number . " thang " . now()->format('m'));
-            $accNameEscaped = rawurlencode($accountName);
-            $qrUrl = "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$totalAmount}&addInfo={$addInfo}&accountName={$accNameEscaped}";
+            $qrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo={$addInfo}";
             
             // Build Zalo message template
             $message = "📢 [SMARTROOM REMINDER] Kính gửi Anh/Chị {$residentName} (Phòng {$room->room_number}). Hệ thống nhận thấy hóa đơn tiền trọ tháng " . now()->format('m/Y') . " của phòng mình chưa được hoàn tất. Tổng số tiền cần thanh toán là {$totalFormatted}. Kính mong Anh/Chị thanh toán trước ngày 10 để tránh trễ hạn. Link quét QR VietQR thanh toán nhanh: {$qrUrl}. Trân trọng cảm ơn!";

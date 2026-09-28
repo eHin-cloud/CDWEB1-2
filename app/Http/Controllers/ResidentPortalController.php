@@ -200,6 +200,7 @@ class ResidentPortalController extends Controller
             'resident' => $resident,
             'bill' => $bill,
             'qrUrl' => $this->vietQrUrl($resident->room->room_number, $bill->billing_month, $bill->total_amount),
+            'staticQrUrl' => 'https://img.vietqr.io/image/VCB-1051572297-compact.png',
         ]);
     }
 
@@ -251,12 +252,9 @@ class ResidentPortalController extends Controller
 
     private function vietQrUrl(string $roomNumber, string $billingMonth, int $amount): string
     {
-        $bankId = 'MB';
-        $accountNo = '9999888889999';
-        $accountName = rawurlencode('NGUYEN VAN CHU NHA');
         $addInfo = rawurlencode('Thanh toan phong ' . $roomNumber . ' thang ' . $billingMonth);
 
-        return "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$amount}&addInfo={$addInfo}&accountName={$accountName}";
+        return "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$amount}&addInfo={$addInfo}";
     }
 
     private function billStatusLabels(): array
