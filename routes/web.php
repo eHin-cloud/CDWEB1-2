@@ -259,7 +259,18 @@ Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::c
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
 
 $rentyRooms = function () {
-    $rooms = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews'])->get();
+    $user = auth()->user();
+    $query = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews']);
+
+    // Nếu người dùng đăng nhập là chủ trọ hoặc quản lý có tenant_id (và không phải Superadmin),
+    // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó
+    if ($user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin()) {
+        if (!request()->boolean('all_tenants')) {
+            $query->where('tenant_id', $user->tenant_id);
+        }
+    }
+
+    $rooms = $query->get();
     
     $mappedRooms = $rooms->map(function($room) {
         $num = intval($room->room_number);
@@ -472,7 +483,12 @@ $rentyRooms = function () {
 };
 
 $rentyPage = function () use ($rentyRooms) {
-    $recentReviews = \App\Models\Review::with('room')->latest()->take(5)->get();
+    $user = auth()->user();
+    $reviewsQuery = \App\Models\Review::with('room');
+    if ($user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin() && !request()->boolean('all_tenants')) {
+        $reviewsQuery->whereHas('room', fn ($q) => $q->where('tenant_id', $user->tenant_id));
+    }
+    $recentReviews = $reviewsQuery->latest()->take(5)->get();
     return view('rentry.rentry', [
         'rooms' => $rentyRooms(),
         'recentReviews' => $recentReviews

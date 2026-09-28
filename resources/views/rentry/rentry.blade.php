@@ -403,6 +403,20 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-slate-900 pb-4 renty-split-header">
             <div class="flex items-center gap-3.5 flex-wrap">
                 <h2 class="text-lg font-bold text-slate-200" id="results-count">Tìm thấy {{ count($rooms) }} phòng</h2>
+                @if(auth()->check() && auth()->user()->canAccessLandlordDashboard() && auth()->user()->tenant_id && !auth()->user()->isAdmin())
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
+                        <i class="fa-solid fa-building-user text-indigo-400"></i> Cơ sở: {{ auth()->user()->tenant?->name ?? 'Khu vực quản lý' }}
+                    </span>
+                    @if(request()->boolean('all_tenants'))
+                        <a href="{{ route('renty.user') }}" class="text-xs text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-filter"></i> Chỉ xem trọ của tôi
+                        </a>
+                    @else
+                        <a href="{{ route('renty.user', ['all_tenants' => 1]) }}" class="text-xs text-slate-400 hover:text-slate-200 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-globe"></i> Xem tất cả trọ hệ thống
+                        </a>
+                    @endif
+                @endif
                 <div id="live-activity-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-400 select-none shadow-sm transition-all duration-500">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span id="live-activity-text">24 người đang xem khu vực Đống Đa</span>
