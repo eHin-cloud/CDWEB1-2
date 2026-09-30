@@ -1,14 +1,16 @@
 @echo off
+chcp 65001 > nul
 setlocal enabledelayedexpansion
 title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
 
-:: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher nho gon
+:: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher
 if "%1" neq "--cli" (
-    start "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    start "" powershell -WindowStyle Normal -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
     exit /b 0
 )
 
 mode con: cols=110 lines=42
+chcp 65001 >nul
 
 :: ======================================================================
 :: INITIAL ENVIRONMENT SCAN (AUTO-PILOT)
@@ -67,29 +69,29 @@ if exist .env (
 cls
 color 0b
 echo.
-echo    +==================================================================================================+
-echo    ^|                SMARTROOM ^& RENTY - TRINH KHOI CHAY HE THONG [RUN SELECTOR]                        ^|
-echo    +==================================================================================================+
-echo    ^|  [TAB 1: DOCKER COMPOSE]       ^|  [TAB 2: XAMPP STACK]          ^|  [TAB 3: WAMPP STACK]           ^|
-echo    ^|--------------------------------+---------------------------------+-------------------------------^|
-echo    ^|  * Container hoa toan dien     ^|  * May chu cuc bo XAMPP        ^|  * May chu cuc bo WampServer    ^|
-echo    ^|  * Web App: Port 8088          ^|  * Web App: Port 8000          ^|  * Web App: Port 8000           ^|
-echo    ^|  * MySQL Docker: Port 3309     ^|  * MySQL XAMPP: Port 3306      ^|  * MySQL WAMPP: Port 3306/3308  ^|
-echo    ^|  * Reverb WS: Port 8085        ^|  * Vite Dev Hot-Reload         ^|  * Vite Dev Hot-Reload          ^|
-echo    ^|  * Khong lo xung dot moi truong^|  * Nhan dien D:\, C:\xampp...  ^|  * Tu dong quet WampServer      ^|
-echo    +==================================================================================================+
-echo    ^|                                                                                                  ^|
-echo    ^|   >> VUI LONG CHON PHUONG THUC BAN MUON KHOI CHAY DU AN:                                         ^|
-echo    ^|                                                                                                  ^|
-echo    ^|      [1] CHAY BANG DOCKER    ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)       ^|
-echo    ^|      [2] CHAY BANG XAMPP     ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)       ^|
-echo    ^|      [3] CHAY BANG WAMPP     ---^> Khoi chay bang PHP ^& MySQL cua WampServer                     ^|
-echo    ^|                                                                                                  ^|
-echo    ^|   --------------------------------------------------------------------------------------------   ^|
-echo    ^|      [4] MENU NANG CAO       ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan^|
-echo    ^|      [0] THOAT CHUONG TRINH                                                                      ^|
-echo    ^|                                                                                                  ^|
-echo    +==================================================================================================+
+echo    ====================================================================================================
+echo                     SMARTROOM ^& RENTY - TRINH KHOI CHAY HE THONG [RUN SELECTOR]
+echo    ====================================================================================================
+echo      [TAB 1: DOCKER COMPOSE]       ^|  [TAB 2: XAMPP STACK]          ^|  [TAB 3: WAMPP STACK]
+echo    --------------------------------+---------------------------------+---------------------------------
+echo      * Container hoa toan dien     ^|  * May chu cuc bo XAMPP        ^|  * May chu cuc bo WampServer
+echo      * Web App: Port 8088          ^|  * Web App: Port 8000          ^|  * Web App: Port 8000
+echo      * MySQL Docker: Port 3309     ^|  * MySQL XAMPP: Port 3306      ^|  * MySQL WAMPP: Port 3306/3308
+echo      * Reverb WS: Port 8085        ^|  * Vite Dev Hot-Reload         ^|  * Vite Dev Hot-Reload
+echo      * Khong lo xung dot moi truong^|  * Nhan dien D:\, C:\xampp...  ^|  * Tu dong quet WampServer
+echo    ====================================================================================================
+echo.
+echo      >> VUI LONG CHON PHUONG THUC BAN MUON KHOI CHAY DU AN:
+echo.
+echo         [1] CHAY BANG DOCKER    ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)
+echo         [2] CHAY BANG XAMPP     ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)
+echo         [3] CHAY BANG WAMPP     ---^> Khoi chay bang PHP ^& MySQL cua WampServer
+echo.
+echo      ----------------------------------------------------------------------------------------------
+echo         [4] MENU NANG CAO       ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan
+echo         [0] THOAT CHUONG TRINH
+echo.
+echo    ====================================================================================================
 echo.
 set /p tab_choice="   >> Nhap lua chon cua ban (1-4 hoac 0 de thoat): "
 
@@ -186,7 +188,7 @@ if exist .env (
     findstr /C:"DB_HOST=mysql" .env > nul
     if !errorlevel! equ 0 (
         echo    [!] Phat hien .env dang tro Docker. Dang chuyen sang MySQL XAMPP (127.0.0.1:3306)...
-        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=quan_ly_nha_tro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
+        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=qlphongtro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
         call !PHP_CMD! artisan config:clear > nul 2>&1
     )
 )
@@ -265,7 +267,7 @@ if exist .env (
     findstr /C:"DB_HOST=mysql" .env > nul
     if !errorlevel! equ 0 (
         echo    [!] Phat hien .env dang tro Docker. Dang chuyen sang MySQL WAMP (127.0.0.1:3306)...
-        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=quan_ly_nha_tro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
+        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=qlphongtro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
         call !PHP_CMD! artisan config:clear > nul 2>&1
     )
 )
@@ -304,10 +306,11 @@ echo    [8] HEALTH DIAGNOSTIC - [MOI] Kiem tra suc khoe toan dien he thong du an
 echo    [9] LOG MANAGEMENT    - [MOI] Xem, theo doi va xoa sach nhat ky loi Laravel
 echo    [10] DOCKER CONTROL   - [MOI] Bang dieu khien chuyen sau Docker Compose
 echo    [11] QUAY LAI BANG TAB- Quay lai man hinh chon moi truong (Docker / XAMPP / WAMPP)
+echo    [12] AUTO-SYNC GIT    - [MOI] Bat tien trinh tu dong lang nghe va keo code tu Git
 echo    [0]  EXIT             - Thoat
 echo.
 echo    ----------------------------------------------------------------------------------------
-set /p choice="   >> Nhap lua chon cua ban (0-11): "
+set /p choice="   >> Nhap lua chon cua ban (0-12): "
 
 if "%choice%"=="1" goto DEV_MODE
 if "%choice%"=="2" goto STABLE_RUN
@@ -320,7 +323,24 @@ if "%choice%"=="8" goto DIAGNOSTICS
 if "%choice%"=="9" goto LOG_MGMT
 if "%choice%"=="10" goto DOCKER_RUN
 if "%choice%"=="11" goto TAB_MENU
+if "%choice%"=="12" goto AUTO_SYNC
 if "%choice%"=="0" goto EXIT_CLEAN
+goto ADVANCED_MENU
+
+:AUTO_SYNC
+cls
+color 0b
+echo.
+echo    ====================================================================
+echo    [ AUTO-SYNC ] KHOI CHAY TIEN TRINH TU DONG DONG BO GIT (DAEMON)
+echo    ====================================================================
+echo.
+start "SmartRoom Auto-Sync Daemon" powershell -ExecutionPolicy Bypass -NoExit -File "%~dp0auto-sync.ps1"
+echo    [+] Da kich hoat tien trinh Auto-Sync Git Daemon trong mot cua so moi!
+echo    Cua so se dinh ky kiem tra commit moi tu GitHub.
+echo    Khi May 1 push code, May 2 se tu dong pull, migrate va build tai nguyen.
+echo.
+pause
 goto ADVANCED_MENU
 
 :INITIALIZE
@@ -387,6 +407,14 @@ goto TAB_MENU
 :DOCKER_CHECK_CLI
 where docker >nul 2>&1
 if %errorlevel% neq 0 (
+    if exist "%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin\docker.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin;!PATH!"
+    ) else if exist "%ProgramFiles%\Docker\Docker\resources\bin\docker.exe" (
+        set "PATH=%ProgramFiles%\Docker\Docker\resources\bin;!PATH!"
+    )
+)
+where docker >nul 2>&1
+if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong tim thay Docker CLI. Vui long cai Docker Desktop truoc.
     pause
@@ -398,11 +426,33 @@ exit /b 0
 call :DOCKER_CHECK_CLI
 docker info >nul 2>&1
 if %errorlevel% neq 0 (
+    echo    [!] Docker Desktop chua bat. Dang tu dong khoi dong Docker Desktop...
+    set "DOCKER_APP="
+    if exist "%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe" (
+        set "DOCKER_APP=%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe"
+    ) else if exist "%ProgramFiles%\Docker\Docker\Docker Desktop.exe" (
+        set "DOCKER_APP=%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
+    )
+    if defined DOCKER_APP (
+        start "" "!DOCKER_APP!"
+    ) else (
+        start "" "Docker Desktop" >nul 2>&1
+    )
+    echo    [!] Dang doi Docker Engine khoi dong hoan tat...
+    for /l %%k in (1,1,20) do (
+        timeout /t 2 > nul
+        docker info >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo    ^|---^> [OK] Docker Desktop da khoi dong va san sang.
+            goto DOCKER_DAEMON_READY
+        )
+    )
     color 0c
-    echo    [ LOI ] Docker Daemon chua chay! Vui long bat Docker Desktop tren Windows.
+    echo    [ LOI ] Docker Daemon chua chay xong! Vui long kiem tra Docker Desktop tren Windows.
     pause
     goto DOCKER_RUN
 )
+:DOCKER_DAEMON_READY
 if not exist ".docker-config" (
     mkdir ".docker-config" >nul 2>&1
 )
@@ -426,8 +476,8 @@ if not exist .env (
     )
     echo    [+] Da khoi tao .env cho Docker.
 )
-echo    [1/3] Dang khoi chay cac container (Build ^& Run Background)...
-docker compose up -d --build
+echo    [1/3] Dang khoi chay cac container (Background)...
+docker compose up -d
 if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong the khoi chay Docker Compose. Hay kiem tra logs.
@@ -449,8 +499,8 @@ for /l %%i in (1,1,30) do (
 
 :DOCKER_READY_LAUNCH
 echo.
-echo    [3/3] Dang mo website duoi dang cua so ung dung...
-start chrome --app="http://localhost:8088/renty" >nul 2>&1 || start msedge --app="http://localhost:8088/renty" >nul 2>&1 || start "" "http://localhost:8088/renty"
+echo    [3/3] Dang mo website tren trinh duyet...
+call :LAUNCH_APP_WINDOW "http://localhost:8088/renty"
 
 cls
 color 0b
@@ -1440,7 +1490,7 @@ if "!SERVER_READY!"=="1" (
 ) else (
     echo    [!] Chua xac nhan duoc server san sang, van mo web de ban kiem tra.
 )
-start chrome --app="!AUTO_OPEN_URL!" >nul 2>&1 || start msedge --app="!AUTO_OPEN_URL!" >nul 2>&1 || start "" "!AUTO_OPEN_URL!"
+call :LAUNCH_APP_WINDOW "!AUTO_OPEN_URL!"
 
 cls
 color 0b
@@ -1515,3 +1565,12 @@ exit /b 1
 :: Reset lai errorlevel ve 0 tranh lỗi do cac lenh taskkill truoc do de lai
 cmd /c "exit /b 0"
 exit /b 0
+
+:: ======================================================================
+:: MO TRANG WEB TREN TRINH DUYET MAC DINH (CO TAB VA THANH DIA CHI)
+:: ======================================================================
+:LAUNCH_APP_WINDOW
+set "APP_URL=%~1"
+start "" "%APP_URL%"
+exit /b 0
+

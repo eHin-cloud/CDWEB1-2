@@ -4,130 +4,127 @@ DANH SÁCH TÀI KHOẢN HỆ THỐNG RENTY & SMARTROOM (CẬP NHẬT MỚI NHẤ
 
 1. TÀI KHOẢN ADMIN HỆ THỐNG (SUPERADMIN)
 --------------------------------------------------------------------------------
-* Tên đăng nhập (username): admin
+* Tên đăng nhập (username): superadmin (hoặc admin)
 * Tên hiển thị (name): Quản trị viên Hệ thống
-* Số điện thoại (phone): 0987654321
-* Email: admin@smartroom.com
-* Mật khẩu (password): admin123
+* Số điện thoại (phone): 0999999999 / 0987654321
+* Email: superadmin@smartroom.local / admin@smartroom.com
+* Mật khẩu (password): password (hoặc admin123)
 * Phân quyền (role): admin (Toàn quyền quản trị nền tảng)
-* Quyền hạn: Duyệt KYC chủ trọ, quản lý toàn bộ cơ sở, phân quyền, xem log kiểm toán.
+* Quyền hạn: Duyệt KYC chủ trọ, quản lý toàn bộ cơ sở, phân quyền, xem báo cáo, kiểm toán.
 
 
-2. TÀI KHOẢN QUẢN LÝ / CHỦ TRỌ CƠ SỞ (ĐÃ XÁC MINH KYC & LIÊN KẾT PHÒNG)
+2. DANH SÁCH 10 CHỦ TRỌ CHUNG CƯ MINI (7 ĐÃ XÁC MINH - 3 CHƯA XÁC MINH)
 --------------------------------------------------------------------------------
-* CHỦ TRỌ HÀ NỘI (Cơ sở SmartRoom Cầu Giấy):
-  - Tên đăng nhập (username): admin_hanoi
-  - Tên hiển thị (name): Nguyễn Văn Hà (Chủ trọ Hà Nội)
-  - Số điện thoại (phone): 0988000001
-  - Email: admin.hanoi@smartroom.local
-  - Mật khẩu (password): password
-  - Vai trò (role): landlord (Chủ trọ / Quản lý)
-  - Trạng thái xác minh: Đã duyệt KYC (kyc_verified / verified)
-  - Cơ sở quản lý: SmartRoom Cầu Giấy (Số 12 Chùa Hà, Cầu Giấy, Hà Nội)
-  - Quy mô liên kết: 2 tòa nhà, 24 phòng trọ và 24 hợp đồng cư dân tại Hà Nội.
+Mật khẩu chung cho tất cả các tài khoản chủ trọ: password
 
-* CHỦ TRỌ TP. HỒ CHÍ MINH (Cơ sở Luxury Bình Thạnh):
-  - Tên đăng nhập (username): admin_hcm
-  - Tên hiển thị (name): Trần Minh Nam (Chủ trọ TP.HCM)
-  - Số điện thoại (phone): 0909123456
-  - Email: admin.hcm@smartroom.local
-  - Mật khẩu (password): password
-  - Vai trò (role): landlord (Chủ trọ / Quản lý)
-  - Trạng thái xác minh: Đã duyệt KYC (kyc_verified / verified)
-  - Cơ sở quản lý: Căn hộ dịch vụ Luxury Bình Thạnh (45 Ung Văn Khiêm, P.25, Bình Thạnh, TP.HCM)
-  - Quy mô liên kết: 2 tòa nhà, 24 phòng trọ và 24 hợp đồng cư dân tại TP.HCM.
+[NHÓM 1: 7 CHỦ TRỌ ĐÃ XÁC MINH KYC (kyc_verified)]
+1. Chủ trọ Cầu Giấy (SmartRoom Cầu Giấy):
+   - Tên đăng nhập: admin_hanoi (hoặc demo-landlord-1)
+   - Tên chủ trọ: Trần Văn Hoàng
+   - Email: contact@smartroom-caugiay.vn (hoặc admin.hanoi@smartroom.local)
+   - Điện thoại: 0988000001
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 95
+   - Cơ sở quản lý: Chung cư mini SmartRoom Cầu Giấy (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ khép kín đầy đủ tiện nghi.
+
+2. Chủ trọ Thanh Xuân (Rentry Home Thanh Xuân):
+   - Tên đăng nhập: demo-landlord-2
+   - Tên chủ trọ: Lê Quản Lý Thanh Xuân
+   - Email: demo-thanhxuan@smartroom.local
+   - Điện thoại: 0988000002
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 90
+   - Cơ sở quản lý: Chung cư mini Rentry Home Thanh Xuân (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ khép kín.
+
+3. Chủ trọ Đống Đa (Sen Vàng Đống Đa):
+   - Tên đăng nhập: demo-landlord-3
+   - Tên chủ trọ: Phạm Văn Đống Đa
+   - Email: demo-dongda@smartroom.local
+   - Điện thoại: 0988000003
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 88
+   - Cơ sở quản lý: Chung cư mini Sen Vàng Đống Đa (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ.
+
+4. Chủ trọ Tây Hồ (Hồ Tây Panorama):
+   - Tên đăng nhập: demo-landlord-4
+   - Tên chủ trọ: Hoàng Văn Tây Hồ
+   - Email: demo-tayho@smartroom.local
+   - Điện thoại: 0988000004
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 92
+   - Cơ sở quản lý: Chung cư mini Hồ Tây Panorama Tây Hồ (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ cao cấp view hồ.
+
+5. Chủ trọ Hai Bà Trưng (Times Light Hai Bà Trưng):
+   - Tên đăng nhập: demo-landlord-5
+   - Tên chủ trọ: Vũ Thị Hai Bà Trưng
+   - Email: demo-hbt@smartroom.local
+   - Điện thoại: 0988000005
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 86
+   - Cơ sở quản lý: Chung cư mini Times Light Hai Bà Trưng (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ.
+
+6. Chủ trọ Ba Đình (Liễu Giai Riverside Ba Đình):
+   - Tên đăng nhập: demo-landlord-6
+   - Tên chủ trọ: Trần Văn Ba Đình
+   - Email: demo-badinh@smartroom.local
+   - Điện thoại: 0988000006
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 89
+   - Cơ sở quản lý: Chung cư mini Liễu Giai Riverside Ba Đình (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ.
+
+7. Chủ trọ Nam Từ Liêm (Mỹ Đình Star Nam Từ Liêm):
+   - Tên đăng nhập: demo-landlord-7
+   - Tên chủ trọ: Bùi Tiến Đạt
+   - Email: demo-mydinh@smartroom.local
+   - Điện thoại: 0988000007
+   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 87
+   - Cơ sở quản lý: Chung cư mini Mỹ Đình Star Nam Từ Liêm (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ.
+
+[NHÓM 2: 3 CHỦ TRỌ CHƯA XÁC MINH / ĐANG CHỜ DUYỆT]
+8. Chủ trọ Hoàng Mai (Linh Đàm Green Hoàng Mai):
+   - Tên đăng nhập: demo-landlord-8
+   - Tên chủ trọ: Hoàng Văn Hùng
+   - Email: demo-hoangmai@smartroom.local
+   - Điện thoại: 0988000008
+   - Trạng thái: CHỜ DUYỆT KYC (pending) - Đã nộp CCCD chờ Admin duyệt
+   - Cơ sở quản lý: Chung cư mini Linh Đàm Green Hoàng Mai (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ.
+
+9. Chủ trọ Bắc Từ Liêm (Cổ Nhuế House Bắc Từ Liêm):
+   - Tên đăng nhập: demo-landlord-9
+   - Tên chủ trọ: Nguyễn Thị Mai
+   - Email: demo-bactuliem@smartroom.local
+   - Điện thoại: 0988000009
+   - Trạng thái: CHỜ DUYỆT KYC (pending) - Đã nộp CCCD chờ Admin duyệt
+   - Cơ sở quản lý: Chung cư mini Cổ Nhuế House Bắc Từ Liêm (Tòa A & Tòa B)
+   - Quy mô: 24 phòng trọ.
+
+10. Chủ trọ Hà Đông (Hà Đông Central Hà Đông):
+    - Tên đăng nhập: demo-landlord-10 (hoặc unverified-landlord)
+    - Tên chủ trọ: Trịnh Văn Lâm
+    - Email: demo-hadong@smartroom.local (hoặc unverified@demo.smartroom.local)
+    - Điện thoại: 0988000010 (hoặc 0888999888)
+    - Trạng thái: CHƯA XÁC MINH (unverified) - Chưa nộp hồ sơ KYC
+    - Cơ sở quản lý: Chung cư mini Hà Đông Central Hà Đông (Tòa A & Tòa B)
+    - Quy mô: 24 phòng trọ.
 
 
-3. 10 TÀI KHOẢN KHÁCH THUÊ / CƯ DÂN (ĐÃ LIÊN KẾT HỢP ĐỒNG & PHÒNG THỰC TẾ)
+3. TÀI KHOẢN KHÁCH THUÊ / CƯ DÂN
 --------------------------------------------------------------------------------
-Tất cả tài khoản cư dân đều có mật khẩu chung là: password
-Vai trò (role): user / resident (Cư dân thuê phòng)
+Mật khẩu chung: password
+Vai trò: user / resident
+- demo-resident-101-1 (Trần Minh Anh - P.101 Cầu Giấy)
+- demo-resident-102-1 (Nguyễn Hoàng Nam - P.102 Cầu Giấy)
+- demo-resident-201-1 (Lê Thu Trang - P.201 Cầu Giấy)
+- demo-resident-202-1 (Phạm Quốc Việt - P.202 Cầu Giấy)
+- demo-resident-301-1 (Đỗ Khánh Linh - P.301 Cầu Giấy)
+- tenant (Khách thuê demo chung - password)
 
---- [KHU VỰC HÀ NỘI - CƠ SỞ CẦU GIẤY] ---
-1. Khách thuê: Trần Minh Anh
-   - Tên đăng nhập (username): tranminhanh
-   - Số điện thoại: 0912000101
-   - Email: minhanh.hn@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 101 (Tòa Cầu Giấy, Hà Nội)
-   - Hợp đồng: Hợp đồng số 197 (Đang hiệu lực)
-
-2. Khách thuê: Nguyễn Hoàng Nam
-   - Tên đăng nhập (username): nguyenhoangnam
-   - Số điện thoại: 0912000102
-   - Email: hoangnam.hn@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 102 (Tòa Cầu Giấy, Hà Nội)
-   - Hợp đồng: Hợp đồng số 199 (Đang hiệu lực)
-
-3. Khách thuê: Lê Thu Trang
-   - Tên đăng nhập (username): lethutrang
-   - Số điện thoại: 0912000201
-   - Email: thutrang.hn@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 201 (Tòa Cầu Giấy, Hà Nội)
-   - Hợp đồng: Hợp đồng số 201 (Đang hiệu lực)
-
-4. Khách thuê: Phạm Quốc Việt
-   - Tên đăng nhập (username): phamquocviet
-   - Số điện thoại: 0912000302
-   - Email: quocviet.hn@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 302 (Tòa Cầu Giấy, Hà Nội)
-   - Hợp đồng: Hợp đồng số 203 (Đang hiệu lực)
-
-5. Khách thuê: Đỗ Khánh Linh
-   - Tên đăng nhập (username): dokhanhlinh
-   - Số điện thoại: 0912000402
-   - Email: khanhlinh.hn@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 402 (Tòa Cầu Giấy, Hà Nội)
-   - Hợp đồng: Hợp đồng số 205 (Đang hiệu lực)
-
---- [KHU VỰC TP. HỒ CHÍ MINH - CƠ SỞ BÌNH THẠNH] ---
-6. Khách thuê: Vũ Phương Thảo
-   - Tên đăng nhập (username): vuphuongthao
-   - Số điện thoại: 0913000101
-   - Email: phuongthao.hcm@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 101 (Tòa Luxury Bình Thạnh, TP.HCM)
-   - Hợp đồng: Hợp đồng số 491 (Đang hiệu lực)
-
-7. Khách thuê: Đặng Anh Đức
-   - Tên đăng nhập (username): danganhduc
-   - Số điện thoại: 0913000102
-   - Email: anhduc.hcm@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 102 (Tòa Luxury Bình Thạnh, TP.HCM)
-   - Hợp đồng: Hợp đồng số 493 (Đang hiệu lực)
-
-8. Khách thuê: Ngô Bảo Châu
-   - Tên đăng nhập (username): ngobaochau
-   - Số điện thoại: 0913000201
-   - Email: baochau.hcm@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 201 (Tòa Luxury Bình Thạnh, TP.HCM)
-   - Hợp đồng: Hợp đồng số 495 (Đang hiệu lực)
-
-9. Khách thuê: Hoàng Gia Bảo
-   - Tên đăng nhập (username): hoanggiabao
-   - Số điện thoại: 0913000602
-   - Email: giabao.hcm@smartroom.local
-   - Mật khẩu (password): password
-   - Phòng đang ở: Phòng 602 (Tòa Luxury Bình Thạnh, TP.HCM)
-   - Hợp đồng: Hợp đồng số 489 (Đang hiệu lực)
-
-10. Khách thuê: Bùi Tiến Đạt
-    - Tên đăng nhập (username): buitiendat
-    - Số điện thoại: 0913000502
-    - Email: tiendat.hcm@smartroom.local
-    - Mật khẩu (password): password
-    - Phòng đang ở: Phòng 502 (Tòa Luxury Bình Thạnh, TP.HCM)
-    - Hợp đồng: Hợp đồng số 487 (Đang hiệu lực)
 
 ================================================================================
 GHI CHÚ ĐĂNG NHẬP:
-- Tất cả các tài khoản trên đều có thể đăng nhập bằng 1 trong 3 hình thức:
+- Tất cả tài khoản trên đều có thể đăng nhập bằng 1 trong 3 hình thức:
   1) Tên đăng nhập (username)
   2) Số điện thoại (phone)
   3) Email

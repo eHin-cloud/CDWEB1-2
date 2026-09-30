@@ -1,0 +1,110 @@
+name: SmartRoom & Renty - Laravel CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'CI/CD'
+      - 'AnhQuy/**'
+      - 'Hien/**'
+      - 'VinhEm/**'
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-style:
+    name: 🎨 Kiểm tra chuẩn Code (Laravel Pint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài đặt môi trường PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, intl
+          coverage: none
+
+      - name: Lấy Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Cài đặt Composer Packages
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Kiểm tra Code Style với Laravel Pint
+        run: ./vendor/bin/pint --test -v
+        continue-on-error: true
+
+  phpunit-tests:
+    name: 🧪 Chạy bộ kiểm thử tự động (PHPUnit Suite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài đặt môi trường PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, intl, gd, fileinfo
+          coverage: none
+
+      - name: Lấy Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Cài đặt Composer Packages
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Khởi tạo file cấu hình môi trường (.env)
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Chạy toàn bộ 64 Feature & Unit Tests (SQLite in-memory)
+        run: php vendor/phpunit/phpunit/phpunit --testdox --colors=always
+
+  frontend-build:
+    name: ⚡ Biên dịch tài nguyên giao diện (Vite & Tailwind)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài đặt môi trường Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Cài đặt NPM Packages
+        run: npm ci
+
+      - name: Build Production Assets với Vite
+        run: npm run build
+
+      - name: Xác nhận file bundle đã được sinh ra
+        run: |
+          test -f public/build/manifest.json || (echo "Lỗi: manifest.json không tồn tại!" && exit 1)
+          echo " Biên dịch thành công toàn bộ CSS & JS cho giao diện SmartRoom / Renty!"

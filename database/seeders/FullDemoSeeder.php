@@ -9,6 +9,9 @@ use App\Models\ContactRequest;
 use App\Models\Contract;
 use App\Models\ElectricWaterLog;
 use App\Models\Equipment;
+use App\Models\LandlordProfile;
+use App\Models\LandlordVerificationDocument;
+use App\Models\LandlordVerificationRequest;
 use App\Models\NotificationLog;
 use App\Models\Resident;
 use App\Models\ResidentRelative;
@@ -31,6 +34,9 @@ class FullDemoSeeder extends Seeder
 
     public function run(): void
     {
+        // 0. Xóa hết dữ liệu phòng trọ và dữ liệu cũ để tránh sót rác
+        $this->cleanOldData();
+
         DB::transaction(function () {
             $this->seedRoles();
 
@@ -49,10 +55,7 @@ class FullDemoSeeder extends Seeder
                 ]
             );
 
-            // 2. Tạo Tenant & Chủ trọ chưa xác minh kèm yêu cầu KYC mẫu
-            $this->seedUnverifiedLandlordWithKyc();
-
-            // 3. Tạo các chủ trọ và phòng trọ mẫu tại 10 khu vực
+            // 2. Tạo đúng 10 chủ trọ (7 đã xác minh KYC, 3 chưa xác minh) cùng các tòa chung cư mini và phòng trọ
             foreach ($this->tenantBlueprints() as $tenantIndex => $blueprint) {
                 $tenant = $this->seedTenant($blueprint);
                 $landlord = $this->seedLandlord($tenant, $blueprint, $tenantIndex);
@@ -77,6 +80,35 @@ class FullDemoSeeder extends Seeder
         $this->printInstructions();
     }
 
+    private function cleanOldData(): void
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        RoomEquipment::truncate();
+        Equipment::truncate();
+        ElectricWaterLog::truncate();
+        UtilityRecord::truncate();
+        Bill::truncate();
+        Contract::truncate();
+        ResidentRelative::truncate();
+        Resident::truncate();
+        Ticket::truncate();
+        Review::truncate();
+        ContactRequest::truncate();
+        NotificationLog::truncate();
+        AdminActivityLog::truncate();
+        Room::truncate();
+        Building::truncate();
+        LandlordVerificationDocument::truncate();
+        LandlordVerificationRequest::truncate();
+        LandlordProfile::truncate();
+        Tenant::truncate();
+
+        User::whereNotIn('username', ['superadmin', 'admin'])->delete();
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
     private function seedRoles(): void
     {
         $roles = [
@@ -93,108 +125,6 @@ class FullDemoSeeder extends Seeder
         }
     }
 
-    private function seedUnverifiedLandlordWithKyc(): void
-    {
-        $tenant = Tenant::updateOrCreate(
-            ['email' => 'unverified@demo.smartroom.local'],
-            [
-                'name' => 'Nhà Trọ Hoàng Gia Đống Đa',
-                'phone' => '0888999888',
-                'bank_name' => 'MB',
-                'bank_account_no' => '999900001111',
-                'bank_account_name' => 'HOANG GIA DONG DA',
-                'verification_status' => 'unverified',
-                'listing_badge' => 'unverified',
-                'boost_score' => 0,
-                'onboarding_step' => 1,
-            ]
-        );
-
-        $building = Building::updateOrCreate(
-            ['tenant_id' => $tenant->id, 'name' => 'Hoàng Gia Building Đống Đa'],
-            [
-                'address' => 'Số 10 Xã Đàn, Đống Đa, Hà Nội',
-                'description' => 'Nhà trọ cao cấp trung tâm Đống Đa, đầy đủ tiện ích hiện đại.',
-            ]
-        );
-
-        foreach (['101', '102'] as $roomNo) {
-            Room::updateOrCreate(
-                ['building_id' => $building->id, 'room_number' => $roomNo],
-                [
-                    'tenant_id' => $tenant->id,
-                    'floor' => 1,
-                    'status' => 'empty',
-                    'room_type' => 'vip',
-                    'price' => 4500000,
-                    'area' => 30,
-                    'amenities' => ['điều hòa', 'nóng lạnh', 'wifi', 'ban công', 'wc khép kín', 'cho nuôi thú cưng'],
-                    'description' => 'Phòng test cho chủ trọ chưa xác minh.',
-                    'image' => null,
-                    'images' => [],
-                    'video' => null,
-                    'version' => 1,
-                ]
-            );
-        }
-
-        $user = User::updateOrCreate(
-            ['username' => 'unverified-landlord'],
-            [
-                'tenant_id' => $tenant->id,
-                'role_id' => $this->roles['unverified_landlord']->id,
-                'name' => 'Trần Văn Chưa Xác Minh',
-                'phone' => '0888999888',
-                'email' => 'unverified@demo.smartroom.local',
-                'password' => Hash::make('password'),
-                'role' => 'unverified_landlord',
-                'like' => 'Chủ trọ chưa xác minh',
-            ]
-        );
-
-        \App\Models\LandlordProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'tenant_id' => $tenant->id,
-                'full_name' => $user->name,
-                'phone' => $user->phone,
-                'property_name' => $tenant->name,
-                'property_address' => $building->address,
-                'status' => 'unverified',
-            ]
-        );
-
-        $verificationRequest = \App\Models\LandlordVerificationRequest::updateOrCreate(
-            ['tenant_id' => $tenant->id, 'user_id' => $user->id],
-            [
-                'type' => 'kyc',
-                'cccd_number' => '001095006789',
-                'admin_review_consent_given' => true,
-                'admin_review_consent_at' => Carbon::now(),
-                'admin_review_consent_ip' => '127.0.0.1',
-                'status' => 'pending',
-                'reviewed_by' => null,
-                'reviewed_at' => null,
-                'reject_reason' => null,
-            ]
-        );
-
-        foreach (['cccd_front' => 'Căn cước mặt trước.jpg', 'cccd_back' => 'Căn cước mặt sau.jpg'] as $docType => $filename) {
-            \App\Models\LandlordVerificationDocument::updateOrCreate(
-                ['verification_request_id' => $verificationRequest->id, 'document_type' => $docType],
-                [
-                    'disk' => 'local',
-                    'file_path' => 'kyc/' . $docType . '_demo.jpg',
-                    'original_filename' => $filename,
-                    'mime_type' => 'image/jpeg',
-                    'size_bytes' => 102400,
-                    'sha256_checksum' => hash('sha256', $filename),
-                    'status' => 'pending',
-                ]
-            );
-        }
-    }
-
     private function seedTenant(array $blueprint): Tenant
     {
         return Tenant::updateOrCreate(
@@ -205,8 +135,10 @@ class FullDemoSeeder extends Seeder
                 'bank_name' => $blueprint['bank_name'],
                 'bank_account_no' => $blueprint['bank_account_no'],
                 'bank_account_name' => $blueprint['bank_account_name'],
-                'verification_status' => 'kyc_verified',
-                'listing_badge' => 'kyc_verified',
+                'verification_status' => $blueprint['verification_status'] ?? 'kyc_verified',
+                'listing_badge' => $blueprint['listing_badge'] ?? 'kyc_verified',
+                'boost_score' => $blueprint['boost_score'] ?? 0,
+                'onboarding_step' => ($blueprint['verification_status'] ?? '') === 'kyc_verified' ? 4 : 2,
             ]
         );
     }
@@ -215,39 +147,129 @@ class FullDemoSeeder extends Seeder
     {
         $username = $blueprint['username'] ?? 'demo-landlord-' . ($tenantIndex + 1);
         $email = $blueprint['email'] ?? 'landlord' . ($tenantIndex + 1) . '@demo.smartroom.local';
+        $verificationStatus = $blueprint['verification_status'] ?? 'unverified';
+        $isVerified = ($verificationStatus === 'kyc_verified');
+        $isPending = ($verificationStatus === 'pending');
 
-        // Chủ trọ chính
+        $roleSlug = $isVerified ? 'landlord' : 'unverified_landlord';
+
+        // 1. Tạo tài khoản chủ trọ chính
         $landlord1 = User::updateOrCreate(
             ['username' => $username],
             [
                 'tenant_id' => $tenant->id,
-                'role_id' => $this->roles['landlord']->id,
+                'role_id' => $this->roles[$roleSlug]->id,
                 'name' => $blueprint['owner_name'],
                 'phone' => $blueprint['phone'] ?? ('0888000' . str_pad((string) ($tenantIndex + 1), 3, '0', STR_PAD_LEFT)),
                 'email' => $email,
                 'password' => Hash::make('password'),
-                'role' => 'landlord',
-                'like' => 'Chủ trọ demo chính',
+                'role' => $roleSlug,
+                'like' => $blueprint['owner_name'],
             ]
         );
 
-        // Chủ trọ phụ (Co-owner)
+        // Alias tài khoản dễ nhớ
+        if ($tenantIndex === 0) {
+            User::updateOrCreate(
+                ['username' => 'admin_hanoi'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'role_id' => $this->roles['landlord']->id,
+                    'name' => $blueprint['owner_name'],
+                    'phone' => '0988111001',
+                    'email' => 'admin.hanoi@smartroom.local',
+                    'password' => Hash::make('password'),
+                    'role' => 'landlord',
+                    'like' => 'Chủ trọ Hà Nội (Cầu Giấy)',
+                ]
+            );
+        }
+
+        if ($tenantIndex === 9) {
+            User::updateOrCreate(
+                ['username' => 'unverified-landlord'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'role_id' => $this->roles['unverified_landlord']->id,
+                    'name' => $blueprint['owner_name'],
+                    'phone' => '0888999888',
+                    'email' => 'unverified@demo.smartroom.local',
+                    'password' => Hash::make('password'),
+                    'role' => 'unverified_landlord',
+                    'like' => 'Chủ trọ chưa xác minh mẫu',
+                ]
+            );
+        }
+
+        // 2. Tạo LandlordProfile tương ứng
+        $profileStatus = $isVerified ? 'verified' : ($isPending ? 'pending' : 'unverified');
+        $firstBuilding = $blueprint['buildings'][0] ?? null;
+
+        LandlordProfile::updateOrCreate(
+            ['user_id' => $landlord1->id],
+            [
+                'tenant_id' => $tenant->id,
+                'full_name' => $landlord1->name,
+                'phone' => $landlord1->phone,
+                'property_name' => $tenant->name,
+                'property_address' => $firstBuilding['address'] ?? 'Hà Nội',
+                'status' => $profileStatus,
+                'verification_status' => $verificationStatus,
+            ]
+        );
+
+        // 3. Tạo yêu cầu KYC nếu đã xác minh (approved) hoặc đang chờ duyệt (pending)
+        if ($isVerified || $isPending) {
+            $reqStatus = $isVerified ? 'approved' : 'pending';
+            $verificationRequest = LandlordVerificationRequest::updateOrCreate(
+                ['tenant_id' => $tenant->id, 'user_id' => $landlord1->id],
+                [
+                    'type' => 'kyc',
+                    'cccd_number' => '00109' . str_pad((string) ($tenantIndex + 1), 7, '0', STR_PAD_LEFT),
+                    'admin_review_consent_given' => true,
+                    'admin_review_consent_at' => Carbon::now()->subDays(5),
+                    'admin_review_consent_ip' => '127.0.0.1',
+                    'status' => $reqStatus,
+                    'reviewed_by' => $isVerified ? 1 : null,
+                    'reviewed_at' => $isVerified ? Carbon::now()->subDays(2) : null,
+                    'reject_reason' => null,
+                ]
+            );
+
+            foreach (['cccd_front' => 'Căn cước mặt trước.jpg', 'cccd_back' => 'Căn cước mặt sau.jpg'] as $docType => $filename) {
+                LandlordVerificationDocument::updateOrCreate(
+                    ['verification_request_id' => $verificationRequest->id, 'document_type' => $docType],
+                    [
+                        'disk' => 'local',
+                        'file_path' => 'kyc/' . $docType . '_' . ($tenantIndex + 1) . '.jpg',
+                        'original_filename' => $filename,
+                        'mime_type' => 'image/jpeg',
+                        'size_bytes' => 102400,
+                        'sha256_checksum' => hash('sha256', $filename . ($tenantIndex + 1)),
+                        'status' => $reqStatus,
+                    ]
+                );
+            }
+        }
+
+        // 4. Chủ trọ đồng sở hữu (Co-owner)
         User::updateOrCreate(
             ['username' => 'demo-landlord-' . ($tenantIndex + 1) . '-co'],
             [
                 'tenant_id' => $tenant->id,
-                'role_id' => $this->roles['landlord']->id,
+                'role_id' => $this->roles[$roleSlug]->id,
                 'name' => $blueprint['owner_name'] . ' (Đồng sở hữu)',
                 'phone' => '0888001' . str_pad((string) ($tenantIndex + 1), 3, '0', STR_PAD_LEFT),
                 'email' => 'landlord' . ($tenantIndex + 1) . 'co@demo.smartroom.local',
                 'password' => Hash::make('password'),
-                'role' => 'landlord',
+                'role' => $roleSlug,
                 'like' => 'Chủ trọ đồng sở hữu',
             ]
         );
 
         return $landlord1;
     }
+
 
     private function seedManager(Tenant $tenant, int $tenantIndex): void
     {
@@ -732,261 +754,258 @@ class FullDemoSeeder extends Seeder
     private function tenantBlueprints(): array
     {
         return [
+            // ==========================================
+            // 7 CHỦ TRỌ ĐÃ XÁC MINH (KYC VERIFIED)
+            // ==========================================
             [
-                'name' => 'Demo SmartRoom Cầu Giấy',
-                'email' => 'demo-caugiay@smartroom.local',
+                'name' => 'Hệ thống Chung cư mini SmartRoom Cầu Giấy',
+                'email' => 'contact@smartroom-caugiay.vn',
                 'phone' => '0988000001',
-                'owner_name' => 'Nguyễn Chủ Trọ Cầu Giấy',
+                'owner_name' => 'Trần Văn Hoàng',
                 'bank_name' => 'MB',
                 'bank_account_no' => '999988880001',
-                'bank_account_name' => 'NGUYỄN CHỦ TRỌ CẦU GIẤY',
-                'buildings' => $this->buildingBlueprints('CG', 'Cầu Giấy', 3200000),
+                'bank_account_name' => 'TRAN VAN HOANG',
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 95,
+                'buildings' => $this->buildingBlueprints(
+                    'CG',
+                    'SmartRoom Cầu Giấy',
+                    'Số 12 Ngõ 105 Xuân Thủy, Cầu Giấy, Hà Nội',
+                    'Số 36 Ngõ 86 Chùa Hà, Cầu Giấy, Hà Nội',
+                    3500000
+                ),
             ],
             [
-                'name' => 'Demo Renty Thanh Xuân',
+                'name' => 'Hệ thống Chung cư mini Rentry Home Thanh Xuân',
                 'email' => 'demo-thanhxuan@smartroom.local',
                 'phone' => '0988000002',
                 'owner_name' => 'Lê Quản Lý Thanh Xuân',
                 'bank_name' => 'VCB',
                 'bank_account_no' => '999988880002',
-                'bank_account_name' => 'LÊ QUẢN LÝ THANH XUÂN',
-                'buildings' => $this->buildingBlueprints('TX', 'Thanh Xuân', 4000000),
+                'bank_account_name' => 'LE QUAN LY THANH XUAN',
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 90,
+                'buildings' => $this->buildingBlueprints(
+                    'TX',
+                    'Rentry Home Thanh Xuân',
+                    'Số 85 Vũ Tông Phan, Thanh Xuân, Hà Nội',
+                    'Số 120 Khương Đình, Thanh Xuân, Hà Nội',
+                    4000000
+                ),
             ],
             [
-                'name' => 'Demo Studio Quận 10',
-                'email' => 'demo-quan10@smartroom.local',
-                'phone' => '0988000003',
-                'owner_name' => 'Trần Quản Lý Quận 10',
-                'bank_name' => 'ACB',
-                'bank_account_no' => '999988880003',
-                'bank_account_name' => 'TRẦN QUẢN LÝ QUẬN 10',
-                'buildings' => $this->buildingBlueprints('Q10', 'Quận 10', 5200000),
-            ],
-            [
-                'name' => 'Demo Nhà Trọ Xanh Đống Đa',
+                'name' => 'Hệ thống Chung cư mini Sen Vàng Đống Đa',
                 'email' => 'demo-dongda@smartroom.local',
-                'phone' => '0988000004',
+                'phone' => '0988000003',
                 'owner_name' => 'Phạm Văn Đống Đa',
                 'bank_name' => 'MB',
-                'bank_account_no' => '999988880004',
+                'bank_account_no' => '999988880003',
                 'bank_account_name' => 'PHAM VAN DONG DA',
-                'buildings' => $this->buildingBlueprints('DD', 'Đống Đa', 3500000),
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 88,
+                'buildings' => $this->buildingBlueprints(
+                    'DD',
+                    'Sen Vàng Đống Đa',
+                    'Số 18 Ngõ 198 Xã Đàn, Đống Đa, Hà Nội',
+                    'Số 45 Chùa Bộc, Đống Đa, Hà Nội',
+                    3800000
+                ),
             ],
             [
-                'name' => 'Demo Căn Hộ Hai Bà Trưng',
+                'name' => 'Hệ thống Chung cư mini Hồ Tây Panorama Tây Hồ',
+                'email' => 'demo-tayho@smartroom.local',
+                'phone' => '0988000004',
+                'owner_name' => 'Hoàng Văn Tây Hồ',
+                'bank_name' => 'Agribank',
+                'bank_account_no' => '999988880004',
+                'bank_account_name' => 'HOANG VAN TAY HO',
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 92,
+                'buildings' => $this->buildingBlueprints(
+                    'TH',
+                    'Hồ Tây Panorama',
+                    'Số 210 Lạc Long Quân, Tây Hồ, Hà Nội',
+                    'Số 99 Trích Sài, Tây Hồ, Hà Nội',
+                    5500000
+                ),
+            ],
+            [
+                'name' => 'Hệ thống Chung cư mini Times Light Hai Bà Trưng',
                 'email' => 'demo-hbt@smartroom.local',
                 'phone' => '0988000005',
                 'owner_name' => 'Vũ Thị Hai Bà Trưng',
                 'bank_name' => 'VCB',
                 'bank_account_no' => '999988880005',
                 'bank_account_name' => 'VU THI HAI BA TRUNG',
-                'buildings' => $this->buildingBlueprints('HBT', 'Hai Bà Trưng', 4500000),
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 86,
+                'buildings' => $this->buildingBlueprints(
+                    'HBT',
+                    'Times Light Hai Bà Trưng',
+                    'Số 250 Bạch Mai, Hai Bà Trưng, Hà Nội',
+                    'Số 158 Minh Khai, Hai Bà Trưng, Hà Nội',
+                    4500000
+                ),
             ],
             [
-                'name' => 'Demo Homestay Tây Hồ',
-                'email' => 'demo-tayho@smartroom.local',
-                'phone' => '0988000006',
-                'owner_name' => 'Hoàng Văn Tây Hồ',
-                'bank_name' => 'Agribank',
-                'bank_account_no' => '999988880006',
-                'bank_account_name' => 'HOANG VAN TAY HO',
-                'buildings' => $this->buildingBlueprints('TH', 'Tây Hồ', 6000000),
-            ],
-            [
-                'name' => 'Demo Luxury Quận 1',
-                'email' => 'demo-quan1@smartroom.local',
-                'phone' => '0988000007',
-                'owner_name' => 'Ngô Thị Quận 1',
-                'bank_name' => 'VietinBank',
-                'bank_account_no' => '999988880007',
-                'bank_account_name' => 'NGO THI QUAN 1',
-                'buildings' => $this->buildingBlueprints('Q1', 'Quận 1', 8000000),
-            ],
-            [
-                'name' => 'Demo Căn Hộ Bình Thạnh',
-                'email' => 'demo-binhthanh@smartroom.local',
-                'phone' => '0988000008',
-                'owner_name' => 'Bùi Văn Bình Thạnh',
-                'bank_name' => 'Sacombank',
-                'bank_account_no' => '999988880008',
-                'bank_account_name' => 'BUI VAN BINH THANH',
-                'buildings' => $this->buildingBlueprints('BT', 'Bình Thạnh', 4800000),
-            ],
-            [
-                'name' => 'Demo Phòng Trọ Tân Bình',
-                'email' => 'demo-tanbinh@smartroom.local',
-                'phone' => '0988000009',
-                'owner_name' => 'Đặng Văn Tân Bình',
-                'bank_name' => 'Techcombank',
-                'bank_account_no' => '999988880009',
-                'bank_account_name' => 'DANG VAN TAN BINH',
-                'buildings' => $this->buildingBlueprints('TB', 'Tân Bình', 3800000),
-            ],
-            [
-                'name' => 'Demo Phòng Trọ Ba Đình',
+                'name' => 'Hệ thống Chung cư mini Liễu Giai Riverside Ba Đình',
                 'email' => 'demo-badinh@smartroom.local',
-                'phone' => '0988000010',
+                'phone' => '0988000006',
                 'owner_name' => 'Trần Văn Ba Đình',
                 'bank_name' => 'BIDV',
-                'bank_account_no' => '999988880010',
+                'bank_account_no' => '999988880006',
                 'bank_account_name' => 'TRAN VAN BA DINH',
-                'buildings' => $this->buildingBlueprints('BD', 'Ba Đình', 4200000),
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 89,
+                'buildings' => $this->buildingBlueprints(
+                    'BD',
+                    'Liễu Giai Ba Đình',
+                    'Số 68 Liễu Giai, Ba Đình, Hà Nội',
+                    'Số 142 Đội Cấn, Ba Đình, Hà Nội',
+                    4800000
+                ),
             ],
             [
-                'name' => 'Căn hộ dịch vụ Luxury Bình Thạnh',
-                'email' => 'admin-hcm@smartroom.local',
-                'phone' => '0909123456',
-                'owner_name' => 'Trần Văn Hoàng',
-                'username' => 'admin-hcm',
-                'bank_name' => 'VCB',
-                'bank_account_no' => '1012345678',
-                'bank_account_name' => 'TRAN VAN HOANG',
-                'buildings' => [
-                    [
-                        'code' => 'BTA',
-                        'name' => 'Chung cư mini Luxury Điện Biên Phủ',
-                        'address' => '12 Điện Biên Phủ, Phường 15, Quận Bình Thạnh, TP. Hồ Chí Minh',
-                        'description' => 'Tòa nhà căn hộ cao cấp đầy đủ tiện nghi, thang máy, bảo vệ 24/7, gần Ngã tư Hàng Xanh.',
-                        'rooms' => $this->roomBlueprints(6000000),
-                    ],
-                    [
-                        'code' => 'BTB',
-                        'name' => 'Nhà trọ Studio Nguyễn Gia Trí',
-                        'address' => '88/12 Nguyễn Gia Trí, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh',
-                        'description' => 'Khu nhà trọ Studio sinh viên cao cấp, gần Đại học HUTECH, Ngoại Thương, Giao thông Vận tải.',
-                        'rooms' => $this->roomBlueprints(5000000),
-                    ]
-                ],
+                'name' => 'Hệ thống Chung cư mini Mỹ Đình Star Nam Từ Liêm',
+                'email' => 'demo-mydinh@smartroom.local',
+                'phone' => '0988000007',
+                'owner_name' => 'Bùi Tiến Đạt',
+                'bank_name' => 'Techcombank',
+                'bank_account_no' => '999988880007',
+                'bank_account_name' => 'BUI TIEN DAT',
+                'verification_status' => 'kyc_verified',
+                'listing_badge' => 'kyc_verified',
+                'boost_score' => 87,
+                'buildings' => $this->buildingBlueprints(
+                    'NTL',
+                    'Mỹ Đình Star',
+                    'Số 56 Đình Thôn, Nam Từ Liêm, Hà Nội',
+                    'Số 89 Lê Đức Thọ, Nam Từ Liêm, Hà Nội',
+                    4200000
+                ),
+            ],
+
+            // ==========================================
+            // 3 CHỦ TRỌ CHƯA XÁC MINH (PENDING & UNVERIFIED)
+            // ==========================================
+            [
+                'name' => 'Hệ thống Chung cư mini Linh Đàm Green Hoàng Mai',
+                'email' => 'demo-hoangmai@smartroom.local',
+                'phone' => '0988000008',
+                'owner_name' => 'Hoàng Văn Hùng',
+                'bank_name' => 'VietinBank',
+                'bank_account_no' => '999988880008',
+                'bank_account_name' => 'HOANG VAN HUNG',
+                'verification_status' => 'pending',
+                'listing_badge' => 'unverified',
+                'boost_score' => 0,
+                'buildings' => $this->buildingBlueprints(
+                    'HM',
+                    'Linh Đàm Green',
+                    'Bán đảo Linh Đàm, Hoàng Mai, Hà Nội',
+                    'Số 72 Đại Từ, Hoàng Mai, Hà Nội',
+                    3600000
+                ),
             ],
             [
-                'name' => 'Demo Phòng Trọ Quận 7 Phú Mỹ Hưng',
-                'email' => 'demo-quan7@smartroom.local',
-                'phone' => '0988000012',
-                'owner_name' => 'Lý Minh Quận 7',
+                'name' => 'Hệ thống Chung cư mini Cổ Nhuế House Bắc Từ Liêm',
+                'email' => 'demo-bactuliem@smartroom.local',
+                'phone' => '0988000009',
+                'owner_name' => 'Nguyễn Thị Mai',
                 'bank_name' => 'ACB',
-                'bank_account_no' => '999988880012',
-                'bank_account_name' => 'LY MINH QUAN 7',
-                'buildings' => [
-                    [
-                        'code' => 'Q7A',
-                        'name' => 'Căn hộ dịch vụ Sky Garden PMH',
-                        'address' => '25 Nguyễn Lương Bằng, Phường Tân Phú, Quận 7, TP. Hồ Chí Minh',
-                        'description' => 'Căn hộ dịch vụ cao cấp khu Phú Mỹ Hưng, gần Lotte Mart, SC VivoCity và bệnh viện FV.',
-                        'rooms' => $this->roomBlueprints(7500000),
-                    ],
-                    [
-                        'code' => 'Q7B',
-                        'name' => 'Nhà trọ sinh viên Tôn Thất Thuyết',
-                        'address' => '112/5 Tôn Thất Thuyết, Phường 16, Quận 4, TP. Hồ Chí Minh',
-                        'description' => 'Nhà trọ giá rẻ gần cầu Kênh Tẻ, thuận tiện qua Quận 7 và Quận 1, phù hợp sinh viên.',
-                        'rooms' => $this->roomBlueprints(3500000),
-                    ],
-                ],
+                'bank_account_no' => '999988880009',
+                'bank_account_name' => 'NGUYEN THI MAI',
+                'verification_status' => 'pending',
+                'listing_badge' => 'unverified',
+                'boost_score' => 0,
+                'buildings' => $this->buildingBlueprints(
+                    'BTL',
+                    'Cổ Nhuế House',
+                    'Số 18 Ngõ 136 Cổ Nhuế, Bắc Từ Liêm, Hà Nội',
+                    'Số 64 Trần Cung, Bắc Từ Liêm, Hà Nội',
+                    3400000
+                ),
             ],
             [
-                'name' => 'Demo Nhà Trọ Thủ Đức Làng ĐH',
-                'email' => 'demo-thuduc@smartroom.local',
-                'phone' => '0988000013',
-                'owner_name' => 'Nguyễn Hữu Thủ Đức',
-                'bank_name' => 'MB',
-                'bank_account_no' => '999988880013',
-                'bank_account_name' => 'NGUYEN HUU THU DUC',
-                'buildings' => [
-                    [
-                        'code' => 'TDA',
-                        'name' => 'Khu trọ Làng Đại Học Thủ Đức',
-                        'address' => '18 Đường Số 7, Khu phố 6, Phường Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
-                        'description' => 'Nhà trọ sinh viên giá rẻ ngay Làng Đại học Quốc gia, gần ĐH Bách Khoa, ĐH KHTN, ĐH Nông Lâm.',
-                        'rooms' => $this->roomBlueprints(2800000),
-                    ],
-                    [
-                        'code' => 'TDB',
-                        'name' => 'Studio cao cấp Xa lộ Hà Nội',
-                        'address' => '215 Xa lộ Hà Nội, Phường Trường Thọ, TP. Thủ Đức, TP. Hồ Chí Minh',
-                        'description' => 'Khu căn hộ mini tiện nghi gần trạm Metro Bến Xe Miền Đông, thuận lợi di chuyển toàn thành phố.',
-                        'rooms' => $this->roomBlueprints(4200000),
-                    ],
-                ],
-            ],
-            [
-                'name' => 'Demo Phòng Trọ Gò Vấp',
-                'email' => 'demo-govap@smartroom.local',
-                'phone' => '0988000014',
-                'owner_name' => 'Trần Thị Gò Vấp',
+                'name' => 'Hệ thống Chung cư mini Hà Đông Central Hà Đông',
+                'email' => 'demo-hadong@smartroom.local',
+                'phone' => '0988000010',
+                'owner_name' => 'Trịnh Văn Lâm',
                 'bank_name' => 'Sacombank',
-                'bank_account_no' => '999988880014',
-                'bank_account_name' => 'TRAN THI GO VAP',
-                'buildings' => [
-                    [
-                        'code' => 'GVA',
-                        'name' => 'Nhà trọ Nguyễn Oanh Gò Vấp',
-                        'address' => '45/3 Nguyễn Oanh, Phường 17, Quận Gò Vấp, TP. Hồ Chí Minh',
-                        'description' => 'Nhà trọ mới xây thoáng mát, gần chợ Gò Vấp, ĐH Công nghiệp TP.HCM và ĐH Văn Lang.',
-                        'rooms' => $this->roomBlueprints(3200000),
-                    ],
-                    [
-                        'code' => 'GVB',
-                        'name' => 'Căn hộ mini Phan Văn Trị',
-                        'address' => '200 Phan Văn Trị, Phường 11, Quận Gò Vấp, TP. Hồ Chí Minh',
-                        'description' => 'Căn hộ mini đầy đủ tiện nghi, gần Emart Gò Vấp, Công viên Gia Định, thuận tiện xe buýt.',
-                        'rooms' => $this->roomBlueprints(3800000),
-                    ],
-                ],
+                'bank_account_no' => '999988880010',
+                'bank_account_name' => 'TRINH VAN LAM',
+                'verification_status' => 'unverified',
+                'listing_badge' => 'unverified',
+                'boost_score' => 0,
+                'buildings' => $this->buildingBlueprints(
+                    'HD',
+                    'Hà Đông Central',
+                    'Số 112 Quang Trung, Hà Đông, Hà Nội',
+                    'Số 35 Nguyễn Khuyến, Hà Đông, Hà Nội',
+                    3300000
+                ),
             ],
         ];
     }
 
-    private function buildingBlueprints(string $code, string $areaName, int $basePrice): array
+    private function buildingBlueprints(string $code, string $buildingName, string $address1, string $address2, int $basePrice): array
     {
         return [
             [
                 'code' => $code . 'A',
-                'name' => 'Demo ' . $areaName . ' A',
-                'address' => 'Số 12 đường demo ' . $areaName,
-                'description' => 'Tòa nhà demo đầy đủ phòng trống, có khách, quá hạn và bảo trì.',
-                'rooms' => $this->roomBlueprints($basePrice),
+                'name' => 'Chung cư mini ' . $buildingName . ' - Tòa A',
+                'address' => $address1,
+                'description' => 'Chung cư mini ' . $buildingName . ' - Tòa A hiện đại, thang máy, an ninh 24/7, khóa vân tay, giờ giấc tự do.',
+                'rooms' => $this->roomBlueprints($basePrice, 'Chung cư mini ' . $buildingName . ' - Tòa A'),
             ],
             [
                 'code' => $code . 'B',
-                'name' => 'Demo ' . $areaName . ' B',
-                'address' => 'Số 88 ngõ demo ' . $areaName,
-                'description' => 'Tòa nhà demo thứ hai để test lọc theo tòa nhà và tenant.',
-                'rooms' => $this->roomBlueprints($basePrice + 450000),
+                'name' => 'Chung cư mini ' . $buildingName . ' - Tòa B',
+                'address' => $address2,
+                'description' => 'Chung cư mini ' . $buildingName . ' - Tòa B cao cấp, ban công thoáng mát, đầy đủ nội thất tiện nghi khép kín.',
+                'rooms' => $this->roomBlueprints($basePrice + 300000, 'Chung cư mini ' . $buildingName . ' - Tòa B'),
             ],
         ];
     }
 
-    private function roomBlueprints(int $basePrice): array
+    private function roomBlueprints(int $basePrice, string $buildingTitle = ''): array
     {
         $statuses = [
             'occupied', 'occupied', 'overdue', 'empty', 'maintenance', 'occupied',
             'empty', 'occupied', 'empty', 'occupied', 'empty', 'occupied'
         ];
         $amenitiesPool = [
-            ['điều hòa', 'nóng lạnh', 'wifi', 'cho nuôi thú cưng', 'gác lửng', 'wc khép kín'],
-            ['điều hòa', 'nóng lạnh', 'ban công', 'wc khép kín', 'tủ quần áo'],
-            ['điều hòa', 'gác lửng', 'wc khép kín', 'wifi'],
-            ['điều hòa', 'nóng lạnh', 'ban công', 'cho nuôi thú cưng', 'wc khép kín'],
-            ['nóng lạnh', 'wifi', 'tủ lạnh', 'gác lửng'],
-            ['điều hòa', 'ban công', 'gác lửng', 'wc khép kín', 'cho nuôi thú cưng', 'wifi'],
-            ['điều hòa', 'nóng lạnh', 'wifi', 'ban công'],
-            ['nóng lạnh', 'wifi', 'tủ lạnh'],
-            ['điều hòa', 'gác lửng', 'wc khép kín'],
-            ['điều hòa', 'nóng lạnh', 'cho nuôi thú cưng'],
-            ['nóng lạnh', 'wifi', 'gác lửng'],
-            ['điều hòa', 'ban công', 'wc khép kín']
+            ['điều hòa', 'nóng lạnh', 'wifi', 'cho nuôi thú cưng', 'gác lửng', 'wc khép kín', 'tủ lạnh'],
+            ['điều hòa', 'nóng lạnh', 'ban công', 'wc khép kín', 'tủ quần áo', 'máy giặt'],
+            ['điều hòa', 'gác lửng', 'wc khép kín', 'wifi', 'bếp từ'],
+            ['điều hòa', 'nóng lạnh', 'ban công', 'cho nuôi thú cưng', 'wc khép kín', 'máy giặt'],
+            ['nóng lạnh', 'wifi', 'tủ lạnh', 'gác lửng', 'điều hòa'],
+            ['điều hòa', 'ban công', 'gác lửng', 'wc khép kín', 'cho nuôi thú cưng', 'wifi', 'khóa thông minh'],
+            ['điều hòa', 'nóng lạnh', 'wifi', 'ban công', 'tủ lạnh'],
+            ['nóng lạnh', 'wifi', 'tủ lạnh', 'máy giặt', 'điều hòa'],
+            ['điều hòa', 'gác lửng', 'wc khép kín', 'ban công'],
+            ['điều hòa', 'nóng lạnh', 'cho nuôi thú cưng', 'wifi', 'tủ quần áo'],
+            ['nóng lạnh', 'wifi', 'gác lửng', 'điều hòa', 'wc khép kín'],
+            ['điều hòa', 'ban công', 'wc khép kín', 'nóng lạnh', 'máy giặt']
         ];
 
         return collect(['101', '102', '201', '202', '301', '302', '401', '402', '501', '502', '601', '602'])
-            ->map(function (string $roomNumber, int $index) use ($basePrice, $statuses, $amenitiesPool) {
+            ->map(function (string $roomNumber, int $index) use ($basePrice, $statuses, $amenitiesPool, $buildingTitle) {
                 return [
                     'room_number' => $roomNumber,
                     'floor' => (int) substr($roomNumber, 0, 1),
                     'status' => $statuses[$index],
                     'room_type' => ['standard', 'deluxe', 'vip', 'studio'][$index % 4],
                     'price' => $basePrice + ($index * 150000),
-                    'area' => 20 + ($index * 2),
+                    'area' => 22 + ($index * 2),
                     'amenities' => $amenitiesPool[$index % count($amenitiesPool)],
+                    'description' => ($buildingTitle ?: 'Chung cư mini') . ' - Phòng ' . $roomNumber . ' khép kín, an ninh tuyệt đối.',
                 ];
             })
             ->all();
@@ -1012,38 +1031,32 @@ class FullDemoSeeder extends Seeder
     {
         if (isset($this->command)) {
             $this->command->info("\n=======================================================================");
-            $this->command->info("   DỮ LIỆU SEED CHO HỆ THỐNG QUẢN LÝ NHÀ TRỌ ĐÃ SẴN SÀNG ĐỂ KIỂM THỬ");
+            $this->command->info("   HỆ THỐNG SMARTROOM & RENTRY - DỮ LIỆU ĐÃ TẠO MỚI HOÀN TOÀN");
             $this->command->info("=======================================================================");
             $this->command->info("1. ADMIN HỆ THỐNG (Superadmin):");
-            $this->command->info("   - Username: superadmin");
-            $this->command->info("   - Password: password");
-            $this->command->info("   - Vai trò: Quản lý toàn hệ thống, phê duyệt KYC chủ trọ.");
+            $this->command->info("   - Username: superadmin / admin (password: password / admin123)");
+            $this->command->info("   - Vai trò: Toàn quyền quản trị, duyệt hồ sơ KYC chủ trọ.");
             $this->command->info("-----------------------------------------------------------------------");
-            $this->command->info("2. CHỦ TRỌ CHƯA XÁC MINH (Chờ duyệt KYC):");
-            $this->command->info("   - Username: unverified-landlord");
-            $this->command->info("   - Password: password");
-            $this->command->info("   - Vai trò: Đăng ký phòng trọ mới, tải tài liệu KYC chờ admin duyệt.");
+            $this->command->info("2. 10 CHỦ TRỌ CHUNG CƯ MINI (7 ĐÃ XÁC MINH - 3 CHƯA XÁC MINH):");
+            $this->command->info("   [ĐÃ XÁC MINH - 7/10]:");
+            $this->command->info("   - Chủ trọ 1 (Cầu Giấy): demo-landlord-1 / admin_hanoi (contact@smartroom-caugiay.vn)");
+            $this->command->info("   - Chủ trọ 2 (Thanh Xuân): demo-landlord-2 (demo-thanhxuan@smartroom.local)");
+            $this->command->info("   - Chủ trọ 3 (Đống Đa): demo-landlord-3 (demo-dongda@smartroom.local)");
+            $this->command->info("   - Chủ trọ 4 (Tây Hồ): demo-landlord-4 (demo-tayho@smartroom.local)");
+            $this->command->info("   - Chủ trọ 5 (Hai Bà Trưng): demo-landlord-5 (demo-hbt@smartroom.local)");
+            $this->command->info("   - Chủ trọ 6 (Ba Đình): demo-landlord-6 (demo-badinh@smartroom.local)");
+            $this->command->info("   - Chủ trọ 7 (Nam Từ Liêm): demo-landlord-7 (demo-mydinh@smartroom.local)");
+            $this->command->info("   [CHƯA XÁC MINH - 3/10]:");
+            $this->command->info("   - Chủ trọ 8 (Hoàng Mai - Chờ duyệt): demo-landlord-8 (demo-hoangmai@smartroom.local)");
+            $this->command->info("   - Chủ trọ 9 (Bắc Từ Liêm - Chờ duyệt): demo-landlord-9 (demo-bactuliem@smartroom.local)");
+            $this->command->info("   - Chủ trọ 10 (Hà Đông - Chưa nộp): demo-landlord-10 / unverified-landlord (demo-hadong@smartroom.local)");
+            $this->command->info("   * Mật khẩu tất cả tài khoản chủ trọ: password");
             $this->command->info("-----------------------------------------------------------------------");
-            $this->command->info("3. CÁC CHỦ TRỌ MẪU (Đã xác minh):");
-            $this->command->info("   - Username: demo-landlord-1 & demo-landlord-1-co, demo-landlord-2 & demo-landlord-2-co, ...");
-            $this->command->info("   - Password: password");
-            $this->command->info("   - Vai trò: Chủ trọ chính và đồng sở hữu quản lý tòa nhà, phòng trọ.");
-            $this->command->info("-----------------------------------------------------------------------");
-            $this->command->info("4. NHÂN VIÊN QUẢN LÝ (Staff/Manager):");
-            $this->command->info("   - Username: demo-manager-1-1 & demo-manager-1-2, demo-manager-2-1 & demo-manager-2-2, ...");
-            $this->command->info("   - Password: password");
-            $this->command->info("   - Vai trò: Nhân viên hỗ trợ chủ trọ quản lý vận hành tòa nhà.");
-            $this->command->info("-----------------------------------------------------------------------");
-            $this->command->info("5. CÁC CƯ DÂN THUÊ PHÒNG (Resident):");
-            $this->command->info("   - Username: demo-resident-101-1 (cư dân chính) & demo-resident-101-2 (ở ghép), ...");
-            $this->command->info("   - Password: password");
-            $this->command->info("   - Vai trò: Xem hoá đơn, lịch sử thanh toán, gửi sự cố báo hỏng.");
-            $this->command->info("-----------------------------------------------------------------------");
-            $this->command->info("6. KHÁCH TÌM PHÒNG (Guest):");
-            $this->command->info("   - Username: demo-guest");
-            $this->command->info("   - Password: password");
-            $this->command->info("   - Vai trò: Xem phòng, tìm phòng, gửi bình luận đánh giá phòng trọ.");
+            $this->command->info("3. CÁC TÒA NHÀ & PHÒNG TRỌ:");
+            $this->command->info("   - Đều là các tòa 'Chung cư mini ...' (Tòa A & Tòa B), đầy đủ 12 phòng/tòa");
+            $this->command->info("   - Đầy đủ trạng thái: Phòng trống, có khách, quá hạn, bảo trì.");
             $this->command->info("=======================================================================\n");
         }
     }
 }
+
