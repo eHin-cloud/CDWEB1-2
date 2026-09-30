@@ -235,9 +235,15 @@
                                     </h3>
 
                                     <div class="space-y-1.5 text-xs text-slate-400 mb-4">
-                                        <div class="flex items-start gap-2">
-                                            <i class="fa-solid fa-location-dot text-indigo-400 mt-0.5 shrink-0"></i>
-                                            <span class="line-clamp-2">{{ $b->address }}</span>
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex items-start gap-2 flex-1">
+                                                <i class="fa-solid fa-location-dot text-rose-400 mt-0.5 shrink-0"></i>
+                                                <span class="line-clamp-2">{{ $b->address }}</span>
+                                            </div>
+                                            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($b->address ?? $b->name) }}" target="_blank" class="shrink-0 text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition" title="Xem trên Google Maps">
+                                                <i class="fa-brands fa-google text-[10px]"></i>
+                                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                            </a>
                                         </div>
                                         @if($b->phone)
                                             <div class="flex items-center gap-2">

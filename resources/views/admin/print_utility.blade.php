@@ -292,11 +292,11 @@
             <div class="payment-instructions">
                 <h4>Hướng dẫn thanh toán</h4>
                 <p>Quý khách vui lòng quét mã VietQR bên dưới hoặc chuyển khoản trực tiếp qua ngân hàng.</p>
-                <p><strong>Ngân hàng:</strong> MB Bank</p>
-                <p><strong>Số tài khoản:</strong> 1234567890</p>
-                <p><strong>Chủ tài khoản:</strong> NGUYEN THANH HIEN</p>
+                <p><strong>Ngân hàng:</strong> Vietcombank (VCB)</p>
+                <p><strong>Số tài khoản:</strong> 1051572297</p>
+                <p><strong>Chủ tài khoản:</strong> CHỦ TRỌ</p>
                 
-                <img class="qr-code" src="https://img.vietqr.io/image/970422-1234567890-compact2.jpg?amount={{ $grandTotal }}&addInfo=Thanh%20toan%20tien%20phong%20{{ $record->room->room_number }}&accountName=NGUYEN%20THANH%20HIEN" alt="VietQR Code">
+                <img class="qr-code" src="https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={{ $grandTotal }}&addInfo=Thanh%20toan%20tien%20phong%20{{ $record->room->room_number }}" alt="VietQR Code">
             </div>
             
             <div>

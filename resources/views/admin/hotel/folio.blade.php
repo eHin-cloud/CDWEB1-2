@@ -109,12 +109,12 @@
             <!-- VietQR Payment Quick Box -->
             @php
                 $tenant = $booking->tenant;
-                $bankId = strtoupper((string) ($tenant?->bank_name ?: 'MB'));
-                $accountNo = (string) ($tenant?->bank_account_no ?: '0988000001');
+                $bankId = 'VCB';
+                $accountNo = '1051572297';
                 $accountName = rawurlencode((string) ($tenant?->bank_account_name ?: 'RENTRY HOTEL'));
                 $addInfo = rawurlencode("Thanh toan Folio {$booking->booking_code}");
                 $qrAmount = (int) $calc['total_amount'];
-                $qrUrl = "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$qrAmount}&addInfo={$addInfo}&accountName={$accountName}";
+                $qrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$qrAmount}&addInfo={$addInfo}";
             @endphp
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/60 flex items-center gap-4">
                 <img src="{{ $qrUrl }}" alt="VietQR Thanh Toán" class="w-28 h-28 object-contain rounded-lg bg-white p-1 shadow">

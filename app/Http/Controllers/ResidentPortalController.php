@@ -49,10 +49,30 @@ class ResidentPortalController extends Controller
                 'contract' => null,
                 'tickets' => collect(),
                 'statusLabels' => $this->ticketStatusLabels(),
+                'tenant' => null,
+                'landlord' => null,
+                'landlordName' => 'Ban quản lý',
+                'landlordPhone' => 'Chưa cập nhật',
+                'landlordEmail' => 'Chưa cập nhật',
             ]);
         }
 
         $room = $resident->room;
+        $tenant = $room->tenant;
+        $landlord = $tenant?->users()
+            ->whereIn('role', ['landlord', 'unverified_landlord'])
+            ->first();
+        $landlordProfile = \App\Models\LandlordProfile::where('tenant_id', $tenant?->id)->first();
+        $landlordName = $landlordProfile?->full_name 
+            ?? $landlord?->name 
+            ?? $tenant?->bank_account_name 
+            ?? 'Ban quản lý cơ sở';
+        $landlordPhone = $landlordProfile?->phone 
+            ?? $landlord?->phone 
+            ?? $tenant?->phone 
+            ?? 'Chưa cập nhật';
+        $landlordEmail = $landlord?->email ?? $tenant?->email ?? 'Chưa cập nhật';
+
         $bills = UtilityRecord::with('room')
             ->where('room_id', $room->id)
             ->orderByDesc('billing_month')
@@ -73,6 +93,11 @@ class ResidentPortalController extends Controller
         return view('resident.portal', [
             'resident' => $resident,
             'room' => $room,
+            'tenant' => $tenant,
+            'landlord' => $landlord,
+            'landlordName' => $landlordName,
+            'landlordPhone' => $landlordPhone,
+            'landlordEmail' => $landlordEmail,
             'bills' => $bills,
             'unpaidTotal' => $bills->where('status', '!=', 'paid')->sum('total_amount'),
             'contract' => $contract,
@@ -175,6 +200,7 @@ class ResidentPortalController extends Controller
             'resident' => $resident,
             'bill' => $bill,
             'qrUrl' => $this->vietQrUrl($resident->room->room_number, $bill->billing_month, $bill->total_amount),
+            'staticQrUrl' => 'https://img.vietqr.io/image/VCB-1051572297-compact.png',
         ]);
     }
 
@@ -226,12 +252,9 @@ class ResidentPortalController extends Controller
 
     private function vietQrUrl(string $roomNumber, string $billingMonth, int $amount): string
     {
-        $bankId = 'MB';
-        $accountNo = '9999888889999';
-        $accountName = rawurlencode('NGUYEN VAN CHU NHA');
         $addInfo = rawurlencode('Thanh toan phong ' . $roomNumber . ' thang ' . $billingMonth);
 
-        return "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$amount}&addInfo={$addInfo}&accountName={$accountName}";
+        return "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$amount}&addInfo={$addInfo}";
     }
 
     private function billStatusLabels(): array
