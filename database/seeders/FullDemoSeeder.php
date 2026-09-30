@@ -31,51 +31,65 @@ use Illuminate\Support\Facades\Hash;
 class FullDemoSeeder extends Seeder
 {
     private array $roles = [];
+    private ?int $adminUserId = null;
 
     public function run(): void
     {
         // 0. Xóa hết dữ liệu phòng trọ và dữ liệu cũ để tránh sót rác
         $this->cleanOldData();
 
-        DB::transaction(function () {
-            $this->seedRoles();
+        $this->seedRoles();
 
-            // 1. Tạo Superadmin hệ thống
-            User::updateOrCreate(
-                ['username' => 'superadmin'],
-                [
-                    'tenant_id' => null,
-                    'role_id' => $this->roles['admin']->id,
-                    'name' => 'Admin hệ thống',
-                    'phone' => '0999999999',
-                    'email' => 'superadmin@smartroom.local',
-                    'password' => Hash::make('password'),
-                    'role' => 'admin',
-                    'like' => 'Superadmin',
-                ]
-            );
+        // 1. Tạo Superadmin hệ thống
+        $adminUser = User::updateOrCreate(
+            ['username' => 'admin1'],
+            [
+                'tenant_id' => null,
+                'role_id' => $this->roles['admin']->id,
+                'name' => 'Admin Hệ Thống 1 (Superadmin)',
+                'phone' => '0999000001',
+                'email' => 'admin1@smartroom.local',
+                'password' => Hash::make('123456'),
+                'role' => 'admin',
+                'like' => 'Admin 1',
+            ]
+        );
+        $this->adminUserId = $adminUser->id;
 
-            // 2. Tạo đúng 10 chủ trọ (7 đã xác minh KYC, 3 chưa xác minh) cùng các tòa chung cư mini và phòng trọ
-            foreach ($this->tenantBlueprints() as $tenantIndex => $blueprint) {
-                $tenant = $this->seedTenant($blueprint);
-                $landlord = $this->seedLandlord($tenant, $blueprint, $tenantIndex);
-                $rooms = $this->seedBuildingsAndRooms($tenant, $blueprint);
-                $residents = $this->seedResidents($tenant, $rooms, $tenantIndex);
+        User::updateOrCreate(
+            ['username' => 'superadmin'],
+            [
+                'tenant_id' => null,
+                'role_id' => $this->roles['admin']->id,
+                'name' => 'Admin hệ thống',
+                'phone' => '0999999999',
+                'email' => 'superadmin@smartroom.local',
+                'password' => Hash::make('123456'),
+                'role' => 'admin',
+                'like' => 'Superadmin',
+            ]
+        );
 
-                $this->seedContracts($tenant, $rooms, $residents, $tenantIndex);
-                $this->seedUtilitiesAndBills($tenant, $rooms, $residents);
-                $equipment = $this->seedEquipment($tenant, $rooms);
-                $this->seedTickets($tenant, $rooms, $residents);
-                $this->seedReviewsAndContactRequests($rooms, $tenantIndex);
-                $this->seedNotifications($tenant, $rooms, $residents);
-                $this->seedActivityLogs($tenant, $landlord, $rooms, $residents, $equipment);
+        // 2. Tạo đúng 10 chủ trọ (7 đã xác minh KYC, 3 chưa xác minh) cùng các tòa chung cư mini và phòng trọ
+        foreach ($this->tenantBlueprints() as $tenantIndex => $blueprint) {
+            $tenant = $this->seedTenant($blueprint);
+            $landlord = $this->seedLandlord($tenant, $blueprint, $tenantIndex);
+            $rooms = $this->seedBuildingsAndRooms($tenant, $blueprint);
+            $residents = $this->seedResidents($tenant, $rooms, $tenantIndex);
 
-                // Tạo thêm tài khoản Manager cho từng Tenant
-                $this->seedManager($tenant, $tenantIndex);
-            }
+            $this->seedContracts($tenant, $rooms, $residents, $tenantIndex);
+            $this->seedUtilitiesAndBills($tenant, $rooms, $residents);
+            $equipment = $this->seedEquipment($tenant, $rooms);
+            $this->seedTickets($tenant, $rooms, $residents);
+            $this->seedReviewsAndContactRequests($rooms, $tenantIndex);
+            $this->seedNotifications($tenant, $rooms, $residents);
+            $this->seedActivityLogs($tenant, $landlord, $rooms, $residents, $equipment);
 
-            $this->seedGuestUsers();
-        });
+            // Tạo thêm tài khoản Manager cho từng Tenant
+            $this->seedManager($tenant, $tenantIndex);
+        }
+
+        $this->seedGuestUsers();
 
         $this->printInstructions();
     }
@@ -104,7 +118,7 @@ class FullDemoSeeder extends Seeder
         LandlordProfile::truncate();
         Tenant::truncate();
 
-        User::whereNotIn('username', ['superadmin', 'admin'])->delete();
+        User::whereNotIn('username', ['superadmin', 'admin', 'admin1', 'admin2'])->delete();
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
@@ -145,15 +159,15 @@ class FullDemoSeeder extends Seeder
 
     private function seedLandlord(Tenant $tenant, array $blueprint, int $tenantIndex): User
     {
-        $username = $blueprint['username'] ?? 'demo-landlord-' . ($tenantIndex + 1);
-        $email = $blueprint['email'] ?? 'landlord' . ($tenantIndex + 1) . '@demo.smartroom.local';
+        $username = 'chutro' . ($tenantIndex + 1);
+        $email = 'chutro' . ($tenantIndex + 1) . '@smartroom.local';
         $verificationStatus = $blueprint['verification_status'] ?? 'unverified';
         $isVerified = ($verificationStatus === 'kyc_verified');
         $isPending = ($verificationStatus === 'pending');
 
         $roleSlug = $isVerified ? 'landlord' : 'unverified_landlord';
 
-        // 1. Tạo tài khoản chủ trọ chính
+        // 1. Tạo tài khoản chủ trọ chính (chutro1 .. chutro10)
         $landlord1 = User::updateOrCreate(
             ['username' => $username],
             [
@@ -162,44 +176,11 @@ class FullDemoSeeder extends Seeder
                 'name' => $blueprint['owner_name'],
                 'phone' => $blueprint['phone'] ?? ('0888000' . str_pad((string) ($tenantIndex + 1), 3, '0', STR_PAD_LEFT)),
                 'email' => $email,
-                'password' => Hash::make('password'),
+                'password' => Hash::make('123456'),
                 'role' => $roleSlug,
                 'like' => $blueprint['owner_name'],
             ]
         );
-
-        // Alias tài khoản dễ nhớ
-        if ($tenantIndex === 0) {
-            User::updateOrCreate(
-                ['username' => 'admin_hanoi'],
-                [
-                    'tenant_id' => $tenant->id,
-                    'role_id' => $this->roles['landlord']->id,
-                    'name' => $blueprint['owner_name'],
-                    'phone' => '0988111001',
-                    'email' => 'admin.hanoi@smartroom.local',
-                    'password' => Hash::make('password'),
-                    'role' => 'landlord',
-                    'like' => 'Chủ trọ Hà Nội (Cầu Giấy)',
-                ]
-            );
-        }
-
-        if ($tenantIndex === 9) {
-            User::updateOrCreate(
-                ['username' => 'unverified-landlord'],
-                [
-                    'tenant_id' => $tenant->id,
-                    'role_id' => $this->roles['unverified_landlord']->id,
-                    'name' => $blueprint['owner_name'],
-                    'phone' => '0888999888',
-                    'email' => 'unverified@demo.smartroom.local',
-                    'password' => Hash::make('password'),
-                    'role' => 'unverified_landlord',
-                    'like' => 'Chủ trọ chưa xác minh mẫu',
-                ]
-            );
-        }
 
         // 2. Tạo LandlordProfile tương ứng
         $profileStatus = $isVerified ? 'verified' : ($isPending ? 'pending' : 'unverified');
@@ -230,7 +211,7 @@ class FullDemoSeeder extends Seeder
                     'admin_review_consent_at' => Carbon::now()->subDays(5),
                     'admin_review_consent_ip' => '127.0.0.1',
                     'status' => $reqStatus,
-                    'reviewed_by' => $isVerified ? 1 : null,
+                    'reviewed_by' => $isVerified ? ($this->adminUserId ?? User::where('role', 'admin')->value('id')) : null,
                     'reviewed_at' => $isVerified ? Carbon::now()->subDays(2) : null,
                     'reject_reason' => null,
                 ]
@@ -252,56 +233,12 @@ class FullDemoSeeder extends Seeder
             }
         }
 
-        // 4. Chủ trọ đồng sở hữu (Co-owner)
-        User::updateOrCreate(
-            ['username' => 'demo-landlord-' . ($tenantIndex + 1) . '-co'],
-            [
-                'tenant_id' => $tenant->id,
-                'role_id' => $this->roles[$roleSlug]->id,
-                'name' => $blueprint['owner_name'] . ' (Đồng sở hữu)',
-                'phone' => '0888001' . str_pad((string) ($tenantIndex + 1), 3, '0', STR_PAD_LEFT),
-                'email' => 'landlord' . ($tenantIndex + 1) . 'co@demo.smartroom.local',
-                'password' => Hash::make('password'),
-                'role' => $roleSlug,
-                'like' => 'Chủ trọ đồng sở hữu',
-            ]
-        );
-
         return $landlord1;
     }
 
-
     private function seedManager(Tenant $tenant, int $tenantIndex): void
     {
-        // Manager 1
-        User::updateOrCreate(
-            ['username' => 'demo-manager-' . ($tenantIndex + 1) . '-1'],
-            [
-                'tenant_id' => $tenant->id,
-                'role_id' => $this->roles['manager']->id,
-                'name' => 'Quản lý ' . $tenant->name . ' 1',
-                'phone' => '0777000' . str_pad((string) (($tenantIndex + 1) * 10 + 1), 3, '0', STR_PAD_LEFT),
-                'email' => 'manager' . ($tenantIndex + 1) . '-1@demo.smartroom.local',
-                'password' => Hash::make('password'),
-                'role' => 'manager',
-                'like' => 'Nhân viên quản lý demo 1',
-            ]
-        );
-
-        // Manager 2
-        User::updateOrCreate(
-            ['username' => 'demo-manager-' . ($tenantIndex + 1) . '-2'],
-            [
-                'tenant_id' => $tenant->id,
-                'role_id' => $this->roles['manager']->id,
-                'name' => 'Quản lý ' . $tenant->name . ' 2',
-                'phone' => '0777000' . str_pad((string) (($tenantIndex + 1) * 10 + 2), 3, '0', STR_PAD_LEFT),
-                'email' => 'manager' . ($tenantIndex + 1) . '-2@demo.smartroom.local',
-                'password' => Hash::make('password'),
-                'role' => 'manager',
-                'like' => 'Nhân viên quản lý demo 2',
-            ]
-        );
+        // Quan ly duoc tao chuan trong SystemUsersSeeder
     }
 
     private function seedBuildingsAndRooms(Tenant $tenant, array $blueprint): array
@@ -726,19 +663,7 @@ class FullDemoSeeder extends Seeder
 
     private function seedGuestUsers(): void
     {
-        User::updateOrCreate(
-            ['username' => 'demo-guest'],
-            [
-                'tenant_id' => null,
-                'role_id' => $this->roles['guest']->id,
-                'name' => 'Khách vãng lai',
-                'phone' => '0999000001',
-                'email' => 'guest@demo.smartroom.local',
-                'password' => Hash::make('password'),
-                'role' => 'guest',
-                'like' => 'Khách tìm phòng',
-            ]
-        );
+        // Khach vang lai duoc tao chuan trong SystemUsersSeeder (khach1..khach10)
     }
 
     private function vietQrUrl(Tenant $tenant, Room $room, string $month, int $amount): string

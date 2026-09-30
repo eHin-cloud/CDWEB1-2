@@ -1,131 +1,207 @@
 ================================================================================
-DANH SÁCH TÀI KHOẢN HỆ THỐNG RENTY & SMARTROOM (CẬP NHẬT MỚI NHẤT)
+HỆ THỐNG RENTY & SMARTROOM - DANH SÁCH TÀI KHOẢN THEO PHÂN QUYỀN MỚI
+================================================================================
+⭐ MẬT KHẨU CHUNG CHO TẤT CẢ TÀI KHOẢN TRONG HỆ THỐNG: 123456
+⭐ Tất cả tài khoản đều có thể đăng nhập bằng: Username, Số điện thoại hoặc Email.
 ================================================================================
 
-1. TÀI KHOẢN ADMIN HỆ THỐNG (SUPERADMIN)
 --------------------------------------------------------------------------------
-* Tên đăng nhập (username): superadmin (hoặc admin)
-* Tên hiển thị (name): Quản trị viên Hệ thống
-* Số điện thoại (phone): 0999999999 / 0987654321
-* Email: superadmin@smartroom.local / admin@smartroom.com
-* Mật khẩu (password): password (hoặc admin123)
-* Phân quyền (role): admin (Toàn quyền quản trị nền tảng)
-* Quyền hạn: Duyệt KYC chủ trọ, quản lý toàn bộ cơ sở, phân quyền, xem báo cáo, kiểm toán.
-
-
-2. DANH SÁCH 10 CHỦ TRỌ CHUNG CƯ MINI (7 ĐÃ XÁC MINH - 3 CHƯA XÁC MINH)
+1. TÀI KHOẢN ADMIN HỆ THỐNG (SUPERADMIN) - [2 TÀI KHOẢN]
 --------------------------------------------------------------------------------
-Mật khẩu chung cho tất cả các tài khoản chủ trọ: password
+* Quyền hạn (Role): admin (Toàn quyền quản trị nền tảng, duyệt KYC chủ trọ, kiểm duyệt tin, xem báo cáo, kiểm toán).
 
-[NHÓM 1: 7 CHỦ TRỌ ĐÃ XÁC MINH KYC (kyc_verified)]
-1. Chủ trọ Cầu Giấy (SmartRoom Cầu Giấy):
-   - Tên đăng nhập: admin_hanoi (hoặc demo-landlord-1)
+1.1 Admin 1:
+   - Tên đăng nhập: admin1
+   - Tên hiển thị: Admin Hệ Thống 1 (Superadmin)
+   - Số điện thoại: 0999000001
+   - Email: admin1@smartroom.local
+   - Mật khẩu: 123456
+
+1.2 Admin 2:
+   - Tên đăng nhập: admin2
+   - Tên hiển thị: Admin Hệ Thống 2 (Superadmin)
+   - Số điện thoại: 0999000002
+   - Email: admin2@smartroom.local
+   - Mật khẩu: 123456
+
+
+--------------------------------------------------------------------------------
+2. TÀI KHOẢN CHỦ TRỌ (LANDLORD) - [10 TÀI KHOẢN: 8 ĐÃ XÁC MINH + 2 CHƯA XÁC MINH]
+--------------------------------------------------------------------------------
+Mật khẩu chung: 123456
+
+[NHÓM 8 CHỦ TRỌ ĐÃ XÁC MINH KYC - CÓ HUY HIỆU TÍCH XANH UY TÍN (kyc_verified)]:
+1. Chủ trọ Cầu Giấy (SmartRoom Cầu Giấy - Tenant 1):
+   - Tên đăng nhập: chutro1
    - Tên chủ trọ: Trần Văn Hoàng
-   - Email: contact@smartroom-caugiay.vn (hoặc admin.hanoi@smartroom.local)
-   - Điện thoại: 0988000001
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 95
-   - Cơ sở quản lý: Chung cư mini SmartRoom Cầu Giấy (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ khép kín đầy đủ tiện nghi.
+   - Số điện thoại: 0988000001
+   - Email: chutro1@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-2. Chủ trọ Thanh Xuân (Rentry Home Thanh Xuân):
-   - Tên đăng nhập: demo-landlord-2
-   - Tên chủ trọ: Lê Quản Lý Thanh Xuân
-   - Email: demo-thanhxuan@smartroom.local
-   - Điện thoại: 0988000002
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 90
-   - Cơ sở quản lý: Chung cư mini Rentry Home Thanh Xuân (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ khép kín.
+2. Chủ trọ Thanh Xuân (Rentry Home Thanh Xuân - Tenant 2):
+   - Tên đăng nhập: chutro2
+   - Tên chủ trọ: Lê Quản Lý
+   - Số điện thoại: 0988000002
+   - Email: chutro2@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-3. Chủ trọ Đống Đa (Sen Vàng Đống Đa):
-   - Tên đăng nhập: demo-landlord-3
+3. Chủ trọ Đống Đa (Sen Vàng Đống Đa - Tenant 3):
+   - Tên đăng nhập: chutro3
    - Tên chủ trọ: Phạm Văn Đống Đa
-   - Email: demo-dongda@smartroom.local
-   - Điện thoại: 0988000003
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 88
-   - Cơ sở quản lý: Chung cư mini Sen Vàng Đống Đa (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ.
+   - Số điện thoại: 0988000003
+   - Email: chutro3@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-4. Chủ trọ Tây Hồ (Hồ Tây Panorama):
-   - Tên đăng nhập: demo-landlord-4
+4. Chủ trọ Tây Hồ (Hồ Tây Panorama - Tenant 4):
+   - Tên đăng nhập: chutro4
    - Tên chủ trọ: Hoàng Văn Tây Hồ
-   - Email: demo-tayho@smartroom.local
-   - Điện thoại: 0988000004
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 92
-   - Cơ sở quản lý: Chung cư mini Hồ Tây Panorama Tây Hồ (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ cao cấp view hồ.
+   - Số điện thoại: 0988000004
+   - Email: chutro4@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-5. Chủ trọ Hai Bà Trưng (Times Light Hai Bà Trưng):
-   - Tên đăng nhập: demo-landlord-5
+5. Chủ trọ Hai Bà Trưng (Times Light Hai Bà Trưng - Tenant 5):
+   - Tên đăng nhập: chutro5
    - Tên chủ trọ: Vũ Thị Hai Bà Trưng
-   - Email: demo-hbt@smartroom.local
-   - Điện thoại: 0988000005
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 86
-   - Cơ sở quản lý: Chung cư mini Times Light Hai Bà Trưng (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ.
+   - Số điện thoại: 0988000005
+   - Email: chutro5@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-6. Chủ trọ Ba Đình (Liễu Giai Riverside Ba Đình):
-   - Tên đăng nhập: demo-landlord-6
+6. Chủ trọ Ba Đình (Liễu Giai Riverside - Tenant 6):
+   - Tên đăng nhập: chutro6
    - Tên chủ trọ: Trần Văn Ba Đình
-   - Email: demo-badinh@smartroom.local
-   - Điện thoại: 0988000006
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 89
-   - Cơ sở quản lý: Chung cư mini Liễu Giai Riverside Ba Đình (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ.
+   - Số điện thoại: 0988000006
+   - Email: chutro6@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-7. Chủ trọ Nam Từ Liêm (Mỹ Đình Star Nam Từ Liêm):
-   - Tên đăng nhập: demo-landlord-7
+7. Chủ trọ Nam Từ Liêm (Mỹ Đình Star Nam Từ Liêm - Tenant 7):
+   - Tên đăng nhập: chutro7
    - Tên chủ trọ: Bùi Tiến Đạt
-   - Email: demo-mydinh@smartroom.local
-   - Điện thoại: 0988000007
-   - Trạng thái: ĐÃ XÁC MINH (kyc_verified) - Điểm uy tín: 87
-   - Cơ sở quản lý: Chung cư mini Mỹ Đình Star Nam Từ Liêm (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ.
+   - Số điện thoại: 0988000007
+   - Email: chutro7@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-[NHÓM 2: 3 CHỦ TRỌ CHƯA XÁC MINH / ĐANG CHỜ DUYỆT]
-8. Chủ trọ Hoàng Mai (Linh Đàm Green Hoàng Mai):
-   - Tên đăng nhập: demo-landlord-8
+8. Chủ trọ Hoàng Mai (Linh Đàm Green Hoàng Mai - Tenant 8):
+   - Tên đăng nhập: chutro8
    - Tên chủ trọ: Hoàng Văn Hùng
-   - Email: demo-hoangmai@smartroom.local
-   - Điện thoại: 0988000008
-   - Trạng thái: CHỜ DUYỆT KYC (pending) - Đã nộp CCCD chờ Admin duyệt
-   - Cơ sở quản lý: Chung cư mini Linh Đàm Green Hoàng Mai (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ.
+   - Số điện thoại: 0988000008
+   - Email: chutro8@smartroom.local
+   - Trạng thái: ĐÃ XÁC MINH KYC (Tích Xanh) - Quản lý 24 phòng
 
-9. Chủ trọ Bắc Từ Liêm (Cổ Nhuế House Bắc Từ Liêm):
-   - Tên đăng nhập: demo-landlord-9
+[NHÓM 2 CHỦ TRỌ CHƯA XÁC MINH KYC]:
+9. Chủ trọ Bắc Từ Liêm (Cổ Nhuế House Bắc Từ Liêm - Tenant 9):
+   - Tên đăng nhập: chutro9
    - Tên chủ trọ: Nguyễn Thị Mai
-   - Email: demo-bactuliem@smartroom.local
-   - Điện thoại: 0988000009
-   - Trạng thái: CHỜ DUYỆT KYC (pending) - Đã nộp CCCD chờ Admin duyệt
-   - Cơ sở quản lý: Chung cư mini Cổ Nhuế House Bắc Từ Liêm (Tòa A & Tòa B)
-   - Quy mô: 24 phòng trọ.
+   - Số điện thoại: 0988000009
+   - Email: chutro9@smartroom.local
+   - Trạng thái: CHỜ DUYỆT KYC (pending) - Đang nộp hồ sơ chờ Admin duyệt
 
-10. Chủ trọ Hà Đông (Hà Đông Central Hà Đông):
-    - Tên đăng nhập: demo-landlord-10 (hoặc unverified-landlord)
-    - Tên chủ trọ: Trịnh Văn Lâm
-    - Email: demo-hadong@smartroom.local (hoặc unverified@demo.smartroom.local)
-    - Điện thoại: 0988000010 (hoặc 0888999888)
-    - Trạng thái: CHƯA XÁC MINH (unverified) - Chưa nộp hồ sơ KYC
-    - Cơ sở quản lý: Chung cư mini Hà Đông Central Hà Đông (Tòa A & Tòa B)
-    - Quy mô: 24 phòng trọ.
+10. Chủ trọ Hà Đông (Hà Đông Central - Tenant 10):
+   - Tên đăng nhập: chutro10
+   - Tên chủ trọ: Trịnh Văn Lâm
+   - Số điện thoại: 0988000010
+   - Email: chutro10@smartroom.local
+   - Trạng thái: CHƯA XÁC MINH (unverified) - Chưa hoàn tất KYC
 
 
-3. TÀI KHOẢN KHÁCH THUÊ / CƯ DÂN
 --------------------------------------------------------------------------------
-Mật khẩu chung: password
-Vai trò: user / resident
-- demo-resident-101-1 (Trần Minh Anh - P.101 Cầu Giấy)
-- demo-resident-102-1 (Nguyễn Hoàng Nam - P.102 Cầu Giấy)
-- demo-resident-201-1 (Lê Thu Trang - P.201 Cầu Giấy)
-- demo-resident-202-1 (Phạm Quốc Việt - P.202 Cầu Giấy)
-- demo-resident-301-1 (Đỗ Khánh Linh - P.301 Cầu Giấy)
-- tenant (Khách thuê demo chung - password)
+3. TÀI KHOẢN NHÂN VIÊN QUẢN LÝ (MANAGER) - [10 TÀI KHOẢN]
+--------------------------------------------------------------------------------
+* Phân bổ: Chỉ dành cho các chủ trọ đã xác nhận (Chủ trọ 1 & 2 có 2 quản lý, các chủ trọ còn lại có 1 quản lý).
+* Quyền hạn (Role): manager (Vận hành phòng, cơ sở, cư dân, hợp đồng và hóa đơn).
+* Mật khẩu chung: 123456
 
+- quanly1_1 (Nguyễn Quản Lý 1 - Cơ sở Cầu Giấy / Tenant 1) - SĐT: 0971000001
+- quanly1_2 (Trần Quản Lý 2 - Cơ sở Cầu Giấy / Tenant 1) - SĐT: 0971000002
+- quanly2_1 (Lê Quản Lý 1 - Cơ sở Thanh Xuân / Tenant 2) - SĐT: 0972000001
+- quanly2_2 (Phạm Quản Lý 2 - Cơ sở Thanh Xuân / Tenant 2) - SĐT: 0972000002
+- quanly3   (Đặng Quản Lý - Cơ sở Đống Đa / Tenant 3) - SĐT: 0973000001
+- quanly4   (Hoàng Quản Lý - Cơ sở Tây Hồ / Tenant 4) - SĐT: 0974000001
+- quanly5   (Vũ Quản Lý - Cơ sở Hai Bà Trưng / Tenant 5) - SĐT: 0975000001
+- quanly6   (Bùi Quản Lý - Cơ sở Ba Đình / Tenant 6) - SĐT: 0976000001
+- quanly7   (Đỗ Quản Lý - Cơ sở Nam Từ Liêm / Tenant 7) - SĐT: 0977000001
+- quanly8   (Ngô Quản Lý - Cơ sở Hoàng Mai / Tenant 8) - SĐT: 0978000001
+
+
+--------------------------------------------------------------------------------
+4. TÀI KHOẢN NHÂN VIÊN LỄ TÂN (RECEPTIONIST) - [10 TÀI KHOẢN]
+--------------------------------------------------------------------------------
+* Phân bổ: Dành cho các cơ sở đã xác nhận (Chủ trọ 1 & 2 có 2 lễ tân, các cơ sở còn lại có 1 lễ tân).
+* Quyền hạn (Role): receptionist (Lễ tân: Check-in, Check-out, quản lý dịch vụ phát sinh Folio).
+* Mật khẩu chung: 123456
+
+- letan1_1 (Lễ Tân 1 - Cơ sở Cầu Giấy / Tenant 1) - SĐT: 0961000001
+- letan1_2 (Lễ Tân 2 - Cơ sở Cầu Giấy / Tenant 1) - SĐT: 0961000002
+- letan2_1 (Lễ Tân 1 - Cơ sở Thanh Xuân / Tenant 2) - SĐT: 0962000001
+- letan2_2 (Lễ Tân 2 - Cơ sở Thanh Xuân / Tenant 2) - SĐT: 0962000002
+- letan3   (Lễ Tân - Cơ sở Đống Đa / Tenant 3) - SĐT: 0963000001
+- letan4   (Lễ Tân - Cơ sở Tây Hồ / Tenant 4) - SĐT: 0964000001
+- letan5   (Lễ Tân - Cơ sở Hai Bà Trưng / Tenant 5) - SĐT: 0965000001
+- letan6   (Lễ Tân - Cơ sở Ba Đình / Tenant 6) - SĐT: 0966000001
+- letan7   (Lễ Tân - Cơ sở Nam Từ Liêm / Tenant 7) - SĐT: 0967000001
+- letan8   (Lễ Tân - Cơ sở Hoàng Mai / Tenant 8) - SĐT: 0968000001
+
+
+--------------------------------------------------------------------------------
+5. TÀI KHOẢN NHÂN VIÊN BUỒNG PHÒNG (HOUSEKEEPER) - [10 TÀI KHOẢN]
+--------------------------------------------------------------------------------
+* Phân bổ: Dành cho các cơ sở đã xác nhận (Chủ trọ 1 & 2 có 2 buồng phòng, các cơ sở còn lại có 1 buồng phòng).
+* Quyền hạn (Role): housekeeper (Buồng phòng: Giao diện mobile cập nhật trạng thái phòng Sạch/Bẩn/Đang dọn).
+* Mật khẩu chung: 123456
+
+- buongphong1_1 (Buồng Phòng 1 - Cơ sở Cầu Giấy / Tenant 1) - SĐT: 0951000001
+- buongphong1_2 (Buồng Phòng 2 - Cơ sở Cầu Giấy / Tenant 1) - SĐT: 0951000002
+- buongphong2_1 (Buồng Phòng 1 - Cơ sở Thanh Xuân / Tenant 2) - SĐT: 0952000001
+- buongphong2_2 (Buồng Phòng 2 - Cơ sở Thanh Xuân / Tenant 2) - SĐT: 0952000002
+- buongphong3   (Buồng Phòng - Cơ sở Đống Đa / Tenant 3) - SĐT: 0953000001
+- buongphong4   (Buồng Phòng - Cơ sở Tây Hồ / Tenant 4) - SĐT: 0954000001
+- buongphong5   (Buồng Phòng - Cơ sở Hai Bà Trưng / Tenant 5) - SĐT: 0955000001
+- buongphong6   (Buồng Phòng - Cơ sở Ba Đình / Tenant 6) - SĐT: 0956000001
+- buongphong7   (Buồng Phòng - Cơ sở Nam Từ Liêm / Tenant 7) - SĐT: 0957000001
+- buongphong8   (Buồng Phòng - Cơ sở Hoàng Mai / Tenant 8) - SĐT: 0958000001
+
+
+--------------------------------------------------------------------------------
+6. TÀI KHOẢN CƯ DÂN THUÊ PHÒNG (RESIDENT) - [120 TÀI KHOẢN]
+--------------------------------------------------------------------------------
+* Tương ứng với đúng 120 phòng đang được thuê trong cơ sở dữ liệu seeder (12 phòng/cơ sở x 10 cơ sở).
+* Quyền hạn (Role): resident (user) - Truy cập Resident Portal, tra cứu phòng đang thuê, xem hợp đồng, quét QR VietQR đóng tiền phòng, gửi báo hỏng.
+* Mật khẩu chung: 123456
+
+Danh sách tài khoản: cudan_1 đến cudan_120
+- cudan_1 (P.101 Cầu Giấy) - SĐT: 0940000001 - Mật khẩu: 123456
+- cudan_2 (P.102 Cầu Giấy) - SĐT: 0940000002 - Mật khẩu: 123456
+- cudan_3 (P.103 Cầu Giấy) - SĐT: 0940000003 - Mật khẩu: 123456
+- cudan_4 (P.104 Cầu Giấy) - SĐT: 0940000004 - Mật khẩu: 123456
+- cudan_5 (P.105 Cầu Giấy) - SĐT: 0940000005 - Mật khẩu: 123456
+- cudan_6 (P.106 Cầu Giấy) - SĐT: 0940000006 - Mật khẩu: 123456
+- cudan_7 (P.201 Cầu Giấy) - SĐT: 0940000007 - Mật khẩu: 123456
+- cudan_8 (P.202 Cầu Giấy) - SĐT: 0940000008 - Mật khẩu: 123456
+- cudan_9 (P.203 Cầu Giấy) - SĐT: 0940000009 - Mật khẩu: 123456
+- cudan_10 (P.204 Cầu Giấy) - SĐT: 0940000010 - Mật khẩu: 123456
+- cudan_11 (P.205 Cầu Giấy) - SĐT: 0940000011 - Mật khẩu: 123456
+- cudan_12 (P.206 Cầu Giấy) - SĐT: 0940000012 - Mật khẩu: 123456
+- ... (tương tự lần lượt cho các cơ sở tiếp theo đến cudan_120)
+
+
+--------------------------------------------------------------------------------
+7. TÀI KHOẢN KHÁCH CHƯA GẮN TRỌ (GUEST) - [10 TÀI KHOẢN]
+--------------------------------------------------------------------------------
+* Tài khoản người dùng / khách tìm phòng tự do, chưa gắn vào cơ sở lưu trú hay phòng nào.
+* Quyền hạn (Role): guest - Tìm kiếm phòng trên sàn Renty, chatbot tư vấn, so sánh phòng, gửi yêu cầu liên hệ xem phòng.
+* Mật khẩu chung: 123456
+
+1. khach1  - SĐT: 0930000001 - Email: khach1@smartroom.local - Mật khẩu: 123456
+2. khach2  - SĐT: 0930000002 - Email: khach2@smartroom.local - Mật khẩu: 123456
+3. khach3  - SĐT: 0930000003 - Email: khach3@smartroom.local - Mật khẩu: 123456
+4. khach4  - SĐT: 0930000004 - Email: khach4@smartroom.local - Mật khẩu: 123456
+5. khach5  - SĐT: 0930000005 - Email: khach5@smartroom.local - Mật khẩu: 123456
+6. khach6  - SĐT: 0930000006 - Email: khach6@smartroom.local - Mật khẩu: 123456
+7. khach7  - SĐT: 0930000007 - Email: khach7@smartroom.local - Mật khẩu: 123456
+8. khach8  - SĐT: 0930000008 - Email: khach8@smartroom.local - Mật khẩu: 123456
+9. khach9  - SĐT: 0930000009 - Email: khach9@smartroom.local - Mật khẩu: 123456
+10. khach10 - SĐT: 0930000010 - Email: khach10@smartroom.local - Mật khẩu: 123456
 
 ================================================================================
-GHI CHÚ ĐĂNG NHẬP:
-- Tất cả tài khoản trên đều có thể đăng nhập bằng 1 trong 3 hình thức:
-  1) Tên đăng nhập (username)
-  2) Số điện thoại (phone)
-  3) Email
+TỔNG CỘNG: 172 TÀI KHOẢN HỆ THỐNG
+TẤT CẢ ĐÃ SẴN SÀNG SỬ DỤNG - MẬT KHẨU: 123456
 ================================================================================

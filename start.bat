@@ -1227,7 +1227,7 @@ echo    [1] Trang chu Website              - http://127.0.0.1:!PORT!/
 echo    [2] Vong quay ^& Doi diem thuong     - http://127.0.0.1:!PORT!/rewards
 echo    [3] Dat lich ^& Lich su sua chua    - http://127.0.0.1:!PORT!/profile
 echo    [4] So sanh san pham               - http://127.0.0.1:!PORT!/compare
-echo    [5] Dang nhap / Dang ky            - http://127.0.0.1:!PORT!/login_register
+echo    [5] Dang nhap / Dang ky            - http://127.0.0.1:!PORT!/login
 echo.
 echo    --- HE THONG QUAN TRI (ADMIN PORTAL) ---
 echo    [6] Tong quan Admin Dashboard      - http://127.0.0.1:!PORT!/admin
@@ -1247,7 +1247,7 @@ if "!sitemap_choice!"=="1" start http://127.0.0.1:!PORT!/ & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="2" start http://127.0.0.1:!PORT!/rewards & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="3" start http://127.0.0.1:!PORT!/profile & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="4" start http://127.0.0.1:!PORT!/compare & goto VIEW_SITEMAP
-if "!sitemap_choice!"=="5" start http://127.0.0.1:!PORT!/login_register & goto VIEW_SITEMAP
+if "!sitemap_choice!"=="5" start http://127.0.0.1:!PORT!/login & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="6" start http://127.0.0.1:!PORT!/admin & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="7" start http://127.0.0.1:!PORT!/admin/repair-tickets & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="8" start http://127.0.0.1:!PORT!/admin/service-invoices & goto VIEW_SITEMAP
@@ -1500,13 +1500,19 @@ echo    ^|                 SmartRoom ^& Renty CHAY TU DONG HOA THANH CONG       
 echo    +======================================================================================+
 echo    ^|                                                                                      ^|
 echo    ^|  [+] Website nguoi thue:  http://127.0.0.1:!PORT!/renty                              ^|
-echo    ^|  [+] Localhost URL:       http://127.0.0.1:!PORT!/                                    ^|
-echo    ^|  [+] Local Network URL:   http://!LOCAL_IP!:!PORT!/                                   ^|
+echo    ^|  [+] Dang nhap / Login:   http://127.0.0.1:!PORT!/login                              ^|
 echo    ^|  [+] Admin Portal:        http://127.0.0.1:!PORT!/smartroom/admin                    ^|
+echo    ^|  [+] Local Network URL:   http://!LOCAL_IP!:!PORT!/                                   ^|
 echo    ^|                                                                                      ^|
-echo    ^|  [*] Meo kiem thu: Dung dien thoai / may tinh bang ket noi cung mang Wi-Fi voi may   ^|
-echo    ^|      tinh, roi truy cap vao duong dan Local Network URL o tren de test thiet bi di   ^|
-echo    ^|      dong cuc ky de dang va thuc te.                                                 ^|
+echo    ^|  [*] TAI KHOAN DEMO (Tat ca dung mat khau: 123456):                                 ^|
+echo    ^|      - Admin he thong:   admin1, admin2                                              ^|
+echo    ^|      - Chu tro (8 KYC):  chutro1 .. chutro8  (Chua KYC: chutro9, chutro10)           ^|
+echo    ^|      - Quan ly:          quanly1_1 .. quanly8                                        ^|
+echo    ^|      - Le tan:           letan1_1 .. letan8                                          ^|
+echo    ^|      - Buong phong:      buongphong1_1 .. buongphong8                                ^|
+echo    ^|      - Cu dan phong:     cudan_1 .. cudan_120                                        ^|
+echo    ^|      - Khach vang lai:   khach1 .. khach10                                           ^|
+echo    ^|      (Xem danh sach chi tiet 172 tai khoan tai tep 'taikhoan')                      ^|
 echo    ^|                                                                                      ^|
 echo    +======================================================================================+
 echo.
