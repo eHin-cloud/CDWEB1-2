@@ -12,9 +12,9 @@ HỆ THỐNG QUẢN LÝ NHÀ TRỌ, CHUNG CƯ, CĂN HỘ DỊCH VỤ VÀ KHÁCH 
 
 | STT | Họ và Tên Sinh Viên | Mã Số Sinh Viên | Chức Vụ |
 | --- | --- | --- | --- |
-| 01 | Nguyễn Thanh Hiền | 23211TT4102 | Nhóm Trưởng |
-| 02 | Nguyễn Anh Quý | 23211TT4188 | Thành Viên |
-| 03 | Huỳnh Văn Vĩnh Em | 23211TT4256 | Nhóm Phó |
+| 01 | Nguyễn Thanh Hiền | 24211TT3646 | Nhóm Trưởng |
+| 02 | Nguyễn Anh Quý | 24211TT3159 | Thành Viên |
+| 03 | Huỳnh Văn Vĩnh Em | 24211TT1288 | Nhóm Phó |
 
 GIẢNG VIÊN HƯỚNG DẪN: PHAN THANH NHUẦN
 
@@ -34,9 +34,9 @@ HỆ THỐNG QUẢN LÝ NHÀ TRỌ, CHUNG CƯ, CĂN HỘ DỊCH VỤ VÀ KHÁCH 
 
 | STT | Họ và Tên Sinh Viên | Mã Số Sinh Viên | Chức Vụ |
 | --- | --- | --- | --- |
-| 01 | Nguyễn Thanh Hiền | 23211TT4102 | Nhóm Trưởng |
-| 02 | Nguyễn Anh Quý | 23211TT4188 | Nhóm Phó |
-| 03 | Huỳnh Văn Vĩnh Em | 23211TT4256 | Thành Viên |
+| 01 | Nguyễn Thanh Hiền | 24211TT3646 | Nhóm Trưởng |
+| 02 | Nguyễn Anh Quý | 24211TT3159 | Nhóm Phó |
+| 03 | Huỳnh Văn Vĩnh Em | 24211TT1288 | Thành Viên |
 
 GIẢNG VIÊN HƯỚNG DẪN: PHAN THANH NHUẦN
 
@@ -48,209 +48,8 @@ DANH MỤC HÌNH ẢNH3
 
 DANH MỤC BẢNG SỐ LIỆU4
 
-DANH MỤC TỪ VIẾT TẮT5
 
-LỜI MỞ ĐẦU5
-
-I. KẾ HOẠCH LÀM VIỆC NHÓM7
-
-1. Bảng phân chia công việc (Bảng 2)7
-
-2. Bảng báo cáo phiên họp nhóm (Bảng 3)11
-
-II. GIỚI THIỆU ĐỀ TÀI VÀ MÔ TẢ CHỨC NĂNG13
-
-1. Giới thiệu đề tài13
-
-a. Hiện trạng và vấn đề13
-
-b. Mục tiêu của đề tài13
-
-c. Công nghệ sử dụng14
-
-2. Bảng danh mục chức năng và Endpoint API hệ thống (Bảng 4)14
-
-III. DATABASE VÀ MÔ HÌNH ERD25
-
-1. Mô hình ERD (Entity Relationship Diagram)25
-
-2. Từ điển dữ liệu (Data Dictionary - 10 Thực thể cốt lõi)26
-
-a. Bảng Users & Roles (Tài khoản và Vai trò)26
-
-b. Bảng Properties / Buildings (Cơ sở lưu trú: Nhà trọ, Chung cư, Tòa nhà, Khách sạn)
-
-c. Bảng Rooms & Condos (Phòng trọ, Căn hộ chung cư, Phòng khách sạn & Minibar)
-
-d. Bảng Residents & Guests (Cư dân thuê trọ & Khách lưu trú khách sạn)
-
-e. Bảng Contracts & Bookings (Hợp đồng thuê dài hạn & Đặt phòng khách sạn)
-
-f. Bảng Utility & Services (Chốt Điện - Nước & Dịch vụ Khách sạn)
-
-g. Bảng Bills & Transactions (Hóa đơn thu tiền, Bảng kê Folio & Sổ quỹ)
-
-h. Bảng Tickets & RoomReports (Sự cố kỹ thuật, Dịch vụ phòng & Khiếu nại)
-
-i. Bảng LandlordProfiles & VerificationRequests (Hồ sơ & Yêu cầu duyệt chủ trọ)36
-
-j. Bảng AdminActivityLogs & AuditLogs (Nhật ký truy vết & Kiểm toán bất biến)37
-
-k. Bảng IotDevices & IotMeterTelemetries (Thiết bị IoT và Dữ liệu đo đạc chỉ số vi mô)
-
-Hệ sinh thái bảng dữ liệu IoT bao gồm bảng iot_devices (quản lý định danh thiết bị gateway, công tơ thông minh, loại giao thức kết nối, khóa bảo mật API Key và trạng thái hoạt động) và bảng iot_meter_telemetries (lưu trữ toàn bộ chuỗi dữ liệu đo đạc thời gian thực chu kỳ 15 phút: công suất P(kW), lưu lượng nước Q(m³/h), điện áp, dòng điện và chỉ số lũy kế).
-
-Bảng 20a: Mô tả cấu trúc bảng IotDevices (Thiết bị IoT & Công tơ thông minh)
-
-| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
-| --- | --- | --- |
-| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh duy nhất của thiết bị công tơ IoT |
-| tenant_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết chủ trọ / ban quản trị (tenants.id) |
-| room_id | BIGINT, UNSIGNED, FOREIGN KEY, NULL | Khóa ngoại liên kết phòng lưu trú được lắp đặt công tơ (rooms.id) |
-| device_code | VARCHAR(100), UNIQUE | Mã định danh duy nhất của thiết bị phần cứng (vd: ESP32_ELEC_P101) |
-| meter_serial | VARCHAR(100) | Số sản xuất (Số SX) dập trên mặt đồng hồ đo |
-| meter_type | ENUM('electricity', 'water') | Loại công tơ đo lường: điện sinh hoạt hoặc nước sạch |
-| protocol | ENUM('esp32_wifi', 'lorawan', 'modbus_rs485', 'zigbee', 'mqtt') | Giao thức truyền thông không dây/có dây kết nối Gateway |
-| api_key | VARCHAR(64), UNIQUE | Khóa token xác thực bảo mật khi thiết bị gửi dữ liệu lên Webhook |
-| status | VARCHAR(30), DEFAULT 'active' | Trạng thái hoạt động của thiết bị ('active', 'warning', 'inactive') |
-| last_reading | DECIMAL(12,2), DEFAULT 0 | Chỉ số tiêu thụ lũy kế ghi nhận ở chu kỳ đo gần nhất |
-| last_seen_at | DATETIME, NULL | Thời điểm thiết bị gửi gói tin gần nhất (phục vụ cảnh báo Offline > 3 phút) |
-| firmware_version | VARCHAR(50), NULL | Phiên bản phần mềm nhúng (Firmware) cài đặt trên vi điều khiển |
-
-Bảng 20b: Mô tả cấu trúc bảng IotMeterTelemetries (Gói tin dữ liệu đo đạc thời gian thực)
-
-| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
-| --- | --- | --- |
-| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh gói tin telemetry |
-| iot_device_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết thiết bị công tơ đo lường (iot_devices.id) |
-| room_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết phòng lưu trú (rooms.id) |
-| meter_type | ENUM('electricity', 'water') | Loại công tơ (điện / nước) |
-| reading | DECIMAL(12,2) | Chỉ số tiêu thụ lũy kế tức thời tại thời điểm đo (kWh hoặc m³) |
-| voltage | DECIMAL(8,2), NULL | Điện áp tức thời đo được trên đường dây (Vôn - V) |
-| current | DECIMAL(8,3), NULL | Cường độ dòng điện tiêu thụ (Ampe - A) |
-| power | DECIMAL(10,2), NULL | Công suất tiêu thụ tức thời của phòng (Watt / Kilowatt - kW) |
-| flow_rate | DECIMAL(10,3), NULL | Lưu lượng dòng chảy nước tức thời (m³/h hoặc lít/phút) |
-| signal_quality | INTEGER, NULL | Chỉ số chất lượng sóng vô tuyến thu phát (RSSI / CSQ) |
-| battery_level | INTEGER, NULL | Mức dung lượng pin dự phòng của cảm biến (0 - 100%) |
-| recorded_at | DATETIME | Thời điểm thiết bị ghi nhận dữ liệu đo lường tại hiện trường |
-
-l. Bảng ElectronicInvoices (Hóa đơn điện tử chuẩn CQT Nghị định 123/2020/NĐ-CP)
-
-Lưu trữ toàn bộ thông tin hóa đơn điện tử hợp pháp được phát hành tự động khi cư dân hoàn tất thanh toán tiền phòng/tiện ích, bao gồm mã Cơ quan Thuế (CQT), chuỗi ký số XML, bản thể hiện PDF và nhật ký truyền nhận với cổng Thuế.
-
-Bảng 20c: Mô tả cấu trúc bảng ElectronicInvoices (Hóa đơn điện tử CQT)
-
-| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
-| --- | --- | --- |
-| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh hóa đơn điện tử |
-| tenant_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết chủ cơ sở lưu trú (tenants.id) |
-| bill_id | BIGINT, UNSIGNED, FOREIGN KEY, UNIQUE | Khóa ngoại duy nhất liên kết hóa đơn tiền phòng/dịch vụ (bills.id) |
-| invoice_template | VARCHAR(20) | Ký hiệu mẫu số hóa đơn (vd: 1/001, C26TAA) |
-| invoice_series | VARCHAR(20) | Ký hiệu sê-ri hóa đơn điện tử theo quy chuẩn Thông tư 78 |
-| invoice_number | VARCHAR(20) | Số thứ tự hóa đơn điện tử được cấp tự động liên tục |
-| cqt_code | VARCHAR(50), NULL | Mã của Cơ quan Thuế cấp cho hóa đơn điện tử hợp lệ |
-| status | VARCHAR(30) | Trạng thái: 'draft', 'signed', 'cqt_approved', 'sent', 'canceled' |
-| buyer_tax_code | VARCHAR(20), NULL | Mã số thuế của cá nhân/doanh nghiệp thuê phòng (nếu có) |
-| buyer_id_card | VARCHAR(30), NULL | Số CCCD/Hộ chiếu người mua (được mã hóa AES-256-GCM) |
-| lookup_code | VARCHAR(32), UNIQUE | Mã tra cứu bí mật giúp người mua tra cứu hóa đơn trực tuyến |
-| xml_url | VARCHAR(255), NULL | Đường dẫn tệp tin hóa đơn gốc định dạng XML có chữ ký số điện tử |
-| pdf_url | VARCHAR(255), NULL | Đường dẫn bản thể hiện hóa đơn điện tử định dạng PDF |
-| issued_at | DATETIME, NULL | Thời điểm phát hành và ký số hóa đơn điện tử thành công |
-
-m. Bảng HotelBookings & HotelFolioItems (Đặt phòng khách sạn & Bảng kê thanh toán Folio)
-
-Phân hệ lưu trú ngắn hạn theo giờ và theo ngày: Quản lý chi tiết giao dịch đặt phòng khách sạn (check-in/check-out thực tế, tiền cọc) và bảng kê thanh toán chi tiết Folio (tổng hợp tiền phòng lũy tiến, phụ thu Minibar, nước uống, giặt ủi và các dịch vụ phòng phát sinh).
-
-Bảng 20d: Mô tả cấu trúc bảng HotelBookings (Phiếu đặt phòng khách sạn)
-
-| Tên Trường | Kiểu Dữ Liệu | Mô Tả Chi Tiết |
-| --- | --- | --- |
-| id | BIGINT, PRIMARY KEY, AUTO_INCREMENT | Mã định danh phiếu đặt phòng khách sạn |
-| tenant_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết cơ sở kinh doanh (tenants.id) |
-| room_id | BIGINT, UNSIGNED, FOREIGN KEY | Khóa ngoại liên kết phòng khách sạn (rooms.id) |
-| booking_code | VARCHAR(50), UNIQUE | Mã đặt phòng duy nhất (vd: HTL-BK-202609-001) |
-| guest_name | VARCHAR(150) | Họ và tên khách lưu trú chính |
-| guest_phone | VARCHAR(255) | Số điện thoại liên hệ (mã hóa cấp ứng dụng AES-256-GCM) |
-| guest_cccd | VARCHAR(255) | Số CCCD/Hộ chiếu khách lưu trú (mã hóa cấp ứng dụng AES-256-GCM) |
-| rental_type | ENUM('day', 'hour') | Hình thức thuê: theo ngày hoặc theo giờ |
-| check_in_at | DATETIME | Thời điểm khách nhận phòng thực tế tại quầy lễ tân |
-| check_out_at | DATETIME, NULL | Thời điểm khách trả phòng thực tế khi hoàn tất thanh toán |
-| deposit_amount | DECIMAL(12,2), DEFAULT 0 | Tiền cọc nhận phòng tạm giữ |
-| total_amount | DECIMAL(12,2), DEFAULT 0 | Tổng tiền thanh toán cuối cùng bao gồm tiền phòng và Folio dịch vụ |
-| status | VARCHAR(30) | Trạng thái: 'checked_in', 'checked_out', 'canceled' |
-
-IV. THIẾT KẾ GIAO DIỆN DEMO VÀ KỊCH BẢN XỬ LÝ LỖI (UI/UX)39
-
-1. Trang Đăng nhập & Đăng ký (WebAuthn Passkey + Mật khẩu)39
-
-2. Trang Dashboard Chủ trọ / Admin (Thống kê & AI Insight)40
-
-3. Trang Quản lý Danh sách phòng & Sơ đồ Ma trận phòng lưu trú (Room Matrix)
-
-4. Trang Quản lý Hợp đồng thuê & Phiếu đặt phòng (Bookings) trực tuyến
-
-5. Trang Ghi chỉ số Điện - Nước định kỳ & AI OCR Camera42
-
-6. Trang Quản lý Thanh toán, Xuất hóa đơn VietQR & Bảng kê Folio Khách sạn (PDF)
-
-7. Trang Cổng thông tin Cư dân & Khách lưu trú (Guest Portal) & Mẫu tạm trú CT01
-
-8. Trang Trợ lý ảo AI & Chatbot tư vấn thuê phòng Renty44
-
-9. Trang Kiểm duyệt Hồ sơ Định danh Chủ trọ (Admin Verification)44
-
-10. Trang Quản lý Tài sản - Trang thiết bị & Minibar (Asset & Minibar Management)
-
-12. Hệ sinh thái IoT Smart Metering & Telemetry 15 phút theo dõi điện nước thời gian thực
-
-Mô tả chi tiết chức năng: Hệ thống tích hợp IoT Gateway và các công tơ thông minh đa chuẩn (ESP32 WiFi/4G, LoRaWAN, Modbus RS485 và MQTT Broker Bridge). Thu thập tự động chuỗi dữ liệu đo đạc định kỳ 15 phút/lần bao gồm: Công suất tiêu thụ P(kW), Lưu lượng nước chảy Q(m³/h), Điện áp U(V), Cường độ dòng điện I(A) và chỉ số lũy kế. Giao diện trực quan hóa dữ liệu bằng Chart Canvas cố định chiều rộng chống giật khung hình, Tooltip tương tác hiển thị chi tiết thời điểm đo, công suất và lưu lượng nước. Hệ thống tự động phát hiện thiết bị Offline khi không nhận được tín hiệu quá 3 chu kỳ đo (3 phút đối với chế độ kiểm thử hoặc 45 phút đối với thực tế) và hiển thị huy hiệu trạng thái. Đặc biệt, tích hợp tính năng Chốt số tự động 1-click: Động cơ tự động quét chỉ số mới nhất của toàn bộ phòng, tính chênh lệch sản lượng, điền trực tiếp vào bảng hóa đơn tháng và tính tiền tức thì.
-
-Bảng: Kịch bản xử lý lỗi Hệ sinh thái IoT Smart Metering
-
-| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Thiết bị công tơ IoT bị mất nguồn điện hoặc mất kết nối WiFi/LoRaWAN quá 3 chu kỳ đo liên tiếp | Huy hiệu thiết bị trên sơ đồ phòng tự động chuyển sang màu xám với nhãn cảnh báo 'Mất kết nối (Offline)'. Hệ thống ghi nhận nhật ký cảnh báo và tạm thời giữ nguyên chỉ số đo lường hợp lệ gần nhất. |
-| Gói tin đo đạc gửi về từ vi điều khiển chứa chỉ số âm hoặc chỉ số lũy kế nhỏ hơn chỉ số chu kỳ trước đó | API trả về mã lỗi HTTP 422: 'Dữ liệu đo đạc không hợp lệ: Chỉ số mới không được nhỏ hơn chỉ số trước đó'. Gói tin lỗi bị đưa vào hàng đợi kiểm toán để kỹ thuật viên kiểm tra. |
-| Mã thiết bị hoặc Số sản xuất gửi về từ Gateway chưa được liên kết cấu hình với bất kỳ phòng nào | Hệ thống lưu gói tin vào bảng dữ liệu chờ và hiển thị cảnh báo trên Dashboard: 'Phát hiện thiết bị chưa gán phòng. Vui lòng vào Cấu hình thiết bị để liên kết công tơ với phòng tương ứng'. |
-
-13. AI Dự đoán bảo trì & Cảnh báo bất thường (AI Predictive Maintenance & Anomaly Detection)
-
-Mô tả chi tiết chức năng: Ứng dụng mô hình phân tích chuỗi thời gian kết hợp trí tuệ nhân tạo Google Gemini AI để giám sát liên tục các chỉ số vi mô điện nước: (1) Phát hiện rò rỉ nước ngầm: Thuật toán nhận diện dòng chảy nước liên tục > 0.05 m³/h vào khung giờ ban đêm (01:00 - 05:00) khi phòng không có người hoạt động; (2) Cảnh báo quá tải phụ tải điện: Phát hiện công suất điện tức thời vượt 80% công suất thiết kế đường dây hoặc dòng điện tăng đột biến, tiềm ẩn nguy cơ chập cháy nổ theo tiêu chuẩn PCCC; (3) Hệ thống kích hoạt Cảnh báo khẩn cấp (Emergency Landlord Alert) với huy hiệu nhấp nháy đỏ trên thanh điều hướng và tự động gửi gợi ý hành động khắc phục cho chủ cơ sở.
-
-Bảng: Kịch bản xử lý lỗi AI Dự đoán bảo trì & Cảnh báo bất thường
-
-| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Lưu lượng nước phát sinh liên tục trong khung giờ nghỉ ngơi (01:00 - 05:00) vượt ngưỡng rò rỉ an toàn | Dashboard hiển thị cảnh báo đỏ khẩn cấp: 'Cảnh báo rò rỉ nước: Phát hiện lưu lượng nước chảy liên tục tại Phòng [Tên]. Khuyến nghị kiểm tra ngay van xả bồn cầu và đường ống ngầm'. |
-| Phụ tải điện tức thời vượt ngưỡng an toàn PCCC (> 4.5 kW đối với phòng trọ thông thường) | Hệ thống phát chuông cảnh báo trên Dashboard và gửi tin nhắn cảnh báo: 'Nguy cơ quá tải điện: Phòng [Tên] đang sử dụng công suất vượt mức an toàn. Đề nghị kiểm tra thiết bị sinh nhiệt cao'. |
-| Mất kết nối API với mô hình AI Gemini trong lúc chạy phân tích dự đoán định kỳ | Hệ thống tự động chuyển sang thuật toán Fallback dự phòng dựa trên ngưỡng thống kê cơ sở dữ liệu nội bộ (Rule-based Thresholds), đảm bảo không bị gián đoạn cảnh báo an toàn. |
-
-14. Tích hợp Hóa đơn điện tử e-Invoice chuẩn Nghị định 123/2020/NĐ-CP & Cổng tra cứu CQT
-
-Mô tả chi tiết chức năng: Đáp ứng toàn diện quy định về hóa đơn điện tử cho hoạt động kinh doanh cho thuê bất động sản lưu trú theo Nghị định số 123/2020/NĐ-CP và Thông tư số 78/2021/TT-BTC. Khi hóa đơn tiền phòng/dịch vụ chuyển sang trạng thái đã thanh toán (qua chuyển khoản VietQR tự động hoặc xác nhận tiền mặt), hệ thống tự động ký số điện tử và gửi dữ liệu hóa đơn lên hệ thống Cơ quan Thuế (CQT) để cấp mã. Hỗ trợ xuất bản thể hiện hóa đơn điện tử chuẩn PDF có mã QR CQT, tự động gửi email/Zalo OTT thông báo kèm link tra cứu cho người thuê, và cung cấp Cổng tra cứu hóa đơn trực tuyến độc lập bằng Mã tra cứu và Mã số thuế.
-
-Bảng: Kịch bản xử lý lỗi Tích hợp Hóa đơn điện tử e-Invoice
-
-| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Thông tin Mã số thuế hoặc CCCD người mua nhập sai định dạng khi phát hành hóa đơn có mã CQT | Hệ thống chặn gửi và hiển thị thông báo lỗi: 'Mã số thuế hoặc số CCCD của người mua không đúng quy chuẩn Tổng cục Thuế. Vui lòng kiểm tra lại thông tin khách thuê'. |
-| Cổng kết nối dịch vụ Hóa đơn điện tử (VNPT / Viettel / MISA) phản hồi chậm hoặc đang bảo trì định kỳ | Hóa đơn chuyển sang trạng thái 'Chờ cấp mã (Queued)' và hệ thống tự động đưa vào hàng đợi Retry với cơ chế Exponential Backoff để cấp mã lại khi dịch vụ thông suốt. |
-| Người thuê tra cứu hóa đơn trên cổng công khai với Mã tra cứu sai hoặc không tồn tại | Giao diện tra cứu phản hồi: 'Không tìm thấy hóa đơn điện tử tương ứng với mã tra cứu đã cung cấp. Vui lòng kiểm tra lại mã trên biên lai thanh toán hoặc liên hệ ban quản lý'. |
-
-15. Bộ Khởi Chạy Ứng Dụng GUI Launcher & Hệ Thống Vận Hành Kép Docker / XAMPP
-
-Mô tả chi tiết chức năng: Công cụ Launcher GUI trực quan phát triển trên nền PowerShell và Batch Script (start.bat và launcher.ps1), cho phép người dùng khởi động toàn bộ hệ thống (Web server, MySQL, Queue worker, Reverb WebSocket) chỉ với một cú nhấp chuột. Cơ chế tự động quét phát hiện dịch vụ MySQL, tự động kiểm tra và giải phóng xung đột cổng 3306 trước khi chạy migrations, hỗ trợ chuyển đổi linh hoạt giữa môi trường Docker Container và môi trường Local XAMPP/WAMPP, có cơ chế fallback thông minh tự kích hoạt container khi máy trạm chưa cài đặt PHP cục bộ.
-
-Bảng: Kịch bản xử lý lỗi Bộ Khởi Chạy Launcher & Môi Trường
-
-| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Cổng 3306 bị chiếm dụng bởi một tiến trình MySQL khác đang chạy ngầm trên Windows | Launcher tự động kiểm tra cổng 3306, hiển thị thông báo: 'Phát hiện dịch vụ MySQL đang chạy trên cổng 3306. Tự động liên kết cơ sở dữ liệu và tiếp tục khởi chạy ứng dụng'. |
-| Máy tính của người dùng chưa cài đặt môi trường PHP CLI khi lựa chọn khởi chạy cục bộ | Bộ khởi chạy tự động phát hiện thiếu binary PHP và chuyển hướng thông minh sang chế độ Docker Runner: 'Không tìm thấy PHP cục bộ. Hệ thống tự động chuyển sang chế độ Docker Container'. |
-
-TÀI LIỆU THAM KHẢO46
-
-DANH MỤC HÌNH ẢNH
+# DANH MỤC HÌNH ẢNH
 
 Hình 1: Sơ đồ mô hình thực thể quan hệ (ERD) hệ thống Quản lý Nhà trọ, Chung cư, Căn hộ dịch vụ & Khách sạn25
 
@@ -290,7 +89,8 @@ Hình 18: Giao diện Quản lý Tài sản - Trang thiết bị & Minibar lưu 
 
 Hình 19: Giao diện Quản lý Sổ quỹ thu chi và ghi nhận dòng tiền phát sinh45
 
-DANH MỤC BẢNG SỐ LIỆU
+
+# DANH MỤC BẢNG SỐ LIỆU
 
 Bảng 1: Bảng danh mục từ viết tắt5
 
@@ -352,7 +152,8 @@ Bảng 29: Kịch bản xử lý lỗi Trang Kiểm duyệt Hồ sơ Định dan
 
 Bảng 30: Kịch bản xử lý lỗi Trang Quản lý Tài sản - Trang thiết bị & Minibar45
 
-DANH MỤC TỪ VIẾT TẮT
+
+# DANH MỤC TỪ VIẾT TẮT
 
 | STT | Chữ Viết Tắt | Ý Nghĩa Tiếng Việt | Thuật Ngữ Tiếng Anh |
 | --- | --- | --- | --- |
@@ -374,14 +175,9 @@ DANH MỤC TỪ VIẾT TẮT
 | 7 | RBAC | Kiểm soát truy cập phân quyền theo vai trò | Role-Based Access Control |
 | 6 | UI / UX | Giao diện và Trải nghiệm người dùng | User Interface / User Experience |
 | 16 | VietQR | Chuẩn nhận diện thanh toán mã QR ngân hàng | Vietnam Quick Response Code |
-| 19 | IoT | Mạng lưới vạn vật kết nối Internet | Internet of Things |
-| 20 | CQT | Cơ quan Thuế Việt Nam | General Department of Taxation |
-| 21 | e-Invoice | Hóa đơn điện tử có mã CQT (NĐ 123/2020 & TT 78/2021) | Electronic Invoice |
-| 22 | PdM | Bảo trì dự đoán dựa trên AI và dữ liệu cảm biến | Predictive Maintenance |
-| 23 | WebSocket / Reverb | Giao thức truyền thông hai chiều thời gian thực | Laravel Reverb WebSocket Engine |
-| 24 | LoRaWAN / ESP32 | Chuẩn mạng vô tuyến tầm xa & Vi điều khiển công tơ IoT | Low Power Wide Area Network / ESP32 SoC |
 
-LỜI MỞ ĐẦU
+
+# LỜI MỞ ĐẦU
 
 Trong tiến trình chuyển đổi số và tốc độ đô thị hóa nhanh chóng tại Việt Nam hiện nay, nhu cầu tìm kiếm và thuê nhà trọ, căn hộ dịch vụ, chung cư mini của học sinh, sinh viên và người lao động tại các đô thị lớn không ngừng gia tăng. Tuy nhiên, công tác quản lý và thị trường thuê trọ truyền thống đang bộc lộ rất nhiều bất cập mang tính cố hữu:
 
@@ -393,60 +189,59 @@ Trong tiến trình chuyển đổi số và tốc độ đô thị hóa nhanh c
 
 Nhận thức rõ những bài toán thực tiễn nêu trên, nhóm chúng em đã nghiên cứu và phát triển đề tài: "HỆ THỐNG QUẢN LÝ NHÀ TRỌ, CHUNG CƯ, CĂN HỘ DỊCH VỤ VÀ KHÁCH SẠN THÔNG MINH (RENTRY & SMARTROOM)" trong khuôn khổ môn học Chuyên đề phát triển Web 1 (năm 2026).
 
-Hệ thống là sự kết hợp chặt chẽ giữa nền tảng tìm kiếm, đặt phòng và đánh giá lưu trú minh bạch (Renty) với hệ sinh thái quản trị vận hành toàn diện cho Nhà trọ, Chung cư, Căn hộ dịch vụ và Khách sạn (SmartRoom). Hệ thống tích hợp sâu chuỗi công nghệ hiện đại hàng đầu: Trí tuệ nhân tạo (Google Gemini AI) hỗ trợ tư vấn ngôn ngữ tự nhiên (RAG), AI Vision OCR nhận diện công tơ đơn lẻ và hàng loạt (Bulk Match OCR), AI Dự đoán bảo trì thiết bị (Predictive Maintenance); Hệ sinh thái IoT Smart Metering thu thập vi mô phụ tải điện nước chu kỳ 15 phút; Cơ chế truyền thông thời gian thực bằng Laravel Reverb WebSockets; Hóa đơn điện tử e-Invoice chuẩn Nghị định 123/2020/NĐ-CP và Thông tư 78/2021/TT-BTC có mã Cơ quan Thuế (CQT); Xác thực sinh trắc học không mật khẩu WebAuthn Passkey (FIDO2); Ký số hợp đồng điện tử Canvas; và Mã hóa bảo vệ dữ liệu nhạy cảm PII bằng chuẩn quân sự AES-256-GCM kết hợp HMAC Blind Index.
+Hệ thống là sự kết hợp chặt chẽ giữa nền tảng tìm kiếm, đặt phòng và đánh giá lưu trú minh bạch (Renty) với hệ sinh thái quản trị vận hành toàn diện cho Nhà trọ, Chung cư, Căn hộ dịch vụ và Khách sạn (SmartRoom), tích hợp sâu các công nghệ tiên tiến: Trí tuệ nhân tạo (Google Gemini AI) hỗ trợ tư vấn và OCR nhận diện chỉ số đồng hồ điện nước, cơ chế xác thực sinh trắc học WebAuthn Passkey, Ký số hợp đồng điện tử bằng Canvas, Quản lý sơ đồ buồng phòng Housekeeping thời gian thực, Phí quản lý chung cư tự động và Mã hóa dữ liệu nhạy cảm AES-256-GCM.
 
 Nhóm chúng em xin bày tỏ lòng biết ơn chân thành và sâu sắc nhất đến Thầy Phan Thanh Nhuần – Giảng viên phụ trách môn học. Trong suốt quá trình thực hiện đề tài, Thầy đã tận tình hướng dẫn, định hướng kiến trúc hệ thống và đóng góp nhiều ý kiến chuyên môn quý báu giúp nhóm hoàn thành đồ án một cách hoàn thiện nhất.
 
-I. KẾ HOẠCH LÀM VIỆC NHÓM
 
-1. Bảng phân chia công việc (Bảng 2)
+# I. KẾ HOẠCH LÀM VIỆC NHÓM
 
-| Họ và tên | STT | Công việc | Ngày bắt đầu | Hạn hoàn thành | Sinh viên đánh giá | Đánh giá của GV |
-| --- | --- | --- | --- | --- | --- | --- |
-| Nguyễn Thanh Hiền(Nhóm Trưởng) | 1 | Khởi tạo dự án & Database Migrations | 07/09/2026 | 09/09/2026 | 1 |  |
-|  | 2 | Phân quyền người dùng & Multi-tenancy | 07/09/2026 | 11/09/2026 | 0.75 |  |
-|  | 3 | Đăng ký, Đăng nhập & Rate Limiting | 07/09/2026 | 13/09/2026 | 0.75 |  |
-|  | 4 | Đăng nhập sinh trắc học Passkey | 07/09/2026 | 15/09/2026 | 1.5 |  |
-|  | 5 | Quản lý Phòng trọ (CRUD Room) | 07/09/2026 | 17/09/2026 | 1.5 |  |
-|  | 6 | Trang Chi tiết phòng (Room Detail) | 07/09/2026 | 19/09/2026 | 0.75 |  |
-|  | 7 | Quản lý Hợp đồng & Tiền cọc | 07/09/2026 | 22/09/2026 | 1 |  |
-|  | 8 | Ký số hợp đồng online & OTP | 07/09/2026 | 24/09/2026 | 0.75 |  |
-|  | 9 | AI Soạn thảo điều khoản hợp đồng | 07/09/2026 | 26/09/2026 | 0.75 |  |
-|  | 10 | Xác thực định danh & Tích Xanh KYC | 07/09/2026 | 28/09/2026 | 0.5 |  |
-|  | 11 | Onboarding đăng ký nhanh Chủ trọ | 07/09/2026 | 30/09/2026 | 0.25 |  |
-|  | 12 | Duyệt hồ sơ Chủ trọ (Admin) | 07/09/2026 | 02/10/2026 | 0.5 |  |
-| Nguyễn Anh Quý(Nhóm Phó) | 1 | Quản lý Tòa nhà & Cơ sở lưu trú | 07/09/2026 | 09/09/2026 | 0.75 |  |
-|  | 2 | Sơ đồ ma trận phòng (Room Matrix) | 07/09/2026 | 12/09/2026 | 0.75 |  |
-|  | 3 | Chốt số Điện - Nước định kỳ | 07/09/2026 | 14/09/2026 | 1 |  |
-|  | 4 | AI Quét số công tơ điện nước (OCR) & Quét hàng loạt khớp phòng (Bulk Match OCR) | 07/09/2026 | 16/09/2026 | 0.75 |  |
-|  | 5 | Tính tiền phòng & Hóa đơn tự động | 07/09/2026 | 18/09/2026 | 2 |  |
-|  | 6 | Xuất Hóa đơn PDF & Mã VietQR | 07/09/2026 | 21/09/2026 | 0.75 |  |
-|  | 7 | Nhắc nợ tự động qua Zalo/SMS | 07/09/2026 | 23/09/2026 | 1.5 |  |
-|  | 8 | Quản lý Trang thiết bị & Tài sản | 07/09/2026 | 25/09/2026 | 0.75 |  |
-|  | 9 | Sổ quỹ thu - chi tài chính | 07/09/2026 | 27/09/2026 | 0.75 |  |
-|  | 10 | AI Viết bài mô tả phòng chuẩn SEO | 07/09/2026 | 30/09/2026 | 0.5 |  |
-|  | 11 | Nhật ký kiểm toán (Audit Logs) | 07/09/2026 | 02/10/2026 | 0.5 |  |
-| Huỳnh Văn Vĩnh Em(Thành Viên) | 1 | Cổng tìm kiếm & Đặt phòng Renty | 07/09/2026 | 09/09/2026 | 1 |  |
-|  | 2 | Bộ lọc tìm kiếm phòng thông minh | 07/09/2026 | 12/09/2026 | 0.75 |  |
-|  | 3 | So sánh phòng trực quan (Compare) | 07/09/2026 | 14/09/2026 | 0.75 |  |
-|  | 4 | Mã hóa bảo mật dữ liệu cá nhân | 07/09/2026 | 16/09/2026 | 0.75 |  |
-|  | 5 | Đánh giá phòng & Báo cáo sai phạm | 07/09/2026 | 18/09/2026 | 0.5 |  |
-|  | 6 | Trợ lý ảo AI Renty Chatbot | 07/09/2026 | 21/09/2026 | 2 |  |
-|  | 7 | Cổng dịch vụ Cư dân (Guest Portal) | 07/09/2026 | 23/09/2026 | 1 |  |
-|  | 8 | Xử lý báo hỏng & Dọn phòng (Tickets) | 07/09/2026 | 25/09/2026 | 0.75 |  |
-|  | 9 | Quản lý Cư dân & Người ở cùng | 07/09/2026 | 27/09/2026 | 0.75 |  |
-|  | 10 | Xuất tờ khai tạm trú Mẫu CT01 | 07/09/2026 | 30/09/2026 | 1 |  |
-|  | 11 | Chuông báo phòng trống (Room Alert) | 07/09/2026 | 02/10/2026 | 0.75 |  |
-| Nguyễn Anh Quý(Nhóm Phó) | 12 | IoT Smart Metering & Telemetry 15 phút giám sát điện nước thời gian thực | 07/09/2026 | 21/09/2026 | 1.5 |  |
-| Nguyễn Anh Quý(Nhóm Phó) | 13 | AI Dự đoán bảo trì & Cảnh báo bất thường (AI Predictive Maintenance) | 15/09/2026 | 22/09/2026 | 1.5 |  |
-| Nguyễn Anh Quý(Nhóm Phó) | 14 | Tích hợp Hóa đơn điện tử e-Invoice chuẩn CQT Nghị định 123 & Thông tư 78 | 18/09/2026 | 22/09/2026 | 1.5 |  |
-| Nguyễn Anh Quý(Nhóm Phó) | 15 | Bộ khởi chạy App Launcher GUI & Tự động kết nối CSDL đa môi trường Docker/XAMPP | 20/09/2026 | 23/09/2026 | 0.75 |  |
-| Nguyễn Thanh Hiền(Nhóm Trưởng) | 13 | Đăng nhập 3 phương thức linh hoạt (Passkey FIDO2 + Email OTP + Password) | 07/09/2026 | 20/09/2026 | 1.0 |  |
-| Nguyễn Thanh Hiền(Nhóm Trưởng) | 14 | Phân hệ Khách sạn: Tiếp nhận đặt phòng (Hotel Bookings) & Bảng kê Folio | 12/09/2026 | 21/09/2026 | 1.25 |  |
-| Huỳnh Văn Vĩnh Em(Thành Viên) | 12 | Bộ lọc tìm kiếm phòng thông minh sửa lỗi chính tả (Typo Tolerance & Live Suggestion) | 10/09/2026 | 21/09/2026 | 1.0 |  |
-| Huỳnh Văn Vĩnh Em(Thành Viên) | 13 | Phân hệ Buồng phòng (Housekeeping) cập nhật thời gian thực qua WebSocket Reverb | 14/09/2026 | 21/09/2026 | 1.0 |  |
 
-2. Bảng báo cáo phiên họp nhóm (Bảng 3)
+## 1. Bảng phân chia công việc theo Git Branch & Codebase (Bảng 2)
+
+| Họ và tên | STT | Mã Chức Năng | Tên Chức Năng / Nghiệp Vụ Cốt Lõi | Nhánh Git Thực Tế (Branch) | Ngày Bắt Đầu | Hạn Hoàn Thành | Tiến Độ |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **Nguyễn Thanh Hiền**<br>*(Nhóm Trưởng)* | 1 | FEAT-HIEN-01 | Khởi tạo dự án, Docker, CI/CD & 35 Migrations | `main`, `CI/CD`, `CauHinh` | 07/09/2026 | 09/09/2026 | 100% |
+| | 2 | FEAT-HIEN-02 | Phân quyền truy cập RBAC & Multi-tenancy Scoping | `Hien/PhanQuyen` | 07/09/2026 | 11/09/2026 | 100% |
+| | 3 | FEAT-HIEN-03 | Đăng ký, Đăng nhập truyền thống & Rate Limiting | `Hien/Login_Sign` | 07/09/2026 | 13/09/2026 | 100% |
+| | 4 | FEAT-HIEN-04 | Xác thực sinh trắc học WebAuthn Passkey FIDO2 | `Hien/Login_Sign` | 07/09/2026 | 16/09/2026 | 100% |
+| | 5 | FEAT-HIEN-05 | Mã hóa bảo mật dữ liệu PII AES-256-GCM & Blind Index | `Hien/PhanQuyen` | 07/09/2026 | 19/09/2026 | 100% |
+| | 6 | FEAT-HIEN-06 | Quản lý Hợp đồng thuê phòng & Tiền cọc | `main` | 07/09/2026 | 22/09/2026 | 100% |
+| | 7 | FEAT-HIEN-07 | Ký số hợp đồng online bằng HTML5 Canvas Pad & OTP | `main` | 07/09/2026 | 24/09/2026 | 100% |
+| | 8 | FEAT-HIEN-08 | Xác thực định danh chủ trọ lũy tiến (KYC & Premium) | `main` | 07/09/2026 | 26/09/2026 | 100% |
+| | 9 | FEAT-HIEN-09 | Bảng điều khiển kiểm duyệt hồ sơ (Superadmin) | `main` | 07/09/2026 | 28/09/2026 | 100% |
+| | 10 | FEAT-HIEN-10 | Xem tài liệu Signed URL (TTL 5m) & Dynamic Watermark | `main` | 07/09/2026 | 30/09/2026 | 100% |
+| | 11 | FEAT-HIEN-11 | Hệ thống Nhật ký kiểm toán bất biến (Audit Logs) | `main` | 07/09/2026 | 02/10/2026 | 100% |
+| | 12 | FEAT-HIEN-12 | AI Gemini phân tích và sinh điều khoản hợp đồng | `main` | 07/09/2026 | 04/10/2026 | 100% |
+| | 13 | FEAT-HIEN-13 | Quy trình Onboarding Step-Wizard cho chủ trọ mới | `Hien/Menu` | 07/09/2026 | 06/10/2026 | 100% |
+| **Nguyễn Anh Quý**<br>*(Nhóm Phó)* | 1 | FEAT-AQ-01 | CRUD Quản lý Cơ sở lưu trú (Properties) & Guard Check | `AnhQuy/quan-ly-co-so-luu-tru` | 07/09/2026 | 09/09/2026 | 100% |
+| | 2 | FEAT-AQ-02 | CRUD Quản lý Phòng lưu trú (Rooms) & Serial công tơ | `AnhQuy/quan-ly-phong` | 07/09/2026 | 12/09/2026 | 100% |
+| | 3 | FEAT-AQ-03 | Sơ đồ Ma trận phòng trực quan (Visual Matrix) & Realtime | `AnhQuy/ma-tran-phong` | 07/09/2026 | 14/09/2026 | 100% |
+| | 4 | FEAT-AQ-04 | Chốt số Điện - Nước định kỳ hàng tháng | `AnhQuy/chot-so-dien-nuoc-ai-ocr` | 07/09/2026 | 16/09/2026 | 100% |
+| | 5 | FEAT-AQ-05 | AI Vision OCR Quét công tơ & Khớp Serial hàng loạt | `AnhQuy/chot-so-dien-nuoc-ai-ocr` | 07/09/2026 | 18/09/2026 | 100% |
+| | 6 | FEAT-AQ-06 | Động cơ tính cước tự động (BillingEngine) & Doanh thu | `AnhQuy/tinh-cuoc-hoa-don-vietqr` | 07/09/2026 | 21/09/2026 | 100% |
+| | 7 | FEAT-AQ-07 | Xuất Hóa đơn / Folio PDF kèm Mã VietQR NAPAS247 | `AnhQuy/tinh-cuoc-hoa-don-vietqr` | 07/09/2026 | 23/09/2026 | 100% |
+| | 8 | FEAT-AQ-08 | Quét nợ tự động và gửi tin nhắn Zalo/SMS/Telegram | `AnhQuy/nhac-no-zalo-sms` | 07/09/2026 | 25/09/2026 | 100% |
+| | 9 | FEAT-AQ-09 | Quản lý Trang thiết bị tài sản kho & Phân bổ phòng | `AnhQuy/quan-ly-trang-thiet-bi` | 07/09/2026 | 27/09/2026 | 100% |
+| | 10 | FEAT-AQ-10 | Sổ quỹ thu - chi và ghi nhận dòng tiền phát sinh | `AnhQuy/so-quy-thu-chi` | 07/09/2026 | 30/09/2026 | 100% |
+| | 11 | FEAT-AQ-11 | AI Gemini tự động viết bài mô tả phòng chuẩn SEO | `AnhQuy/ai-viet-mo-ta-phong` | 07/09/2026 | 02/10/2026 | 100% |
+| | 12 | FEAT-AQ-12 | Nhật ký thao tác quản trị hệ thống (AdminActivityLog) | `AnhQuy/nhat-ky-kiem-toan` | 07/09/2026 | 04/10/2026 | 100% |
+| | 13 | FEAT-AQ-13 | Phân hệ Khách sạn / Lễ tân: Check-in, Check-out & Folio | `AnhQuy/PhanQuyen` | 07/09/2026 | 06/10/2026 | 100% |
+| **Huỳnh Văn Vĩnh Em**<br>*(Thành Viên)* | 1 | FEAT-VEM-01 | Cổng tìm kiếm lưu trú công cộng Renty Portal | `main` | 07/09/2026 | 09/09/2026 | 100% |
+| | 2 | FEAT-VEM-02 | Bộ lọc tìm kiếm thông minh đa tiêu chí (Smart Filter) | `feat(smart-search)` | 07/09/2026 | 12/09/2026 | 100% |
+| | 3 | FEAT-VEM-03 | Thanh công cụ so sánh phòng nổi song song (3 phòng) | `main` | 07/09/2026 | 14/09/2026 | 100% |
+| | 4 | FEAT-VEM-04 | Màn hình Chi tiết phòng lưu trú (Room Detail & Media) | `main` | 07/09/2026 | 16/09/2026 | 100% |
+| | 5 | FEAT-VEM-05 | Hệ thống Đánh giá Review có xác thực người ở thực tế | `main` | 07/09/2026 | 18/09/2026 | 100% |
+| | 6 | FEAT-VEM-06 | Tiếp nhận Báo cáo phòng vi phạm / lừa cọc (RoomReport)| `main` | 07/09/2026 | 21/09/2026 | 100% |
+| | 7 | FEAT-VEM-07 | Trợ lý ảo AI Renty Chatbot theo mô hình RAG (Gemini) | `main` | 07/09/2026 | 24/09/2026 | 100% |
+| | 8 | FEAT-VEM-08 | Cổng dịch vụ Cư dân & Khách lưu trú (Guest Portal) | `main` | 07/09/2026 | 26/09/2026 | 100% |
+| | 9 | FEAT-VEM-09 | Tiếp nhận & Xử lý sự cố kỹ thuật (Smart Tickets & AI)| `VinhEm/8-XuLyBaoHongDangDonPhong` | 07/09/2026 | 28/09/2026 | 100% |
+| | 10 | FEAT-VEM-10 | Quản lý thông tin Cư dân & Thân nhân lưu trú | `main` | 07/09/2026 | 30/09/2026 | 100% |
+| | 11 | FEAT-VEM-11 | Tự động kết xuất tờ khai tạm trú Mẫu CT01 (Bộ Công an)| `main` | 07/09/2026 | 02/10/2026 | 100% |
+| | 12 | FEAT-VEM-12 | Tiện ích Đăng ký nhận chuông báo khi phòng trống | `main` | 07/09/2026 | 04/10/2026 | 100% |
+
+
+## 2. Bảng báo cáo phiên họp nhóm (Bảng 3)
 
 | STT | Ngày Họp | Thời Gian | Địa Điểm | Thành Phần | Nội Dung Phiên Họp | Kết Quả Đạt Được | Ghi Chú |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -455,11 +250,14 @@ I. KẾ HOẠCH LÀM VIỆC NHÓM
 | 03 | 12/04/2026 | 09:00 | Thư viện trường | Cả nhóm (3/3) | Review tiến độ Sprint 1: Nghiệm thu các chức năng Auth, WebAuthn, CRUD phòng và sơ đồ ma trận. | Ghép nối thành công module tài khoản và phòng trọ. | Tốt |
 | 04 | 03/05/2026 | 15:00 | Google Meet | Cả nhóm (3/3) | Review tiến độ Sprint 2: Kiểm thử module Chốt điện nước, xuất VietQR và ký hợp đồng Canvas. | Khắc phục các lỗi cảm ứng trên thiết bị di động khi vẽ chữ ký. | Tốt |
 
-II. GIỚI THIỆU ĐỀ TÀI VÀ MÔ TẢ CHỨC NĂNG
 
-1. Giới thiệu đề tài
+# II. GIỚI THIỆU ĐỀ TÀI VÀ MÔ TẢ CHỨC NĂNG
 
-a. Hiện trạng và vấn đề
+
+## 1. Giới thiệu đề tài
+
+
+### a. Hiện trạng và vấn đề
 
 Thực tế quản lý vận hành cơ sở lưu trú và tìm kiếm nhà trọ hiện nay đang bộc lộ 4 nhóm vấn đề nghiêm trọng:
 
@@ -471,7 +269,8 @@ Thực tế quản lý vận hành cơ sở lưu trú và tìm kiếm nhà trọ
 
 • Nguy cơ rò rỉ dữ liệu cá nhân theo Nghị định 13/2023/NĐ-CP: Thông tin số điện thoại, số Căn cước công dân và tài khoản ngân hàng của người thuê đang bị lưu trữ công khai trong các sổ sách, file excel không mã hóa, rất dễ bị khai thác trái phép cho các hành vi lừa đảo tài chính.
 
-b. Mục tiêu của đề tài
+
+### b. Mục tiêu của đề tài
 
 Hệ thống được xây dựng nhằm đạt được các mục tiêu trọng tâm sau:
 
@@ -481,7 +280,8 @@ Hệ thống được xây dựng nhằm đạt được các mục tiêu trọn
 
 • Đối với quản trị viên sàn (Platform Admin): Thiết lập quy trình Xác minh chủ cơ sở lưu trú lũy tiến (Progressive Verification) gồm 3 cấp độ (Cơ bản -> KYC định danh -> Premium Tích Xanh thẩm định), đảm bảo mọi cơ sở nhà trọ, chung cư, căn hộ và khách sạn đăng tải trên nền tảng đều có nguồn gốc pháp lý rõ ràng, minh bạch về giá cả và an toàn về PCCC, ANTT.
 
-c. Công nghệ sử dụng
+
+### c. Công nghệ sử dụng
 
 Để đáp ứng yêu cầu về độ tin cậy, hiệu năng và tính bảo mật cao, hệ thống áp dụng các công nghệ sau:
 
@@ -495,15 +295,8 @@ c. Công nghệ sử dụng
 
 • Trí tuệ nhân tạo (AI Integration): Tích hợp Google Gemini API (gemini-3.1-flash-lite / gemini-2.5-flash): Cơ chế RAG (Retrieval-Augmented Generation) truy vấn dữ liệu phòng thực tế đưa vào ngữ cảnh Prompt, triệt tiêu hiện tượng AI bịa đặt thông tin; AI Vision OCR phân tích ảnh chụp mặt đồng hồ điện/nước để trích xuất chỉ số công tơ; AI NLP phân loại độ khẩn cấp sự cố bảo trì của cư dân và tự động sinh điều khoản hợp đồng thuê.
 
-• Môi trường Vận hành & GUI Launcher (Docker / XAMPP Dual Engine): Xây dựng bộ công cụ khởi chạy một chạm Launcher GUI trên nền PowerShell/Batch Script, tự động kiểm tra xung đột và kích hoạt dịch vụ MySQL trên cổng 3306, hỗ trợ cơ chế vận hành kép linh hoạt giữa Docker Container và môi trường cục bộ (XAMPP/WAMPP/PHP CLI) với khả năng tự phục hồi khi thiếu PHP môi trường.
 
-• Trí tuệ nhân tạo nâng cao & Dự đoán bảo trì (AI Predictive Maintenance & Bulk OCR): Nâng cấp công nghệ AI Vision Bulk Match OCR cho phép tải lên cùng lúc 5 – 30 ảnh công tơ để bóc tách song song Số SX (Serial) và chỉ số tiêu thụ rồi tự động khớp phòng; kết hợp mô hình AI phân tích chuỗi thời gian telemetry để phát hiện sớm rò rỉ nước ngầm, cảnh báo quá tải phụ tải điện và kích hoạt cảnh báo khẩn cấp (Emergency Landlord Alert) ngăn ngừa chập cháy và thất thoát tài nguyên.
-
-• Hóa đơn điện tử & Tuân thủ Pháp lý Thuế (e-Invoice & Tax Compliance): Tích hợp chuẩn hóa đơn điện tử có mã của Cơ quan Thuế (CQT) theo Nghị định số 123/2020/NĐ-CP và Thông tư số 78/2021/TT-BTC. Cơ chế tự động ký số XML, xuất bản thể hiện PDF hợp pháp khi người thuê hoàn tất thanh toán, tích hợp sẵn API kết nối các nhà cung cấp (VNPT-Invoice, Viettel S-Invoice, MISA meInvoice) và cung cấp cổng tra cứu hóa đơn trực tuyến độc lập bằng Mã tra cứu và Mã số thuế.
-
-• Internet of Things (IoT) & Truyền thông Thời Gian Thực (Real-time WebSockets): Hệ sinh thái thu thập dữ liệu đo đạc chỉ số điện nước tự động chu kỳ 15 phút từ các thiết bị thông minh qua vi điều khiển ESP32, chuẩn truyền thông vô tuyến tầm xa LoRaWAN, giao thức công nghiệp Modbus RS485 và cầu nối MQTT Broker. Hệ thống truyền phát sự kiện thời gian thực (Real-time Event Broadcasting) dựa trên máy chủ Laravel Reverb WebSockets, tự động đồng bộ phụ tải điện nước, cảnh báo khẩn cấp và trạng thái dọn dẹp buồng phòng Housekeeping lên màn hình quản trị và Resident Portal mà không cần tải lại trang.
-
-2. Bảng danh mục chức năng và Endpoint API hệ thống (Bảng 4)
+## 2. Bảng danh mục chức năng và Endpoint API hệ thống (Bảng 4)
 
 Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được trích xuất trực tiếp từ routes/web.php và routes/api.php:
 
@@ -579,24 +372,12 @@ Bảng tổng hợp chi tiết toàn bộ các Endpoint hệ thống được tr
 | Admin | Quản lý người dùng hệ thống | GET | /list | Xem danh sách toàn bộ tài khoản người dùng trên hệ thống |
 | Admin | Phân quyền vai trò | POST | /users/role | Cập nhật vai trò quản trị (Admin, Landlord, Manager, Resident, Guest) |
 | Admin | Khóa / Xóa tài khoản | DELETE | /delete/{id} | Vô hiệu hóa hoặc xóa người dùng vi phạm quy chế hoạt động |
-| IoT Smart Metering | Tiếp nhận Telemetry từ Gateway/ESP32 | POST | /api/iot/telemetry/ingest | Tiếp nhận gói tin công suất kW, lưu lượng m3/h, điện áp, dòng điện chu kỳ 15 phút từ vi điều khiển qua Token xác thực |
-| IoT Smart Metering | Chỉ số Realtime và Phụ tải phòng | GET | /smartroom/admin/iot/room/{roomId}/realtime | Truy xuất dữ liệu telemetry thời gian thực và lịch sử phụ tải 24h/7d của phòng để vẽ biểu đồ canvas và tooltip |
-| IoT Smart Metering | Tổng quan mạng lưới IoT cơ sở | GET | /smartroom/admin/iot/facility-summary | Thống kê tổng công tơ Online/Offline, cảnh báo rò rỉ, tổng công suất tức thời toàn cơ sở lưu trú |
-| IoT Smart Metering | Tự động chốt số hóa đơn từ IoT | POST | /smartroom/admin/iot/sync-billing | Một chạm tự động lấy chỉ số công tơ điện nước mới nhất điền vào hóa đơn tháng của các phòng và tính tiền |
-| AI & Bảo Trì PdM | Bảng cảnh báo bất thường & PdM | GET | /smartroom/admin/iot/anomalies | AI Gemini phân tích chuỗi thời gian, phát hiện rò rỉ nước ngầm, quá tải phụ tải điện và đề xuất giải pháp bảo trì |
-| AI & Bảo Trì PdM | Xử lý cảnh báo sự cố bất thường | POST | /smartroom/admin/iot/anomalies/{id}/resolve | Chủ trọ hoặc kỹ thuật viên ghi nhận khắc phục sự cố rủi ro theo khuyến nghị chi tiết của AI |
-| Tài Chính & Thuế | Phát hành Hóa đơn điện tử e-Invoice | POST | /smartroom/admin/einvoice/issue | Tự động sinh số hóa đơn, ký số điện tử XML/PDF và cấp mã Cơ quan Thuế theo Nghị định 123/2020/NĐ-CP |
-| Tài Chính & Thuế | Cổng tra cứu hóa đơn điện tử công khai | GET | /smartroom/admin/einvoice/lookup | Người thuê hoặc kế toán tra cứu chi tiết hóa đơn điện tử hợp pháp bằng Mã tra cứu và Mã số thuế |
-| Khách Sạn & Lễ Tân | Tiếp nhận Check-in khách lưu trú | POST | /smartroom/admin/hotel/checkin | Tiếp nhận khách thuê theo giờ/theo ngày, lưu thông tin CCCD, tạm thu tiền cọc và tự động phân bổ phòng |
-| Khách Sạn & Lễ Tân | Check-out & Bảng kê thanh toán Folio | POST | /smartroom/admin/hotel/checkout/{bookingId} | Tính cước phòng lũy tiến theo giờ/ngày, tổng hợp chi phí tiêu thụ Minibar, xuất bảng kê Folio PDF |
-| Buồng Phòng | Màn hình dọn dẹp buồng phòng di động | GET | /smartroom/admin/housekeeping | Hiển thị danh sách phòng cần dọn dẹp (Dirty/Cleaning), tối ưu giao diện thao tác nhanh trên điện thoại |
-| Buồng Phòng | Cập nhật trạng thái dọn dẹp realtime | POST | /smartroom/admin/housekeeping/status/{roomId} | Nhân viên cập nhật trạng thái phòng (Clean, Inspected) và phát sóng sự kiện qua Laravel Reverb |
-| Public & Renty | Gợi ý tìm kiếm trực tiếp & Sửa lỗi chính tả | GET | /api/search/suggestions | Thuật toán Levenshtein gợi ý từ khóa khu vực, tiện ích và tự động nhận diện sửa lỗi gõ sai (Did you mean) |
-| Cư Dân | Cổng dịch vụ cư dân trực tuyến | GET | /resident/portal | Cư dân tra cứu hóa đơn tiền phòng, chỉ số điện nước realtime, xem hợp đồng và gửi phản ánh sự cố kỹ thuật |
 
-III. DATABASE VÀ MÔ HÌNH ERD
 
-1. Mô hình ERD (Entity Relationship Diagram)
+# III. DATABASE VÀ MÔ HÌNH ERD
+
+
+## 1. Mô hình ERD (Entity Relationship Diagram)
 
 Hệ thống Renty & SmartRoom được thiết kế theo kiến trúc Đa chủ trọ (Multi-tenancy) với mô hình quan hệ chặt chẽ giữa các thực thể cốt lõi:
 
@@ -616,9 +397,11 @@ Hệ thống Renty & SmartRoom được thiết kế theo kiến trúc Đa chủ
 
 Hình 1: Sơ đồ mô hình thực thể quan hệ (ERD) hệ thống Quản lý Nhà trọ, Chung cư, Căn hộ dịch vụ & Khách sạn (Renty - SmartRoom)
 
-2. Từ điển dữ liệu (Data Dictionary - 10 Thực thể cốt lõi)
 
-a. Bảng Users & Roles (Tài khoản và Vai trò)
+## 2. Từ điển dữ liệu (Data Dictionary - 10 Thực thể cốt lõi)
+
+
+### a. Bảng Users & Roles (Tài khoản và Vai trò)
 
 Bảng users lưu trữ thông tin đăng nhập, xác thực WebAuthn Passkey và phân quyền. Trường phone được mã hóa AES-256-GCM kết hợp Blind Index.
 
@@ -650,7 +433,8 @@ Bảng 6: Mô tả cấu trúc bảng Roles (Vai trò và phân quyền)
 | created_at | TIMESTAMP, NULL | Thời điểm tạo vai trò |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-b. Bảng Properties / Buildings (Cơ sở lưu trú: Nhà trọ, Chung cư, Tòa nhà, Khách sạn)
+
+### b. Bảng Properties / Buildings (Cơ sở lưu trú: Nhà trọ, Chung cư, Tòa nhà, Khách sạn)
 
 Bảng properties (buildings) đại diện cho các cơ sở bất động sản lưu trú trực thuộc quyền quản lý của một Tenant. Hỗ trợ phân loại loại hình cơ sở kinh doanh (property_type: nhà trọ truyền thống, chung cư / căn hộ mini, tòa nhà căn hộ dịch vụ, hoặc khách sạn/homestay), quản lý số tầng, tổng số căn hộ/phòng, cấu hình phí quản lý chung cư (management_fee_rate), quy chuẩn giờ nhận/trả phòng khách sạn (check-in/check-out) và biểu giá điện nước.
 
@@ -672,7 +456,8 @@ Bảng 7: Mô tả cấu trúc bảng Properties / Buildings (Cơ sở lưu trú
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 | deleted_at | TIMESTAMP, NULL | Thời điểm xóa mềm cơ sở lưu trú (phục vụ SoftDeletes) |
 
-c. Bảng Rooms & Condos (Phòng trọ, Căn hộ chung cư, Phòng khách sạn & Minibar)
+
+### c. Bảng Rooms & Condos (Phòng trọ, Căn hộ chung cư, Phòng khách sạn & Minibar)
 
 Quản lý chi tiết từng căn phòng trọ hoặc căn hộ chung cư: số phòng/mã căn (P.101, Căn 12A.03), phân loại phòng (Studio, 1PN, 2PN, 3PN, Deluxe, VIP), hình thức thuê linh hoạt (theo tháng cho trọ/chung cư, theo ngày hoặc theo giờ cho khách sạn), đa khung giá (giá tháng, giá đêm, giá giờ), trạng thái phòng (trống, đang ở, đang dọn dẹp vệ sinh - Housekeeping, bảo trì), danh mục tiện ích (WC, ban công, thang máy, thẻ từ) và danh mục tài sản/minibar bàn giao.
 
@@ -701,9 +486,6 @@ Bảng 8: Mô tả cấu trúc bảng Rooms & Condos (Phòng lưu trú, Căn h�
 | version | INT UNSIGNED, DEFAULT 1 | Phiên bản phục vụ Optimistic Locking (chống xung đột ghi đè khi đặt phòng) |
 | created_at | TIMESTAMP, NULL | Thời điểm tạo phòng |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
-| price_per_day | DECIMAL(12,2), NULL | Đơn giá thuê phòng theo ngày đối với mô hình khách sạn / homestay ngắn hạn |
-| price_per_hour | DECIMAL(12,2), NULL | Đơn giá thuê phòng theo giờ phục vụ khách nghỉ chặng ngắn hoặc dịch vụ linh hoạt |
-| cleaning_status | VARCHAR(30), DEFAULT 'clean' | Trạng thái buồng phòng: 'clean' (sạch), 'dirty' (bẩn), 'cleaning' (đang dọn), 'inspected' (đã kiểm tra) |
 
 Bảng 9: Mô tả cấu trúc bảng Equipment (Danh mục tài sản - Trang thiết bị)
 
@@ -731,7 +513,8 @@ Bảng 10: Mô tả cấu trúc bảng RoomEquipment (Phân bổ trang thiết b
 | created_at | TIMESTAMP, NULL | Thời điểm tạo bản ghi |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-d. Bảng Residents & Guests (Cư dân thuê trọ & Khách lưu trú khách sạn)
+
+### d. Bảng Residents & Guests (Cư dân thuê trọ & Khách lưu trú khách sạn)
 
 Quản lý thông tin nhân thân của cư dân thuê trọ dài hạn và khách lưu trú khách sạn/homestay ngắn hạn. Phân loại đối tượng (resident, hotel_guest), quản lý người đi cùng / ở ghép, phục vụ xuất biểu mẫu đăng ký tạm trú CT01 và khai báo lưu trú du lịch. Toàn bộ thông tin CCCD, hộ chiếu và SĐT được mã hóa chuẩn ứng dụng AES-256-GCM.
 
@@ -769,7 +552,8 @@ Bảng 12: Mô tả cấu trúc bảng ResidentRelatives (Thân nhân & Người
 | created_at | TIMESTAMP, NULL | Thời điểm thêm bản ghi |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-e. Bảng Contracts & Bookings (Hợp đồng thuê dài hạn & Đặt phòng khách sạn)
+
+### e. Bảng Contracts & Bookings (Hợp đồng thuê dài hạn & Đặt phòng khách sạn)
 
 Lưu trữ thông tin giao dịch lưu trú: Hợp đồng thuê trọ dài hạn có tiền cọc, chu kỳ thu và chuỗi Base64 chữ ký vẽ tay điện tử của hai bên; hoặc Phiếu đặt phòng khách sạn (Booking) với mã đặt phòng, thời điểm check-in/check-out chi tiết theo giờ, tổng cước phòng và trạng thái thanh toán.
 
@@ -793,7 +577,8 @@ Bảng 13: Mô tả cấu trúc bảng Contracts & Bookings (Hợp đồng thuê
 | created_at | TIMESTAMP, NULL | Thời điểm khởi tạo hợp đồng |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-f. Bảng Utility & Services (Chốt Điện - Nước & Dịch vụ Khách sạn)
+
+### f. Bảng Utility & Services (Chốt Điện - Nước & Dịch vụ Khách sạn)
 
 Ghi nhận chỉ số tiêu thụ điện nước hàng tháng bằng AI OCR (cho trọ/căn hộ) và theo dõi các chi phí dịch vụ buồng phòng, tiêu thụ đồ uống/đồ ăn vặt minibar, giặt ủi và cước phòng theo giờ/ngày (cho khách sạn).
 
@@ -817,7 +602,8 @@ Bảng 14: Mô tả cấu trúc bảng Utility & Services (Chốt Điện - Nư�
 | created_at | TIMESTAMP, NULL | Thời điểm chốt số |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-g. Bảng Bills & Transactions (Hóa đơn thu tiền, Bảng kê Folio & Sổ quỹ)
+
+### g. Bảng Bills & Transactions (Hóa đơn thu tiền, Bảng kê Folio & Sổ quỹ)
 
 Quản lý toàn bộ hóa đơn tiền phòng định kỳ hàng tháng của nhà trọ và bảng kê thanh toán trả phòng (Hotel Folio) của khách sạn. Tự động sinh mã VietQR thanh toán chuẩn NAPAS247 và ghi nhận dòng tiền đối soát sổ quỹ thu chi.
 
@@ -848,7 +634,8 @@ Bảng 16: Mô tả cấu trúc bảng CashFlows / Transactions (Sổ quỹ thu 
 | created_at | TIMESTAMP, NULL | Thời điểm ghi sổ kế toán |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-h. Bảng Tickets & RoomReports (Sự cố kỹ thuật, Dịch vụ phòng & Khiếu nại)
+
+### h. Bảng Tickets & RoomReports (Sự cố kỹ thuật, Dịch vụ phòng & Khiếu nại)
 
 Tiếp nhận và xử lý yêu cầu báo hỏng thiết bị từ cư dân trọ, đồng thời tiếp nhận các yêu cầu dịch vụ phòng (Housekeeping, dọn phòng, tiếp nước, đổi khăn) từ khách lưu trú khách sạn có AI phân loại mức độ khẩn cấp.
 
@@ -883,7 +670,8 @@ Bảng 18: Mô tả cấu trúc bảng RoomReports (Báo cáo phòng vi phạm /
 | created_at | TIMESTAMP, NULL | Thời điểm gửi báo cáo |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-i. Bảng LandlordProfiles & VerificationRequests (Hồ sơ & Yêu cầu duyệt chủ trọ)
+
+### i. Bảng LandlordProfiles & VerificationRequests (Hồ sơ & Yêu cầu duyệt chủ trọ)
 
 Phục vụ luồng xác minh chủ trọ lũy tiến (Progressive Verification) và lưu trữ chứng chỉ PCCC, ANTT, ĐKKD.
 
@@ -904,7 +692,8 @@ Bảng 19: Mô tả cấu trúc bảng LandlordProfiles & VerificationRequests (
 | created_at | TIMESTAMP, NULL | Thời điểm gửi hồ sơ |
 | updated_at | TIMESTAMP, NULL | Thời điểm cập nhật gần nhất |
 
-j. Bảng AdminActivityLogs & AuditLogs (Nhật ký truy vết & Kiểm toán bất biến)
+
+### j. Bảng AdminActivityLogs & AuditLogs (Nhật ký truy vết & Kiểm toán bất biến)
 
 Bảo đảm tuân thủ Nghị định 13: Ghi nhận mọi thao tác truy cập dữ liệu cá nhân nhạy cảm, chống sửa xóa bằng trigger CSDL.
 
@@ -924,420 +713,1565 @@ Bảng 20: Mô tả cấu trúc bảng AdminActivityLogs & AuditLogs (Nhật ký
 | row_hash | VARCHAR(64) | Mã băm SHA-256 xác thực tính toàn vẹn của bản ghi hiện tại |
 | created_at | TIMESTAMP | Thời điểm phát sinh hành vi kiểm toán |
 
-IV. THIẾT KẾ GIAO DIỆN DEMO VÀ KỊCH BẢN XỬ LÝ LỖI (UI/UX)
 
-Quy ước chung khi thiết kế giao diện và xử lý lỗi người dùng:
+# IV. ĐẶC TẢ KỸ THUẬT HỆ THỐNG VÀ KỊCH BẢN XỬ LÝ LỖI (TECHNICAL SPECIFICATIONS & UI/UX)
 
-Note: Đối với những input khi lỗi input sẽ bôi đỏ viền ô input (border-red-500) và xuất hiện thông báo lỗi chi tiết màu đỏ ngay phía dưới mỗi ô input. Khi thao tác thành công, hệ thống hiển thị Toast/Alert thông báo xanh (bg-emerald-500) tự động ẩn sau 3 giây.
+Để đảm bảo nguyên tắc **"10 người đọc cả 10 người code đều giống nhau"** và **"một lập trình viên khi đọc vào spec phải code được ngay mà không cần suy đoán"**, toàn bộ các chức năng của hệ thống được đặc tả nghiêm ngặt theo chuẩn công nghiệp với cấu trúc 5 thành phần bắt buộc cho mỗi chức năng:
+1. **Input Specification**: Bảng quy tắc xác thực dữ liệu đầu vào (Validation Rules, kiểu dữ liệu, thông báo lỗi cụ thể khi fail).
+2. **Business Logic Flow**: Thuật toán xử lý tuần tự từng bước (kiểm tra Multi-tenancy, Guard check, DB Transaction, Event).
+3. **Database Operation**: Chi tiết các bảng, cột bị tác động, cơ chế khóa lạc quan (Optimistic Locking) và toàn vẹn dữ liệu.
+4. **Output Specification**: Hợp đồng dữ liệu đầu ra (Response JSON thành công / thất bại hoặc View Redirect kèm Flash Toast).
+5. **UI/UX Specification & Kịch bản lỗi**: Giao diện, Class CSS Tailwind, Element IDs, và bảng xử lý chi tiết mọi trường hợp ngoại lệ.
 
-A. CÁC MODULE & CHỨC NĂNG DO NGUYỄN THANH HIỀN (NHÓM TRƯỞNG) PHỤ TRÁCH
+Đồng thời, tuân thủ nguyên tắc cốt lõi: **"Trong báo cáo có gì thì trong code phải có cái đó và ngược lại"**, mọi chức năng đều được ánh xạ trực tiếp từ các nhánh Git, Controller, Model và Migration thực tế trong kho mã nguồn dự án.
 
-1. Khởi tạo kiến trúc dự án Laravel 11, thiết lập Docker, Git và thiết kế 35 bản ghi Database Migrations
 
-Mô tả chi tiết chức năng: Xây dựng kiến trúc dự án trên framework Laravel 11, cấu hình môi trường Docker (Nginx, PHP 8.3, MySQL 8.0, Redis Cache) và quy trình Git workflow. Thiết kế và thực thi 35 bản ghi migration định nghĩa toàn bộ mô hình dữ liệu lõi cho hệ sinh thái quản lý lưu trú đa mô hình (Properties, Rooms, Users, Contracts, UtilityReadings, Bills, Tickets, AuditLogs...).
+## A. CÁC MODULE & ĐẶC TẢ KỸ THUẬT DO NGUYỄN THANH HIỀN (NHÓM TRƯỞNG) PHỤ TRÁCH
 
-Bảng: Kịch bản xử lý lỗi Khởi tạo hệ thống và Database Migrations
+---
 
+### [FEAT-HIEN-01] Khởi tạo kiến trúc dự án Laravel 11, Docker, CI/CD GitHub Actions & 35 Migrations
+- **Git Branch**: `main`, `CI/CD`, `CauHinh`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Phạm vi mã nguồn**: `docker-compose.yml`, `.github/workflows/laravel-ci.yml`, `.github/workflows/docker-ci.yml`, `database/migrations/*`
+- **Môi trường**: PHP 8.3-fpm, Nginx Alpine, MySQL 8.0, Redis 7.2 Alpine
+
+#### 1. Input Specification (Môi trường & Biến cấu hình .env)
+| Biến Cấu Hình | Kiểu Dữ Liệu | Bắt Buộc | Giá Trị Mặc Định / Mẫu | Mục Đích Sử Dụng |
+|---|---|---|---|---|
+| `APP_ENV` | String | Có | `local` / `production` | Môi trường thực thi ứng dụng |
+| `DB_CONNECTION` | String | Có | `mysql` | Driver cơ sở dữ liệu chính |
+| `DB_HOST` | String | Có | `127.0.0.1` / `db` | Host kết nối MySQL container |
+| `DB_PORT` | Integer | Có | `3306` | Cổng kết nối CSDL |
+| `DB_DATABASE` | String | Có | `cdweb1_db` | Tên CSDL ứng dụng |
+| `DB_USERNAME` | String | Có | `root` / `sail` | Tài khoản đăng nhập MySQL |
+| `DB_PASSWORD` | String | Có | `password` | Mật khẩu truy cập MySQL |
+| `PII_ENCRYPTION_KEY` | String (Base64) | Có | `base64:32bytes...` | Khóa mã hóa đối xứng AES-256-GCM |
+| `BLIND_INDEX_KEY` | String (Hex/Base64) | Có | `sha256:32bytes...` | Khóa HMAC-SHA256 băm chỉ mục tra cứu |
+| `GEMINI_API_KEY` | String | Có | `AIzaSy...` | Khóa API truy cập Google Gemini AI |
+
+#### 2. Business Logic Flow
+1. **Thiết lập hạ tầng Docker**: Khởi động 4 dịch vụ độc lập (`app`, `web`, `db`, `redis`) qua file `docker-compose.yml`, mount volume mã nguồn và thư mục `storage`.
+2. **Quy trình CI/CD GitHub Actions**:
+   - Chạy linter định dạng mã nguồn chuẩn hóa bằng `vendor/bin/pint --test`.
+   - Khởi tạo service container MySQL, chạy toàn bộ `php artisan migrate --force`.
+   - Thực thi bộ kiểm thử tự động `php artisan test` (đảm bảo 100% 64/64 Unit & Feature tests pass).
+   - Biên dịch tài nguyên giao diện `npm run build` (Vite + Tailwind CSS).
+3. **Thực thi 35 Migrations**: Thứ tự chạy migration từ bảng cha sang bảng con, kích hoạt Foreign Key constraints, Unique Indexes và Composite Indexes cho các bảng lõi.
+
+#### 3. Database Operation
+- **Thực thi**: Tạo lập 35 bảng hệ thống bao gồm `tenants`, `roles`, `users`, `buildings`, `rooms`, `equipment`, `room_equipment`, `residents`, `resident_relatives`, `contracts`, `utility_records`, `bills`, `transactions`, `tickets`, `room_reports`, `landlord_profiles`, `audit_logs`...
+- **Ràng buộc**: Khóa ngoại `ON DELETE RESTRICT` cho các quan hệ bảo vệ toàn vẹn tài chính, `ON DELETE CASCADE` cho các bảng chi tiết phụ thuộc.
+
+#### 4. Output Specification
+- **Thành công**: Pipeline GitHub Actions trả về trạng thái `All checks have passed` (Xanh lá), ứng dụng lắng nghe tại `http://localhost:8000` hoặc cổng Docker `http://localhost:8088`.
+- **Thất bại**: CI dừng khẩn cấp và gửi cảnh báo đỏ về Telegram/Email nếu có bất kỳ test case nào fail hoặc migration bị lỗi Foreign Key.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Lỗi kết nối CSDL khi chạy Migration | Màn hình bôi đỏ: "Lỗi kết nối CSDL: SQLSTATE[HY000] [2002] Connection refused. Vui lòng kiểm tra file .env và container MySQL". |
+|---|---|
+| Lỗi kết nối CSDL khi chạy Migration | Terminal bôi đỏ: "Lỗi kết nối CSDL: SQLSTATE[HY000] [2002] Connection refused. Vui lòng kiểm tra file .env và container MySQL". |
 | Trùng lặp bảng hoặc khóa ngoại sai thứ tự | Dừng tiến trình, hiển thị mã lỗi ForeignKeyConstraintViolationException và tự động rollback giao dịch. |
 
-2. Xây dựng Middleware phân quyền truy cập đa tầng RBAC & Multi-tenancy phân lập dữ liệu
+---
 
-Mô tả chi tiết chức năng: Thiết lập Middleware kiểm soát an ninh đa tầng theo vai trò RBAC (Superadmin, Landlord, Resident, Guest). Tích hợp cơ chế Multi-tenancy tự động lọc phạm vi truy vấn dữ liệu theo landlord_id và property_id, ngăn chặn triệt để nguy cơ rò rỉ dữ liệu chéo giữa các chủ cơ sở lưu trú khác nhau.
+### [FEAT-HIEN-02] Phân quyền truy cập đa tầng RBAC & Multi-tenancy phân lập theo Tenant
+- **Git Branch**: `Hien/PhanQuyen`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\CrudUserController@listUser`, `updateRole`
+- **Middleware**: `App\Http\Middleware\RoleMiddleware`, Global Scope `App\Models\Scopes\TenantScope`
+- **Endpoint & Method**: `GET /list`, `POST /users/role`
+- **Middleware kiểm soát**: `auth`, `role:admin`
 
-Bảng: Kịch bản xử lý lỗi Phân quyền truy cập đa tầng và Multi-tenancy
+#### 1. Input Specification (Request Validation POST /users/role)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `user_id` | Integer | Có | `required\|integer\|exists:users,id` | "Tài khoản người dùng không tồn tại trên hệ thống." |
+| `role` | String | Có | `required\|string\|in:admin,landlord,unverified_landlord,manager,resident,guest` | "Vai trò được gán không hợp lệ." |
 
+#### 2. Business Logic Flow
+1. **Kiểm tra quyền quản trị viên**: Middleware `role:admin` kiểm tra người thực hiện có quyền `admin`. Nếu không, trả về HTTP 403 Forbidden.
+2. **Cơ chế Multi-tenancy Scoping**:
+   - Mọi truy vấn trên các Model nghiệp vụ (`Building`, `Room`, `Resident`, `Bill`, `Contract`...) tự động áp dụng `TenantScope`: `builder->where('tenant_id', auth()->user()->tenant_id)`.
+   - Nếu người dùng có role `admin` (Superadmin), bỏ qua Scope qua hàm `withoutGlobalScope(TenantScope::class)`.
+3. **Thực thi phân quyền**:
+   - Tìm kiếm người dùng theo `user_id`. Chặn không cho phép Admin tự hạ quyền chính mình nếu là admin duy nhất.
+   - Cập nhật trường `role` và `role_id` tương ứng trong bảng `users`.
+   - Ghi bản ghi Audit Log truy vết hành vi thay đổi quyền hạn.
+4. **Trả về phản hồi**: Redirect về danh sách kèm Flash message thành công.
+
+#### 3. Database Operation
+- **Bảng tác động**: `users` (cột `role`, `role_id`), `audit_logs` (ghi log phân quyền).
+
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Redirect về route `user.list` kèm `session('success', 'Cập nhật vai trò người dùng thành công!')`.
+- **Thất bại (HTTP 403 / 422)**:
+  - 403: View `errors.403` "Bạn không có quyền hạn thực hiện thao tác này".
+  - 422: Redirect back kèm `$errors->withInput()`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Component**: View `resources/views/list.blade.php`.
+- **Badge vai trò**: `admin` (bg-red-500/20 text-red-400), `landlord` (bg-sky-500/20 text-sky-400), `resident` (bg-emerald-500/20 text-emerald-400).
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
+|---|---|
 | Truy cập URL vượt quyền hạn (VD: Landlord vào /admin/audit-logs) | Hệ thống chặn ngay lập tức, hiển thị trang 403 Forbidden kèm nút quay lại trang chủ quản trị an toàn. |
-| Cố tình sửa tham số property_id trên URL để xem cơ sở khác | Hệ thống trả về mã lỗi 404 Not Found hoặc thông báo "Cơ sở lưu trú này không thuộc quyền quản lý của bạn". |
+| Cố tình sửa tham số tenant_id hoặc property_id trên URL | Hệ thống trả về mã lỗi 404 Not Found do TenantScope tự động loại bỏ bản ghi không thuộc quyền quản lý. |
 
-3. Lập trình module Đăng ký & Đăng nhập truyền thống kèm cơ chế Rate Limiting chống brute-force
+---
 
-Mô tả chi tiết chức năng: Cung cấp giao diện đăng nhập bằng Username/Số điện thoại và Mật khẩu. Tích hợp cơ chế Rate Limiting tự động khóa form sau 5 lần nhập sai liên tiếp trong 60 giây nhằm vô hiệu hóa các cuộc tấn công brute-force tự động dò mật khẩu.
+### [FEAT-HIEN-03] Đăng ký & Đăng nhập truyền thống kèm Rate Limiting chống Brute-force
+- **Git Branch**: `Hien/Login_Sign`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\CrudUserController@login`, `authUser`, `createUser`, `postUser`
+- **Endpoint & Method**: `GET /login`, `POST /login`, `GET /create`, `POST /create`
+- **Middleware**: `guest`, `throttle:30,1` (Login), `throttle:10,1` (Register)
 
-Hình 2: Quy ước hiển thị ô input lỗi và thông báo trạng thái giao diện
+#### 1. Input Specification (Request Validation POST /login)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `login` | String | Có | `required\|string` | "Vui lòng nhập tên đăng nhập hoặc số điện thoại." |
+| `password` | String | Có | `required\|string\|min:6` | "Mật khẩu phải có độ dài từ 6 ký tự trở lên." |
 
-Hình 3: Giao diện Trang Đăng nhập & Đăng ký (WebAuthn Passkey + Mật khẩu)
+#### 2. Business Logic Flow
+1. **Kiểm tra Rate Limiting**: Nếu IP gửi quá 30 request/phút hoặc tài khoản nhập sai quá 5 lần liên tiếp trong 60 giây, chặn ngay và trả về HTTP 429 Too Many Requests.
+2. **Nhận diện phương thức đăng nhập**:
+   - Kiểm tra `login` có phải định dạng số điện thoại Việt Nam (`preg_match('/^(0[3|5|7|8|9])[0-9]{8}$/')`).
+   - Nếu là SĐT: Tính giá trị băm `phone_blind_index = hash_hmac('sha256', $phone, env('BLIND_INDEX_KEY'))` và truy vấn `User::where('phone_blind_index', $blindIndex)->first()`.
+   - Nếu là username: Truy vấn `User::where('username', $login)->first()`.
+3. **Xác thực Mật khẩu**: Dùng `Hash::check($password, $user->password)`.
+   - Nếu không khớp: Tăng biến đếm rate limit, trả về lỗi "Thông tin đăng nhập hoặc mật khẩu không chính xác".
+   - Nếu khớp: `Auth::login($user, $remember = true)`. Xóa biến đếm rate limit.
+4. **Phân luồng điều hướng**:
+   - Role `admin`: Redirect `/smartroom/admin`.
+   - Role `landlord`: Redirect `/smartroom/admin`.
+   - Role `resident`: Redirect `/smartroom/resident`.
+   - Role `guest`: Redirect `/renty`.
 
-Bảng 21: Kịch bản xử lý lỗi Trang Đăng nhập & Đăng ký (WebAuthn Passkey + Mật khẩu)
+#### 3. Database Operation
+- **Đọc**: `users` (kiểm tra username hoặc `phone_blind_index`).
+- **Ghi**: Cập nhật `last_login_at`, lưu session vào bảng `sessions`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng đến dashboard tương ứng vai trò.
+- **Thất bại (HTTP 422 / 429)**: Redirect back với input `login`, flash message lỗi đỏ.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Form element**: `#login-form`, input `#login-field`, `#password-field`, nút submit `#btn-login`.
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bỏ trống cả Tên đăng nhập và Mật khẩu | Viền 2 ô input đổi sang màu đỏ. Hiển thị thông báo: "Vui lòng nhập tên đăng nhập hoặc số điện thoại" và "Vui lòng nhập mật khẩu". |
-| Số điện thoại không đúng định dạng (< 10 số hoặc chứa chữ) | Ô SĐT bôi đỏ. Hiển thị: "Số điện thoại không hợp lệ, vui lòng nhập đúng 10 số di động Việt Nam". |
-| Sai thông tin đăng nhập (Username hoặc Password không khớp) | Hiển thị thông báo lỗi trên cùng form: "Thông tin đăng nhập hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!". |
-| Tài khoản bị khóa hoặc vô hiệu hóa bởi Admin | Thông báo lỗi màu đỏ: "Tài khoản của bạn đã bị tạm khóa do vi phạm tiêu chuẩn cộng đồng. Vui lòng liên hệ hỗ trợ". |
-| Nhập sai mật khẩu liên tiếp quá 5 lần | Khóa tạm thời form đăng nhập 60 giây: "Bạn đã thao tác sai quá nhiều lần. Vui lòng đợi sau 60 giây". |
-| Mất kết nối mạng / Lỗi máy chủ (HTTP 500) | Hiển thị Toast lỗi hệ thống: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet và thử lại sau ít phút". |
+|---|---|
+| Bỏ trống cả Tên đăng nhập và Mật khẩu | Viền 2 ô input đổi sang màu đỏ `border-red-500`. Hiển thị: "Vui lòng nhập tên đăng nhập hoặc số điện thoại" và "Vui lòng nhập mật khẩu". |
+| Nhập sai thông tin đăng nhập | Hiển thị thông báo trên đầu form: "Thông tin đăng nhập hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!". |
+| Nhập sai mật khẩu liên tiếp quá 5 lần | Khóa form 60 giây (HTTP 429): "Bạn đã thao tác sai quá nhiều lần. Vui lòng đợi sau 60 giây". |
 
-4. Tích hợp chuẩn xác thực không mật khẩu WebAuthn / FIDO2 Passkey sinh trắc học
+---
 
-Mô tả chi tiết chức năng: Cho phép người dùng tạo cặp khóa bất đối xứng và xác thực không mật khẩu (Passkey) thông qua vân tay, FaceID hoặc mã PIN thiết bị (Windows Hello). Giúp nâng cao trải nghiệm đăng nhập siêu tốc chỉ với một chạm và bảo mật tuyệt đối trước các thủ đoạn lừa đảo Phishing.
+### [FEAT-HIEN-04] Xác thực không mật khẩu WebAuthn / FIDO2 Passkey sinh trắc học
+- **Git Branch**: `Hien/Login_Sign`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `Laragear\WebAuthn\Http\Controllers\WebAuthnLoginController`, `WebAuthnRegisterController`
+- **Endpoint**: `POST /webauthn/login/options`, `POST /webauthn/login`, `POST /webauthn/register/options`, `POST /webauthn/register`
+- **Middleware**: `web`, `throttle:10,1`
 
-Bảng: Kịch bản xử lý lỗi Xác thực sinh trắc học WebAuthn Passkey
+#### 1. Input Specification (Request Verification Assertion)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `id` | String | Có | `required\|string` | "Định danh credential Passkey không hợp lệ." |
+| `rawId` | String (Base64) | Có | `required\|string` | "Mã khóa gốc Passkey không hợp lệ." |
+| `response.clientDataJSON` | String (Base64) | Có | `required\|string` | "Thiếu dữ liệu xác thực clientDataJSON." |
+| `response.authenticatorData`| String (Base64) | Có | `required\|string` | "Thiếu chữ ký phần cứng authenticatorData." |
+| `response.signature` | String (Base64) | Có | `required\|string` | "Chữ ký sinh trắc học không hợp lệ." |
 
+#### 2. Business Logic Flow
+1. **Khởi tạo Challenge**: Client gọi `POST /webauthn/login/options`. Server sinh chuỗi ngẫu nhiên 32 bytes cryptographically secure, lưu vào session `webauthn.challenge`.
+2. **Kích hoạt phần cứng WebAuthn**: Trình duyệt gọi `navigator.credentials.get({publicKey: options})`, kích hoạt cảm biến vân tay/FaceID/Windows Hello của thiết bị.
+3. **Xác thực chữ ký công khai (Public Key Assertion)**:
+   - Server nhận Assertion response từ client.
+   - Kiểm tra Challenge khớp với session, kiểm tra `origin` khớp với domain hệ thống, kiểm tra `userPresence` và `userVerification`.
+   - Tìm kiếm khóa công khai trong bảng `webauthn_credentials` theo `credential_id`.
+   - Xác thực chữ ký `signature` bằng Public Key.
+4. **Đăng nhập người dùng**: Lấy `user_id` liên kết với credential và thực hiện `Auth::loginUsingId($credential->user_id)`.
+
+#### 3. Database Operation
+- **Bảng tác động**: `webauthn_credentials` (đọc Public Key, cập nhật `counter` chống replay attack).
+
+#### 4. Output Specification
+- **Thành công (HTTP 204 / JSON)**: `{"status": "ok", "redirect": "/smartroom/admin"}`.
+- **Thất bại (HTTP 422)**: `{"error": "Xác thực sinh trắc học thất bại hoặc khóa không tồn tại."}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Nút bấm**: `#btn-webauthn-login` với icon vân tay phát sáng `text-sky-400`.
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Thiết bị hoặc trình duyệt chưa hỗ trợ WebAuthn | Popup cảnh báo: "Không tìm thấy thiết bị xác thực WebAuthn hoặc trình duyệt chưa hỗ trợ. Vui lòng sử dụng mật khẩu". |
-| Người dùng bấm Hủy (Cancel) trên popup sinh trắc học | Toast vàng nhẹ: "Thao tác quét vân tay/Passkey đã bị hủy. Bạn có thể thử lại hoặc nhập mật khẩu truyền thống". |
+|---|---|
+| Thiết bị hoặc trình duyệt không hỗ trợ WebAuthn | Ẩn nút Passkey hoặc hiển thị popup: "Trình duyệt chưa hỗ trợ WebAuthn. Vui lòng đăng nhập bằng mật khẩu". |
+| Người dùng bấm Hủy (Cancel) trên popup sinh trắc | Toast thông báo vàng: "Thao tác xác thực vân tay/Passkey đã bị hủy. Bạn có thể thử lại". |
 
-5. Hiện thực giải pháp mã hóa dữ liệu nhạy cảm PII bằng AES-256-GCM kết hợp HMAC Blind Index
+---
 
-Mô tả chi tiết chức năng: Bảo vệ tuyệt đối thông tin định danh cá nhân PII của cư dân và chủ cơ sở (CCCD, Số tài khoản ngân hàng, Số điện thoại) bằng thuật toán mã hóa đối xứng quân sự AES-256-GCM. Xây dựng chỉ mục ẩn HMAC-SHA256 Blind Index phục vụ tìm kiếm chính xác mà không cần giải mã toàn bộ cơ sở dữ liệu.
+### [FEAT-HIEN-05] Mã hóa bảo mật dữ liệu cá nhân PII bằng AES-256-GCM & HMAC Blind Index
+- **Git Branch**: `Hien/PhanQuyen`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Service**: `App\Services\SecureDocumentService`, `App\Http\Controllers\Api\SensitiveDataController`
+- **Phạm vi bảo vệ**: Các trường `phone`, `cccd`, `bank_account_number` trên toàn hệ thống
 
-Bảng: Kịch bản xử lý lỗi Bảo mật dữ liệu cá nhân PII và Giải mã
+#### 1. Input Specification (Tra cứu dữ liệu nhạy cảm)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `search_term` | String | Có | `required\|string\|min:3` | "Chuỗi tìm kiếm phải từ 3 ký tự trở lên." |
+| `field_type` | String | Có | `required\|in:phone,cccd` | "Loại trường tìm kiếm không hợp lệ." |
 
+#### 2. Business Logic Flow
+1. **Quy trình Mã hóa (Ghi dữ liệu)**:
+   - Dữ liệu thô (Plaintext) như số CCCD được mã hóa bằng AES-256-GCM với IV (Initialization Vector) 96-bit ngẫu nhiên và Authentication Tag 128-bit:
+     `ciphertext = encrypt_aes_256_gcm(plaintext, key, iv, tag)`.
+   - Đồng thời sinh mã chỉ mục mù (Blind Index) phục vụ tra cứu chính xác:
+     `blind_index = hash_hmac('sha256', strtolower(trim(plaintext)), env('BLIND_INDEX_KEY'))`.
+   - Lưu vào cơ sở dữ liệu: Cột `cccd` lưu `ciphertext:iv:tag` (dạng chuỗi base64), cột `cccd_blind_index` lưu chuỗi hex 64 ký tự.
+2. **Quy trình Tra cứu**: Không bao giờ giải mã toàn bộ DB. Tính hash của giá trị tìm kiếm và truy vấn: `where('cccd_blind_index', $targetBlindIndex)`.
+3. **Quy trình Giải mã hiển thị**: Chỉ người dùng có thẩm quyền kèm lý do nghiệp vụ mới được giải mã. Kết quả hiển thị được mặt nạ hóa mặc định (ví dụ: `0912****89`, `07920100****`).
+
+#### 3. Database Operation
+- **Bảng tác động**: `users`, `residents`, `resident_relatives`, `landlord_profiles`.
+- **Cột**: `phone`, `phone_blind_index`, `cccd`, `cccd_blind_index`.
+
+#### 4. Output Specification
+- **Thành công**: Trả về dữ liệu đã giải mã kèm ghi nhận 1 bản ghi vào `audit_logs`.
+- **Thất bại**: Trả về chuỗi lỗi `[DECRYPTION_ERROR]` và kích hoạt cảnh báo an ninh.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Nhập sai mật khẩu cấp 2 khi bấm mở xem số CCCD | Ô mật khẩu bôi đỏ: "Mật khẩu xác thực cấp 2 không chính xác. Quyền xem thông tin bị từ chối". |
-| Lỗi giải mã do khóa mã hóa hệ thống bị thay đổi | Dữ liệu hiển thị dạng mặt nạ lỗi [DECRYPTION_ERROR] và tự động kích hoạt cảnh báo an ninh gửi Superadmin. |
+|---|---|
+| Nhập sai mật khẩu cấp 2 khi xem số CCCD | Ô mật khẩu bôi đỏ: "Mật khẩu xác thực cấp 2 không chính xác. Quyền xem thông tin bị từ chối". |
+| Khóa mã hóa hệ thống PII_ENCRYPTION_KEY bị thay đổi | Dữ liệu hiển thị mặt nạ [DECRYPTION_ERROR], hệ thống tự động kích hoạt cảnh báo an ninh gửi Superadmin. |
 
-6 & 7. Quản lý Hợp đồng thuê phòng & Ký số điện tử online bằng HTML5 Canvas Signature Pad
+---
 
-Mô tả chi tiết chức năng: Quản lý toàn diện vòng đời hợp đồng: từ hợp đồng thuê dài hạn theo tháng (nhà trọ, căn hộ) đến các phiếu đặt phòng ngắn hạn theo ngày/giờ (khách sạn). Khách thuê truy cập link ký số, đọc toàn văn điều khoản, xác thực mã OTP bảo mật và ký tay trực tiếp lên khung cảm ứng HTML5 Canvas. Chữ ký được nhúng thẳng vào file PDF hợp đồng có giá trị chứng thực.
+### [FEAT-HIEN-06] Quản lý Hợp đồng thuê phòng & Tiền cọc (Contracts)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\AdminDashboardController@storeContract`, `deleteContract`, `renewContract`
+- **Endpoint & Method**: `POST /smartroom/admin/contract`, `DELETE /smartroom/admin/contract/{id}`, `POST /smartroom/admin/contract/{id}/renew`
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Ký số hợp đồng trực tuyến HTML5 Canvas Pad
+#### 1. Input Specification (Request Validation POST /contract)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_id` | Integer | Có | `required\|integer\|exists:rooms,id` | "Phòng được chọn không tồn tại." |
+| `resident_id` | Integer | Có | `required\|integer\|exists:residents,id` | "Thông tin cư dân đại diện không hợp lệ." |
+| `deposit` | Numeric | Có | `required\|numeric\|min:0` | "Tiền đặt cọc giữ phòng phải lớn hơn hoặc bằng 0 VNĐ." |
+| `start_date` | Date | Có | `required\|date` | "Ngày bắt đầu hợp đồng không hợp lệ." |
+| `end_date` | Date | Có | `required\|date\|after:start_date` | "Ngày kết thúc hợp đồng phải sau ngày bắt đầu." |
+| `terms` | String | Không | `nullable\|string` | "Điều khoản hợp đồng không hợp lệ." |
 
-Hình 8: Giao diện Ký số hợp đồng điện tử online bằng Canvas Signature Pad
+#### 2. Business Logic Flow
+1. **Kiểm tra trạng thái phòng**: Phòng được chọn phải đang ở trạng thái `empty` hoặc `maintenance`. Nếu phòng đang có hợp đồng `active`, chặn thao tác (HTTP 422).
+2. **Sinh mã hợp đồng chuẩn**: Tạo chuỗi duy nhất định dạng `HD-{YYYY}-{room_number}-{random4}` (Ví dụ: `HD-2026-P101-A9B2`).
+3. **Mở DB Transaction**:
+   - Tạo bản ghi mới trong bảng `contracts` với `status = 'draft'`.
+   - Tự động sinh biên lai tiền cọc vào bảng `bills` (nếu `deposit > 0`).
+4. **Commit & Phản hồi**: Trả về redirect kèm thông báo thành công và đường dẫn ký số trực tuyến.
 
-Hình 9: Giao diện Xuất file PDF Hợp đồng thuê phòng có chữ ký số hai bên
+#### 3. Database Operation
+- **Bảng tác động**: `contracts` (INSERT bản ghi mới), `rooms` (chuẩn bị trạng thái), `bills` (sinh phiếu cọc).
 
-Bảng 24: Kịch bản xử lý lỗi Trang Quản lý Hợp đồng thuê & Ký số Canvas
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về tab Hợp đồng kèm toast xanh: "Tạo hợp đồng thuê phòng thành công. Hãy gửi liên kết ký số cho cư dân."
+- **Thất bại (HTTP 422)**: Redirect back với input và `$errors`.
 
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Ngày kết thúc hợp đồng sớm hơn hoặc trùng với ngày bắt đầu | Ô ngày kết thúc bôi đỏ. Thông báo: "Ngày kết thúc hợp đồng phải sau ngày bắt đầu ít nhất 1 tháng". |
-| Số tiền đặt cọc giữ phòng nhập giá trị âm | Ô tiền cọc bôi đỏ. Hiển thị: "Tiền cọc phòng phải lớn hơn hoặc bằng 0 VNĐ". |
-| Cư dân bấm Xác nhận ký khi chưa vẽ chữ ký vào khung Canvas | Khung viền Canvas rung nhẹ và đổi màu đỏ. Thông báo: "Vui lòng vẽ chữ ký tay của bạn vào khung trước khi xác nhận ký kết". |
-| Nhập sai mã OTP xác thực ký số hoặc mã OTP đã hết hạn 5 phút | Ô nhập OTP bôi đỏ. Hiển thị: "Mã xác thực OTP không chính xác hoặc đã hết thời gian hiệu lực. Vui lòng bấm gửi lại mã mới". |
-| Hợp đồng đã được ký trước đó nhưng người dùng bấm nút Ký lại | Thông báo: "Hợp đồng này đã được hoàn tất ký số trước đó. Bạn không thể thực hiện ký lại". |
+|---|---|
+| Ngày kết thúc sớm hơn hoặc trùng ngày bắt đầu | Ô ngày kết thúc bôi đỏ `border-red-500`: "Ngày kết thúc hợp đồng phải sau ngày bắt đầu ít nhất 1 tháng". |
+| Nhập tiền đặt cọc âm | Ô tiền cọc bôi đỏ: "Tiền cọc phòng phải lớn hơn hoặc bằng 0 VNĐ". |
 
-8. Xây dựng quy trình Xác thực định danh chủ trọ lũy tiến (KYC CCCD & Premium Tích xanh PCCC/ANTT)
+---
 
-Mô tả chi tiết chức năng: Quy trình xác thực lũy tiến nâng cao uy tín cho cơ sở lưu trú: Cấp 1 (Chủ trọ gửi ảnh CCCD 2 mặt để kích hoạt nhận tiền qua cổng VietQR) và Cấp 2 (Nộp Giấy phép phòng cháy chữa cháy PCCC và Cam kết an ninh trật tự để nhận tích xanh kiểm định uy tín hiển thị nổi bật trên bản đồ tìm phòng).
+### [FEAT-HIEN-07] Ký số hợp đồng online bằng HTML5 Canvas Signature Pad & Xác thực OTP
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `AdminDashboardController@signContractView`, `signContract`, `sendOtpForContract`, `printContractPdf`
+- **Endpoint**: `GET /smartroom/contract/{id}/sign`, `POST /smartroom/contract/{id}/sign`, `POST /smartroom/contract/{id}/send-otp`, `GET /smartroom/contract/{id}/pdf`
+- **Middleware**: `web`
 
-Bảng: Kịch bản xử lý lỗi Quy trình Nộp hồ sơ định danh KYC
+#### 1. Input Specification (Request Validation POST /sign)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `signature` | String (Base64) | Có | `required\|string\|starts_with:data:image/png;base64,` | "Vui lòng vẽ chữ ký tay của bạn vào khung ký trước khi xác nhận." |
+| `otp_code` | String | Có | `required\|digits:6` | "Mã xác thực OTP phải gồm đúng 6 chữ số." |
 
+#### 2. Business Logic Flow
+1. **Kiểm tra trạng thái hợp đồng**: `Contract::findOrFail($id)`. Nếu `status == 'active'` hoặc đã có chữ ký, chặn thao tác và báo lỗi "Hợp đồng đã hoàn tất ký số trước đó".
+2. **Xác minh OTP**: Tra cứu `OtpCode` theo SĐT người thuê, mã `code`, kiểm tra thời hạn hiệu lực (5 phút). Nếu sai hoặc hết hạn, từ chối giao dịch.
+3. **Mở DB Transaction**:
+   - Lưu chuỗi Base64 chữ ký vào trường `signature` của bảng `contracts`.
+   - Cập nhật `signed_at = now()`, chuyển trạng thái hợp đồng `status = 'active'`.
+   - Chuyển trạng thái phòng liên quan trong bảng `rooms` sang `status = 'occupied'` (Đang ở).
+   - Đánh dấu OTP đã sử dụng.
+4. **Commit & Xuất PDF**: Hợp đồng có hiệu lực pháp lý, kích hoạt link tải file PDF có gắn ảnh chữ ký hai bên.
+
+#### 3. Database Operation
+- **Bảng tác động**: `contracts` (cột `signature`, `signed_at`, `status`), `rooms` (cột `status`), `otp_codes`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: `{"success": true, "message": "Ký số hợp đồng thành công!", "pdf_url": "/smartroom/contract/12/pdf"}`.
+- **Thất bại (HTTP 422)**: `{"success": false, "message": "Mã OTP không chính xác hoặc đã hết thời gian hiệu lực."}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Khung Canvas**: Thẻ `<canvas id="signature-pad" class="border rounded-xl bg-white w-full h-48"></canvas>`, nút xóa chữ ký `#btn-clear-sig`.
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
+|---|---|
+| Chưa vẽ chữ ký vào Canvas mà bấm xác nhận | Khung Canvas rung nhẹ (animation shake), đổi viền sang đỏ: "Vui lòng vẽ chữ ký tay của bạn vào khung trước khi xác nhận ký kết". |
+| Nhập sai mã OTP xác thực hoặc mã OTP hết hạn | Ô nhập OTP bôi đỏ: "Mã xác thực OTP không chính xác hoặc đã hết thời gian hiệu lực. Vui lòng bấm gửi lại mã mới". |
+
+---
+
+### [FEAT-HIEN-08] Quy trình Xác thực định danh chủ trọ lũy tiến (KYC CCCD & Premium Tích xanh PCCC/ANTT)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\LandlordVerificationController@submitKyc`, `submitPremium`
+- **Endpoint & Method**: `POST /smartroom/admin/verification/kyc`, `POST /smartroom/admin/verification/premium`
+- **Middleware**: `auth`, `admin`, `role:landlord`
+
+#### 1. Input Specification (Request Validation POST /kyc)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `landlord_name` | String | Có | `required\|string\|max:255` | "Vui lòng nhập họ và tên chủ trọ." |
+| `cccd_number` | String | Có | `required\|regex:/^[0-9]{12}$/` | "Số CCCD phải gồm đúng 12 chữ số hợp lệ." |
+| `bank_name` | String | Có | `required\|string\|max:100` | "Vui lòng chọn ngân hàng thụ hưởng." |
+| `bank_account_number` | String | Có | `required\|string\|max:50` | "Số tài khoản ngân hàng không được để trống." |
+| `cccd_front_image` | File | Có | `required\|image\|mimes:jpg,jpeg,png,webp\|max:10240` | "Ảnh mặt trước CCCD không quá 10MB." |
+| `cccd_back_image` | File | Có | `required\|image\|mimes:jpg,jpeg,png,webp\|max:10240` | "Ảnh mặt sau CCCD không quá 10MB." |
+
+#### 2. Business Logic Flow
+1. **Lưu trữ tài liệu bảo mật**: Upload ảnh CCCD vào đĩa lưu trữ riêng biệt `storage/app/secure_documents/` (thư mục không public ra ngoài web).
+2. **Mã hóa dữ liệu nhạy cảm**: Số CCCD và STK ngân hàng được mã hóa AES-256-GCM trước khi lưu vào bảng `landlord_profiles`.
+3. **Tạo yêu cầu thẩm định**: Tạo bản ghi trong `landlord_verification_requests` với `type = 'kyc'`, `status = 'pending'`.
+4. **Phản hồi**: Thông báo hồ sơ đang chờ Superadmin xét duyệt trong 24 giờ làm việc.
+
+#### 3. Database Operation
+- **Bảng tác động**: `landlord_profiles`, `landlord_verification_requests`, `landlord_verification_documents`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về màn hình trạng thái KYC kèm toast xanh: "Hồ sơ định danh KYC đã được gửi lên Ban Quản Trị thành công."
+
+#### 5. UI/UX Specification & Xử lý lỗi
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+|---|---|
 | Chưa tải đủ cả 2 mặt CCCD khi bấm gửi duyệt | Vùng upload bôi đỏ: "Vui lòng tải lên đầy đủ ảnh chụp cả hai mặt trước và sau của CCCD". |
-| Tải file tài liệu vượt quá giới hạn dung lượng (> 10MB) | Thông báo lỗi: "Dung lượng file tải lên quá lớn (tối đa 10MB). Vui lòng nén file trước khi gửi". |
+| Tải file tài liệu dung lượng vượt quá giới hạn (> 10MB) | Thông báo lỗi: "Dung lượng file tải lên quá lớn (tối đa 10MB). Vui lòng nén file trước khi gửi". |
 
-9. Xây dựng Bảng điều khiển kiểm duyệt hồ sơ chủ trọ (Superadmin)
+---
 
-Mô tả chi tiết chức năng: Giao diện kiểm duyệt bảo mật dành cho Superadmin: xem tài liệu định danh của chủ trọ qua đường dẫn tạm thời Signed URL (hết hạn sau 5 phút kèm đóng dấu Watermark chống rò rỉ). Nút Phê duyệt và nút Từ chối (bắt buộc nhập lý do chi tiết để thông báo cho chủ cơ sở chỉnh sửa).
+### [FEAT-HIEN-09] Bảng điều khiển kiểm duyệt hồ sơ định danh chủ trọ (Superadmin Verification)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\AdminVerificationController@index`, `approve`, `reject`
+- **Endpoint**: `GET /admin/verifications`, `POST /admin/verifications/{verification}/approve`, `POST /admin/verifications/{verification}/reject`
+- **Middleware**: `auth`, `role:admin`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Bảng điều khiển kiểm duyệt hồ sơ Chủ trọ (Admin Verification)
+#### 1. Input Specification (Request Validation POST /reject)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `rejection_reason` | String | Có | `required\|string\|min:10\|max:1000` | "Vui lòng nhập lý do từ chối cụ thể (tối thiểu 10 ký tự)." |
 
-Hình 16: Giao diện Kiểm duyệt Hồ sơ Định danh Chủ trọ (Admin Verification)
+#### 2. Business Logic Flow
+1. **Kiểm tra quyền Superadmin**: Chỉ tài khoản có `role = 'admin'` mới được truy cập.
+2. **Xử lý Phê duyệt (Approve)**:
+   - Cập nhật trạng thái yêu cầu sang `approved`, ghi nhận `reviewed_by = auth()->id()`, `reviewed_at = now()`.
+   - Nếu là hồ sơ KYC: Nâng cấp tài khoản chủ trọ từ `unverified_landlord` thành `landlord`, mở khóa chức năng nhận tiền VietQR.
+   - Nếu là hồ sơ Premium: Cấp cờ Tích Xanh thẩm định uy tín (`listing_badge = 'premium_verified'`).
+3. **Xử lý Từ chối (Reject)**:
+   - Cập nhật `status = 'rejected'`, lưu `rejection_reason`.
+   - Gửi thông báo hệ thống đến chủ trọ nêu rõ nguyên nhân để nộp lại giấy tờ.
+4. **Ghi Audit Log**: Mọi thao tác duyệt/từ chối đều được ghi vào `audit_logs`.
 
-Bảng 29: Kịch bản xử lý lỗi Trang Kiểm duyệt Hồ sơ Định danh Chủ trọ (Admin Verification)
+#### 3. Database Operation
+- **Bảng tác động**: `landlord_verification_requests`, `users`, `tenants`, `audit_logs`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về danh sách xét duyệt kèm flash message: "Đã phê duyệt hồ sơ định danh thành công!".
+- **Thất bại (HTTP 422)**: Báo lỗi nếu thiếu lý do từ chối.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Admin bấm nút Từ chối hồ sơ xác minh nhưng bỏ trống lý do từ chối | Ô lý do từ chối bôi đỏ viền. Thông báo: "Vui lòng nhập lý do từ chối để chủ cơ sở biết và bổ sung lại giấy tờ hợp lệ". |
-| Truy cập tài liệu bảo mật khi link ký đã quá thời gian hiệu lực (TTL > 5 phút) | Trang hiển thị lỗi 403 Forbidden: "Liên kết xem tài liệu đã hết hạn vì lý do an toàn bảo mật. Vui lòng bấm làm mới trang để nhận liên kết mới". |
-| Tài khoản không có quyền admin cố tình truy cập vào URL /admin/verifications | Hệ thống chặn và trả về lỗi 403: "Truy cập bị từ chối. Bạn không có quyền hạn quản trị viên để thực hiện thao tác này". |
-| Mở khóa tài liệu nhạy cảm sau khi đã duyệt mà không nhập lý do nghiệp vụ | Ô lý do bôi đỏ. Hiển thị: "Quy định bảo mật: Bạn bắt buộc phải ghi rõ lý do nghiệp vụ để lưu vào nhật ký kiểm toán Audit Log trước khi mở khóa tài liệu". |
+|---|---|
+| Admin bấm Từ chối nhưng bỏ trống lý do | Ô lý do từ chối bôi đỏ viền: "Vui lòng nhập lý do từ chối để chủ cơ sở biết và bổ sung lại giấy tờ hợp lệ". |
+| Tài khoản không phải admin cố tình vào URL | Hệ thống chặn và trả về trang lỗi 403: "Truy cập bị từ chối. Bạn không có quyền hạn quản trị viên". |
 
-10. Xây dựng hệ thống Nhật ký kiểm toán bất biến (Immutable Audit Logs)
+---
 
-Mô tả chi tiết chức năng: Cơ chế ghi nhật ký hệ thống tự động ghi nhận mọi thao tác nhạy cảm (xem số CCCD, sửa đổi giá thuê phòng, duyệt hồ sơ KYC, xóa dữ liệu). Bảng log áp dụng chính sách ghi một lần (Append-only) và cấm triệt để quyền UPDATE/DELETE để đảm bảo tính toàn vẹn phục vụ công tác thanh tra.
+### [FEAT-HIEN-10] Xem tài liệu pháp lý bảo mật bằng Signed URL (TTL 5 phút) & Đóng dấu Watermark
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\VerificationDocumentController@show`, `stream`, `unlock`
+- **Endpoint**: `GET /admin/verification-documents/{document}`, `GET /admin/verification-documents/{document}/stream`, `POST /admin/verification-documents/{document}/unlock`
+- **Middleware**: `auth`, `role:admin`, `signed` (đối với route stream)
 
-Hình 17: Giao diện Nhật ký kiểm toán bất biến (Immutable Audit Logs)
+#### 1. Input Specification (Mở khóa tài liệu sau duyệt POST /unlock)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `reason` | String | Có | `required\|string\|min:10` | "Bắt buộc phải nhập lý do nghiệp vụ khi mở khóa xem tài liệu nhạy cảm." |
+| `passkey_verified` | Boolean | Có | `accepted` | "Vui lòng xác thực Passkey sinh trắc học trước khi mở khóa." |
 
-Bảng: Kịch bản xử lý lỗi Nhật ký kiểm toán bất biến Audit Logs
+#### 2. Business Logic Flow
+1. **Bảo vệ tài liệu thô**: File CCCD/PCCC được đặt ngoài `public`. Mọi yêu cầu xem file phải sinh đường dẫn có chữ ký thời hạn tạm thời (Signed URL) thông qua `URL::temporarySignedRoute('admin.verification-documents.stream', now()->addMinutes(5), ['document' => $id])`.
+2. **Xác thực Signed URL**: Middleware `signed` kiểm tra tham số băm `signature` và thời hạn `expires`. Nếu hết hạn (> 5 phút), trả về HTTP 403 Forbidden.
+3. **Đóng dấu bản quyền động (Dynamic Watermarking)**: Khi stream file ảnh ra response, ứng dụng tự động đóng dấu chìm: `"CHỈ DÙNG KIỂM DUYỆT - ADMIN: {name} - IP: {ip} - TIME: {now}"` chéo qua bức ảnh nhằm chống chụp màn hình tuồn ra ngoài.
+4. **Ghi vết truy cập**: Ghi nhận hành vi xem tài liệu vào `admin_access_logs`.
 
+#### 3. Database Operation
+- **Bảng tác động**: `admin_access_logs`, `audit_logs`. Không sửa đổi file gốc.
+
+#### 4. Output Specification
+- **Thành công**: Stream nhị phân hình ảnh định dạng `image/jpeg` kèm header `Cache-Control: no-store, private`.
+- **Thất bại (HTTP 403)**: "Liên kết xem tài liệu đã hết hạn vì lý do bảo mật. Vui lòng bấm làm mới trang."
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Người dùng can thiệp gọi API để sửa hoặc xóa bản ghi log | Hệ thống chặn lập tức với mã lỗi 405 Method Not Allowed: "Nhật ký kiểm toán là bất biến, nghiêm cấm mọi hành vi sửa/xóa dữ liệu!". |
+|---|---|
+| Truy cập tài liệu khi link ký đã quá thời gian 5 phút | Trang hiển thị lỗi 403: "Liên kết xem tài liệu đã hết hạn vì lý do an toàn bảo mật. Vui lòng bấm làm mới trang để nhận liên kết mới". |
+| Mở khóa tài liệu nhạy cảm mà không nhập lý do | Ô lý do bôi đỏ: "Quy định bảo mật: Bạn bắt buộc phải ghi rõ lý do nghiệp vụ để lưu vào nhật ký kiểm toán Audit Log trước khi mở khóa tài liệu". |
 
-11. Tích hợp Google Gemini AI tự động phân tích và sinh điều khoản hợp đồng thuê phòng chuẩn pháp lý
+---
 
-Mô tả chi tiết chức năng: Ứng dụng mô hình ngôn ngữ lớn Google Gemini AI để hỗ trợ chủ cơ sở: chỉ cần nhập các ý tưởng hoặc yêu cầu quản lý thực tế (cho nuôi thú cưng, giữ xe điện, giờ đóng cổng), AI tự động tạo văn bản điều khoản pháp lý chặt chẽ, đúng quy chuẩn pháp luật thuê nhà tại Việt Nam.
+### [FEAT-HIEN-11] Hệ thống Nhật ký kiểm toán bất biến (Immutable Audit Logs)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Service**: `App\Http\Controllers\AdminVerificationController@auditLogs`, `App\Services\AuditLogService`
+- **Endpoint**: `GET /admin/audit-logs`
+- **Middleware**: `auth`, `role:admin`
 
-Bảng: Kịch bản xử lý lỗi Trợ lý AI sinh điều khoản hợp đồng
+#### 1. Input Specification (Bộ lọc tra cứu Audit Logs)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `action` | String | Không | `nullable\|string` | "Hành động lọc không hợp lệ." |
+| `date_from` | Date | Không | `nullable\|date` | "Ngày bắt đầu lọc không hợp lệ." |
+| `date_to` | Date | Không | `nullable\|date\|after_or_equal:date_from` | "Ngày kết thúc lọc phải sau hoặc bằng ngày bắt đầu." |
 
+#### 2. Business Logic Flow
+1. **Kiến trúc Bất biến (Immutable Append-only)**:
+   - Bảng `audit_logs` được thiết lập Database Trigger cấm triệt để lệnh `UPDATE` và `DELETE`. Bất kỳ thao tác can thiệp sửa/xóa nào đều bị CSDL ném lỗi `SIGNAL SQLSTATE '45000'`.
+2. **Cơ chế chuỗi băm xác thực toàn vẹn (Cryptographic Hash Chaining)**:
+   - Mỗi bản ghi log mới được tính toán:
+     `row_hash = sha256(prev_hash + user_id + action + target_model + target_id + reason + timestamp)`.
+   - Tạo nên một chuỗi khối liên hoàn không thể bị chèn bản ghi giả mạo hoặc thay đổi dữ liệu cũ.
+3. **Hiển thị giao diện**: Superadmin tra cứu danh sách log, hiển thị huy hiệu xác thực tính toàn vẹn (Integrity Verified: Xanh lá).
+
+#### 3. Database Operation
+- **Bảng tác động**: `audit_logs` (Chỉ cho phép `INSERT` và `SELECT`).
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Render view `admin.audit_logs` hiển thị danh sách dòng thời gian truy vết.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bỏ trống yêu cầu khi gọi AI sinh điều khoản | Ô nhập bôi đỏ: "Vui lòng nhập ít nhất một yêu cầu quy định sinh hoạt để AI phân tích". |
+|---|---|
+| Người dùng hoặc script can thiệp API để sửa/xóa log | Hệ thống chặn lập tức với mã lỗi 405 Method Not Allowed: "Nhật ký kiểm toán là bất biến, nghiêm cấm mọi hành vi sửa/xóa dữ liệu!". |
+
+---
+
+### [FEAT-HIEN-12] AI Google Gemini tự động phân tích và sinh điều khoản hợp đồng thuê phòng
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\AdminDashboardController@aiContractTerms`
+- **Endpoint & Method**: `POST /smartroom/admin/ai/contract-terms`
+- **Middleware**: `auth`, `admin`, `role:landlord`
+
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `requirements` | String | Có | `required\|string\|min:5\|max:1000` | "Vui lòng nhập ít nhất một yêu cầu quy định sinh hoạt (5 - 1000 ký tự)." |
+| `room_type` | String | Không | `nullable\|string` | "Hạng phòng không hợp lệ." |
+
+#### 2. Business Logic Flow
+1. **Tiếp nhận tiêu chí quản lý**: Chủ trọ nhập các ý tưởng thực tế (ví dụ: *"cho nuôi mèo, không được dẫn người lạ qua đêm, xe điện phải sạc ban ngày"*).
+2. **Tạo Prompt Pháp lý chuyên sâu**:
+   - Gửi yêu cầu đến mô hình `gemini-2.5-flash` kèm luật tham chiếu: Luật Nhà ở Việt Nam và Bộ luật Dân sự.
+   - Yêu cầu AI sinh văn bản điều khoản pháp lý chuẩn xác gồm 3 phần: Quyền hạn, Nghĩa vụ và Chế tài phạt khi vi phạm.
+3. **Trả về kết quả**: Trả về văn bản đã chuẩn hóa định dạng Markdown/HTML để chèn tự động vào ô soạn thảo hợp đồng.
+
+#### 3. Database Operation
+- Không ghi CSDL trực tiếp tại bước này.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: `{"success": true, "terms": "ĐIỀU KHOẢN VỀ AN NINH VÀ SINH HOẠT CHUNG: 1. Bên thuê được phép nuôi thú cưng (mèo)..."}`.
+- **Thất bại (HTTP 500)**: Trả về mẫu điều khoản mặc định dự phòng nếu mất kết nối AI.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+|---|---|
+| Bỏ trống yêu cầu khi gọi AI sinh điều khoản | Ô nhập bôi đỏ viền: "Vui lòng nhập ít nhất một yêu cầu quy định sinh hoạt để AI phân tích". |
 | Mất kết nối mạng đến Google Gemini API | Toast cảnh báo: "Không thể kết nối đến máy chủ AI. Hệ thống tạm thời nạp mẫu điều khoản tiêu chuẩn có sẵn". |
 
-12. Xây dựng quy trình Onboarding đăng ký nhanh cho chủ trọ mới
+---
 
-Mô tả chi tiết chức năng: Quy trình hướng dẫn từng bước (Step Wizard) giúp chủ trọ mới thiết lập cơ sở lưu trú chỉ trong 3 phút: Bước 1 (Tên cơ sở, địa chỉ, loại hình), Bước 2 (Số lượng tầng, cấu hình biểu giá điện nước và dịch vụ), Bước 3 (Khởi tạo phòng tự động và bàn giao quyền quản trị).
+### [FEAT-HIEN-13] Quy trình Onboarding Step-Wizard đăng ký nhanh cho chủ trọ mới
+- **Git Branch**: `Hien/Menu`
+- **Thành viên phụ trách**: Nguyễn Thanh Hiền
+- **Controller & Method**: `App\Http\Controllers\LandlordOnboardingController@create`, `store`, `verifyOtp`
+- **Endpoint**: `GET /landlord/register`, `POST /landlord/register`, `POST /landlord/verify-otp`
+- **Middleware**: `guest`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Thiết lập cơ sở lưu trú ban đầu (Step Wizard)
+#### 1. Input Specification (Request Validation POST /landlord/register)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `name` | String | Có | `required\|string\|max:255` | "Vui lòng nhập họ và tên chủ cơ sở." |
+| `phone` | String | Có | `required\|regex:/^(0[3\|5\|7\|8\|9])[0-9]{8}$/` | "Số điện thoại di động Việt Nam không hợp lệ." |
+| `password` | String | Có | `required\|string\|min:6` | "Mật khẩu tối thiểu 6 ký tự." |
+| `facility_name` | String | Có | `required\|string\|max:255` | "Vui lòng nhập tên cơ sở lưu trú ban đầu." |
+| `facility_address`| String | Có | `required\|string\|max:255` | "Địa chỉ cơ sở lưu trú không được để trống." |
+| `total_floors` | Integer | Có | `required\|integer\|min:1\|max:100` | "Số tầng phải từ 1 đến 100 tầng." |
 
-Hình 4: Giao diện Onboarding thiết lập cơ sở lưu trú ban đầu cho Chủ trọ mới
+#### 2. Business Logic Flow
+1. **Kiểm tra trùng lặp SĐT**: Tính `phone_blind_index` và kiểm tra trong bảng `users`. Nếu tồn tại, trả về lỗi: *"Số điện thoại này đã được đăng ký tài khoản"*.
+2. **Khởi tạo tài khoản & Tenant**:
+   - Tạo bản ghi mới trong bảng `tenants` đại diện cho doanh nghiệp lưu trú của chủ trọ.
+   - Tạo tài khoản `users` với `role = 'unverified_landlord'`, liên kết `tenant_id`.
+   - Tạo cơ sở lưu trú ban đầu trong bảng `buildings`.
+3. **Xác thực OTP kích hoạt**: Gửi mã OTP kích hoạt qua SMS/Zalo. Sau khi xác thực thành công, đăng nhập tự động và chuyển đến bảng điều khiển Overview.
 
-Bảng: Kịch bản xử lý lỗi Quy trình Onboarding Chủ trọ mới
+#### 3. Database Operation
+- **Bảng tác động**: `tenants`, `users`, `buildings`, `otp_codes`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng đến trang xác thực OTP hoặc trang quản trị `/smartroom/admin`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Giao diện**: Thanh chỉ báo tiến trình Step Wizard (Bước 1: Tài khoản -> Bước 2: Cơ sở lưu trú -> Bước 3: Kích hoạt).
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
+|---|---|
 | Bỏ trống Tên cơ sở hoặc Địa chỉ tòa nhà | Các ô input bắt buộc bôi đỏ: "Vui lòng nhập tên cơ sở lưu trú" và "Địa chỉ không được để trống". |
 | Số tầng hoặc số phòng dự kiến nhập số ≤ 0 | Báo lỗi: "Số tầng và số phòng dự kiến phải là số nguyên dương lớn hơn 0". |
 
-B. CÁC MODULE & CHỨC NĂNG DO NGUYỄN ANH QUÝ (NHÓM PHÓ) PHỤ TRÁCH
 
-1. Lập trình module CRUD Quản lý Cơ sở lưu trú (Properties/Hotels)
+## B. CÁC MODULE & ĐẶC TẢ KỸ THUẬT DO NGUYỄN ANH QUÝ (NHÓM PHÓ) PHỤ TRÁCH
 
-Mô tả chi tiết chức năng: Module cho phép chủ cơ sở và quản trị viên thêm mới, cập nhật thông tin tòa nhà, khách sạn; quản lý số điện thoại liên hệ, tải lên ảnh đại diện tòa nhà, chọn danh mục tiện ích chung (thang máy, bảo vệ 24/7, camera an ninh, hầm giữ xe, hệ thống PCCC...), thiết lập trạng thái hoạt động (Hoạt động - active, Bảo trì - maintenance, Tạm ngưng - inactive), cài đặt số tầng (total_floors), mốc giờ Check-in/Check-out tiêu chuẩn và cấu hình bảng giá điện, nước, phí quản lý cơ sở. Áp dụng cơ chế SoftDeletes (xóa mềm) kết hợp Guard Check an toàn tuyệt đối: tự động kiểm tra và ngăn chặn hành vi xóa cơ sở lưu trú nếu vẫn còn phòng trọ trực thuộc.
+---
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Quản lý và thiết lập Cơ sở lưu trú (Properties/Hotels)
+### [FEAT-AQ-01] CRUD Quản lý Cơ sở lưu trú (Properties/Hotels) & Guard Check an toàn
+- **Git Branch**: `AnhQuy/quan-ly-co-so-luu-tru` (`AnhQuy-quan-ly-co-so-luu-tru`)
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\BuildingController@index`, `create`, `store`, `edit`, `update`, `destroy`
+- **Endpoint**:
+  - `GET /smartroom/admin/buildings` (`admin.buildings.index`)
+  - `GET /smartroom/admin/buildings/create` (`admin.buildings.create`)
+  - `POST /smartroom/admin/buildings/store` (`admin.buildings.store`)
+  - `GET /smartroom/admin/buildings/{id}/edit` (`admin.buildings.edit`)
+  - `POST /smartroom/admin/buildings/{id}/update` (`admin.buildings.update`)
+  - `DELETE /smartroom/admin/buildings/{id}/delete` (`admin.buildings.destroy`)
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Bảng: Kịch bản xử lý lỗi Quản lý Cơ sở lưu trú (Properties/Hotels)
+#### 1. Input Specification (Request Validation POST /store & POST /{id}/update)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `name` | String | Có | `required\|string\|max:255` | "Tên cơ sở lưu trú không được để trống." |
+| `address` | String | Có | `required\|string\|max:255` | "Địa chỉ cơ sở lưu trú không được để trống." |
+| `total_floors` | Integer | Có | `required\|integer\|min:1\|max:100` | "Số tầng tối thiểu là 1 và tối đa là 100." |
+| `phone` | String | Không | `nullable\|regex:/^(0[3\|5\|7\|8\|9])[0-9]{8}$/` | "Số điện thoại hotline cơ sở không hợp lệ." |
+| `status` | String | Có | `required\|in:active,maintenance,inactive` | "Trạng thái hoạt động không hợp lệ." |
+| `image` | File | Không | `nullable\|image\|mimes:jpeg,png,jpg,webp\|max:5120` | "File tải lên phải là hình ảnh (jpg, png, webp) và dung lượng không quá 5MB." |
+| `amenities` | Array | Không | `nullable\|array` | "Danh sách tiện ích chung không hợp lệ." |
+| `property_type`| String | Không | `nullable\|in:boarding,apartment,hotel` | "Loại hình cơ sở lưu trú không hợp lệ." |
+| `checkin_time` | String | Không | `nullable\|date_format:H:i` | "Giờ check-in tiêu chuẩn không đúng định dạng HH:mm." |
+| `checkout_time`| String | Không | `nullable\|date_format:H:i` | "Giờ check-out tiêu chuẩn không đúng định dạng HH:mm." |
 
+#### 2. Business Logic Flow
+1. **Kiểm tra quyền Multi-tenancy**: Mọi thao tác truy xuất hoặc cập nhật phải đảm bảo `building->tenant_id === auth()->user()->tenant_id`. Nếu không khớp, trả về HTTP 403.
+2. **Logic Thêm mới (Store) & Cập nhật (Update)**:
+   - Xử lý upload file ảnh: Nếu có file `image`, lưu trữ vào `storage/app/public/buildings/` với tên file tạo ngẫu nhiên UUID kèm đuôi tệp gốc; cập nhật đường dẫn vào cột `image`.
+   - Tiện ích chung `amenities` được encode thành JSON array.
+   - Kiểm tra logic giờ giấc (nếu là khách sạn): Nếu có cả `checkin_time` và `checkout_time`, kiểm tra `checkin_time > checkout_time` (check-in sau check-out).
+3. **Cơ chế Guard Check an toàn khi Xóa (Destroy)**:
+   - Đếm số lượng phòng trực thuộc: `$roomCount = Room::where('building_id', $id)->count()`.
+   - **Guard Check**: Nếu `$roomCount > 0`, **CHẶN TUYỆT ĐỐI** hành vi xóa; trả về phản hồi lỗi kèm số lượng phòng còn tồn tại.
+   - Nếu `$roomCount === 0`: Thực thi SoftDelete (`building->delete()`).
+4. **Phản hồi**: Redirect về danh sách kèm Flash Session Toast.
+
+#### 3. Database Operation
+- **Bảng tác động**: `buildings` (hoặc `properties`).
+- **Cột**: `tenant_id`, `name`, `address`, `total_floors`, `phone`, `status`, `image`, `amenities`, `deleted_at`.
+- **Cơ chế**: SoftDeletes (`deleted_at` timestamp).
+
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về `admin.buildings.index` kèm `session('success', 'Lưu thông tin cơ sở lưu trú thành công!')`.
+- **Thất bại khi Xóa (HTTP 422)**: Redirect back kèm `session('error', 'Không thể xóa cơ sở vì vẫn còn 8 phòng trực thuộc. Vui lòng chuyển hoặc xóa các phòng trước!')`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Form element**: `#building-form`, input `#building-name`, `#total-floors`, vùng upload `#building-image-dropzone`.
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bỏ trống tên cơ sở lưu trú khi tạo mới | Ô tên cơ sở bôi đỏ: "Tên cơ sở lưu trú không được để trống". |
-| Giờ Check-in sớm hơn hoặc trùng với giờ Check-out | Báo lỗi logic: "Giờ Check-in (14:00) phải sau giờ Check-out tiêu chuẩn (12:00)". |
-| Đơn giá điện hoặc nước nhập số âm | Ô đơn giá bôi đỏ: "Đơn giá dịch vụ phải lớn hơn hoặc bằng 0 VNĐ". |
+|---|---|
+| Bỏ trống tên cơ sở lưu trú khi tạo mới | Ô tên cơ sở bôi đỏ `border-red-500`: "Tên cơ sở lưu trú không được để trống". |
 | Số tầng nhập không hợp lệ (nhỏ hơn 1 hoặc lớn hơn 100) | Ô số tầng bôi đỏ: "Số tầng tối thiểu là 1 và tối đa 100". |
-| Tải lên ảnh đại diện sai định dạng hoặc vượt quá dung lượng cho phép (> 5MB) | Vùng upload ảnh bôi đỏ: "File tải lên phải là hình ảnh hợp lệ (jpg, png, webp) và dung lượng không quá 5MB". |
-| Xóa cơ sở lưu trú khi vẫn còn phòng trực thuộc (Guard Check an toàn) | Modal cảnh báo chặn thao tác: "Không thể xóa cơ sở vì vẫn còn X phòng trọ trực thuộc. Vui lòng chuyển hoặc xóa các phòng trước". |
+| Tải lên ảnh sai định dạng hoặc vượt quá 5MB | Vùng upload bôi đỏ: "File tải lên phải là hình ảnh hợp lệ (jpg, png, webp) và dung lượng không quá 5MB". |
+| Xóa cơ sở lưu trú khi vẫn còn phòng trực thuộc (Guard Check) | Modal cảnh báo chặn thao tác: "Không thể xóa cơ sở vì vẫn còn X phòng trọ trực thuộc. Vui lòng chuyển hoặc xóa các phòng trước". |
 
-2. Lập trình module CRUD Quản lý Phòng lưu trú (Rooms)
+---
 
-Mô tả chi tiết chức năng: Quản lý danh sách chi tiết các phòng trong cơ sở: phân loại theo tầng, phân hạng phòng chuẩn hóa (Standard, Deluxe, VIP, Studio), hình thức cho thuê linh hoạt (Theo tháng - month, Theo ngày - day, Theo giờ - hour), cấu hình diện tích, đơn giá thuê, thiết lập tiền đặt cọc giữ phòng (deposit), mô tả chi tiết phòng, cơ chế khóa lạc quan (Optimistic Locking với trường version) và danh mục tiện ích phòng (Máy lạnh, Nóng lạnh, Minibar, SmartLock, Ban công). Hỗ trợ tải lên cùng lúc tối đa 10 ảnh thực tế và 1 video không gian phòng (định dạng MP4/WebM/MOV ≤ 30MB). Đặc biệt, tích hợp cấu hình Số sản xuất (Số SX / Serial Number) công tơ điện và đồng hồ nước dập trên mặt thiết bị (electric_meter_serial, water_meter_serial) phục vụ cơ chế AI Vision quét hàng loạt tự động khớp phòng.
+### [FEAT-AQ-02] CRUD Quản lý Phòng lưu trú (Rooms - đa mô hình) & Cấu hình Serial công tơ
+- **Git Branch**: `AnhQuy/quan-ly-phong`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\RoomController@index`, `create`, `store`, `edit`, `update`, `destroy`
+- **Endpoint**:
+  - `GET /smartroom/admin/rooms` (`admin.rooms.index`)
+  - `GET /smartroom/admin/rooms/create` (`admin.rooms.create`)
+  - `POST /smartroom/admin/rooms/store` (`admin.rooms.store`)
+  - `GET /smartroom/admin/rooms/{id}/edit` (`admin.rooms.edit`)
+  - `POST /smartroom/admin/rooms/{id}/update` (`admin.rooms.update`)
+  - `DELETE /smartroom/admin/rooms/{id}/delete` (`admin.rooms.destroy`)
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Thêm mới và cập nhật thông tin phòng lưu trú
+#### 1. Input Specification (Request Validation POST /store & POST /{id}/update)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `building_id` | Integer | Có | `required\|integer\|exists:buildings,id` | "Vui lòng chọn cơ sở lưu trú hợp lệ." |
+| `room_number` | String | Có | `required\|string\|max:50` | "Số phòng không được để trống." |
+| `floor` | Integer | Có | `required\|integer\|min:0\|max:100` | "Tầng phòng tọa lạc phải từ 0 (tầng trệt) đến 100." |
+| `price` | Numeric | Có | `required\|numeric\|min:0` | "Giá thuê phòng phải là số dương lớn hơn hoặc bằng 0." |
+| `area` | Integer | Có | `required\|integer\|min:5\|max:500` | "Diện tích phòng phải từ 5m² đến 500m²." |
+| `deposit` | Numeric | Có | `required\|numeric\|min:0` | "Tiền đặt cọc giữ phòng không được là số âm." |
+| `room_type` | String | Có | `required\|in:standard,deluxe,vip,studio` | "Hạng phòng phải là standard, deluxe, vip hoặc studio." |
+| `rental_type`| String | Có | `required\|in:month,day,hour` | "Hình thức cho thuê phải là theo tháng, theo ngày hoặc theo giờ." |
+| `status` | String | Có | `required\|in:empty,occupied,overdue,maintenance` | "Trạng thái phòng không hợp lệ." |
+| `electric_meter_serial`| String | Không | `nullable\|string\|max:100` | "Số SX công tơ điện tối đa 100 ký tự." |
+| `water_meter_serial` | String | Không | `nullable\|string\|max:100` | "Số SX đồng hồ nước tối đa 100 ký tự." |
+| `amenities` | Array | Không | `nullable\|array` | "Danh sách tiện ích phòng không hợp lệ." |
+| `image` | File | Không | `nullable\|image\|mimes:jpeg,png,jpg,webp\|max:5120` | "Ảnh đại diện phòng tối đa 5MB." |
+| `images` | Array | Không | `nullable\|array\|max:10` | "Chỉ được tải lên tối đa 10 ảnh thực tế của phòng." |
+| `images.*` | File | Không | `image\|mimes:jpeg,png,jpg,webp\|max:5120` | "Mỗi ảnh thực tế tối đa 5MB." |
+| `video` | File | Không | `nullable\|file\|mimes:mp4,mov,webm\|max:30720` | "Video không gian phòng phải có định dạng MP4/MOV/WebM và dung lượng tối đa 30MB." |
+| `version` | Integer | Không | `nullable\|integer` | "Mã phiên bản đồng bộ không hợp lệ." |
 
-Hình 7: Giao diện Form Thêm / Cập nhật thông tin phòng lưu trú đa mô hình
+#### 2. Business Logic Flow
+1. **Kiểm tra trùng lặp số phòng trong cùng tòa nhà**:
+   Query kiểm tra: `Room::where('building_id', $buildingId)->where('room_number', $roomNumber)->where('id', '!=', $currentId)->exists()`. Nếu trùng lặp, trả về HTTP 422: *"Số phòng này đã tồn tại trong tòa nhà"*.
+2. **Khóa lạc quan (Optimistic Locking)**:
+   Khi `update`: So sánh giá trị `version` gửi lên với `room->version` trong CSDL.
+   - Nếu `version_request != room->version`: Ném ngoại lệ xung đột dữ liệu (HTTP 409 Conflict): *"Dữ liệu phòng vừa được cập nhật bởi một người dùng khác. Vui lòng tải lại trang"*.
+   - Nếu khớp: Thực hiện cập nhật và tăng `version = version + 1`.
+3. **Cấu hình Serial công tơ**: Lưu trữ `electric_meter_serial` và `water_meter_serial` phục vụ thuật toán AI Vision Bulk Match.
+4. **Xử lý tệp tin Media**:
+   - Lưu ảnh đại diện và mảng ảnh thực tế vào `storage/app/public/rooms/photos/`.
+   - Lưu video vào `storage/app/public/rooms/videos/`.
+5. **Guard Check khi Xóa phòng**: Nếu phòng có `status == 'occupied'` hoặc còn cư dân đang ở, cấm xóa (HTTP 422).
 
-Bảng 23: Kịch bản xử lý lỗi Trang Quản lý Danh sách phòng & Form Phòng
+#### 3. Database Operation
+- **Bảng tác động**: `rooms`.
+- **Cột**: `tenant_id`, `building_id`, `room_number`, `floor`, `price`, `area`, `deposit`, `room_type`, `rental_type`, `status`, `electric_meter_serial`, `water_meter_serial`, `amenities`, `image`, `images`, `video`, `version`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về `admin.rooms.index` kèm `session('success', 'Lưu thông tin phòng thành công!')`.
+- **Thất bại (HTTP 422 / 409)**: Redirect back với input và thông báo lỗi tương ứng.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bỏ trống Số phòng hoặc Diện tích hoặc Giá thuê | Các ô input bắt buộc bôi đỏ viền. Dưới mỗi ô hiện: "Số phòng không được để trống", "Vui lòng nhập giá phòng hợp lệ". |
-| Nhập giá phòng hoặc diện tích là số âm hoặc bằng 0 | Ô input bôi đỏ. Hiển thị thông báo: "Giá thuê và diện tích phải là số nguyên dương lớn hơn 0". |
-| Số phòng bị trùng lặp trong cùng một tòa nhà (Ví dụ đã có P.101) | Ô số phòng bôi đỏ. Thông báo lỗi: "Số phòng P.101 đã tồn tại trong tòa nhà này. Vui lòng chọn số phòng khác". |
-| Tải lên tệp tin hình ảnh sai định dạng (.exe, .pdf thay vì .jpg, .png) | Vùng upload ảnh bôi đỏ. Hiển thị: "Định dạng tệp tin không hợp lệ. Hệ thống chỉ chấp nhận ảnh .jpg, .jpeg, .png, .webp". |
-| Dung lượng file ảnh hoặc video vượt quá giới hạn (Ảnh > 5MB, Video > 30MB) | Thông báo lỗi: "Dung lượng tệp vượt quá kích thước cho phép. Vui lòng nén file hoặc chọn tệp nhỏ hơn". |
-| Chưa chọn hoặc chọn sai Hạng phòng (room_type) | Ô chọn hạng phòng bôi đỏ viền: "Hạng phòng phải là Standard, Deluxe, VIP hoặc Studio". |
-| Chưa chọn hoặc chọn sai Hình thức cho thuê (rental_type) | Ô chọn hình thức thuê bôi đỏ viền: "Hình thức cho thuê phải là theo tháng, theo ngày hoặc theo giờ". |
-| Nhập tiền đặt cọc giữ phòng là số âm (deposit < 0) | Ô tiền cọc bôi đỏ viền: "Tiền cọc không được là số âm (tối thiểu 0 VNĐ)". |
+|---|---|
+| Bỏ trống Số phòng, Diện tích hoặc Giá thuê | Các ô input bôi đỏ `border-red-500`: "Số phòng không được để trống", "Vui lòng nhập giá phòng hợp lệ". |
+| Số phòng bị trùng lặp trong cùng tòa nhà | Ô số phòng bôi đỏ: "Số phòng P.101 đã tồn tại trong tòa nhà này. Vui lòng chọn số phòng khác". |
+| Tải file ảnh/video vượt quá dung lượng (Ảnh > 5MB, Video > 30MB) | Vùng upload bôi đỏ: "Dung lượng tệp vượt quá kích thước cho phép. Vui lòng nén file hoặc chọn tệp nhỏ hơn". |
+| Xóa phòng đang có người ở (status = occupied) | Modal cảnh báo đỏ: "Không thể xóa phòng đang có người ở! Bạn phải làm thủ tục trả phòng cho cư dân trước khi xóa". |
 
-3. Thiết kế & phát triển Sơ đồ ma trận phòng trực quan (Visual Room Matrix) theo tầng
+---
 
-Mô tả chi tiết chức năng: Giao diện sơ đồ buồng phòng ma trận chia theo tầng chuẩn công nghiệp khách sạn: mỗi phòng là một thẻ trực quan với mã màu trạng thái thời gian thực: Xanh lá (Phòng trống), Đỏ (Đang ở), Cam (Cần dọn dẹp - Cleaning/Housekeeping), Vàng (Đang nợ cước), Xám (Đang bảo trì). Hỗ trợ đổi trạng thái dọn buồng một chạm.
+### [FEAT-AQ-03] Sơ đồ Ma trận phòng trực quan theo tầng (Visual Room Matrix) & Real-time Housekeeping
+- **Git Branch**: `AnhQuy/ma-tran-phong`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\RoomMatrixRealtimeController@updateStatus`, `stream`, `poll`, `App\Http\Controllers\HousekeepingController@index`, `updateStatus`
+- **Endpoint**:
+  - `POST /smartroom/admin/rooms/{id}/quick-status` (`admin.rooms.quick_status`)
+  - `GET /smartroom/admin/rooms/matrix/stream` (SSE Server-Sent Events)
+  - `GET /smartroom/admin/rooms/matrix/poll` (Long-polling fallback)
+  - `GET /smartroom/housekeeping` (`admin.housekeeping.index`)
+  - `POST /smartroom/housekeeping/{roomId}/status` (`admin.housekeeping.update`)
+- **Middleware**: `auth`, `admin`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Sơ đồ Ma trận phòng trực quan theo tầng (Visual Room Matrix)
+#### 1. Input Specification (Request Validation POST /quick-status)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `status` | String | Có | `required\|in:empty,occupied,cleaning,overdue,maintenance` | "Trạng thái phòng cập nhật không hợp lệ." |
 
-Hình 6: Giao diện Sơ đồ Ma trận phòng lưu trú (Visual Room Matrix) theo tầng
+#### 2. Business Logic Flow
+1. **Kiểm tra logic chuyển trạng thái**:
+   - Không cho phép chuyển thủ công sang `occupied` nếu phòng chưa có Hợp đồng hoặc Phiếu đặt phòng có hiệu lực.
+   - Cho phép nhân viên buồng phòng đổi giữa `cleaning` (Cần dọn) và `empty` (Đã dọn xong - Sẵn sàng đón khách) chỉ với 1 chạm.
+2. **Cập nhật CSDL**: Cập nhật `rooms.status = :status` và tăng `version = version + 1`.
+3. **Phát sóng thời gian thực (Real-time Broadcast)**:
+   - Đẩy sự kiện qua SSE (`stream`) hoặc Laravel Reverb WebSocket tới toàn bộ các tab trình duyệt của nhân viên lễ tân và quản lý đang mở.
+4. **Phản hồi**: Trả về JSON trạng thái mới.
 
-Bảng: Kịch bản xử lý lỗi Sơ đồ Ma trận phòng trực quan
+#### 3. Database Operation
+- **Bảng tác động**: `rooms` (cập nhật cột `status`, `version`, `updated_at`).
 
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: `{"success": true, "room_id": 15, "new_status": "empty", "status_label": "Còn trống", "color_class": "bg-emerald-500"}`.
+- **Thất bại (HTTP 422)**: `{"success": false, "message": "Không thể chuyển trạng thái thủ công sang Đang ở. Vui lòng tạo Hợp đồng trước."}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Ma trận phòng**: Chia theo tầng (Tầng 1, Tầng 2...), mỗi phòng là 1 thẻ Card bo tròn với mã màu động:
+  - `empty`: Viền xanh lá, nền `bg-emerald-500/10 text-emerald-400`
+  - `occupied`: Viền đỏ, nền `bg-rose-500/10 text-rose-400`
+  - `cleaning`: Viền cam, nền `bg-amber-500/10 text-amber-400` (Icon chổi quét)
+  - `overdue`: Viền vàng cảnh báo nợ, nền `bg-yellow-500/10 text-yellow-400`
+  - `maintenance`: Viền xám, nền `bg-slate-500/10 text-slate-400`
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bấm nút Xóa phòng đang có cư dân thuê (Status = occupied) | Modal cảnh báo nguy hiểm: "Không thể xóa phòng đang có người ở! Bạn phải làm thủ tục trả phòng cho cư dân trước khi xóa". |
-| Bấm Xóa phòng trống (Hành động hợp lệ) | Modal Popup xác nhận: "Bạn có chắc chắn muốn xóa vĩnh viễn phòng này? Thao tác này không thể khôi phục!" (Nút Xác nhận đỏ / Hủy bỏ). |
-| Chuyển trạng thái sang Đang ở khi chưa lập Hợp đồng | Toast cảnh báo: "Không thể chuyển trạng thái thủ công sang Đang ở. Vui lòng tạo Hợp đồng hoặc Phiếu booking trước". |
+|---|---|
+| Chuyển trạng thái sang Đang ở khi chưa lập hợp đồng | Toast cảnh báo vàng: "Không thể chuyển trạng thái thủ công sang Đang ở. Vui lòng tạo Hợp đồng hoặc Phiếu booking trước". |
+| Mất kết nối SSE thời gian thực | Hệ thống tự động chuyển sang cơ chế Polling ngầm mỗi 5 giây mà không làm gián đoạn người dùng. |
 
-4 & 5. Chốt số Điện - Nước định kỳ hàng tháng & AI Vision OCR nhận diện công tơ từ camera
+---
 
-Mô tả chi tiết chức năng: Bảng chốt số tiện ích tập trung cuối tháng: tự động nạp chỉ số cũ của tháng trước (khóa không cho sửa), ô nhập chỉ số mới của tháng này, tự động tính chênh lệch sản lượng tiêu thụ và thành tiền tương ứng. Tích hợp AI thị giác kép: (1) Quét đơn lẻ từng phòng qua Camera/Tải ảnh có sẵn với hiệu ứng laser scan và huy hiệu độ tin cậy; (2) AI Quét hàng loạt & Khớp phòng tự động (Bulk Match OCR): Cho phép chủ trọ tải lên cùng lúc 5 – 30 ảnh công tơ, Google Gemini Vision API tự động bóc tách song song Số SX (Serial Number) và Chỉ số tiêu thụ mới, tự động đối chiếu với cơ sở dữ liệu để điền chính xác vào từng phòng và tính tiền tức thì chỉ trong một thao tác.
+### [FEAT-AQ-04] Chốt số Điện - Nước định kỳ hàng tháng (Đơn lẻ & Hàng loạt)
+- **Git Branch**: `AnhQuy/chot-so-dien-nuoc-ai-ocr`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\AdminDashboardController@storeUtility`, `storeUtilityBulk`, `payUtility`
+- **Endpoint**:
+  - `POST /smartroom/admin/utility` (`smartroom.admin.utility.store`)
+  - `POST /smartroom/admin/utility/bulk` (`smartroom.admin.utility.bulk_store`)
+  - `POST /smartroom/admin/utility/{id}/pay` (`smartroom.admin.utility.pay`)
+- **Middleware**: `auth`, `admin`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Chốt số Điện - Nước định kỳ & AI Vision OCR Camera
+#### 1. Input Specification (Request Validation POST /utility)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_id` | Integer | Có | `required\|integer\|exists:rooms,id` | "Phòng được chốt số không tồn tại." |
+| `billing_month`| String | Có | `required\|regex:/^[0-9]{4}-(0[1-9]\|1[0-2])$/` | "Tháng tính tiền phải có định dạng YYYY-MM (Ví dụ: 2026-06)." |
+| `new_electricity`| Integer | Có | `required\|integer\|min:0` | "Chỉ số điện mới phải là số nguyên dương." |
+| `new_water` | Integer | Có | `required\|integer\|min:0` | "Chỉ số nước mới phải là số nguyên dương." |
+| `electricity_price`| Numeric | Có | `required\|numeric\|min:0` | "Đơn giá tiền điện không hợp lệ." |
+| `water_price` | Numeric | Có | `required\|numeric\|min:0` | "Đơn giá tiền nước không hợp lệ." |
 
-Hình 10: Giao diện Chốt số Điện - Nước định kỳ & AI OCR Camera nhận diện công tơ
+#### 2. Business Logic Flow
+1. **Lấy chỉ số cũ**: Truy vấn bản ghi tháng trước liền kề của phòng. Nếu là tháng đầu tiên, `old_electricity` và `old_water` lấy từ chỉ số bàn giao ban đầu.
+2. **Kiểm tra ràng buộc logic**:
+   - `new_electricity >= old_electricity`: Nếu nhỏ hơn, báo lỗi HTTP 422: *"Chỉ số điện mới không được nhỏ hơn chỉ số cũ tháng trước"*.
+   - `new_water >= old_water`: Tương tự với chỉ số nước.
+   - Cảnh báo tiêu thụ bất thường: Nếu `(new_electricity - old_electricity) > 1000 kWh`, đánh dấu cờ cảnh báo rò rỉ điện.
+3. **Tính toán chi phí**:
+   - `electric_cost = (new_electricity - old_electricity) * electricity_price`.
+   - `water_cost = (new_water - old_water) * water_price`.
+   - `total_utility_cost = electric_cost + water_cost`.
+4. **Lưu CSDL**: Ghi vào bảng `utility_records` với `status = 'draft'`. Tự động đồng bộ sang bảng `bills` (Hóa đơn tổng hợp).
 
-Bảng 25: Kịch bản xử lý lỗi Trang Ghi chỉ số Điện - Nước định kỳ & AI OCR Camera
+#### 3. Database Operation
+- **Bảng tác động**: `utility_records`, `bills`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về màn hình Điện nước kèm toast xanh: "Chốt số điện nước thành công!".
+- **Thất bại (HTTP 422)**: Báo lỗi viền đỏ ô nhập liệu.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Nhập chỉ số điện/nước mới nhỏ hơn chỉ số cũ tháng trước | Ô chỉ số mới bôi đỏ. Thông báo lỗi: "Chỉ số mới không được nhỏ hơn chỉ số cũ tháng trước (Chỉ số cũ: 150 kWh)". |
-| Nhập ký tự chữ cái hoặc ký hiệu đặc biệt vào ô chỉ số | Ô input bôi đỏ. Hiển thị: "Chỉ số công tơ phải là số nguyên dương hợp lệ". |
-| Mức tiêu thụ tăng đột biến bất thường (Ví dụ dùng hơn 1000 số điện/tháng) | Hiển thị cảnh báo vàng (Warning): "Lượng điện tiêu thụ tăng đột biến (+1200 kWh). Vui lòng kiểm tra lại công tơ xem có bị nhầm số không!". |
-| Ảnh chụp đồng hồ quá mờ hoặc bị lóa sáng khiến AI không đọc được số | Toast thông báo: "AI không nhận diện rõ số trên mặt đồng hồ do ảnh mờ/thiếu sáng. Vui lòng chụp lại rõ nét hoặc tự nhập tay". |
-| Lưu bản ghi chốt số của phòng đã được chốt trong tháng đó rồi | Thông báo: "Hóa đơn điện nước tháng này của phòng đã được lập. Bạn chỉ có thể cập nhật chỉnh sửa lại bản ghi cũ". |
-| Quét hàng loạt: Ảnh công tơ không tìm thấy Số SX trùng khớp với phòng nào của cơ sở lưu trú | Dòng kết quả hiển thị nhãn trạng thái màu vàng 'Cần gán phòng' kèm dropdown danh sách phòng để chủ trọ lựa chọn gán tay nhanh chóng trước khi áp dụng. |
-| Tải lên vượt quá số lượng ảnh cho phép (> 30 ảnh) hoặc file tải lên không phải ảnh hợp lệ | Modal quét hàng loạt hiển thị thông báo: 'Hệ thống hỗ trợ quét tối đa 30 ảnh công tơ trong một lượt và chỉ chấp nhận định dạng ảnh JPG, PNG, WEBP'. |
+|---|---|
+| Chỉ số mới nhỏ hơn chỉ số cũ | Ô chỉ số mới bôi đỏ: "Chỉ số mới không được nhỏ hơn chỉ số cũ tháng trước (Chỉ số cũ: 150 kWh)". |
+| Mức tiêu thụ tăng đột biến (> 1000 kWh) | Toast cảnh báo vàng: "Lượng điện tiêu thụ tăng đột biến (+1200 kWh). Vui lòng kiểm tra lại công tơ xem có bị nhầm số không!". |
+| Phòng đã được chốt số trong tháng đó rồi | Thông báo: "Hóa đơn điện nước tháng này của phòng đã được lập. Bạn chỉ có thể cập nhật chỉnh sửa lại bản ghi cũ". |
 
-6 & 7. Bộ máy tính toán cước tự động & Xuất hóa đơn tháng / Bảng kê Folio PDF kèm mã VietQR Check-out
+---
 
-Mô tả chi tiết chức năng: Động cơ tính toán tài chính tự động tổng hợp tiền phòng, tiền điện nước (từ chốt số AI), phí dịch vụ chung và phụ thu tiêu hao đồ uống minibar khách sạn. Sử dụng DomPDF kết xuất phiếu tính tiền chuẩn khổ giấy A4/A5, tự động sinh mã VietQR động NAPAS chứa chính xác số tiền cần thu và nội dung chuyển khoản để khách thanh toán tức thời.
+### [FEAT-AQ-05] AI Vision OCR Nhận diện mặt công tơ đơn lẻ & Quét hàng loạt khớp Serial phòng tự động
+- **Git Branch**: `AnhQuy/chot-so-dien-nuoc-ai-ocr`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\AdminDashboardController@aiOcrMeter`, `aiOcrMeterBulk`
+- **Endpoint**:
+  - `POST /smartroom/admin/ai/ocr-meter` (`smartroom.admin.ai.ocr_meter`)
+  - `POST /smartroom/admin/ai/ocr-meter-bulk` (`smartroom.admin.ai.ocr_meter_bulk`)
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Bảng kê thanh toán Folio & Hóa đơn VietQR
+#### 1. Input Specification (Request Validation POST /ocr-meter-bulk)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `building_id` | Integer | Có | `required\|integer\|exists:buildings,id` | "Vui lòng chọn cơ sở lưu trú hợp lệ." |
+| `meter_type` | String | Có | `required\|in:electricity,water` | "Loại công tơ phải là điện (electricity) hoặc nước (water)." |
+| `images` | Array | Có | `required\|array\|min:1\|max:30` | "Số lượng ảnh công tơ tải lên từ 1 đến tối đa 30 ảnh." |
+| `images.*` | File | Có | `image\|mimes:jpeg,png,jpg,webp\|max:10240` | "Ảnh công tơ phải có định dạng hợp lệ và dung lượng không quá 10MB." |
 
-Hình 11: Giao diện Quản lý Thanh toán & Xuất hóa đơn / Bảng kê Folio VietQR
+#### 2. Business Logic Flow
+1. **Nạp danh mục Serial của cơ sở**: Truy vấn danh sách phòng thuộc `building_id`, lấy ra danh sách cặp `[room_id, room_number, electric_meter_serial, water_meter_serial]`.
+2. **Gọi Google Gemini Vision API**:
+   - Duyệt qua từng file ảnh, convert sang chuỗi `base64`.
+   - Gửi yêu cầu phân tích thị giác AI kèm Structured Output Schema:
+     `{"meter_reading": <int>, "serial_number": "<string>", "confidence": <float>}`.
+3. **Thuật toán Khớp số Serial (Serial Matching Engine)**:
+   - So sánh chuỗi `serial_number` AI đọc được với `electric_meter_serial` (hoặc `water_meter_serial`) của các phòng trong CSDL.
+   - Nếu trùng khớp: Gán `matched = true`, `room_id = room.id`, `room_number = room.room_number`.
+   - Nếu không khớp: Gán `matched = false`, gắn nhãn `"Cần gán phòng thủ công"`.
+4. **Phản hồi**: Trả về danh sách đối soát JSON để hiển thị trực quan lên Modal chốt số hàng loạt.
 
-Bảng 26: Kịch bản xử lý lỗi Trang Quản lý Thanh toán, Xuất hóa đơn VietQR & Bảng kê Folio
+#### 3. Database Operation
+- Không ghi CSDL tại bước này (chỉ phân tích và gợi ý dữ liệu). Dữ liệu được ghi khi người dùng bấm Lưu qua `storeUtilityBulk`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Trả về JSON kết quả gồm `total_processed`, `matched_count`, `unmatched_count` và mảng chi tiết từng phòng kèm chỉ số cũ, chỉ số mới, lượng tiêu thụ.
+- **Thất bại (HTTP 422 / 500)**: Báo lỗi định dạng ảnh hoặc lỗi timeout từ Google Gemini API.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Modal Quét hàng loạt**: `#bulk-meter-ocr-modal`, hiệu ứng Laser Scan xanh lướt qua thumbnail các bức ảnh.
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bấm xuất mã VietQR khi Chủ trọ chưa hoàn tất xác minh KYC | Modal chặn: "Bạn cần hoàn tất xác minh định danh KYC (CCCD & STK Ngân hàng) trước khi sử dụng tính năng nhận tiền online qua VietQR". |
-| Chủ trọ chưa cập nhật thông tin Số tài khoản hoặc Tên ngân hàng nhận tiền | Thông báo lỗi: "Chưa cấu hình tài khoản ngân hàng thụ hưởng. Vui lòng vào Cài đặt để bổ sung thông tin thanh toán". |
-| Lỗi mạng khi gọi API VietQR sinh ảnh mã QR | Hiển thị khung thông báo dự phòng: "Không tải được ảnh mã QR từ cổng VietQR. Vui lòng chuyển khoản theo thông tin STK bên dưới". |
+|---|---|
+| Ảnh chụp đồng hồ quá mờ hoặc lóa sáng | Toast cảnh báo: "AI không nhận diện rõ số trên mặt đồng hồ do ảnh mờ/thiếu sáng. Vui lòng chụp lại rõ nét hoặc tự nhập tay". |
+| Không tìm thấy Số SX trùng khớp với phòng nào | Dòng kết quả hiển thị nhãn vàng 'Cần gán phòng' kèm dropdown danh sách phòng để chủ trọ chọn nhanh trước khi lưu. |
+| Tải vượt quá 30 ảnh trong 1 lượt | Modal hiển thị cảnh báo: "Hệ thống hỗ trợ quét tối đa 30 ảnh công tơ trong một lượt và chỉ chấp nhận định dạng ảnh JPG, PNG, WEBP". |
 
-8. Quét nợ tự động và gửi tin nhắn nhắc tiền phòng kèm link VietQR qua Zalo/SMS
+---
 
-Mô tả chi tiết chức năng: Hệ thống tự động theo dõi thời hạn thanh toán sau chu kỳ thu tiền, lọc danh sách các phòng trễ hẹn nợ cước và hỗ trợ chức năng gửi tin nhắn nhắc nợ một chạm kèm link mở hóa đơn VietQR thanh toán nhanh qua mạng xã hội Zalo hoặc SMS.
+### [FEAT-AQ-06] Động cơ tính cước tự động (BillingEngine) & Bảng phân bổ doanh thu
+- **Git Branch**: `AnhQuy/tinh-cuoc-hoa-don-vietqr`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Service & Endpoint**: `App\Services\BillingEngine`, `GET /api/revenue-breakdown`
+- **Middleware**: `auth`, `admin`
 
-Bảng: Kịch bản xử lý lỗi Quét nợ và Gửi nhắc nợ Zalo/SMS
+#### 1. Input Specification (Tính toán hóa đơn phòng)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_id` | Integer | Có | `required\|integer\|exists:rooms,id` | "Phòng tính cước không hợp lệ." |
+| `billing_month`| String | Có | `required\|regex:/^[0-9]{4}-(0[1-9]\|1[0-2])$/` | "Tháng tính cước không hợp lệ." |
 
+#### 2. Business Logic Flow
+1. **Tổng hợp đa thành phần chi phí**:
+   - `room_fee`: Tiền thuê phòng cơ sở (từ bảng `rooms.price`).
+   - `electric_fee`: Tiền điện tiêu thụ trong kỳ tính theo đơn giá.
+   - `water_fee`: Tiền nước tiêu thụ trong kỳ.
+   - `management_fee`: Phí quản lý chung cư (nếu là căn hộ: tính theo diện tích `area * management_fee_rate`).
+   - `minibar_fee`: Phụ phí đồ uống, dịch vụ buồng phòng phát sinh (từ bảng `hotel_folio_items` nếu có).
+   - `discount`: Khấu trừ khuyến mãi / giảm giá (nếu có).
+2. **Công thức tính tổng tiền**:
+   `total_amount = room_fee + electric_fee + water_fee + management_fee + minibar_fee - discount`.
+3. **Cập nhật hoặc Tạo bản ghi Hóa đơn**: Ghi vào bảng `bills` kèm mã hóa đơn duy nhất `BILL-{YYYYMM}-{ROOM_NUMBER}` và hạn thanh toán `due_date = ngày 5 tháng kế tiếp`.
+4. **Phân tích cơ cấu doanh thu**: API `/api/revenue-breakdown` trả về tỷ trọng phần trăm từng nguồn thu phục vụ vẽ biểu đồ Donut Chart (Chart.js).
+
+#### 3. Database Operation
+- **Bảng tác động**: `bills`, `utility_records`, `hotel_folio_items`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: Trả về `total`, cấu trúc `breakdown` (room, electric, water, service) và tỷ trọng `percentages`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Biểu đồ doanh thu**: Thẻ `<canvas id="revenueDoughnutChart"></canvas>` hiển thị 4 màu: Tiền phòng (Xanh dương `#38bdf8`), Điện (Vàng `#facc15`), Nước (Xanh lơ `#06b6d4`), Dịch vụ (Tím `#a855f7`).
+
+---
+
+### [FEAT-AQ-07] Xuất Hóa đơn / Bảng kê Folio PDF chuẩn in kèm Mã VietQR động NAPAS247
+- **Git Branch**: `AnhQuy/tinh-cuoc-hoa-don-vietqr`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `AdminDashboardController@printUtility`, `HotelReceptionController@printFolio`, `PaymentController@index`
+- **Endpoint**:
+  - `GET /smartroom/admin/utility/{id}/print` (`smartroom.admin.utility.print`)
+  - `GET /smartroom/admin/hotel/folio/{bookingId}` (`admin.hotel.folio`)
+  - `GET /smartroom/admin/payments` (`admin.payments.index`)
+- **Middleware**: `auth`, `admin`
+
+#### 1. Input Specification (Tham số xuất in)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `id` | Integer (Route) | Có | `exists:utility_records,id` | "Bản ghi hóa đơn không tồn tại." |
+
+#### 2. Business Logic Flow
+1. **Kiểm tra thông tin tài khoản ngân hàng chủ trọ**:
+   Lấy `bank_name`, `bank_account_number`, `landlord_name` từ hồ sơ chủ trọ đã xác minh KYC.
+   - **Guard Check**: Nếu chủ trọ chưa cập nhật STK ngân hàng, chặn xuất VietQR và hiển thị cảnh báo yêu cầu cài đặt.
+2. **Sinh mã VietQR động chuẩn NAPAS247**:
+   - Sử dụng định dạng QuickLink chuẩn VietQR:
+     `https://img.vietqr.io/image/{BANK_ID}-{ACCOUNT_NO}-compact2.png?amount={TOTAL}&addInfo={BILL_CODE}&accountName={LANDLORD_NAME}`.
+   - Mã QR chứa sẵn: STK ngân hàng thụ hưởng, chính xác số tiền cần nộp đến từng đồng, và nội dung chuyển khoản là mã hóa đơn.
+3. **Kết xuất file PDF chuẩn in (DomPDF)**:
+   - Sử dụng `Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.utility_invoice', $data)`.
+   - Thiết lập khổ giấy A4 hoặc A5 đứng, nhúng font tiếng Việt hỗ trợ Unicode, hiển thị mã VietQR nổi bật ở góc dưới.
+4. **Phản hồi**: Stream file PDF trực tiếp trên trình duyệt hoặc tải về máy.
+
+#### 3. Database Operation
+- **Đọc**: `utility_records`, `rooms`, `residents`, `tenants`, `landlord_profiles`. Không làm biến đổi dữ liệu.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Trả về PDF stream MIME `application/pdf` sẵn sàng bấm Ctrl+P để in hóa đơn nhiệt/A4.
+- **Thất bại (HTTP 422)**: Báo lỗi chưa cấu hình tài khoản nhận tiền.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Gửi tin nhắc nợ tự động cho phòng không có số điện thoại cư dân | Báo lỗi trên danh sách: "Không thể gửi tin nhắc nợ đến Phòng 201: Cư dân chưa cập nhật số điện thoại liên lạc". |
+|---|---|
+| Chủ trọ chưa hoàn tất xác minh KYC hoặc chưa có STK | Modal chặn: "Bạn cần hoàn tất xác minh định danh KYC (CCCD & STK Ngân hàng) trước khi sử dụng tính năng nhận tiền online qua VietQR". |
+| Lỗi mạng khi gọi API cổng VietQR | Hiển thị khung thông báo dự phòng: "Không tải được ảnh mã QR từ cổng VietQR. Vui lòng chuyển khoản thủ công theo thông tin STK bên dưới". |
+
+---
+
+### [FEAT-AQ-08] Quét nợ tự động và gửi tin nhắn nhắc tiền phòng Zalo/SMS/Telegram kèm link VietQR
+- **Git Branch**: `AnhQuy/nhac-no-zalo-sms`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Service**: `AdminDashboardController@autoRemindUtilities`, `notifyUtility`, `App\Services\SmsZaloService`, `NotificationService`
+- **Endpoint**: `POST /smartroom/admin/utility/auto-remind`, `POST /smartroom/admin/utility/{id}/notify`
+- **Middleware**: `auth`, `admin`, `role:landlord`
+
+#### 1. Input Specification (Request Validation POST /auto-remind)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `channel` | String | Không | `nullable\|in:all,zalo,sms,telegram` | "Kênh gửi tin nhắn không hợp lệ." |
+
+#### 2. Business Logic Flow
+1. **Quét danh sách hóa đơn trễ hạn**: Truy vấn các hóa đơn trong `utility_records` có `status = 'draft'` hoặc `'sent'` và ngày hiện tại đã quá hạn thanh toán (`due_date < now()`).
+2. **Xây dựng nội dung tin nhắn cá nhân hóa**:
+   - Template mẫu: *"Kính gửi [Tên_Cư_Dân] phòng [Số_Phòng], Ban Quản Lý xin gửi hóa đơn tiền phòng tháng [Tháng]. Tổng thanh toán: [Số_Tiền]đ. Quý khách vui lòng bấm vào liên kết sau để quét mã VietQR thanh toán nhanh: [Short_Link]. Xin cảm ơn!"*.
+3. **Phân phối tin nhắn đa kênh (Background Dispatch)**:
+   - Gửi tin Zalo ZNS / SMS Brandname qua `SmsZaloService`.
+   - Gửi tin nhắn bot Telegram đến nhóm quản trị viên.
+   - Ghi lịch sử gửi vào bảng `notification_logs` để chặn việc gửi spam nhiều lần trong cùng một ngày.
+4. **Cập nhật trạng thái**: Chuyển trạng thái hóa đơn sang `status = 'sent'`.
+
+#### 3. Database Operation
+- **Bảng tác động**: `utility_records` (cập nhật status), `notification_logs` (lưu vết gửi tin).
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "reminded_count": 8, "message": "Đã gửi tin nhắn nhắc tiền phòng thành công đến 8 phòng trễ hạn!"}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+|---|---|
+| Gửi tin nhắc nợ cho phòng chưa có số điện thoại | Báo lỗi trên danh sách: "Không thể gửi tin nhắc nợ đến Phòng 201: Cư dân chưa cập nhật số điện thoại liên lạc". |
 | Gửi tin nhắc nợ nhiều lần liên tục trong ngày | Popup cảnh báo: "Phòng này đã được gửi tin nhắc nợ hôm nay lúc 08:30. Bạn có chắc chắn muốn gửi tiếp?". |
 
-9. Lập trình module Quản lý Trang thiết bị - Tài sản phòng trọ (Equipment)
+---
 
-Mô tả chi tiết chức năng: Theo dõi và quản lý danh mục tài sản, trang thiết bị vật tư của cơ sở lưu trú (Máy lạnh, Giường, Tủ, Tivi, Nệm, Tủ lạnh mini): thống kê số lượng tồn kho, quy trình bàn giao vào phòng và lập biên bản ghi nhận hỏng hóc để khấu trừ tiền cọc khi trả phòng.
+### [FEAT-AQ-09] Quản lý Danh mục Trang thiết bị - Tài sản kho & Phân bổ phòng (Equipment & RoomEquipment)
+- **Git Branch**: `AnhQuy/quan-ly-trang-thiet-bi`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\EquipmentController@index`, `store`, `update`, `allocate`, `recover`, `destroy`
+- **Endpoint**:
+  - `GET /smartroom/admin/equipment` (`admin.equipment.index`)
+  - `POST /smartroom/admin/equipment/store` (`admin.equipment.store`)
+  - `POST /smartroom/admin/equipment/{id}/update` (`admin.equipment.update`)
+  - `POST /smartroom/admin/equipment/allocate` (`admin.equipment.allocate`)
+  - `POST /smartroom/admin/equipment/recover` (`admin.equipment.recover`)
+  - `DELETE /smartroom/admin/equipment/{id}/delete` (`admin.equipment.destroy`)
+- **Middleware**: `auth`, `admin`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Quản lý Trang thiết bị & Hàng hóa Minibar
+#### 1. Input Specification (Bàn giao thiết bị vào phòng POST /allocate)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `equipment_id` | Integer | Có | `required\|integer\|exists:equipment,id` | "Trang thiết bị không tồn tại." |
+| `room_id` | Integer | Có | `required\|integer\|exists:rooms,id` | "Phòng tiếp nhận thiết bị không hợp lệ." |
+| `quantity` | Integer | Có | `required\|integer\|min:1` | "Số lượng bàn giao tối thiểu là 1." |
+| `condition` | String | Có | `required\|string\|max:100` | "Vui lòng ghi rõ tình trạng thiết bị (VD: Mới 100%, Hoạt động tốt)." |
 
-Hình 18: Giao diện Quản lý Tài sản - Trang thiết bị & Minibar lưu trú
+#### 2. Business Logic Flow
+1. **Kiểm tra tồn kho thực tế**: Truy vấn `equipment = Equipment::findOrFail($equipment_id)`.
+   - **Guard Check**: Nếu `equipment->quantity < $request->quantity`, ném lỗi HTTP 422: *"Số lượng thiết bị trong kho không đủ để bàn giao"*.
+2. **Mở DB Transaction**:
+   - Trừ số lượng tồn kho trong bảng `equipment`: `quantity = quantity - $request->quantity`.
+   - Thêm hoặc cập nhật bản ghi trong bảng trung gian `room_equipment`: gán `room_id`, `equipment_id`, số lượng bàn giao, tình trạng và `assigned_date = now()`.
+3. **Quy trình Thu hồi về kho (/recover)**:
+   - Khi cư dân trả phòng hoặc thiết bị hỏng cần sửa: Xóa/giảm bản ghi trong `room_equipment` và cộng hoàn trả số lượng vào kho `equipment`.
+4. **Guard Check khi Xóa danh mục thiết bị**: Nếu thiết bị đang được phân bổ trong bất kỳ phòng nào, cấm xóa danh mục thiết bị khỏi hệ thống.
 
-Bảng 30: Kịch bản xử lý lỗi Trang Quản lý Tài sản - Trang thiết bị & Minibar (Asset & Minibar Management)
+#### 3. Database Operation
+- **Bảng tác động**: `equipment`, `room_equipment`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Redirect về `admin.equipment.index` kèm `session('success', 'Bàn giao trang thiết bị vào phòng thành công!')`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bỏ trống Tên thiết bị hoặc Mã thiết bị khi thêm mới | Các ô bắt buộc bôi đỏ. Hiển thị: "Vui lòng nhập tên trang thiết bị" và "Mã thiết bị không được để trống". |
-| Nhập mã thiết bị đã tồn tại trong kho của cùng chủ trọ | Ô mã thiết bị bôi đỏ: "Mã thiết bị này đã tồn tại trong danh mục. Vui lòng chọn mã khác". |
-| Bàn giao thiết bị vào phòng với số lượng vượt quá tồn kho thực tế | Ô số lượng bôi đỏ. Thông báo: "Số lượng thiết bị trong kho không đủ để bàn giao (Tồn kho hiện tại: 2 cái, yêu cầu: 5 cái)". |
-| Xóa danh mục thiết bị đang được gán sử dụng trong các phòng trọ | Modal chặn: "Không thể xóa trang thiết bị này! Thiết bị đang được phân bổ trong các phòng trọ. Bạn phải thu hồi về kho trước khi xóa". |
+|---|---|
+| Bỏ trống tên hoặc mã thiết bị khi thêm mới | Các ô input bôi đỏ: "Vui lòng nhập tên trang thiết bị" và "Mã thiết bị không được để trống". |
+| Bàn giao số lượng vượt quá tồn kho thực tế | Ô số lượng bôi đỏ: "Số lượng thiết bị trong kho không đủ để bàn giao (Tồn kho hiện tại: 2 cái, yêu cầu: 5 cái)". |
+| Xóa danh mục thiết bị đang được sử dụng trong phòng | Modal chặn: "Không thể xóa trang thiết bị này! Thiết bị đang được phân bổ trong các phòng trọ. Bạn phải thu hồi về kho trước khi xóa". |
 
-10. Xây dựng module Sổ quỹ thu - chi và ghi nhận dòng tiền phát sinh ngoài tiền phòng
+---
 
-Mô tả chi tiết chức năng: Giúp chủ trọ kiểm soát dòng tiền thực tế thông qua việc lập phiếu thu phát sinh (tiền cọc, thanh lý đồ cũ) và phiếu chi vận hành (mua bóng đèn, sửa ống nước, vệ sinh bể nước, thuê bảo vệ, tiền rác). Báo cáo trực quan doanh thu thuần và lợi nhuận ròng.
+### [FEAT-AQ-10] Sổ quỹ thu - chi và ghi nhận dòng tiền phát sinh ngoài tiền phòng (Transactions)
+- **Git Branch**: `AnhQuy/so-quy-thu-chi`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\ReportController@index`, `storeTransaction`
+- **Endpoint**: `GET /smartroom/admin/reports` (`admin.reports.index`), `POST /smartroom/admin/reports/transactions` (`admin.reports.transaction.store`)
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Sổ quỹ thu - chi cơ sở lưu trú
+#### 1. Input Specification (Request Validation POST /transactions)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `type` | String | Có | `required\|in:income,expense` | "Loại phiếu phải là Thu (income) hoặc Chi (expense)." |
+| `category` | String | Có | `required\|string\|max:100` | "Khoản mục thu chi không được để trống." |
+| `amount` | Numeric | Có | `required\|numeric\|min:1000` | "Số tiền giao dịch tối thiểu là 1.000 VNĐ." |
+| `description` | String | Có | `required\|string\|max:500` | "Vui lòng nhập lý do / diễn giải khoản thu chi." |
+| `transaction_date`| Date | Có | `required\|date\|before_or_equal:today` | "Ngày ghi nhận không thể là ngày trong tương lai." |
 
-Hình 19: Giao diện Quản lý Sổ quỹ thu chi và ghi nhận dòng tiền phát sinh
+#### 2. Business Logic Flow
+1. **Gán Tenant Scoping**: Tự động gán `tenant_id = auth()->user()->tenant_id`.
+2. **Lưu bản ghi dòng tiền**: Tạo bản ghi mới trong bảng `transactions` (hoặc `cash_flows`).
+3. **Tính toán số dư lũy kế**:
+   - `total_income = sum(amount) where type = 'income'`.
+   - `total_expense = sum(amount) where type = 'expense'`.
+   - `net_cash_flow = total_income - total_expense`.
+4. **Phản hồi**: Redirect về báo cáo tài chính hiển thị thẻ KPI dòng tiền thuần thời gian thực.
 
-Bảng: Kịch bản xử lý lỗi Sổ quỹ thu - chi và Dòng tiền
+#### 3. Database Operation
+- **Bảng tác động**: `transactions`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về `admin.reports.index` kèm `session('success', 'Ghi nhận phiếu thu/chi thành công!')`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
+|---|---|
 | Bỏ trống số tiền hoặc hạng mục chi khi lập phiếu | Viền đỏ các ô input: "Vui lòng nhập lý do phát sinh" và "Số tiền phải lớn hơn 0 đ". |
 | Chọn ngày lập phiếu lớn hơn ngày hiện tại | Báo lỗi: "Ngày ghi nhận phiếu thu/chi không thể là ngày trong tương lai". |
 
-11. Tích hợp AI tự động viết bài đăng mô tả phòng trọ chuẩn SEO thu hút khách thuê
+---
 
-Mô tả chi tiết chức năng: Tính năng ứng dụng AI hỗ trợ marketing: chủ trọ chỉ cần chọn vài tiện ích chính (ban công, thang máy, gần trường ĐH), AI tự động tạo bài viết giới thiệu phòng trọ hấp dẫn, tối ưu từ khóa SEO để đăng lên cổng Renty tìm khách thuê phòng siêu tốc.
+### [FEAT-AQ-11] AI Google Gemini tự động viết bài mô tả phòng chuẩn SEO thu hút khách thuê
+- **Git Branch**: `AnhQuy/ai-viet-mo-ta-phong`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\RoomController@generateDescription`
+- **Endpoint & Method**: `POST /smartroom/admin/rooms/description/ai` (`admin.rooms.description.ai`)
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Bảng: Kịch bản xử lý lỗi AI Soạn bài viết mô tả phòng trọ
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_number` | String | Có | `required\|string` | "Số phòng không được để trống." |
+| `area` | Numeric | Có | `required\|numeric` | "Diện tích phòng không hợp lệ." |
+| `price` | Numeric | Có | `required\|numeric` | "Giá thuê phòng không hợp lệ." |
+| `amenities` | Array | Không | `nullable\|array` | "Danh sách tiện ích không hợp lệ." |
+| `highlights` | String | Không | `nullable\|string\|max:500` | "Ghi chú đặc điểm nổi bật tối đa 500 ký tự." |
 
+#### 2. Business Logic Flow
+1. **Thiết lập Prompt Marketing chuyên nghiệp**:
+   Gửi yêu cầu đến Google Gemini API (`gemini-2.5-flash`):
+   - Đóng vai chuyên gia Copywriter Bất động sản.
+   - Tổng hợp các tham số: Diện tích, giá, tiện ích (máy lạnh, ban công, gác lửng), vị trí khu vực.
+   - Yêu cầu cấu trúc bài đăng: Tiêu đề giật tít hấp dẫn, nội dung mô tả tiện nghi sinh động, bảng giá minh bạch, lời kêu gọi hành động (Call To Action - CTA) đặt lịch xem phòng ngay.
+2. **Tối ưu SEO**: Tự động chèn các từ khóa tìm kiếm phổ biến (ví dụ: *phòng trọ giá rẻ, căn hộ mini đầy đủ nội thất, giờ giấc tự do, an ninh 24/7*).
+3. **Phản hồi**: Trả về chuỗi văn bản mô tả để chèn vào textarea `description` của form phòng.
+
+#### 3. Database Operation
+- Không ghi CSDL tại bước này.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: `{"success": true, "description": "🌟 SIÊU PHẨM PHÒNG TRỌ BAN CÔNG THOÁNG MÁT... Giá chỉ 3.5tr/tháng..."}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Chưa nhập đặc điểm phòng khi bấm tạo bài đăng | Viền đỏ ô nhập: "Vui lòng nhập ít nhất một vài đặc điểm nổi bật của phòng trọ để AI xử lý". |
+|---|---|
+| Chưa nhập thông số cơ bản của phòng | Viền đỏ: "Vui lòng nhập ít nhất một vài đặc điểm nổi bật của phòng trọ để AI xử lý". |
+| Mất kết nối API | Toast cảnh báo lỗi kết nối và gợi ý nhập mô tả thủ công. |
 
-C. CÁC MODULE & CHỨC NĂNG DO HUỲNH VĂN VĨNH EM (THÀNH VIÊN) PHỤ TRÁCH
+---
 
-1, 2 & 3. Cổng tìm kiếm Renty Portal, Bộ lọc thông minh trực quan & Thanh so sánh phòng nổi
+### [FEAT-AQ-12] Nhật ký thao tác quản trị viên hệ thống (AdminActivityLog)
+- **Git Branch**: `AnhQuy/nhat-ky-kiem-toan`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Service**: `App\Http\Controllers\AdminActivityLogController@index`, `App\Services\AdminActivityLogger`
+- **Endpoint**: `GET /smartroom/admin/activity-logs` (`admin.activity_logs.index`)
+- **Middleware**: `auth`, `admin`, `role:landlord`
 
-Mô tả chi tiết chức năng: Cổng công cộng phong cách Glassmorphism đáp ứng mọi thiết bị di động (Responsive). Tích hợp bộ lọc tiện ích trực quan (WC khép kín, Thú cưng, Ban công, Thang máy, Máy giặt) và công tắc 'Chỉ hiển thị phòng còn trống'. Thanh công cụ so sánh nổi cố định ở cạnh đáy màn hình cho phép đối chiếu song song tối đa 3 phòng.
+#### 1. Input Specification (Bộ lọc tìm kiếm nhật ký)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `action` | String | Không | `nullable\|string` | "Loại thao tác lọc không hợp lệ." |
+| `user_id` | Integer | Không | `nullable\|integer\|exists:users,id` | "Người thực hiện không hợp lệ." |
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Cổng tìm kiếm phòng & Thanh so sánh nổi Renty Portal
+#### 2. Business Logic Flow
+1. **Lắng nghe sự kiện hệ thống (Model Observers & Middleware)**:
+   - Tự động bắt các thao tác CRUD trên các bảng trọng yếu (`Room::created`, `Room::updated`, `Contract::deleted`...).
+2. **Ghi nhật ký chi tiết**:
+   - Lưu trữ: `user_id`, `action` (login, create, update, delete), `model_type`, `model_id`, `description`, `ip_address`, `user_agent`, mảng `old_values` và `new_values` (JSON).
+3. **Phân quyền hiển thị**: Chủ trọ chỉ xem nhật ký hoạt động thuộc cơ sở của mình; Superadmin xem toàn bộ hệ thống.
 
-Hình 14: Giao diện Cổng tìm kiếm, đặt phòng & Review lưu trú Renty Portal
+#### 3. Database Operation
+- **Bảng tác động**: `admin_activity_logs`.
 
-Bảng: Kịch bản xử lý lỗi Cổng tìm kiếm, Bộ lọc và So sánh phòng Renty
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Render view `admin.activity_logs.index` với bảng phân trang 20 dòng/trang.
 
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Bảng Timeline**: Hiển thị nhãn màu theo action: `create` (Xanh lá), `update` (Xanh dương), `delete` (Đỏ), `login` (Tím).
+
+---
+
+### [FEAT-AQ-13] Phân hệ Khách sạn / Lễ tân: Check-in, Check-out & Folio chi tiêu minibar
+- **Git Branch**: `AnhQuy/PhanQuyen`
+- **Thành viên phụ trách**: Nguyễn Anh Quý
+- **Controller & Method**: `App\Http\Controllers\HotelReceptionController@checkIn`, `checkOut`, `addFolioItem`, `printFolio`
+- **Endpoint**:
+  - `POST /smartroom/admin/hotel/check-in` (`admin.hotel.checkin`)
+  - `POST /smartroom/admin/hotel/folio/{bookingId}/items` (`admin.hotel.folio.add_item`)
+  - `POST /smartroom/admin/hotel/check-out/{bookingId}` (`admin.hotel.checkout`)
+  - `GET /smartroom/admin/hotel/folio/{bookingId}` (`admin.hotel.folio`)
+- **Middleware**: `auth`, `admin`
+
+#### 1. Input Specification (Check-in khách sạn POST /check-in)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_id` | Integer | Có | `required\|integer\|exists:rooms,id` | "Phòng khách sạn không hợp lệ." |
+| `guest_name` | String | Có | `required\|string\|max:255` | "Họ tên khách lưu trú không được để trống." |
+| `guest_phone` | String | Có | `required\|regex:/^[0-9]{10}$/` | "Số điện thoại khách lưu trú không đúng 10 số." |
+| `guest_cccd` | String | Không | `nullable\|string\|max:20` | "Số CCCD/Hộ chiếu không hợp lệ." |
+| `rental_type` | String | Có | `required\|in:hour,day` | "Hình thức thuê phải là theo giờ hoặc theo ngày." |
+| `checkin_time` | DateTime | Có | `required\|date` | "Thời điểm nhận phòng không hợp lệ." |
+
+#### 2. Business Logic Flow
+1. **Kiểm tra trạng thái phòng**: Phòng phải có `status == 'empty'`. Nếu đang `occupied` hoặc `cleaning`, ném lỗi chặn Check-in.
+2. **Quy trình Check-in**:
+   - Tạo bản ghi mới trong bảng `hotel_bookings` với `status = 'active'`.
+   - Cập nhật phòng sang `status = 'occupied'`.
+3. **Thêm phụ phí tiêu dùng minibar (addFolioItem)**:
+   - Lễ tân ghi nhận nước ngọt, bia, giặt ủi vào bảng kê `hotel_folio_items` liên kết với `booking_id`.
+4. **Quy trình Check-out**:
+   - Tính tổng tiền phòng (theo số giờ hoặc số đêm thực tế) + tổng tiền minibar folio.
+   - Chuyển `booking->status = 'completed'`, chuyển phòng sang `status = 'cleaning'` (Cần dọn vệ sinh buồng phòng).
+   - Tự động xuất phiếu thanh toán Bảng kê Folio PDF có nhúng mã VietQR thanh toán.
+
+#### 3. Database Operation
+- **Bảng tác động**: `hotel_bookings`, `hotel_folio_items`, `rooms`, `cash_flows`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "booking_id": 45, "folio_url": "/smartroom/admin/hotel/folio/45"}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Nhập khoảng giá tối thiểu lớn hơn giá tối đa | Ô giá bôi đỏ: "Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)". |
-| Người dùng chọn thêm phòng thứ 4 vào thanh so sánh | Toast cảnh báo vàng: "Bạn chỉ có thể so sánh tối đa 3 phòng cùng một lúc". |
-| Bấm nút So sánh ngay khi mới chỉ chọn 1 phòng duy nhất | Toast thông báo: "Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối chiếu". |
+|---|---|
+| Check-in vào phòng đang có khách hoặc chưa dọn dẹp | Modal chặn: "Phòng đang ở trạng thái Cần dọn dẹp vệ sinh. Vui lòng hoàn tất dọn phòng trước khi nhận khách mới". |
+| Bỏ trống họ tên hoặc số điện thoại khách | Viền đỏ ô input bắt buộc. |
 
-4 & 5. Chi tiết phòng trọ (Room Detail), Review có xác thực & Báo cáo phòng lừa đảo
 
-Mô tả chi tiết chức năng: Màn hình chi tiết phòng: slide trình chiếu ảnh/video, bản đồ vị trí, popover thống kê chỉ số an ninh và vệ sinh từ cư dân cũ, kèm thuật toán phát hiện cảnh báo nếu giá phòng dị biệt. Cơ chế bảo vệ minh bạch: chỉ người có hợp đồng ở thực tế mới được viết review; đồng thời cung cấp form báo cáo phòng sai phạm (ảnh ảo, cọc lừa đảo).
+## C. CÁC MODULE & ĐẶC TẢ KỸ THUẬT DO HUỲNH VĂN VĨNH EM (THÀNH VIÊN) PHỤ TRÁCH
 
-Bảng: Kịch bản xử lý lỗi Chi tiết phòng, Gửi đánh giá và Báo cáo sai phạm
+---
 
+### [FEAT-VEM-01] Cổng tìm kiếm lưu trú công cộng Renty Portal (Glassmorphism & Responsive)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Route & View**: `GET /renty` (hoặc `/home`, `/`), View `resources/views/renty/index.blade.php`
+- **Middleware**: `web`
+
+#### 1. Input Specification (Tham số Query String)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `q` | String | Không | `nullable\|string\|max:100` | "Từ khóa tìm kiếm tối đa 100 ký tự." |
+| `city` | String | Không | `nullable\|string` | "Tỉnh/Thành phố không hợp lệ." |
+| `district` | String | Không | `nullable\|string` | "Quận/Huyện không hợp lệ." |
+| `sort` | String | Không | `nullable\|in:price_asc,price_desc,rating_desc,newest` | "Tiêu chí sắp xếp không hợp lệ." |
+
+#### 2. Business Logic Flow
+1. **Truy vấn danh sách phòng**:
+   - Truy vấn `Room::with(['building', 'tenant', 'reviews'])` với điều kiện mặc định `status = 'empty'`.
+   - Tính toán điểm đánh giá sao trung bình (`rating = reviews->avg('rating') ?? 4.5`).
+   - Lấy huy hiệu uy tín chủ trọ (`trustBadge`):
+     - `premium_verified` / `verified`: Huy hiệu "Tích xanh" uy tín (Xanh ngọc `bg-sky-500/10 text-sky-300`).
+     - `kyc_verified`: Huy hiệu "Đã xác minh KYC" (Xanh lá `bg-emerald-500/10 text-emerald-300`).
+     - `unverified`: Chưa xác minh (Xám).
+2. **Khởi tạo dữ liệu giao diện**: Nạp danh sách các cơ sở, ảnh đại diện, khoảng cách tiện ích, mức giá theo tháng/ngày/giờ.
+3. **Render View**: Kết xuất giao diện Glassmorphism với hiệu ứng nền mờ `backdrop-blur-md bg-slate-900/80 border border-white/10`.
+
+#### 3. Database Operation
+- **Đọc**: `rooms`, `buildings`, `tenants`, `reviews`. Không sửa đổi dữ liệu.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Render HTML trang chủ Renty hoàn chỉnh kèm danh sách thẻ phòng dạng Grid (1 cột trên di động, 2 cột trên tablet, 3 cột trên desktop).
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Layout**: Header với logo Renty phát sáng, thanh tìm kiếm lớn ở Banner Hero, nút chuyển chế độ xem Bản đồ / Danh sách.
+
+---
+
+### [FEAT-VEM-02] Bộ lọc tìm kiếm thông minh đa tiêu chí (Smart Search Filter)
+- **Git Branch**: `feat(smart-search)`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Service & Controller**: `App\Services\SmartSearchService`, `App\Http\Controllers\Api\SmartSearchController`
+- **Endpoint**: `GET /api/renty/rooms`
+- **Middleware**: `web`
+
+#### 1. Input Specification (Request Query Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `price_min` | Numeric | Không | `nullable\|numeric\|min:0` | "Giá tối thiểu phải lớn hơn hoặc bằng 0." |
+| `price_max` | Numeric | Không | `nullable\|numeric\|gte:price_min` | "Giá tối đa phải lớn hơn hoặc bằng giá tối thiểu." |
+| `rental_type` | String | Không | `nullable\|in:month,day,hour` | "Hình thức thuê phải là month, day hoặc hour." |
+| `room_type` | String | Không | `nullable\|in:standard,deluxe,vip,studio` | "Hạng phòng không hợp lệ." |
+| `amenities` | Array | Không | `nullable\|array` | "Danh sách tiện ích lọc không hợp lệ." |
+| `only_empty` | Boolean | Không | `nullable\|boolean` | "Trạng thái chỉ phòng trống phải là true/false." |
+
+#### 2. Business Logic Flow
+1. **Xây dựng truy vấn động (Dynamic Query Builder)**:
+   - Áp dụng các điều kiện lọc: `whereBetween('price', [$min, $max])`.
+   - Nếu `only_empty == true`: Thêm điều kiện `where('status', 'empty')`.
+   - Lọc theo tiện ích (JSON column): Duyệt qua mảng `amenities` (ví dụ: `wc_rieng`, `gac_lung`, `ban_cong`, `thu_cung`, `thang_may`):
+     `whereJsonContains('amenities', $amenity)`.
+2. **Sắp xếp & Phân trang**: Mặc định sắp xếp theo ngày đăng mới nhất hoặc theo giá tăng/giảm dần; phân trang 12 phòng/trang.
+3. **Phản hồi**: Trả về dữ liệu JSON kèm metadata phân trang để giao diện cập nhật AJAX không cần tải lại trang.
+
+#### 3. Database Operation
+- **Đọc**: `rooms`, `buildings`, `reviews`. Lập chỉ mục trên các cột `price`, `status`, `room_type` để truy vấn dưới 50ms.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "data": [...], "current_page": 1, "total_rooms": 28}`.
+- **Thất bại (HTTP 422)**: Báo lỗi nếu khoảng giá `price_min > price_max`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Người dùng chưa đăng nhập bấm Đặt phòng ngay | Hệ thống tự động hiển thị Modal đăng nhập/đăng ký kèm thông báo: "Vui lòng đăng nhập tài khoản để đặt phòng". |
-| Người dùng chưa từng thuê phòng cố tình gửi đánh giá | Hệ thống chặn gửi đánh giá: "Bạn chỉ có thể đánh giá phòng này sau khi đã hoàn tất hợp đồng thuê tại đây". |
-| Gửi báo cáo lừa đảo nhưng bỏ trống phần mô tả chi tiết | Ô mô tả bôi đỏ viền: "Vui lòng nhập mô tả chi tiết hành vi sai phạm để ban quản trị đối soát xử lý". |
+|---|---|
+| Nhập khoảng giá tối thiểu lớn hơn giá tối đa | Ô giá bôi đỏ viền: "Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)". |
+| Không tìm thấy phòng nào phù hợp | Hiển thị Empty State với hình minh họa: "Không tìm thấy phòng phù hợp với tiêu chí của bạn. Hãy thử nới lỏng bộ lọc!". |
 
-6. Tích hợp Trợ lý ảo AI Renty Chatbot theo mô hình RAG với Google Gemini API
+---
 
-Mô tả chi tiết chức năng: Hộp thoại chat nổi góc phải màn hình Cổng Renty: khách thuê trò chuyện bằng tiếng Việt tự nhiên; hệ thống áp dụng kỹ thuật RAG (Retrieval-Augmented Generation) truy xuất trực tiếp dữ liệu phòng trống thực tế trong cơ sở dữ liệu và phản hồi kèm thẻ preview phòng trực quan có giá, địa chỉ và tiện ích.
+### [FEAT-VEM-03] Thanh công cụ so sánh phòng nổi song song (Compare tối đa 3 phòng)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Endpoint**: `POST /api/renty/rooms/compare`
+- **Middleware**: `web`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Trợ lý ảo AI & Chatbot tư vấn thuê phòng theo mô hình RAG
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_ids` | Array | Có | `required\|array\|min:2\|max:3` | "Vui lòng chọn từ 2 đến tối đa 3 phòng để thực hiện so sánh." |
+| `room_ids.*`| Integer | Có | `integer\|exists:rooms,id` | "Mã phòng so sánh không tồn tại." |
 
-Hình 15: Giao diện Trợ lý ảo AI & Chatbot tư vấn thuê phòng theo mô hình RAG
+#### 2. Business Logic Flow
+1. **Kiểm tra số lượng phòng**:
+   - Nếu `count(room_ids) < 2`: Báo lỗi yêu cầu chọn ít nhất 2 phòng.
+   - Nếu `count(room_ids) > 3`: Chặn và thông báo chỉ được so sánh tối đa 3 phòng.
+2. **Nạp & Đối chiếu thông số kỹ thuật song song**:
+   - Truy vấn chi tiết các phòng được chọn kèm thông tin tòa nhà.
+   - Chuẩn hóa ma trận đối chiếu gồm các tiêu chí: Giá thuê theo tháng, tiền đặt cọc, diện tích sử dụng, đơn giá điện/nước, danh mục tiện ích có/không (Checkmark xanh / Dấu x đỏ), khoảng cách tiện ích và điểm sao đánh giá uy tín.
+3. **Phản hồi**: Trả về cấu trúc bảng so sánh chi tiết dạng JSON hoặc render Partial Blade View.
 
-Bảng 28: Kịch bản xử lý lỗi Trang Trợ lý ảo AI & Chatbot tư vấn thuê phòng Renty
+#### 3. Database Operation
+- **Đọc**: `rooms`, `buildings`, `utility_records`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Trả về ma trận so sánh song song 3 cột để hiển thị trên Modal đối chiếu.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Thanh so sánh nổi (Sticky Floating Bar)**: Cố định ở đáy màn hình `fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 border border-sky-500/30 rounded-2xl px-6 py-3 shadow-2xl`, hiển thị thumbnail các phòng đã chọn kèm nút "So sánh ngay (2/3)".
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Gửi tin nhắn rỗng hoặc toàn khoảng trắng vào ô chat | Nút gửi bị vô hiệu hóa (disabled). Nếu cố tình gửi hiển thị: "Nội dung tin nhắn không được để trống". |
-| Nhập câu hỏi quá dài vượt quá giới hạn xử lý (> 300 ký tự) | Ô chat bôi đỏ viền. Thông báo: "Câu hỏi quá dài (tối đa 300 ký tự). Vui lòng rút ngắn tiêu chí tìm kiếm của bạn". |
-| Tìm kiếm với từ khóa không tồn tại trong hệ thống (Ví dụ: phòng trọ dưới 500k tại Quận 1) | Chatbot trả lời thân thiện: "Renty chưa tìm thấy phòng trọ nào phù hợp với yêu cầu của bạn trong hệ thống. Bạn có thể thử tăng khoảng giá hoặc chọn khu vực lân cận xem sao nhé!". |
-| Người dùng gửi tin nhắn spam quá nhanh (Vượt quá giới hạn Rate Limiting 60 req/phút) | Hệ thống chặn tạm thời: "Bạn đang thao tác quá nhanh! Vui lòng chờ 30 giây trước khi gửi câu hỏi tiếp theo". |
+|---|---|
+| Chọn thêm phòng thứ 4 vào thanh so sánh | Toast cảnh báo vàng: "Bạn chỉ có thể so sánh tối đa 3 phòng cùng một lúc". |
+| Bấm So sánh khi chỉ chọn 1 phòng | Toast thông báo: "Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối chiếu". |
 
-7. Xây dựng Cổng thông tin Cư dân & Khách lưu trú (Guest Portal)
+---
 
-Mô tả chi tiết chức năng: Trang thông tin trực tuyến dành riêng cho khách thuê phòng: theo dõi hạn hợp đồng, kiểm tra chi tiết hóa đơn tháng (tiền phòng, điện nước, dịch vụ), nút mở mã VietQR thanh toán nhanh, danh sách người ở cùng phòng và các tiện ích dịch vụ buồng phòng.
+### [FEAT-VEM-04] Màn hình Chi tiết phòng lưu trú (Room Detail & Media Gallery)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Route & View**: `GET /renty/room/{id}`, View `resources/views/renty/detail.blade.php`
+- **Middleware**: `web`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Cổng thông tin Cư dân & Khách lưu trú (Guest Portal)
+#### 1. Input Specification (Tham số Route)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `id` | Integer (Route) | Có | `exists:rooms,id` | "Phòng lưu trú không tồn tại hoặc đã ngừng cho thuê." |
 
-Hình 12: Giao diện Cổng dịch vụ Cư dân & Khách lưu trú (Guest Portal)
+#### 2. Business Logic Flow
+1. **Truy vấn thông tin chi tiết**: `Room::with(['building', 'tenant', 'reviews', 'equipment'])->findOrFail($id)`.
+2. **Tổng hợp đa phương tiện (Media Showcase)**:
+   - Slide ảnh chất lượng cao (Lightbox xem ảnh phóng to).
+   - Trình phát Video thực tế không gian phòng (hỗ trợ MP4, WebM).
+3. **Tọa độ địa lý & Bản đồ GIS**: Nạp tọa độ GPS của tòa nhà để hiển thị vị trí trên OpenStreetMap / Google Maps.
+4. **Phát hiện giá dị biệt (Price Anomaly Detection)**:
+   - So sánh đơn giá phòng với mức giá trung bình của các phòng cùng khu vực. Nếu giá rẻ hơn hoặc cao hơn 30% bất thường, hiển thị nhãn cảnh báo để khách hàng lưu ý.
 
-Bảng 27: Kịch bản xử lý lỗi Trang Cổng thông tin Cư dân & Khách lưu trú (Guest Portal) & Mẫu tạm trú CT01
+#### 3. Database Operation
+- **Đọc**: `rooms`, `buildings`, `reviews`, `equipment`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Render HTML trang chi tiết phòng đầy đủ tiện ích và form liên hệ đặt hẹn xem phòng.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Gallery**: Carousel trình chiếu ảnh mượt mà, nút "Đặt phòng ngay", nút "Đăng ký xem phòng", nút "Gửi báo cáo vi phạm".
+
+---
+
+### [FEAT-VEM-05] Hệ thống Đánh giá Review có xác thực hợp đồng lưu trú thực tế
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: Route `POST /renty/room/{id}/review`
+- **Middleware**: `auth`
+
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `rating` | Integer | Có | `required\|integer\|min:1\|max:5` | "Điểm đánh giá phải từ 1 đến 5 sao." |
+| `comment` | String | Có | `required\|string\|min:10\|max:1000` | "Nội dung nhận xét phải từ 10 đến 1000 ký tự." |
+
+#### 2. Business Logic Flow
+1. **Cơ chế Xác thực Khách thuê Thực tế (Verified Tenant Guard)**:
+   - Kiểm tra xem người dùng đang đăng nhập (`auth()->id()`) đã từng có Hợp đồng thuê (`Contract`) hoặc Phiếu đặt phòng (`HotelBooking`) hợp lệ đối với căn phòng này chưa.
+   - **Guard Check**: Nếu chưa từng thuê, **CHẶN ĐÁNH GIÁ** (HTTP 403): *"Bạn chỉ có thể đánh giá phòng này sau khi đã ký hợp đồng hoặc lưu trú thực tế tại đây"*.
+2. **Lưu đánh giá**:
+   - Tạo bản ghi mới trong bảng `reviews` với `user_id = auth()->id()`, `room_id = :id`, số sao và bình luận.
+   - Gắn nhãn chứng thực `"Đã xác thực cư dân thuê trọ"`.
+3. **Phản hồi**: Redirect back kèm thông báo cảm ơn đã gửi đánh giá.
+
+#### 3. Database Operation
+- **Bảng tác động**: `reviews` (INSERT bản ghi mới).
+
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về trang chi tiết phòng kèm toast xanh: "Cảm ơn bạn đã gửi đánh giá trải nghiệm lưu trú!".
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bấm mở VietQR khi hóa đơn tháng đã được thanh toán hoàn tất | Toast xanh thông báo: "Hóa đơn tháng này của bạn đã được thanh toán đầy đủ. Cảm ơn bạn!". |
-| Gửi yêu cầu gia hạn hợp đồng khi hợp đồng hiện tại vẫn còn hạn trên 60 ngày | Toast thông báo: "Hợp đồng của bạn vẫn còn thời hạn dài (> 60 ngày). Hệ thống chỉ mở tính năng xin gia hạn trước khi hết hạn 30 ngày". |
+|---|---|
+| Người dùng chưa từng thuê phòng cố tình gửi review | Chặn gửi đánh giá kèm thông báo đỏ: "Bạn chỉ có thể đánh giá phòng này sau khi đã hoàn tất hợp đồng thuê tại đây". |
+| Bỏ trống nội dung hoặc nhận xét dưới 10 ký tự | Ô nhận xét bôi đỏ viền: "Vui lòng nhập nội dung đánh giá chi tiết (tối thiểu 10 ký tự)". |
 
-8. Lập trình module Tiếp nhận & Xử lý sự cố kỹ thuật và Yêu cầu dịch vụ buồng phòng (Smart Tickets)
+---
 
-Mô tả chi tiết chức năng: Hệ thống tiếp nhận phản ánh trực tuyến: cư dân gửi yêu cầu sửa chữa hỏng hóc (cháy bóng đèn, rò rỉ ống nước, tắc bồn cầu) kèm ảnh chụp hiện trạng hoặc đặt lịch dọn phòng (Housekeeping). Ban quản trị tiếp nhận, phân công kỹ thuật viên và cập nhật tiến độ xử lý.
+### [FEAT-VEM-06] Tiếp nhận Báo cáo phòng vi phạm / lừa cọc (RoomReport)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: Route `POST /renty/room/{id}/report`
+- **Middleware**: `web`, `throttle:5,1`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Tiếp nhận sự cố kỹ thuật & buồng phòng (Smart Ticket)
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `reason` | String | Có | `required\|in:scam,fake_images,wrong_price,unsafe,other` | "Lý do báo cáo vi phạm không hợp lệ." |
+| `description` | String | Có | `required\|string\|min:10\|max:1000` | "Vui lòng cung cấp mô tả chi tiết bằng chứng sai phạm (10 - 1000 ký tự)." |
+| `reporter_name`| String | Không | `nullable\|string\|max:255` | "Họ tên người báo cáo tối đa 255 ký tự." |
+| `reporter_phone`| String | Không | `nullable\|regex:/^[0-9]{10}$/` | "Số điện thoại liên lạc phải gồm đúng 10 chữ số." |
 
-Bảng: Kịch bản xử lý lỗi Tiếp nhận sự cố và Dịch vụ buồng phòng
+#### 2. Business Logic Flow
+1. **Tiếp nhận khiếu nại**: Ghi nhận báo cáo vào bảng `room_reports` với `status = 'pending'`.
+2. **Cơ chế Cảnh báo Tự động (Auto-flagging)**:
+   - Đếm số lượng báo cáo `pending` của phòng đó.
+   - Nếu một phòng nhận quá 3 báo cáo lừa đảo (`scam`), hệ thống tự động gắn cờ cảnh báo màu vàng `"Phòng đang bị người dùng báo cáo sai phạm"` trên cổng tìm kiếm Renty để bảo vệ người thuê khác.
+3. **Phản hồi**: Thông báo đã tiếp nhận và sẽ đối soát xử lý trong vòng 12 giờ.
 
+#### 3. Database Operation
+- **Bảng tác động**: `room_reports`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "message": "Báo cáo của bạn đã được gửi đến Ban Quản Trị để xử lý."}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Cư dân gửi ticket báo hỏng nhưng để trống phần mô tả chi tiết sự cố | Ô mô tả bôi đỏ. Hiển thị: "Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng". |
-| Tải ảnh chụp sự cố bị lỗi vượt dung lượng cho phép (> 10MB) | Thông báo lỗi: "Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 10MB". |
+|---|---|
+| Bỏ trống phần mô tả chi tiết vi phạm | Ô mô tả bôi đỏ viền: "Vui lòng nhập mô tả chi tiết hành vi sai phạm để ban quản trị đối soát xử lý". |
 
-9. Lập trình module Quản lý thông tin Cư dân & Thân nhân lưu trú theo phòng
+---
 
-Mô tả chi tiết chức năng: Quản lý hồ sơ cư dân đại diện ký hợp đồng và danh sách những người ở cùng phòng (Họ tên, CCCD, Số điện thoại, Quan hệ nhân thân). Giúp chủ cơ sở nắm rõ số lượng người cư trú thực tế phục vụ công tác khai báo an ninh trật tự khu phố.
+### [FEAT-VEM-07] Trợ lý ảo AI Renty Chatbot tư vấn thuê phòng theo mô hình RAG (Google Gemini API)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: `App\Http\Controllers\ChatbotController@chat`
+- **Endpoint & Method**: `POST /renty/chatbot/chat`
+- **Middleware**: `web`, `throttle:60,1`
 
-Bảng: Kịch bản xử lý lỗi Quản lý Cư dân và Thân nhân
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `message` | String | Có | `required\|string\|min:2\|max:300` | "Câu hỏi của bạn phải từ 2 đến tối đa 300 ký tự." |
+| `conversation_history`| Array | Không | `nullable\|array\|max:10` | "Lịch sử hội thoại không hợp lệ." |
 
+#### 2. Business Logic Flow
+1. **Giai đoạn Truy xuất dữ liệu (Retrieval Phase - RAG)**:
+   - Phân tích ngữ nghĩa câu hỏi để trích xuất các thực thể: Khu vực (Quận/Đường), Mức giá tối đa, Tiện ích yêu cầu (máy lạnh, gác lửng, thú cưng).
+   - Truy vấn CSDL bảng `rooms` kết hợp `buildings` lấy tối đa 5 phòng trống (`status = 'empty'`) phù hợp nhất.
+   - Nạp thông tin phòng vào đoạn văn bản ngữ cảnh Context.
+2. **Giai đoạn Tăng cường & Sinh câu trả lời (Augmented Generation Phase)**:
+   - Gửi Context phòng và câu hỏi người dùng đến Google Gemini API (`gemini-2.5-flash`).
+   - Ràng buộc AI tuân thủ nguyên tắc: *"Chỉ trả lời dựa trên danh sách phòng trong Context. Không tự bịa đặt phòng không có thật."*
+3. **Phản hồi**: Nhận văn bản trả lời từ AI và bóc tách danh sách phòng đính kèm (Card Preview) hiển thị trực tiếp trong khung chat.
+
+#### 3. Database Operation
+- **Đọc**: `rooms`, `buildings` (lọc phòng trống).
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "reply": "...", "suggested_rooms": [{"id": 8, "name": "...", "price": "...", "image": "..."}]}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+- **Khung chat**: Cửa sổ nổi góc phải `#renty-chatbot-modal`, bong bóng chat người dùng và AI, hiệu ứng gõ phím 3 chấm nhảy.
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Thêm người ở cùng nhưng bỏ trống số CCCD hoặc Họ tên | Các ô bắt buộc bôi đỏ: "Vui lòng điền họ tên và số CCCD hợp lệ của người ở cùng". |
-| Số lượng người ở cùng vượt quá sức chứa tối đa của phòng | Cảnh báo quá tải: "Phòng này chỉ có sức chứa tối đa 2 người. Vui lòng kiểm tra lại quy định phòng". |
+|---|---|
+| Gửi tin nhắn rỗng hoặc toàn khoảng trắng | Nút gửi bị vô hiệu hóa (disabled). Nếu cố tình gửi hiển thị: "Nội dung tin nhắn không được để trống". |
+| Nhập câu hỏi quá dài (> 300 ký tự) | Ô chat bôi đỏ viền: "Câu hỏi quá dài (tối đa 300 ký tự). Vui lòng rút ngắn tiêu chí tìm kiếm của bạn". |
+| Không tìm thấy phòng phù hợp trong CSDL | Chatbot trả lời thân thiện: "Renty chưa tìm thấy phòng trọ nào phù hợp với yêu cầu của bạn. Bạn thử nới rộng khoảng giá hoặc chọn khu vực lân cận nhé!". |
 
-10. Lập trình chức năng Tự động trích xuất và kết xuất tờ khai đăng ký tạm trú Mẫu CT01 (Bộ Công an)
+---
 
-Mô tả chi tiết chức năng: Tính năng hành chính công tự động: hệ thống tổng hợp thông tin cá nhân của cư dân, chủ cơ sở và địa chỉ cơ sở lưu trú, tự động điền vào biểu mẫu chuẩn Mẫu CT01 (Tờ khai thay đổi thông tin cư trú của Bộ Công an) và xuất file PDF để nộp công an phường.
+### [FEAT-VEM-08] Cổng dịch vụ Cư dân & Khách lưu trú (Guest Portal: Hóa đơn & Mã VietQR)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: `App\Http\Controllers\ResidentPortalController@index`, `billQr`, `requestRenewal`
+- **Endpoint**:
+  - `GET /smartroom/resident` (`smartroom.resident`)
+  - `GET /smartroom/resident/bills/{id}/qr` (`smartroom.resident.bills.qr`)
+  - `POST /smartroom/resident/contract/{id}/request-renewal` (`smartroom.resident.contract.request_renewal`)
+- **Middleware**: `auth`
 
-Hình phác thảo: Phác thảo sơ bộ (Low-fidelity Wireframe) - Tờ khai thay đổi thông tin cư trú Mẫu CT01 (Bộ Công an)
+#### 1. Input Specification (Xin gia hạn hợp đồng POST /request-renewal)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `extension_months`| Integer | Có | `required\|integer\|min:1\|max:36` | "Thời gian xin gia hạn phải từ 1 đến 36 tháng." |
+| `note` | String | Không | `nullable\|string\|max:500` | "Ghi chú gia hạn tối đa 500 ký tự." |
 
-Hình 13: Giao diện Tờ khai thay đổi thông tin cư trú Mẫu CT01 Bộ Công an
+#### 2. Business Logic Flow
+1. **Xác thực quyền Cư dân**: Lấy thông tin cư dân liên kết với tài khoản người dùng (`Resident::where('user_id', auth()->id())->first()`).
+2. **Tổng hợp dữ liệu Dashboard Cư dân**:
+   - Phòng đang thuê, thời hạn hợp đồng, danh sách người ở cùng phòng.
+   - Danh sách hóa đơn chưa thanh toán kèm nút "Quét mã VietQR thanh toán nhanh".
+3. **Hiển thị mã VietQR chuyển khoản**:
+   - Khi bấm xem mã QR hóa đơn: Hệ thống sinh mã VietQR chứa đúng số tiền và cú pháp chuyển tiền để cư dân mở app ngân hàng quét thanh toán tức thì.
 
-Bảng: Kịch bản xử lý lỗi Kết xuất tờ khai tạm trú Mẫu CT01
+#### 3. Database Operation
+- **Đọc**: `residents`, `rooms`, `contracts`, `bills`, `resident_relatives`.
 
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Render view `resident.dashboard` hoặc trả về ảnh mã VietQR.
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Xuất Mẫu CT01 khi cư dân chưa bổ sung thông tin quê quán và ngày sinh | Modal yêu cầu: "Hồ sơ cư trú chưa đầy đủ thông tin (thiếu Quê quán / Ngày sinh). Vui lòng cập nhật đầy đủ trước khi xuất mẫu CT01". |
+|---|---|
+| Bấm mở VietQR khi hóa đơn đã được thanh toán | Toast xanh: "Hóa đơn tháng này của bạn đã được thanh toán đầy đủ. Cảm ơn bạn!". |
+| Gửi xin gia hạn khi hợp đồng còn hạn trên 60 ngày | Toast cảnh báo: "Hợp đồng của bạn vẫn còn thời hạn dài (> 60 ngày). Hệ thống chỉ mở tính năng xin gia hạn trước khi hết hạn 30 ngày". |
 
-11. Xây dựng tiện ích Đăng ký nhận chuông báo khi phòng đang thuê chuyển sang trạng thái trống (Empty Room Alert)
+---
 
-Mô tả chi tiết chức năng: Tính năng tiện ích dành cho khách thuê: khi ưng ý một phòng đang có người ở, khách nhấn 'Đăng ký nhận chuông báo'. Khi hợp đồng cũ kết thúc và phòng chuyển trạng thái sang 'Trống', hệ thống tự động gửi tin nhắn thông báo qua Zalo/SMS cho khách.
+### [FEAT-VEM-09] Tiếp nhận & Xử lý sự cố kỹ thuật và buồng phòng (Smart Tickets & AI NLP)
+- **Git Branch**: `VinhEm/8-XuLyBaoHongDangDonPhong`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: `App\Http\Controllers\ResidentPortalController@storeTicket`, `analyzeTicket`
+- **Endpoint**:
+  - `POST /smartroom/resident/tickets` (`smartroom.resident.tickets.store`)
+  - `POST /smartroom/resident/tickets/analyze` (`smartroom.resident.tickets.analyze`)
+- **Middleware**: `auth`
 
-Bảng: Kịch bản xử lý lỗi Đăng ký nhận chuông báo phòng trống
+#### 1. Input Specification (Gửi báo hỏng POST /tickets)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `title` | String | Có | `required\|string\|max:255` | "Tiêu đề sự cố không được để trống." |
+| `description` | String | Có | `required\|string\|min:5\|max:1000` | "Vui lòng mô tả chi tiết sự cố hỏng hóc (5 - 1000 ký tự)." |
+| `category` | String | Có | `required\|in:electric,water,furniture,maintenance,other` | "Danh mục phân loại sự cố không hợp lệ." |
+| `image` | File | Không | `nullable\|image\|mimes:jpeg,png,jpg,webp\|max:10240` | "Ảnh chụp hiện trạng sự cố tối đa 10MB." |
 
+#### 2. Business Logic Flow
+1. **AI NLP Phân tích độ khẩn cấp (analyzeTicket)**:
+   - Sử dụng Google Gemini AI phân tích nội dung mô tả: Tự động đánh giá mức độ nghiêm trọng (`priority`: `low`, `medium`, `high`) và gợi ý biện pháp xử lý tạm thời cho cư dân (ví dụ: *"Khóa van nước tổng ngay lập tức để tránh ngập phòng"*).
+2. **Lưu phiếu sự cố**: Tạo bản ghi trong bảng `tickets` với `status = 'pending'`, gán `resident_id`, `room_id`, `priority` từ AI.
+3. **Thông báo Ban Quản Lý**: Tự động gửi thông báo đến chủ trọ / nhân viên kỹ thuật để điều phối sửa chữa.
+
+#### 3. Database Operation
+- **Bảng tác động**: `tickets`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 302)**: Điều hướng về danh sách ticket kèm toast: "Đã gửi phiếu báo hỏng thành công. Kỹ thuật viên sẽ xử lý sớm nhất!".
+
+#### 5. UI/UX Specification & Xử lý lỗi
 | Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
-| --- | --- |
-| Bỏ trống số điện thoại nhận thông báo chuông báo | Viền đỏ ô SĐT: "Vui lòng nhập số điện thoại để hệ thống gửi thông báo". |
-| Số điện thoại đã đăng ký nhận thông báo phòng này trước đó | Toast thông báo: "Bạn đã đăng ký nhận chuông báo cho phòng này rồi. Hệ thống sẽ nhắn tin ngay khi phòng trống!". |
+|---|---|
+| Cư dân gửi ticket nhưng để trống mô tả | Ô mô tả bôi đỏ: "Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng". |
+| Tải ảnh sự cố vượt quá 10MB | Thông báo lỗi: "Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 10MB". |
 
-TÀI LIỆU THAM KHẢO
+---
+
+### [FEAT-VEM-10] Quản lý thông tin Cư dân & Thân nhân lưu trú theo phòng (Residents & Relatives)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: `AdminDashboardController@storeResident`, `updateResident`, `deleteResident`, `getRelatives`, `storeRelative`, `updateRelative`, `deleteRelative`
+- **Endpoint**:
+  - `POST /smartroom/admin/resident` (`smartroom.admin.resident.store`)
+  - `PUT /smartroom/admin/resident/{id}` (`smartroom.admin.resident.update`)
+  - `DELETE /smartroom/admin/resident/{id}` (`smartroom.admin.resident.delete`)
+  - `GET /smartroom/admin/resident/{residentId}/relatives` (`smartroom.admin.resident.relatives`)
+  - `POST /smartroom/admin/resident/{residentId}/relative` (`smartroom.admin.resident.relative.store`)
+- **Middleware**: `auth`, `admin`
+
+#### 1. Input Specification (Thêm người ở cùng POST /relative)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `name` | String | Có | `required\|string\|max:255` | "Vui lòng nhập họ và tên người ở cùng." |
+| `phone` | String | Không | `nullable\|regex:/^[0-9]{10}$/` | "Số điện thoại người ở cùng không hợp lệ." |
+| `cccd` | String | Có | `required\|regex:/^[0-9]{12}$/` | "Số CCCD người ở cùng phải đủ 12 chữ số." |
+| `relationship` | String | Có | `required\|string\|max:100` | "Vui lòng ghi rõ quan hệ nhân thân (Bạn bè, Vợ/Chồng, Anh em)." |
+
+#### 2. Business Logic Flow
+1. **Kiểm tra sức chứa của phòng**:
+   - Đếm tổng số người đang ở phòng đó (1 cư dân đại diện + số thân nhân hiện tại).
+   - Nếu vượt quá sức chứa tối đa quy định của phòng, ném lỗi HTTP 422: *"Số lượng người ở cùng vượt quá sức chứa tối đa của phòng"*.
+2. **Mã hóa PII**: Dữ liệu SĐT và CCCD của người ở cùng được mã hóa AES-256-GCM trước khi lưu vào bảng `resident_relatives`.
+3. **Phản hồi**: Trả về danh sách thân nhân cập nhật dưới dạng JSON.
+
+#### 3. Database Operation
+- **Bảng tác động**: `residents`, `resident_relatives`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "message": "Thêm người ở cùng phòng thành công!"}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+|---|---|
+| Thêm người ở cùng nhưng bỏ trống CCCD | Ô CCCD bôi đỏ: "Vui lòng điền họ tên và số CCCD hợp lệ của người ở cùng". |
+| Số người ở cùng vượt quá sức chứa phòng | Cảnh báo quá tải: "Phòng này chỉ có sức chứa tối đa 2 người. Vui lòng kiểm tra lại quy định phòng". |
+
+---
+
+### [FEAT-VEM-11] Tự động kết xuất tờ khai đăng ký tạm trú Mẫu CT01 (Bộ Công an)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: `App\Http\Controllers\AdminDashboardController@exportCt01`
+- **Endpoint**: `GET /smartroom/admin/resident/{id}/export-ct01` (`smartroom.admin.resident.export_ct01`)
+- **Middleware**: `auth`, `admin`
+
+#### 1. Input Specification (Tham số Route)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `id` | Integer (Route) | Có | `exists:residents,id` | "Hồ sơ cư dân không tồn tại trên hệ thống." |
+
+#### 2. Business Logic Flow
+1. **Tổng hợp dữ liệu nhân thân**:
+   - Giải mã số CCCD, SĐT của cư dân đại diện và danh sách người ở cùng phòng từ bảng `residents` và `resident_relatives`.
+   - Lấy địa chỉ cơ sở lưu trú từ bảng `buildings`, thông tin chủ hộ/chủ trọ từ bảng `landlord_profiles`.
+2. **Kiểm tra tính đầy đủ của hồ sơ (Completeness Guard)**:
+   - Nếu cư dân còn thiếu Quê quán (`hometown`), Ngày sinh (`dob`) hoặc Số CCCD: Chặn xuất và yêu cầu cập nhật hồ sơ trước.
+3. **Điền biểu mẫu Mẫu CT01 tự động (DomPDF)**:
+   - Tự động điền đúng các mục hành chính theo chuẩn Bộ Công an: Họ tên, Ngày tháng năm sinh, Giới tính, Số định danh cá nhân CCCD, Nơi thường trú, Nơi tạm trú, Ý kiến của chủ hộ/chủ cơ sở lưu trú.
+4. **Xuất file**: Kết xuất file PDF Mẫu CT01 sẵn sàng in để nộp Công an phường/xã.
+
+#### 3. Database Operation
+- **Đọc**: `residents`, `resident_relatives`, `buildings`, `landlord_profiles`. Không ghi CSDL.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200)**: Tải về file PDF tên `Mau_CT01_TamTru_{TenCuDan}.pdf`.
+- **Thất bại (HTTP 422)**: Báo lỗi hồ sơ cư trú chưa đầy đủ thông tin.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+|---|---|
+| Xuất CT01 khi thiếu thông tin quê quán / ngày sinh | Modal cảnh báo: "Hồ sơ cư trú chưa đầy đủ thông tin (thiếu Quê quán / Ngày sinh). Vui lòng cập nhật đầy đủ trước khi xuất mẫu CT01". |
+
+---
+
+### [FEAT-VEM-12] Tiện ích Đăng ký nhận chuông báo khi phòng chuyển sang trống (Empty Room Alert)
+- **Git Branch**: `main`
+- **Thành viên phụ trách**: Huỳnh Văn Vĩnh Em
+- **Controller & Method**: `AdminDashboardController@storeContactRequest`, `updateContactRequestStatus`
+- **Endpoint**: `POST /renty/contact-request` (`renty.contact_request.store`)
+- **Middleware**: `web`, `throttle:5,1`
+
+#### 1. Input Specification (Request Validation)
+| Tên Field | Kiểu | Bắt buộc | Validation Rules | Message Lỗi Cụ Thể |
+|---|---|---|---|---|
+| `room_id` | Integer | Có | `required\|integer\|exists:rooms,id` | "Phòng đăng ký theo dõi không tồn tại." |
+| `name` | String | Có | `required\|string\|max:255` | "Vui lòng nhập họ và tên của bạn." |
+| `phone` | String | Có | `required\|regex:/^(0[3\|5\|7\|8\|9])[0-9]{8}$/` | "Số điện thoại nhận chuông báo không hợp lệ." |
+| `note` | String | Không | `nullable\|string\|max:500` | "Ghi chú tối đa 500 ký tự." |
+
+#### 2. Business Logic Flow
+1. **Kiểm tra trùng lặp đăng ký**:
+   Kiểm tra trong bảng `contact_requests` xem SĐT này đã đăng ký theo dõi phòng này trong 30 ngày qua chưa. Nếu đã có, trả về thông báo đã ghi nhận.
+2. **Lưu phiếu đăng ký**: Tạo bản ghi trong `contact_requests` với `type = 'empty_room_alert'`, `status = 'pending'`.
+3. **Cơ chế kích hoạt chuông báo tự động**:
+   Khi một hợp đồng thuê kết thúc và phòng chuyển trạng thái từ `occupied` sang `empty` (hoặc nhân viên dọn phòng xong), hệ thống tự động quét danh sách `contact_requests` của phòng đó và gửi tin nhắn SMS/Zalo thông báo cho khách: *"Phòng [Số_Phòng] tại [Địa_Chỉ] bạn đang theo dõi hiện đã trống! Bấm vào đây để đặt phòng ngay: [Link]"*.
+
+#### 3. Database Operation
+- **Bảng tác động**: `contact_requests`, `notification_logs`.
+
+#### 4. Output Specification
+- **Thành công (HTTP 200 / JSON)**: `{"success": true, "message": "Đăng ký nhận chuông báo thành công! Renty sẽ nhắn tin ngay khi phòng này có người trả."}`.
+
+#### 5. UI/UX Specification & Xử lý lỗi
+| Nguyên Nhân Phát Sinh Lỗi | Message Lỗi / Trạng Thái Giao Diện Hiển Thị Phản Hồi |
+|---|---|
+| Bỏ trống số điện thoại nhận thông báo | Viền đỏ ô SĐT: "Vui lòng nhập số điện thoại để hệ thống gửi thông báo". |
+| Số điện thoại đã đăng ký nhận thông báo phòng này | Toast thông báo: "Bạn đã đăng ký nhận chuông báo cho phòng này rồi. Hệ thống sẽ nhắn tin ngay khi phòng trống!". |
+
+
+# TÀI LIỆU THAM KHẢO
 
 1. Laravel Documentation (v11.x): The PHP Framework for Web Artisans. Truy cập tại: https://laravel.com/docs/11.x
 
