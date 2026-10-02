@@ -37,7 +37,8 @@ Route::get('/renty/rooms/suggest', [SmartSearchController::class, 'suggestions']
 Route::get('/renty/rooms/map', [VisitorController::class, 'map']);
 Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);
-Route::post('/renty/rooms/compare', [VisitorController::class, 'compare']);
+Route::post('/renty/rooms/compare', [VisitorController::class, 'compare'])->middleware('throttle:30,1');
+Route::post('/renty/rooms/compare-ai', [VisitorController::class, 'compareAi'])->middleware('throttle:30,1');
 
 // IoT Smart Metering Ingestion & Realtime Telemetry APIs
 Route::post('/v1/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);

@@ -51,8 +51,23 @@
         window.rentySessionError = {!! json_encode(session('error')) !!};
     </script>
 
-    <!-- Custom CSS & JS -->
-    @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
+    <style>
+        .compare-checkbox {
+            accent-color: #10b981 !important;
+            cursor: pointer;
+        }
+        .compare-checkbox:checked {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+        }
+        .theme-light #compare-radar-wrap {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        .theme-light #compare-radar-wrap h4 {
+            color: #0f172a !important;
+        }
+    </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
     <div id="theme-flip-wash" class="theme-flip-wash" aria-hidden="true"></div>
@@ -1040,52 +1055,6 @@
         </div> <!-- End of .renty-split-right -->
     </main>
 
-    <!-- FLOATING COMPARE BAR -->
-    <div id="compare-dock" class="compare-floating-bar hidden">
-        <div class="compare-floating-copy">
-            <div class="compare-floating-icon">
-                <i class="fa-solid fa-code-compare"></i>
-            </div>
-            <div class="hidden sm:block">
-                <strong class="text-xs font-bold text-slate-200">So sánh phòng</strong>
-                <span class="text-[10px] text-slate-400">Chọn tối đa 3 phòng</span>
-            </div>
-        </div>
-
-        <!-- Dynamic Room Thumbnails List -->
-        <div id="compare-thumbnails" class="compare-floating-thumbnails flex items-center gap-2"></div>
-
-        <div class="compare-floating-actions flex items-center gap-2">
-            <button type="button" onclick="clearCompare()" class="compare-clear-btn px-3 py-1.5 rounded-xl text-[11px] font-bold">
-                Hủy
-            </button>
-            <button type="button" onclick="openCompareModal()" id="compare-btn-submit" class="compare-submit-btn px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1">
-                So sánh ngay (0)
-            </button>
-        </div>
-    </div>
-
-    <!-- ROOM COMPARISON MODAL -->
-    <div id="compare-modal" class="compare-modal hidden">
-        <div class="compare-panel animate-fade-in">
-            <button type="button" onclick="closeCompareModal()" class="compare-close">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="compare-panel-header">
-                <h2><i class="fa-solid fa-code-compare text-emerald-400"></i> So sánh phòng đã chọn</h2>
-                <p>Vuốt ngang trên điện thoại để xem đủ các phòng.</p>
-            </div>
-
-            <div class="compare-table-wrap">
-                <table class="compare-table">
-                    <thead id="compare-table-head"></thead>
-                    <tbody id="compare-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- QUICK ROOM PREVIEW -->
     <div id="quick-room-preview" class="quick-preview-overlay hidden" aria-hidden="true">
         <div class="quick-preview-panel" role="dialog" aria-modal="true" aria-labelledby="quick-preview-title">
@@ -1527,7 +1496,7 @@
     </div>
 
     <!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
-    <script src="{{ asset('js/rentry.js') }}"></script>
+    <script src="{{ asset('js/rentry.js') }}?v={{ time() }}"></script>
 
     <!-- HOT AREAS MODAL -->
     <div id="hot-areas-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -1848,72 +1817,70 @@
     </div>
 </div>
 
-<!-- DETAILED COMPARISON MODAL -->
-<div id="renty-compare-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md px-4 py-6">
-    <div class="w-full max-w-4xl bg-[#0b0f19] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-fade-in">
+<!-- DETAILED COMPARISON MODAL (MATCHING SPEC HÌNH 23.2) -->
+<div id="renty-compare-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/80 backdrop-blur-md px-4 py-6">
+    <div class="w-full max-w-3xl bg-[#0c1017] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fade-in p-6">
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-slate-800/80 bg-slate-900/40 flex justify-between items-center">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
-                    <i class="fa-solid fa-code-compare text-emerald-400"></i>
+        <div class="flex justify-between items-start pb-4 border-b border-slate-800/80 mb-4">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="fa-solid fa-code-compare text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-extrabold text-slate-100 uppercase tracking-wider">Bảng So Sánh Chi Tiết</h3>
-                    <p class="text-[10px] text-slate-500 mt-0.5">So sánh thông số, giá cả và tiện ích của các phòng</p>
+                    <h3 class="text-base font-extrabold text-white">So sánh phòng đã chọn</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Vuốt ngang trên điện thoại để xem đủ các phòng.</p>
                 </div>
             </div>
-            <button type="button" onclick="hideCompareModal()" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="copyCompareShareLink()" title="Sao chép link so sánh" class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm">
+                    <i class="fa-solid fa-share-nodes text-xs"></i>
+                    <span class="hidden sm:inline">Chia sẻ</span>
+                </button>
+                <button type="button" onclick="hideCompareModal()" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
         </div>
         
         <!-- Table Container -->
-        <div class="p-6 overflow-auto flex-grow flex flex-col gap-4">
-            <!-- AI Recommendation Insight Box -->
-            <div id="compare-ai-box" class="hidden p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-slate-900/60 border border-emerald-500/30 text-xs text-slate-200 shadow-xl backdrop-blur-md relative animate-fade-in">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
-                        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+        <div class="overflow-x-auto flex-grow rounded-xl border border-slate-800/80 bg-slate-950/40">
+            <table class="w-full text-left text-xs text-slate-200 min-w-[500px] border-collapse compare-table" id="tblCompare">
+                <!-- Populated by JS -->
+            </table>
+        </div>
+
+        <!-- AI Recommendation Insight Box -->
+        <div id="compare-ai-box" class="hidden mt-4 p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-slate-200 shadow-xl relative animate-fade-in">
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-emerald-400 text-xs">Phân tích so sánh AI</h4>
+                        <button type="button" onclick="document.getElementById('compare-ai-box').classList.add('hidden')" class="text-slate-500 hover:text-white transition-colors">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
                     </div>
-                    <div class="flex-grow">
-                        <div class="flex items-center justify-between">
-                            <h4 class="font-extrabold text-emerald-400 text-xs tracking-wider uppercase flex items-center gap-1.5">
-                                <span>Phân Tích So Sánh Thông Minh Bằng AI</span>
-                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">Gemini RAG</span>
-                            </h4>
-                            <button type="button" onclick="document.getElementById('compare-ai-box').classList.add('hidden')" class="text-slate-500 hover:text-white transition-colors">
-                                <i class="fa-solid fa-xmark text-xs"></i>
-                            </button>
-                        </div>
-                        <div id="compare-ai-content" class="mt-2 text-[11px] text-slate-300 leading-relaxed">
-                            <!-- AI insight will be injected here -->
-                        </div>
-                    </div>
+                    <div id="compare-ai-content" class="mt-2 text-[11px] text-slate-300 leading-relaxed"></div>
                 </div>
             </div>
-
-            <!-- Dynamic Comparison Table -->
-            <div class="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/20">
-                <table class="w-full text-left text-xs text-slate-300 min-w-[600px] border-collapse" id="compare-table">
-                    <!-- Dynamic comparison table will be populated by JS -->
-                </table>
-            </div>
         </div>
-        
+
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/20 flex items-center justify-between gap-3">
+        <div class="pt-4 mt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
+            <button type="button" onclick="generateAiComparison()" id="compare-ai-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-emerald-400 text-xs font-bold transition-all">
+                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                <span>Tư vấn so sánh bằng AI</span>
+            </button>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="generateAiComparison()" id="compare-ai-btn" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 hover:from-emerald-600/30 hover:to-teal-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all shadow-lg shadow-emerald-500/10">
-                    <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
-                    <span>Tư vấn so sánh bằng AI</span>
+                <button type="button" onclick="clearCompareList(); hideCompareModal();" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors">
+                    <i class="fa-solid fa-trash-can mr-1 text-xs"></i> Xóa tất cả
                 </button>
-                <button type="button" onclick="clearCompareList(); hideCompareModal();" class="px-3 py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors">
-                    <i class="fa-solid fa-trash-can mr-1"></i> Xóa tất cả
+                <button type="button" onclick="hideCompareModal()" class="px-4 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all">
+                    Đóng
                 </button>
             </div>
-            <button type="button" onclick="hideCompareModal()" class="px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-bold text-slate-350 hover:bg-slate-850 hover:text-white transition-all">
-                Đóng
-            </button>
         </div>
     </div>
 </div>

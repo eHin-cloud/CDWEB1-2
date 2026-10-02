@@ -1488,7 +1488,7 @@ function renderRoomCardsHtml(rooms) {
             </div>
             <div class="p-4 pt-0 flex items-center justify-between gap-3">
                 <label class="flex items-center gap-2 cursor-pointer select-none text-[11px] text-slate-400 hover:text-slate-200">
-                    <input type="checkbox" value="${room.id}" onchange="handleCompareCheck(this, '${room.id}')" ${isCheckedInCompare ? 'checked' : ''} class="compare-checkbox rounded border-slate-800 text-emerald-500 focus:ring-0">
+                    <input type="checkbox" value="${room.id}" data-room-id="${room.id}" onchange="handleCompareCheck(this, '${room.id}')" ${isCheckedInCompare ? 'checked' : ''} class="compare-checkbox rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 cursor-pointer" style="accent-color: #10b981; width: 17px; height: 17px;">
                     <span class="font-bold">So sánh</span>
                 </label>
                 <a href="${room.url}" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-emerald-600 text-slate-200 hover:text-white border border-slate-800 hover:border-emerald-500 text-xs font-bold transition-all flex items-center gap-1.5">
@@ -4153,8 +4153,17 @@ function saveCompareState() {
 
 function syncCompareCheckboxes() {
     document.querySelectorAll('.compare-checkbox').forEach(cb => {
-        const row = cb.closest('[data-id]') || cb.closest('.room-card');
-        const rId = parseInt(cb.getAttribute('data-room-id') || (row ? row.getAttribute('data-id') : null));
+        let rId = parseInt(cb.value) || 
+                  parseInt(cb.getAttribute('data-room-id')) || 
+                  parseInt(cb.getAttribute('onchange')?.match(/\d+/)?.[0]);
+
+        if (!rId) {
+            const card = cb.closest('[data-room-id]') || cb.closest('.room-item-card') || cb.closest('[data-id]') || cb.closest('.room-card');
+            if (card) {
+                rId = parseInt(card.getAttribute('data-room-id') || card.getAttribute('data-id'));
+            }
+        }
+
         if (rId && rentyCompareList.includes(rId)) {
             cb.checked = true;
         } else {
@@ -4163,47 +4172,72 @@ function syncCompareCheckboxes() {
     });
 }
 
-function toggleCompare(roomId, checkbox) {
-    roomId = parseInt(roomId);
+function toggleCompare(arg1, arg2) {
+    let roomId = null;
+    let checkbox = null;
+
+    if (arg1 && typeof arg1 === 'object' && arg1.tagName === 'INPUT') {
+        checkbox = arg1;
+        roomId = parseInt(arg2);
+    } else {
+        roomId = parseInt(arg1);
+        checkbox = (arg2 && typeof arg2 === 'object' && arg2.tagName === 'INPUT') ? arg2 : null;
+    }
+
     if (!roomId) return;
 
     if (checkbox && checkbox.checked) {
         if (rentyCompareList.length >= 3) {
             checkbox.checked = false;
             const notify = window.showRentyToast || alert;
-            notify('Bạn chỉ có thể so sánh tối đa 3 phòng cùng một lúc.', 'warning', 'Giới hạn so sánh');
+            notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'ERR_23_01');
             return;
         }
         if (!rentyCompareList.includes(roomId)) {
             rentyCompareList.push(roomId);
         }
-    } else {
+    } else if (checkbox && !checkbox.checked) {
         rentyCompareList = rentyCompareList.filter(id => id !== roomId);
+    } else {
+        if (rentyCompareList.includes(roomId)) {
+            rentyCompareList = rentyCompareList.filter(id => id !== roomId);
+        } else {
+            if (rentyCompareList.length >= 3) {
+                const notify = window.showRentyToast || alert;
+                notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'ERR_23_01');
+                return;
+            }
+            rentyCompareList.push(roomId);
+        }
     }
 
     saveCompareState();
     updateCompareBar();
+    syncCompareCheckboxes();
 }
 window.toggleCompare = toggleCompare;
+
+function handleCompareCheck(checkbox, roomId) {
+    toggleCompare(roomId, checkbox);
+}
+window.handleCompareCheck = handleCompareCheck;
+window.openCompareModal = showCompareModal;
+window.closeCompareModal = hideCompareModal;
+window.clearCompare = clearCompareList;
 
 function removeCompareItem(roomId) {
     roomId = parseInt(roomId);
     rentyCompareList = rentyCompareList.filter(id => id !== roomId);
     saveCompareState();
     updateCompareBar();
+    syncCompareCheckboxes();
 
-    // Bỏ check ở card bên ngoài
-    document.querySelectorAll('.compare-checkbox').forEach(cb => {
-        if (parseInt(cb.getAttribute('onchange')?.match(/\d+/)?.[0]) === roomId) {
-            cb.checked = false;
-        }
-    });
+    if (window.showRentyToast) {
+        window.showRentyToast('Đã xóa phòng khỏi danh sách so sánh.', 'success', 'ERR_23_03');
+    }
 
     if (rentyCompareList.length < 2) {
         hideCompareModal();
-        if (window.showRentyToast) {
-            window.showRentyToast('Đã xóa phòng. Danh sách hiện còn dưới 2 phòng nên bảng so sánh đã đóng.', 'warning', 'Bảng so sánh');
-        }
     } else {
         showCompareModal();
     }
@@ -4235,230 +4269,341 @@ function updateCompareBar() {
 }
 window.updateCompareBar = updateCompareBar;
 
-function showCompareModal() {
-    const modal = document.getElementById('renty-compare-modal');
-    const table = document.getElementById('compare-table');
-    if (!modal || !table) return;
-
-    const mockRooms = window.rentyRoomsData || {};
-    const roomsToCompare = rentyCompareList.map(id => mockRooms[id]).filter(Boolean);
-
-    // Kịch bản xử lý lỗi theo Báo cáo: Cần tối thiểu 2 phòng để so sánh
-    if (roomsToCompare.length < 2) {
-        const notify = window.showRentyToast || alert;
-        notify('Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối chiếu.', 'warning', 'Cần thêm phòng so sánh');
+function renderCompareRadarChart(rooms) {
+    let container = document.getElementById('compare-chart-container');
+    if (!container) {
+        const canvas = document.getElementById('compareRadarCanvas');
+        if (canvas && canvas.parentElement) {
+            container = canvas.parentElement;
+            container.id = 'compare-chart-container';
+        }
+    }
+    if (!container) {
+        console.warn('[Room Compare] compare-chart-container not found in DOM.');
         return;
     }
 
-    // Tính toán các giá trị tối ưu để highlight
-    const prices = roomsToCompare.map(r => Number(r.price) || 0).filter(p => p > 0);
-    const minPrice = prices.length ? Math.min(...prices) : null;
+    if (!Array.isArray(rooms) || rooms.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-6 text-center">Chưa có dữ liệu phòng để vẽ biểu đồ đối chiếu.</div>`;
+        return;
+    }
 
-    const areas = roomsToCompare.map(r => Number(r.area) || 0).filter(a => a > 0);
-    const maxArea = areas.length ? Math.max(...areas) : null;
+    const isLight = document.body.classList.contains('theme-light') || 
+                    document.documentElement.classList.contains('theme-light') || 
+                    localStorage.getItem('renty_theme_mode') === 'light';
 
-    const ratings = roomsToCompare.map(r => Number(r.rating) || 0).filter(rt => rt > 0);
-    const maxRating = ratings.length ? Math.max(...ratings) : null;
+    const textColor = isLight ? '#1e293b' : '#e2e8f0';
+    const subTextColor = isLight ? '#64748b' : '#94a3b8';
+    const gridColor = isLight ? 'rgba(100, 116, 139, 0.22)' : 'rgba(148, 163, 184, 0.18)';
+    const axisColor = isLight ? 'rgba(100, 116, 139, 0.35)' : 'rgba(148, 163, 184, 0.3)';
+
+    const palette = [
+        { stroke: '#10b981', fill: 'rgba(16, 185, 129, 0.22)', point: '#059669', badgeBg: 'bg-emerald-500/15', text: 'text-emerald-500' },
+        { stroke: '#6366f1', fill: 'rgba(99, 102, 241, 0.22)', point: '#4f46e5', badgeBg: 'bg-indigo-500/15', text: 'text-indigo-400' },
+        { stroke: '#f59e0b', fill: 'rgba(245, 158, 11, 0.22)', point: '#d97706', badgeBg: 'bg-amber-500/15', text: 'text-amber-400' }
+    ];
+
+    const labels = [
+        'Giá thuê rẻ',
+        'Diện tích rộng',
+        'Nhiều tiện nghi',
+        'Đánh giá cao',
+        'Tiết kiệm điện nước'
+    ];
+
+    const N = labels.length;
+    const cx = 200;
+    const cy = 135;
+    const R = 85;
+
+    // 1. Vẽ các vòng lưới đa giác (20%, 40%, 60%, 80%, 100%)
+    let gridSvg = '';
+    const levels = [0.2, 0.4, 0.6, 0.8, 1.0];
+    levels.forEach((lvl, idx) => {
+        const points = [];
+        for (let i = 0; i < N; i++) {
+            const angle = -Math.PI / 2 + (i * 2 * Math.PI) / N;
+            const x = cx + R * lvl * Math.cos(angle);
+            const y = cy + R * lvl * Math.sin(angle);
+            points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        }
+        const isOuter = idx === levels.length - 1;
+        gridSvg += `<polygon points="${points.join(' ')}" fill="${isOuter ? (isLight ? 'rgba(241, 245, 249, 0.4)' : 'rgba(15, 23, 42, 0.3)') : 'none'}" stroke="${gridColor}" stroke-width="${isOuter ? '1.5' : '1'}" stroke-dasharray="${isOuter ? 'none' : '3,3'}" />`;
+    });
+
+    // 2. Vẽ 5 trục tỏa ra từ tâm và các nhãn trục
+    let axesSvg = '';
+    let labelsSvg = '';
+    for (let i = 0; i < N; i++) {
+        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / N;
+        const xOuter = cx + R * Math.cos(angle);
+        const yOuter = cy + R * Math.sin(angle);
+        axesSvg += `<line x1="${cx}" y1="${cy}" x2="${xOuter.toFixed(1)}" y2="${yOuter.toFixed(1)}" stroke="${axisColor}" stroke-width="1.2" />`;
+
+        // Tính vị trí đặt chữ
+        const labelR = R + 22;
+        const lx = cx + labelR * Math.cos(angle);
+        let ly = cy + labelR * Math.sin(angle);
+        if (i === 0) ly -= 4;
+        else if (i === 2 || i === 3) ly += 10;
+        else ly += 4;
+
+        let textAnchor = 'middle';
+        if (Math.cos(angle) > 0.3) textAnchor = 'start';
+        else if (Math.cos(angle) < -0.3) textAnchor = 'end';
+
+        labelsSvg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${textAnchor}" fill="${textColor}" font-size="10.5" font-weight="700" font-family="system-ui, -apple-system, sans-serif">${labels[i]}</text>`;
+    }
+
+    // 3. Vẽ đa giác dữ liệu cho từng phòng
+    let roomsSvg = '';
+    let legendItems = '';
+
+    rooms.forEach((room, idx) => {
+        const theme = palette[idx % palette.length];
+        const scores = room.radar_scores || {
+            price: 70,
+            area: 70,
+            amenity: 70,
+            rating: 70,
+            economic: 70
+        };
+
+        const scoreValues = [
+            Number.isFinite(scores.price) ? Number(scores.price) : 70,
+            Number.isFinite(scores.area) ? Number(scores.area) : 70,
+            Number.isFinite(scores.amenity) ? Number(scores.amenity) : 70,
+            Number.isFinite(scores.rating) ? Number(scores.rating) : 70,
+            Number.isFinite(scores.economic) ? Number(scores.economic) : 70
+        ];
+
+        const polygonPoints = [];
+        let pointsCircles = '';
+
+        for (let i = 0; i < N; i++) {
+            const angle = -Math.PI / 2 + (i * 2 * Math.PI) / N;
+            const currentR = Math.max(8, Math.min(R, (scoreValues[i] / 100) * R));
+            const px = cx + currentR * Math.cos(angle);
+            const py = cy + currentR * Math.sin(angle);
+
+            polygonPoints.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+            pointsCircles += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4.5" fill="${theme.stroke}" stroke="#ffffff" stroke-width="1.8" />`;
+        }
+
+        roomsSvg += `
+            <g class="radar-room-${room.id}">
+                <polygon points="${polygonPoints.join(' ')}" fill="${theme.fill}" stroke="${theme.stroke}" stroke-width="2.5" stroke-linejoin="round" />
+                ${pointsCircles}
+            </g>
+        `;
+
+        legendItems += `
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/10 border border-slate-700/20 text-xs font-extrabold shadow-sm" style="color: ${theme.stroke}">
+                <span class="w-3 h-3 rounded-full" style="background-color: ${theme.stroke}"></span>
+                <span>P.${room.room_number}</span>
+                <span class="text-[10px] font-medium" style="color: ${subTextColor}">(${room.building_name})</span>
+            </div>
+        `;
+    });
+
+    container.innerHTML = `
+        <div class="w-full flex flex-col items-center animate-fade-in py-2">
+            <div class="flex flex-wrap items-center justify-center gap-2.5 mb-3">
+                ${legendItems}
+            </div>
+            <div class="w-full max-w-md flex justify-center">
+                <svg viewBox="0 0 400 270" width="100%" height="260" class="overflow-visible select-none drop-shadow-md" style="max-width: 440px; height: 260px;">
+                    ${gridSvg}
+                    ${axesSvg}
+                    ${roomsSvg}
+                    ${labelsSvg}
+                </svg>
+            </div>
+        </div>
+    `;
+}
+window.renderCompareRadarChart = renderCompareRadarChart;
+
+async function showCompareModal() {
+    const modal = document.getElementById('renty-compare-modal');
+    const table = document.getElementById('tblCompare') || document.getElementById('compare-table');
+    if (!modal) return;
+
+    // Kịch bản xử lý lỗi theo Báo cáo: Cần tối thiểu 2 phòng để so sánh
+    if (rentyCompareList.length < 2) {
+        const notify = window.showRentyToast || alert;
+        notify('Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối đầu.', 'warning', 'ERR_23_02');
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    if (table) {
+        table.innerHTML = `
+            <tbody>
+                <tr>
+                    <td colspan="${rentyCompareList.length + 1}" class="py-16 text-center">
+                        <div class="inline-flex flex-col items-center gap-3">
+                            <div class="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin"></div>
+                            <span class="text-xs font-bold text-slate-300">Đang đối chiếu thông số các phòng đã chọn...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        `;
+    }
 
     // Reset AI Box
     const aiBox = document.getElementById('compare-ai-box');
     if (aiBox) aiBox.classList.add('hidden');
 
-    // Generate comparison table HTML
+    try {
+        const res = await fetch('/api/renty/rooms/compare', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ room_ids: rentyCompareList })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success || !Array.isArray(data.comparison)) {
+            throw new Error(data.message || 'Không thể lấy dữ liệu so sánh.');
+        }
+
+        const rooms = data.comparison;
+        renderComparisonTable(rooms);
+
+    } catch (err) {
+        if (table) {
+            table.innerHTML = `
+                <tbody>
+                    <tr>
+                        <td class="py-8 text-center text-rose-400 text-xs font-bold">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> ${err.message}
+                        </td>
+                    </tr>
+                </tbody>
+            `;
+        }
+    }
+}
+window.showCompareModal = showCompareModal;
+
+function formatRoomAmenities(room) {
+    const list = [];
+    const chk = room.amenities_checklist || {};
+    if (chk.air_conditioner) list.push('Máy lạnh');
+    if (chk.balcony) list.push('Ban công');
+    if (chk.loft) list.push('Gác lửng');
+    if (chk.wc_private) list.push('WC khép kín');
+    if (chk.water_heater) list.push('Nóng lạnh');
+    if (chk.elevator) list.push('Thang máy');
+    if (chk.pets) list.push('Cho nuôi pet');
+    if (chk.fingerprint_lock) list.push('Khóa vân tay');
+
+    if (list.length === 0 && Array.isArray(room.amenities) && room.amenities.length > 0) {
+        return room.amenities.join(', ');
+    }
+    return list.length > 0 ? list.join(', ') : 'Đang cập nhật';
+}
+
+function renderComparisonTable(rooms) {
+    const table = document.getElementById('tblCompare') || document.getElementById('compare-table');
+    if (!table) return;
+
     let html = `
         <thead>
-            <tr class="bg-slate-900/90 border-b border-slate-800">
-                <th class="px-5 py-4 font-bold text-slate-400 w-1/4 text-xs uppercase tracking-wider">Tiêu chí đối chiếu</th>
+            <tr class="bg-slate-900/90 border-b border-slate-800 text-xs">
+                <th class="px-5 py-4 font-bold text-slate-300 w-1/4">Tiêu chí</th>
     `;
-    roomsToCompare.forEach(room => {
-        const isBestPrice = minPrice && Number(room.price) === minPrice;
-        const isLargest = maxArea && Number(room.area) === maxArea;
-        const isTopRated = maxRating && Number(room.rating) === maxRating;
 
-        let badges = '';
-        if (isBestPrice) {
-            badges += `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">💰 Giá tốt nhất</span> `;
-        }
-        if (isLargest) {
-            badges += `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">📐 Rộng nhất</span> `;
-        }
-        if (isTopRated) {
-            badges += `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">⭐ Đánh giá cao nhất</span>`;
-        }
-
+    rooms.forEach(room => {
         html += `
-            <th class="px-5 py-4 font-bold text-center w-[25%] relative group">
-                <button type="button" onclick="removeCompareItem(${room.id})" title="Bỏ phòng này" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-slate-900/80 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all opacity-80 hover:opacity-100 shadow-sm">
-                    <i class="fa-solid fa-xmark text-[10px]"></i>
-                </button>
-                <div class="flex flex-col items-center gap-2 mt-1">
-                    <img src="${room.cover_image}" alt="Ảnh ${room.room_number}" class="w-24 h-16 object-cover rounded-xl border border-slate-800 shadow-md">
-                    <span class="block text-xs text-slate-100 font-extrabold line-clamp-1">${room.title}</span>
-                    <div class="flex flex-wrap items-center justify-center gap-1 mt-0.5">
-                        ${badges}
-                    </div>
+            <th class="px-5 py-4 font-bold text-white text-xs relative group text-left">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="line-clamp-1">Phòng ${room.room_number} – ${room.building_name}</span>
+                    <button type="button" onclick="removeCompareItem(${room.id})" title="Gỡ phòng khỏi bảng so sánh" class="btnRemoveRoom w-5 h-5 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 shrink-0">
+                        <span class="text-xs leading-none">&times;</span>
+                    </button>
                 </div>
             </th>
         `;
     });
+
     html += `
             </tr>
         </thead>
-        <tbody class="divide-y divide-slate-900/60 bg-slate-950/10">
-            <!-- Row 1: Giá thuê -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Giá thuê / tháng</td>
-    `;
-    roomsToCompare.forEach(room => {
-        const isBest = minPrice && Number(room.price) === minPrice;
-        html += `
-            <td class="px-5 py-3.5 text-center font-extrabold ${isBest ? 'text-emerald-400 text-base font-black' : 'text-slate-200 text-sm'}">
-                ${formatCurrency(room.price)}
-            </td>
-        `;
-    });
-    html += `
+        <tbody class="divide-y divide-slate-800/80 text-xs">
+            <!-- Row 1: Giá thuê (tháng) -->
+            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
+                <td class="px-5 py-4 font-semibold text-slate-400">Giá thuê (tháng)</td>
+                ${rooms.map(r => `
+                    <td class="px-5 py-4 font-bold text-white text-xs">
+                        ${Number(r.price).toLocaleString('vi-VN')} VNĐ
+                    </td>
+                `).join('')}
             </tr>
             <!-- Row 2: Diện tích -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Diện tích</td>
-    `;
-    roomsToCompare.forEach(room => {
-        const isBest = maxArea && Number(room.area) === maxArea;
-        html += `
-            <td class="px-5 py-3.5 text-center font-bold ${isBest ? 'text-indigo-300' : 'text-slate-300'}">
-                ${room.area_text || room.area + ' m²'}
-            </td>
-        `;
-    });
-    html += `
+            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
+                <td class="px-5 py-4 font-semibold text-slate-400">Diện tích</td>
+                ${rooms.map(r => `
+                    <td class="px-5 py-4 text-slate-200">
+                        ${r.area} m²
+                    </td>
+                `).join('')}
             </tr>
-            <!-- Row 3: Khoảng cách -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Khoảng cách</td>
-    `;
-    roomsToCompare.forEach(room => {
-        html += `
-            <td class="px-5 py-3.5 text-center text-slate-300 font-semibold">
-                ${room.distance || 1.2} km
-            </td>
-        `;
-    });
-    html += `
+            <!-- Row 3: Tiền cọc -->
+            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
+                <td class="px-5 py-4 font-semibold text-slate-400">Tiền cọc</td>
+                ${rooms.map(r => `
+                    <td class="px-5 py-4 text-slate-200">
+                        ${r.deposit && r.deposit !== r.price ? Number(r.deposit).toLocaleString('vi-VN') + ' VNĐ' : '1 tháng'}
+                    </td>
+                `).join('')}
             </tr>
-            <!-- Row 4: Điểm đánh giá -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Điểm đánh giá</td>
-    `;
-    roomsToCompare.forEach(room => {
-        html += `
-            <td class="px-5 py-3.5 text-center font-extrabold text-amber-400">
-                <i class="fa-solid fa-star text-[10px] mr-1"></i>${room.rating || 5} / 5
-            </td>
-        `;
-    });
-    html += `
+            <!-- Row 4: Tiện nghi -->
+            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
+                <td class="px-5 py-4 font-semibold text-slate-400">Tiện nghi</td>
+                ${rooms.map(r => `
+                    <td class="px-5 py-4 text-slate-300 leading-relaxed text-[11px]">
+                        ${formatRoomAmenities(r)}
+                    </td>
+                `).join('')}
             </tr>
-            <!-- Row 5: Thú cưng -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Nuôi thú cưng</td>
-    `;
-    roomsToCompare.forEach(room => {
-        const hasPets = room.pets === 'true' || room.pets === true;
-        html += `
-            <td class="px-5 py-3.5 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasPets ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
-                    ${hasPets ? 'Cho phép' : 'Không'}
-                </span>
-            </td>
-        `;
-    });
-    html += `
+            <!-- Row 5: Đánh giá trung bình -->
+            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
+                <td class="px-5 py-4 font-semibold text-slate-400">Đánh giá trung bình</td>
+                ${rooms.map(r => `
+                    <td class="px-5 py-4 text-slate-200 font-medium">
+                        ${r.rating_avg} ⭐ <span class="text-slate-400 text-[11px]">(${r.reviews_count || 0} reviews)</span>
+                    </td>
+                `).join('')}
             </tr>
-            <!-- Row 6: Gác lửng -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Gác lửng</td>
-    `;
-    roomsToCompare.forEach(room => {
-        const hasLoft = room.loft === 'true' || room.loft === true;
-        html += `
-            <td class="px-5 py-3.5 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasLoft ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
-                    ${hasLoft ? 'Có gác' : 'Không'}
-                </span>
-            </td>
-        `;
-    });
-    html += `
-            </tr>
-            <!-- Row 7: Ban công -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Ban công</td>
-    `;
-    roomsToCompare.forEach(room => {
-        const hasBalcony = room.balcony === 'true' || room.balcony === true;
-        html += `
-            <td class="px-5 py-3.5 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasBalcony ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
-                    ${hasBalcony ? 'Có ban công' : 'Không'}
-                </span>
-            </td>
-        `;
-    });
-    html += `
-            </tr>
-            <!-- Row 8: Nhà vệ sinh -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Vệ sinh (WC)</td>
-    `;
-    roomsToCompare.forEach(room => {
-        const hasWc = room.wc === 'true' || room.wc === true;
-        html += `
-            <td class="px-5 py-3.5 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${hasWc ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-900 text-slate-500 border border-slate-800'}">
-                    ${hasWc ? 'Khép kín' : 'Chung'}
-                </span>
-            </td>
-        `;
-    });
-    html += `
-            </tr>
-            <!-- Row 9: Đánh giá chủ trọ -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-3.5 font-bold text-slate-400">Đánh giá chủ trọ</td>
-    `;
-    roomsToCompare.forEach(room => {
-        html += `
-            <td class="px-5 py-3.5 text-center text-[10px] font-semibold text-slate-350">
-                ${room.owner || 'Chủ trọ thân thiện'}
-            </td>
-        `;
-    });
-    html += `
-            </tr>
-            <!-- Row 10: Xem chi tiết -->
-            <tr class="hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-4 font-bold text-slate-400">Thao tác</td>
-    `;
-    roomsToCompare.forEach(room => {
-        html += `
-            <td class="px-5 py-4 text-center">
-                <a href="/renty/room/${room.id}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-emerald-400 hover:text-emerald-300 rounded-xl text-[10px] font-extrabold transition-all shadow-md">
-                    Xem review <i class="fa-solid fa-angle-right"></i>
-                </a>
-            </td>
-        `;
-    });
-    html += `
+            <!-- Row 6: Hành động -->
+            <tr class="spec_rows hover:bg-slate-900/30 transition-all bg-slate-900/20">
+                <td class="px-5 py-4 font-semibold text-slate-400">Hành động</td>
+                ${rooms.map(r => `
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-2">
+                            <a href="/renty/room/${r.id}#appointment" class="btnBookNow inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm">
+                                <i class="fa-regular fa-calendar-check text-[11px]"></i>
+                                <span>Hẹn xem phòng này</span>
+                            </a>
+                            <a href="/renty/room/${r.id}" class="text-[11px] font-semibold text-slate-400 hover:text-emerald-400 transition-colors">
+                                Chi tiết &rarr;
+                            </a>
+                        </div>
+                    </td>
+                `).join('')}
             </tr>
         </tbody>
     `;
 
     table.innerHTML = html;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
 }
-window.showCompareModal = showCompareModal;
 
 function hideCompareModal() {
     const modal = document.getElementById('renty-compare-modal');
@@ -4469,57 +4614,116 @@ function hideCompareModal() {
 }
 window.hideCompareModal = hideCompareModal;
 
-function generateAiComparison() {
-    const mockRooms = window.rentyRoomsData || {};
-    const roomsToCompare = rentyCompareList.map(id => mockRooms[id]).filter(Boolean);
+async function generateAiComparison() {
+    if (rentyCompareList.length < 2) return;
+
     const aiBox = document.getElementById('compare-ai-box');
     const aiContent = document.getElementById('compare-ai-content');
     const aiBtn = document.getElementById('compare-ai-btn');
 
-    if (!aiBox || !aiContent || roomsToCompare.length < 2) return;
+    if (!aiBox || !aiContent) return;
 
     aiBox.classList.remove('hidden');
-    aiContent.innerHTML = `<div class="flex items-center gap-2 text-emerald-400 py-1"><i class="fa-solid fa-circle-notch fa-spin text-xs"></i> <span>Đang tổng hợp thông số và đối chiếu AI...</span></div>`;
+    aiContent.innerHTML = `<div class="flex items-center gap-2 text-emerald-400 py-1"><i class="fa-solid fa-circle-notch fa-spin text-xs"></i> <span>Đang kết nối Gemini AI phân tích đối chiếu chuyên sâu...</span></div>`;
 
-    setTimeout(() => {
-        // Phân tích logic so sánh
-        const sortedByPrice = [...roomsToCompare].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
-        const cheapest = sortedByPrice[0];
-        const mostExpensive = sortedByPrice[sortedByPrice.length - 1];
+    try {
+        const res = await fetch('/api/renty/rooms/compare-ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ room_ids: rentyCompareList })
+        });
 
-        const sortedByArea = [...roomsToCompare].sort((a, b) => (Number(b.area) || 0) - (Number(a.area) || 0));
-        const largest = sortedByArea[0];
-
-        const priceDiff = Math.abs((Number(mostExpensive.price) || 0) - (Number(cheapest.price) || 0));
-
-        let insightHtml = `
-            <div class="space-y-1.5">
-                <p>💡 <strong>Lời khuyên lựa chọn từ Renty AI:</strong></p>
-                <ul class="list-disc pl-4 space-y-1 text-slate-300">
-                    <li><strong>Lựa chọn kinh tế nhất:</strong> <span class="text-emerald-400 font-bold">${cheapest.title}</span> với mức giá chỉ <strong>${formatCurrency(cheapest.price)}/tháng</strong> (tiết kiệm hơn <em>${formatCurrency(priceDiff)}/tháng</em> so với phòng cao nhất).</li>
-                    <li><strong>Không gian rộng rãi nhất:</strong> <span class="text-indigo-300 font-bold">${largest.title}</span> với diện tích <strong>${largest.area_text || largest.area + ' m²'}</strong>, rất thích hợp ở từ 2 người hoặc cần không gian học tập, làm việc thoải mái.</li>
-        `;
-
-        const petRooms = roomsToCompare.filter(r => r.pets === 'true' || r.pets === true);
-        if (petRooms.length > 0) {
-            insightHtml += `<li><strong>Nuôi thú cưng:</strong> Nếu bạn có nuôi chó/mèo, hãy ưu tiên <strong>${petRooms.map(r => r.title).join(', ')}</strong> vì các phòng này cho phép nuôi pet.</li>`;
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.insight) {
+            throw new Error(data.message || 'Không thể tạo nhận định AI.');
         }
 
-        insightHtml += `
-                </ul>
-                <p class="mt-2 text-slate-400 text-[10px] italic">📌 Mẹo: Bạn có thể bấm vào "Xem review" để kiểm tra đánh giá an ninh thực tế từ cư dân đã từng ở trước khi quyết định đặt cọc.</p>
+        const insight = data.insight;
+        const recommendationsList = Array.isArray(insight.recommendations) 
+            ? insight.recommendations.map(r => `<li>${r}</li>`).join('')
+            : '';
+
+        aiContent.innerHTML = `
+            <div class="space-y-2">
+                <p class="font-semibold text-slate-200">${insight.summary}</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] my-1.5">
+                    <div class="p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-emerald-300">
+                        <strong>💰 Tối ưu kinh tế:</strong> ${insight.best_economic || 'Đang cập nhật'}
+                    </div>
+                    <div class="p-2 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-indigo-300">
+                        <strong>📐 Rộng rãi nhất:</strong> ${insight.best_space || 'Đang cập nhật'}
+                    </div>
+                </div>
+                ${recommendationsList ? `
+                    <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                        ${recommendationsList}
+                    </ul>
+                ` : ''}
+                <div class="pt-1.5 border-t border-slate-800/80 text-emerald-400 font-medium">
+                    🎯 <strong>Lời khuyên tổng kết:</strong> ${insight.verdict || ''}
+                </div>
             </div>
         `;
 
-        aiContent.innerHTML = insightHtml;
-    }, 600);
+    } catch (err) {
+        aiContent.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${err.message}</span>`;
+    }
 }
 window.generateAiComparison = generateAiComparison;
+
+function copyCompareShareLink() {
+    if (rentyCompareList.length < 2) {
+        const notify = window.showRentyToast || alert;
+        notify('Vui lòng chọn ít nhất 2 phòng để tạo link chia sẻ.', 'warning', 'Chia sẻ');
+        return;
+    }
+
+    const shareUrl = new URL(window.location.origin + '/renty');
+    shareUrl.searchParams.set('compare', rentyCompareList.join(','));
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+            const notify = window.showRentyToast || alert;
+            notify('Đã sao chép link so sánh vào bộ nhớ tạm! Bạn có thể gửi cho bạn bè.', 'success', 'Chia sẻ thành công');
+        }).catch(() => {
+            prompt('Sao chép liên kết so sánh dưới đây:', shareUrl.toString());
+        });
+    } else {
+        prompt('Sao chép liên kết so sánh dưới đây:', shareUrl.toString());
+    }
+}
+window.copyCompareShareLink = copyCompareShareLink;
+
+function checkCompareUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const compareParam = urlParams.get('compare');
+    if (!compareParam) return;
+
+    const ids = compareParam.split(',')
+        .map(id => parseInt(id.trim()))
+        .filter(id => !isNaN(id) && id > 0)
+        .slice(0, 3);
+
+    if (ids.length >= 2) {
+        rentyCompareList = ids;
+        saveCompareState();
+        updateCompareBar();
+        syncCompareCheckboxes();
+
+        setTimeout(() => {
+            showCompareModal();
+        }, 300);
+    }
+}
 
 // Tự động đồng bộ trạng thái khi tải trang
 document.addEventListener('DOMContentLoaded', () => {
     updateCompareBar();
     syncCompareCheckboxes();
+    checkCompareUrlParams();
 
     // Khôi phục bộ lọc từ URL nếu người dùng truy cập link chia sẻ hoặc reload
     restoreFiltersFromUrl();

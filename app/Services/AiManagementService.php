@@ -725,6 +725,121 @@ class AiManagementService
         }
     }
 
+    public function compareRoomsInsight(Collection $rooms): array
+    {
+        $fallback = $this->fallbackRoomComparison($rooms);
+
+        if (!$this->isEnabled()) {
+            return array_merge($fallback, [
+                'used_ai' => false,
+                'fallback_reason' => 'ai_not_configured',
+            ]);
+        }
+
+        try {
+            $context = $rooms->map(function (Room $room) {
+                $amenities = is_array($room->amenities) ? implode(', ', $room->amenities) : (string) $room->amenities;
+                $ratingAvg = round((float) ($room->reviews->avg('rating') ?: 5.0), 1);
+                $elecPrice = (int) ($room->electricity_price ?? 3500);
+                $waterPrice = (int) ($room->water_price ?? 25000);
+                $estTotal = (int) $room->price + (80 * $elecPrice) + (4 * $waterPrice) + self::SERVICE_FEE;
+
+                return [
+                    'id' => $room->id,
+                    'title' => ($room->building->name ?? 'Tòa nhà') . ' - Phòng ' . $room->room_number,
+                    'price' => (int) $room->price,
+                    'area' => (float) $room->area,
+                    'floor' => $room->floor,
+                    'rating_avg' => $ratingAvg,
+                    'amenities' => $amenities,
+                    'address' => $room->building->address ?? 'Đang cập nhật',
+                    'estimated_monthly_total' => $estTotal,
+                ];
+            })->values()->all();
+
+            $content = $this->chatJson([
+                [
+                    'role' => 'system',
+                    'content' => 'Bạn là chuyên gia tư vấn bất động sản và thuê phòng trọ thông minh Renty AI. Hãy so sánh khách quan các phòng dựa trên dữ liệu thật. Chỉ trả về JSON hợp lệ.',
+                ],
+                [
+                    'role' => 'user',
+                    'content' => implode("\n", [
+                        'Hãy phân tích, đối chiếu và đưa ra lời khuyên chọn phòng bằng tiếng Việt.',
+                        'Chỉ trả về JSON định dạng {"summary":"...","best_economic":"...","best_space":"...","recommendations":["...","..."],"verdict":"..."}.',
+                        'Không tự bịa thông tin ngoài dữ liệu được cung cấp.',
+                        'Dữ liệu các phòng:',
+                        json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    ]),
+                ],
+            ]);
+
+            return [
+                'summary' => trim((string) ($content['summary'] ?? $fallback['summary'])),
+                'best_economic' => trim((string) ($content['best_economic'] ?? $fallback['best_economic'])),
+                'best_space' => trim((string) ($content['best_space'] ?? $fallback['best_space'])),
+                'recommendations' => $this->stringList($content['recommendations'] ?? $fallback['recommendations']),
+                'verdict' => trim((string) ($content['verdict'] ?? $fallback['verdict'])),
+                'used_ai' => true,
+                'fallback_reason' => null,
+            ];
+        } catch (Throwable $exception) {
+            Log::warning('AI room comparison insight failed', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return array_merge($fallback, [
+                'used_ai' => false,
+                'fallback_reason' => 'ai_failed',
+            ]);
+        }
+    }
+
+    private function fallbackRoomComparison(Collection $rooms): array
+    {
+        if ($rooms->isEmpty()) {
+            return [
+                'summary' => 'Chưa có đủ phòng để tiến hành so sánh đối chiếu.',
+                'best_economic' => 'Chưa xác định',
+                'best_space' => 'Chưa xác định',
+                'recommendations' => [],
+                'verdict' => 'Vui lòng chọn ít nhất 2 phòng để nhận tư vấn.',
+            ];
+        }
+
+        $sortedByPrice = $rooms->sortBy('price')->values();
+        $cheapest = $sortedByPrice->first();
+        $mostExpensive = $sortedByPrice->last();
+        $priceDiff = (int) $mostExpensive->price - (int) $cheapest->price;
+
+        $sortedByArea = $rooms->sortByDesc('area')->values();
+        $largest = $sortedByArea->first();
+
+        $recommendations = [];
+        $recommendations[] = "Lựa chọn tiết kiệm: {$cheapest->building?->name} - P.{$cheapest->room_number} có mức giá thấp nhất (" . number_format($cheapest->price, 0, ',', '.') . " đ/tháng), tiết kiệm " . number_format($priceDiff, 0, ',', '.') . " đ so với phòng cao nhất.";
+        $recommendations[] = "Không gian rộng rãi: {$largest->building?->name} - P.{$largest->room_number} sở hữu diện tích {$largest->area} m², phù hợp ở từ 2 người hoặc cần góc làm việc thoáng mát.";
+
+        $petRooms = $rooms->filter(function ($r) {
+            $amenities = is_array($r->amenities) ? implode(' ', $r->amenities) : (string) $r->amenities;
+            return (bool) ($r->allow_pets ?? str_contains(mb_strtolower($amenities), 'thú cưng'));
+        });
+
+        if ($petRooms->isNotEmpty()) {
+            $petTitles = $petRooms->map(fn ($r) => "P.{$r->room_number}")->join(', ');
+            $recommendations[] = "Nuôi thú cưng: Nếu bạn có nuôi chó/mèo, hãy ưu tiên {$petTitles} vì cơ sở cho phép nuôi pet.";
+        }
+
+        return [
+            'summary' => "Hệ thống đã đối chiếu " . $rooms->count() . " phòng. Mức giá dao động từ " . number_format($cheapest->price, 0, ',', '.') . " đ đến " . number_format($mostExpensive->price, 0, ',', '.') . " đ/tháng.",
+            'best_economic' => "Phòng {$cheapest->room_number} ({$cheapest->building?->name})",
+            'best_space' => "Phòng {$largest->room_number} ({$largest->building?->name}) - {$largest->area} m²",
+            'recommendations' => $recommendations,
+            'verdict' => $priceDiff > 500000 
+                ? "Nếu bạn ưu tiên tài chính hàng tháng, Phòng {$cheapest->room_number} là phương án tối ưu. Nếu cần không gian sống thoải mái và nhiều tiện nghi, Phòng {$largest->room_number} rất đáng để cân nhắc."
+                : "Mức chênh lệch chi phí giữa các phòng không quá lớn. Bạn nên ưu tiên vị trí toà nhà và tiện ích như ban công, WC khép kín để có trải nghiệm sinh hoạt tốt nhất.",
+        ];
+    }
+
     private function chatJson(array $messages): array
     {
         $response = Http::withToken((string) config('services.ai.api_key'))
