@@ -49,10 +49,30 @@ class ResidentPortalController extends Controller
                 'contract' => null,
                 'tickets' => collect(),
                 'statusLabels' => $this->ticketStatusLabels(),
+                'tenant' => null,
+                'landlord' => null,
+                'landlordName' => 'Ban quản lý',
+                'landlordPhone' => 'Chưa cập nhật',
+                'landlordEmail' => 'Chưa cập nhật',
             ]);
         }
 
         $room = $resident->room;
+        $tenant = $room->tenant;
+        $landlord = $tenant?->users()
+            ->whereIn('role', ['landlord', 'unverified_landlord'])
+            ->first();
+        $landlordProfile = \App\Models\LandlordProfile::where('tenant_id', $tenant?->id)->first();
+        $landlordName = $landlordProfile?->full_name 
+            ?? $landlord?->name 
+            ?? $tenant?->bank_account_name 
+            ?? 'Ban quản lý cơ sở';
+        $landlordPhone = $landlordProfile?->phone 
+            ?? $landlord?->phone 
+            ?? $tenant?->phone 
+            ?? 'Chưa cập nhật';
+        $landlordEmail = $landlord?->email ?? $tenant?->email ?? 'Chưa cập nhật';
+
         $bills = UtilityRecord::with('room')
             ->where('room_id', $room->id)
             ->orderByDesc('billing_month')
@@ -74,6 +94,11 @@ class ResidentPortalController extends Controller
         return view('resident.portal', [
             'resident' => $resident,
             'room' => $room,
+            'tenant' => $tenant,
+            'landlord' => $landlord,
+            'landlordName' => $landlordName,
+            'landlordPhone' => $landlordPhone,
+            'landlordEmail' => $landlordEmail,
             'bills' => $bills,
             'unpaidTotal' => $bills->where('status', '!=', 'paid')->sum('total_amount'),
             'contract' => $contract,
@@ -98,24 +123,35 @@ class ResidentPortalController extends Controller
         $request->merge($input);
 
         $validated = $request->validate([
-            'title' => 'required|string|max:150',
-            'description' => 'required|string|max:1000',
-            'category' => 'required|in:electric,water,furniture,maintenance,housekeeping,other',
+            'title' => 'required|string|min:5|max:100',
+            'description' => 'required|string|min:10|max:1000',
+            'category' => 'required|in:electric,water,furniture,lock,maintenance,housekeeping,other',
+            'urgency' => 'nullable|in:normal,urgent,emergency,Bình thường,Gấp,Khẩn cấp',
             'specific_location' => 'nullable|string|max:150',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:10240',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ], [
-            'title.required' => 'Vui lòng nhập tiêu đề sự cố.',
-            'description.required' => 'Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng.',
-            'image.max' => 'Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 10MB.',
+            'title.required' => 'Vui lòng nhập tiêu đề sự cố cần sửa chữa',
+            'title.min' => 'Tiêu đề sự cố phải có từ 5 đến 100 ký tự.',
+            'title.max' => 'Tiêu đề sự cố tối đa 100 ký tự.',
+            'description.required' => 'Vui lòng mô tả chi tiết sự cố hư hỏng gặp phải.',
+            'description.min' => 'Mô tả sự cố phải có ít nhất 10 ký tự',
+            'category.required' => 'Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).',
+            'category.in' => 'Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).',
+            'image.max' => 'Ảnh chụp sự cố hiện trường tối đa 5MB.',
             'image.image' => 'Tệp tải lên phải là hình ảnh hợp lệ (jpeg, jpg, png, webp).',
             'image.mimes' => 'Hình ảnh chỉ chấp nhận định dạng jpeg, jpg, png hoặc webp.',
-            'category.in' => 'Danh mục sự cố hoặc dịch vụ không hợp lệ.',
         ]);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = '/storage/' . $request->file('image')->store('tickets', 'public');
         }
+
+        $urgency = match ($validated['urgency'] ?? 'normal') {
+            'urgent', 'Gấp' => 'urgent',
+            'emergency', 'Khẩn cấp' => 'emergency',
+            default => 'normal',
+        };
 
         $ticket = Ticket::create([
             'tenant_id' => $resident->tenant_id,
@@ -124,6 +160,7 @@ class ResidentPortalController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'],
             'category' => $validated['category'],
+            'urgency' => $urgency,
             'specific_location' => $validated['specific_location'] ?? null,
             'image_path' => $imagePath,
             'status' => 'pending',
@@ -135,9 +172,20 @@ class ResidentPortalController extends Controller
             \Illuminate\Support\Facades\Log::warning('TicketCreated broadcast failed: ' . $e->getMessage());
         }
 
+        $successMsg = 'Đã gửi yêu cầu sửa chữa sự cố thành công! Kỹ thuật viên sẽ xử lý sớm nhất.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'code' => 'ERR_28_03',
+                'message' => $successMsg,
+                'ticket' => $ticket->load(['room', 'resident']),
+            ]);
+        }
+
         return redirect()
             ->route('smartroom.resident', ['tab' => 'tickets'])
-            ->with('success', 'Đã gửi yêu cầu sửa chữa. Ban quản lý sẽ xử lý sớm.');
+            ->with('success', $successMsg);
     }
 
     public function analyzeTicket(Request $request, AiManagementService $aiManagementService)
@@ -185,6 +233,7 @@ class ResidentPortalController extends Controller
             'resident' => $resident,
             'bill' => $bill,
             'qrUrl' => $this->vietQrUrl($resident->room->room_number, $bill->billing_month, $bill->total_amount),
+            'staticQrUrl' => 'https://img.vietqr.io/image/VCB-1051572297-compact.png',
         ]);
     }
 
@@ -236,12 +285,9 @@ class ResidentPortalController extends Controller
 
     private function vietQrUrl(string $roomNumber, string $billingMonth, int $amount): string
     {
-        $bankId = 'MB';
-        $accountNo = '9999888889999';
-        $accountName = rawurlencode('NGUYEN VAN CHU NHA');
         $addInfo = rawurlencode('Thanh toan phong ' . $roomNumber . ' thang ' . $billingMonth);
 
-        return "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$amount}&addInfo={$addInfo}&accountName={$accountName}";
+        return "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$amount}&addInfo={$addInfo}";
     }
 
     private function billStatusLabels(): array
@@ -256,9 +302,9 @@ class ResidentPortalController extends Controller
     private function ticketStatusLabels(): array
     {
         return [
-            'pending' => 'Chờ xử lý',
+            'pending' => 'Chờ tiếp nhận',
             'processing' => 'Đang xử lý',
-            'resolved' => 'Đã hoàn tất',
+            'resolved' => 'Đã hoàn thành',
         ];
     }
 

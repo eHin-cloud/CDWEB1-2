@@ -23,12 +23,48 @@ class SmartSearchController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = (string) $request->input('q', $request->input('query', ''));
-        $limit = min(20, max(1, (int) $request->input('limit', 6)));
+        $limit = min(50, max(1, (int) $request->input('limit', 12)));
+        $page = max(1, (int) $request->input('page', 1));
         $status = (string) $request->input('status', 'all');
+        $sort = (string) $request->input('sort', $request->input('sort_by', 'default'));
+
+        $minPrice = $request->filled('min_price')
+            ? (int) $request->input('min_price')
+            : ($request->filled('price_min') ? (int) $request->input('price_min') : null);
+
+        $maxPrice = $request->filled('max_price')
+            ? (int) $request->input('max_price')
+            : ($request->filled('price_max') ? (int) $request->input('price_max') : null);
+
+        // Kịch bản bẫy lỗi theo tài liệu nghiệm thu: Giá min > Giá max
+        if ($minPrice !== null && $maxPrice !== null && $minPrice > $maxPrice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).',
+                'errors' => [
+                    'price' => ['Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).']
+                ]
+            ], 422);
+        }
+
+        $amenities = $request->input('amenities', []);
+        if (is_string($amenities)) {
+            $amenities = array_filter(explode(',', $amenities));
+        }
+
+        $rating = $request->filled('rating') && $request->input('rating') !== 'all'
+            ? (float) $request->input('rating')
+            : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
 
         $result = $this->searchService->search($query, [
             'limit' => $limit,
+            'page' => $page,
             'status' => $status,
+            'sort' => $sort,
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'amenities' => $amenities,
+            'min_rating' => $rating,
         ]);
 
         return response()->json([
@@ -41,6 +77,10 @@ class SmartSearchController extends Controller
             'recognized_terms' => $result['analysis']['recognized_terms'],
             'filters' => $result['analysis']['filters'],
             'count' => $result['count'],
+            'total' => $result['total'] ?? $result['count'],
+            'page' => $result['page'] ?? $page,
+            'per_page' => $result['per_page'] ?? $limit,
+            'has_more' => $result['has_more'] ?? false,
             'rooms' => $result['rooms'],
             'suggestions' => $result['suggestions'],
         ]);

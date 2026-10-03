@@ -7,6 +7,50 @@ use Tests\TestCase;
 
 class SmartSearchApiTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $tenant = \App\Models\Tenant::create([
+            'name' => 'Demo Tenant',
+            'email' => 'tenant@example.com',
+        ]);
+
+        $b1 = \App\Models\Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Tòa Nhà Cầu Giấy',
+            'address' => 'Số 10 Cầu Giấy, Hà Nội',
+        ]);
+
+        \App\Models\Room::create([
+            'tenant_id' => $tenant->id,
+            'building_id' => $b1->id,
+            'room_number' => '101',
+            'floor' => 1,
+            'price' => 3500000,
+            'status' => 'empty',
+            'description' => 'Phòng đẹp khép kín Cầu Giấy',
+        ]);
+
+        $b2 = \App\Models\Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Tòa Nhà Thanh Xuân',
+            'address' => 'Số 20 Nguyễn Trãi, Thanh Xuân, Hà Nội',
+        ]);
+
+        \App\Models\Room::create([
+            'tenant_id' => $tenant->id,
+            'building_id' => $b2->id,
+            'room_number' => '201',
+            'floor' => 2,
+            'price' => 3800000,
+            'status' => 'empty',
+            'description' => 'Phòng khép kín Thanh Xuân có ban công',
+        ]);
+    }
+
     /**
      * Test API tìm kiếm thông thường với địa danh chính xác
      */
@@ -104,5 +148,38 @@ class SmartSearchApiTest extends TestCase
                 'success' => true,
             ]);
         $this->assertNotEmpty($emptyResponse->json('suggestions'));
+    }
+
+    /**
+     * Test lọc theo khoảng giá tùy chỉnh min_price và max_price
+     */
+    public function test_smart_search_with_custom_price_filters(): void
+    {
+        $response = $this->getJson('/api/renty/rooms/smart-search?min_price=3600000&max_price=4000000');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $rooms = $response->json('rooms');
+        foreach ($rooms as $room) {
+            $this->assertGreaterThanOrEqual(3600000, $room['price']);
+            $this->assertLessThanOrEqual(4000000, $room['price']);
+        }
+    }
+
+    /**
+     * Test kịch bản bẫy lỗi: Giá tối thiểu lớn hơn giá tối đa (422)
+     */
+    public function test_smart_search_fails_when_min_price_greater_than_max_price(): void
+    {
+        $response = $this->getJson('/api/renty/rooms/smart-search?min_price=5000000&max_price=2000000');
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).',
+            ]);
     }
 }

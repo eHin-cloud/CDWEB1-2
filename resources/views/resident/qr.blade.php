@@ -16,23 +16,34 @@
         <h1 class="text-xl font-black">QR thanh toán</h1>
         <p class="text-xs text-slate-500 mt-1">Hóa đơn {{ $bill->billing_month }} - {{ $resident->name }}</p>
 
-        <div class="mt-6 rounded-2xl bg-white p-4">
-            <img src="{{ $qrUrl }}" alt="VietQR" class="w-full aspect-square object-contain" onerror="this.alt='Không tải được mã QR'; this.classList.add('hidden'); document.getElementById('qr-fallback').classList.remove('hidden');">
-            <div id="qr-fallback" class="hidden text-slate-900 text-sm font-bold py-20">Không tải được mã QR</div>
+        <div class="mt-6 rounded-2xl bg-white p-4 shadow-lg">
+            <img src="{{ $qrUrl ?? 'https://img.vietqr.io/image/VCB-1051572297-compact.png' }}" alt="VietQR" class="w-full aspect-square object-contain" onerror="this.src='https://img.vietqr.io/image/VCB-1051572297-compact.png';">
         </div>
 
-        <div class="mt-5 rounded-xl bg-slate-950/60 border border-slate-800 p-4 text-left text-sm">
+        <div class="mt-5 rounded-xl bg-slate-950/60 border border-slate-800 p-4 text-left text-sm space-y-2">
             <div class="flex justify-between gap-3">
-                <span class="text-slate-500">Số tiền</span>
-                <strong>{{ number_format($bill->total_amount) }} VND</strong>
+                <span class="text-slate-400">Ngân hàng</span>
+                <strong class="text-emerald-400 font-bold">Vietcombank (VCB)</strong>
             </div>
-            <div class="flex justify-between gap-3 mt-2">
-                <span class="text-slate-500">Trạng thái</span>
+            <div class="flex justify-between gap-3">
+                <span class="text-slate-400">Số tài khoản</span>
+                <strong class="text-slate-100 font-mono tracking-wider">1051572297</strong>
+            </div>
+            <div class="flex justify-between gap-3">
+                <span class="text-slate-400">Số tiền</span>
+                <strong class="text-amber-300 font-bold">{{ number_format($bill->total_amount) }} VND</strong>
+            </div>
+            <div class="flex justify-between gap-3">
+                <span class="text-slate-400">Nội dung</span>
+                <span class="text-slate-200 text-xs font-semibold">Thanh toan phong {{ $resident->room->room_number ?? '' }} thang {{ $bill->billing_month }}</span>
+            </div>
+            <div class="flex justify-between gap-3 pt-2 border-t border-slate-800">
+                <span class="text-slate-400">Trạng thái</span>
                 <strong>{{ $bill->status_label }}</strong>
             </div>
         </div>
 
-        <a href="{{ $qrUrl }}" download class="mt-5 inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+        <a href="{{ $qrUrl ?? 'https://img.vietqr.io/image/VCB-1051572297-compact.png' }}" download="VietQR_VCB_1051572297.png" class="mt-5 inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/20">
             <i class="fa-solid fa-download"></i> Tải mã QR
         </a>
     </main>

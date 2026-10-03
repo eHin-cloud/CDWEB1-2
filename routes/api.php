@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SensitiveDataController;
 use App\Http\Controllers\VerificationDocumentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
+use App\Http\Controllers\Api\SystemAdminController;
 
 use App\Http\Controllers\Api\SmartSearchController;
 
@@ -27,6 +28,7 @@ use App\Http\Controllers\Api\SmartSearchController;
 // ==========================================
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/auth/check-availability', [AuthController::class, 'checkAvailability']);
 Route::post('/webhooks/payments', [PaymentWebhookController::class, 'handleWebhook']);
 
 Route::get('/renty/rooms', [VisitorController::class, 'index']);
@@ -35,7 +37,15 @@ Route::get('/renty/rooms/suggest', [SmartSearchController::class, 'suggestions']
 Route::get('/renty/rooms/map', [VisitorController::class, 'map']);
 Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);
-Route::post('/renty/rooms/compare', [VisitorController::class, 'compare']);
+Route::post('/renty/rooms/compare', [VisitorController::class, 'compare'])->middleware('throttle:30,1');
+Route::post('/renty/rooms/compare-ai', [VisitorController::class, 'compareAi'])->middleware('throttle:30,1');
+
+// IoT Smart Metering Ingestion & Realtime Telemetry APIs
+Route::post('/v1/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);
+Route::post('/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);
+Route::get('/v1/iot/rooms/{id}/realtime', [\App\Http\Controllers\IotMeteringController::class, 'roomRealtime']);
+Route::get('/iot/rooms/{id}/realtime', [\App\Http\Controllers\IotMeteringController::class, 'roomRealtime']);
+
 
 // ==========================================
 // 2. AUTHENTICATED ROUTES (Đã đăng nhập)
@@ -51,6 +61,24 @@ Route::middleware('auth:sanctum')->group(function () {
     // ------------------------------------------
     // A. PHÂN HỆ CHỦ TRỌ / QUẢN LÝ (Tenant Admin)
     // ------------------------------------------
+    // ------------------------------------------
+    // SYSTEM ADMIN API (/api/admin/*)
+    // ------------------------------------------
+    Route::middleware('adminMiddleware')->prefix('admin')->group(function () {
+        // Quản lý chủ trọ
+        Route::get('/landlords', [SystemAdminController::class, 'getLandlords']);
+        Route::get('/landlords/{id}', [SystemAdminController::class, 'getLandlordDetail']);
+        Route::patch('/landlords/{id}/verify', [SystemAdminController::class, 'verifyLandlord']);
+        Route::patch('/landlords/{id}/lock', [SystemAdminController::class, 'toggleLockLandlord']);
+
+        // Kiểm duyệt tin đăng nhà trọ
+        Route::get('/properties', [SystemAdminController::class, 'getProperties']);
+        Route::patch('/properties/{id}/moderate', [SystemAdminController::class, 'moderateProperty']);
+
+        // Thống kê tổng quan
+        Route::get('/stats', [SystemAdminController::class, 'getStats']);
+    });
+
     Route::middleware('role:admin')->prefix('platform-admin')->group(function () {
         Route::post('/verification-documents/{document}/unlock', [VerificationDocumentController::class, 'unlock']);
     });
@@ -283,13 +311,12 @@ Route::middleware('auth:sanctum')->group(function () {
             + ($waterUsed * (int) $bill->water_price)
             + 150000;
 
-        $bankId = strtoupper((string) ($tenant->bank_name ?: 'MB'));
-        $accountNo = (string) $tenant->bank_account_no;
-        $accountName = mb_strtoupper((string) $tenant->bank_account_name);
+        $bankId = 'VCB';
+        $accountNo = '1051572297';
+        $accountName = mb_strtoupper((string) ($tenant->bank_account_name ?: 'CHU TRO'));
         $description = 'Thanh toan Phong ' . ($room?->room_number ?? 'N/A') . ' thang ' . $bill->billing_month;
-        $qrUrl = "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$amount}&addInfo="
-            . rawurlencode($description)
-            . '&accountName=' . rawurlencode($accountName);
+        $qrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$amount}&addInfo="
+            . rawurlencode($description);
 
         return response()->json([
             'success' => true,
@@ -358,12 +385,10 @@ Route::middleware('auth:sanctum')->group(function () {
             $totalFormatted = number_format($totalAmount, 0, ',', '.') . 'đ';
             
             // QR payment URL
-            $bankId = strtoupper((string) ($tenant->bank_name ?: 'MB'));
-            $accountNo = (string) $tenant->bank_account_no;
-            $accountName = mb_strtoupper((string) $tenant->bank_account_name);
+            $bankId = 'VCB';
+            $accountNo = '1051572297';
             $addInfo = rawurlencode("Thanh toan Phong " . $room->room_number . " thang " . now()->format('m'));
-            $accNameEscaped = rawurlencode($accountName);
-            $qrUrl = "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$totalAmount}&addInfo={$addInfo}&accountName={$accNameEscaped}";
+            $qrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo={$addInfo}";
             
             // Build Zalo message template
             $message = "📢 [SMARTROOM REMINDER] Kính gửi Anh/Chị {$residentName} (Phòng {$room->room_number}). Hệ thống nhận thấy hóa đơn tiền trọ tháng " . now()->format('m/Y') . " của phòng mình chưa được hoàn tất. Tổng số tiền cần thanh toán là {$totalFormatted}. Kính mong Anh/Chị thanh toán trước ngày 10 để tránh trễ hạn. Link quét QR VietQR thanh toán nhanh: {$qrUrl}. Trân trọng cảm ơn!";

@@ -14,16 +14,33 @@ class LandlordProfile extends Model
 
     protected array $sensitiveMaskedAttributes = [
         'phone' => 'phone',
+        'national_id' => 'national_id',
+        'bank_account_number' => 'bank_account',
     ];
 
     protected $fillable = [
         'user_id',
         'tenant_id',
         'full_name',
+        'username',
         'phone',
+        'email',
+        'password',
+        'national_id',
+        'permanent_address',
+        'bank_account_number',
+        'bank_name',
+        'business_license',
+        'verification_method',
         'property_name',
         'property_address',
         'status',
+        'verification_status',
+        'reject_reason',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     protected $casts = [

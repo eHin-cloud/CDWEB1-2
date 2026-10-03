@@ -40,6 +40,7 @@
     <!-- Leaflet Map Assets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ asset('js/google-maps-renty.js') }}"></script>
 
     <!-- Custom CSS -->
     <!-- Pass Laravel variables to Global JS context -->
@@ -50,8 +51,23 @@
         window.rentySessionError = {!! json_encode(session('error')) !!};
     </script>
 
-    <!-- Custom CSS & JS -->
-    @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
+    <style>
+        .compare-checkbox {
+            accent-color: #10b981 !important;
+            cursor: pointer;
+        }
+        .compare-checkbox:checked {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+        }
+        .theme-light #compare-radar-wrap {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        .theme-light #compare-radar-wrap h4 {
+            color: #0f172a !important;
+        }
+    </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
     <div id="theme-flip-wash" class="theme-flip-wash" aria-hidden="true"></div>
@@ -82,16 +98,35 @@
                         Tìm Trọ Đúng Nghĩa - <br class="hidden md:inline"><span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Xem Review Thật</span>
                     </h1>
                     
-                    <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-6 leading-relaxed">
+                    <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-4 leading-relaxed">
                         Tránh bẫy "ảnh mạng một đằng thực tế một nẻo". Xem đánh giá điểm số chủ nhà, an ninh, điện nước trước khi cọc.
                     </p>
+
+                    <div class="flex items-center gap-3 mb-6">
+                        <a href="{{ route('renty.room.3d') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-lg shadow-blue-500/25 transition-all active:scale-95 border border-white/10">
+                            <i class="fa-solid fa-cube text-sky-300 animate-pulse text-sm"></i>
+                            <span>Khám Phá Mô Hình Phòng Trọ Ảo 3D (360° Tour)</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] bg-white/20 uppercase font-bold tracking-wider">Hot</span>
+                        </a>
+                    </div>
                     
                     <!-- Integrated Search Bar -->
-                    <div class="relative w-full max-w-2xl mb-6 group/search">
+                    <div class="relative w-full max-w-2xl mb-4 group/search">
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
                         <div class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
                             <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
                             <input type="text" id="hero-search-input" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
+                        </div>
+
+                        <!-- AI / Smart Search Spell Correction (Did You Mean) Banner -->
+                        <div id="smart-search-suggestion" class="hidden mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between gap-2 animate-fade-in">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 shrink-0"></i>
+                                <span class="truncate">Có phải bạn muốn tìm: <button type="button" id="did-you-mean-btn" onclick="applySuggestedQuery()" class="font-extrabold underline hover:text-white decoration-emerald-400"></button>?</span>
+                            </div>
+                            <button type="button" onclick="closeSuggestion()" class="text-emerald-400 hover:text-white text-xs px-1 shrink-0">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -187,16 +222,35 @@
 
         <!-- Advanced Filters Dropdown (Expandable Filters) -->
         <div id="filter-drawer" class="hidden mt-6 bg-slate-900/35 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-md animate-fade-in">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/60">
+                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> Bộ lọc chi tiết
+                </span>
+                <button type="button" onclick="resetAllFilters()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-rose-500/10 transition-all">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+                </button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Price Range -->
+                <!-- Price Range Section -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giá phòng tối đa</label>
-                    <select id="filter-price" onchange="filterItems()" class="w-full px-4 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
-                        <option value="all">Tất cả khoảng giá</option>
-                        <option value="3000000">Dưới 3.000.000đ</option>
-                        <option value="4000000">Dưới 4.000.000đ</option>
-                        <option value="5000000">Dưới 5.000.000đ</option>
-                    </select>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Khoảng giá (VNĐ)</label>
+                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2 py-1 bg-[#0a0e17] border border-slate-800 rounded-lg text-slate-300 text-[10px] focus:border-emerald-500 focus:outline-none">
+                            <option value="all">Mức giá gợi ý</option>
+                            <option value="3000000">Dưới 3 triệu</option>
+                            <option value="4000000">Dưới 4 triệu</option>
+                            <option value="5000000">Dưới 5 triệu</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="filter-price-min" oninput="debouncedFilterItems()" placeholder="Tối thiểu (vd: 2000000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                        <span class="text-slate-600 text-xs font-bold">-</span>
+                        <input type="number" id="filter-price-max" oninput="debouncedFilterItems()" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                    </div>
+                    <div id="filter-price-error" class="hidden text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
+                    </div>
                 </div>
                 
                 <!-- Ratings -->
@@ -267,8 +321,96 @@
     <!-- MAIN WORKSPACE -->
     <main class="container mx-auto px-6 py-6 max-w-6xl flex-grow flex flex-col relative z-10">
         <!-- Interactive Map Pane (Left 50% in map mode) -->
-        <div class="renty-split-left">
-            <div id="renty-interactive-map" class="rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl"></div>
+        <div class="renty-split-left relative h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl">
+            <!-- Map Viewport (Fills 100% of left pane) -->
+            <div id="renty-interactive-map" class="w-full h-full"></div>
+
+            <!-- Floating Google Maps Pro HUD Control Bar -->
+            <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] bg-slate-950/92 border border-slate-800/90 rounded-2xl p-3 shadow-2xl backdrop-blur-md flex flex-col gap-2.5 transition-all duration-300">
+                <!-- Top row: Brand & Layer Switchers & Quick Action Controls -->
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-xs font-black tracking-wide bg-gradient-to-r from-blue-400 via-emerald-400 to-teal-300 bg-clip-text text-transparent flex items-center gap-1.5">
+                            <i class="fa-brands fa-google text-blue-400"></i> Google Maps
+                        </span>
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Services Pro</span>
+                    </div>
+
+                    <!-- Layer Switcher Buttons -->
+                    <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+                        <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm">
+                            <i class="fa-solid fa-map"></i> Đường phố
+                        </button>
+                        <button type="button" onclick="setRentyMapLayer('satellite')" id="gm-layer-satellite" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
+                            <i class="fa-solid fa-satellite"></i> Vệ tinh
+                        </button>
+                        <button type="button" onclick="setRentyMapLayer('terrain')" id="gm-layer-terrain" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
+                            <i class="fa-solid fa-mountain"></i> Địa hình
+                        </button>
+                    </div>
+
+                    <!-- Action buttons: Geolocation & Center & Toggle Collapse -->
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="locateUserRentyMap()" title="Định vị vị trí GPS của tôi" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </button>
+                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm khu vực" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                            <i class="fa-solid fa-compass"></i>
+                        </button>
+                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Thu gọn / Mở rộng bộ lọc" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                            <i class="fa-solid fa-chevron-up transition-transform duration-200" id="gm-hud-toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible filter section -->
+                <div id="gm-hud-collapsible" class="flex flex-col gap-2.5 transition-all duration-300">
+                    <!-- Second row: Distance Matrix Commute Calculator & Nearby Places -->
+                    <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-800/80 flex-wrap sm:flex-nowrap">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1">
+                                <i class="fa-solid fa-route text-sky-400"></i> Điểm đến:
+                            </span>
+                            <select id="gm-uni-select" onchange="onUniversityDestinationChange(this.value)" class="w-full sm:w-56 bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-medium">
+                                <option value="">-- Chọn ĐH tính thời gian đi lại --</option>
+                                <optgroup label="Hà Nội">
+                                    <option value="hust">ĐH Bách Khoa Hà Nội</option>
+                                    <option value="neu">ĐH Kinh Tế Quốc Dân</option>
+                                    <option value="vnu">ĐH Quốc Gia Hà Nội (Cầu Giấy)</option>
+                                    <option value="ftu">ĐH Ngoại Thương Hà Nội</option>
+                                    <option value="fpt_hn">ĐH FPT Hà Nội</option>
+                                </optgroup>
+                                <optgroup label="TP. Hồ Chí Minh">
+                                    <option value="hutech">ĐH HUTECH (Điện Biên Phủ)</option>
+                                    <option value="ueh">ĐH Kinh Tế TP.HCM (UEH)</option>
+                                    <option value="vnuhcm">Làng ĐH Quốc Gia TP.HCM (Thủ Đức)</option>
+                                    <option value="rmit">ĐH RMIT (Quận 7)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Nearby Places Filter Chips -->
+                        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+                            <button type="button" onclick="toggleNearbyPlace('supermarket', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🛒 Siêu thị
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('hospital', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🏥 Bệnh viện
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('bus', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🚌 Xe buýt
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('cafe', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                ☕ Cà phê
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Distance Matrix Result Banner (shown when university selected) -->
+                    <div id="gm-commute-box" class="hidden p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Room Cards List Pane (Right 50% in map mode) -->
@@ -276,6 +418,20 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-slate-900 pb-4 renty-split-header">
             <div class="flex items-center gap-3.5 flex-wrap">
                 <h2 class="text-lg font-bold text-slate-200" id="results-count">Tìm thấy {{ count($rooms) }} phòng</h2>
+                @if(auth()->check() && auth()->user()->canAccessLandlordDashboard() && auth()->user()->tenant_id && !auth()->user()->isAdmin())
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
+                        <i class="fa-solid fa-building-user text-indigo-400"></i> Cơ sở: {{ auth()->user()->tenant?->name ?? 'Khu vực quản lý' }}
+                    </span>
+                    @if(request()->boolean('all_tenants'))
+                        <a href="{{ route('renty.user') }}" class="text-xs text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-filter"></i> Chỉ xem trọ của tôi
+                        </a>
+                    @else
+                        <a href="{{ route('renty.user', ['all_tenants' => 1]) }}" class="text-xs text-slate-400 hover:text-slate-200 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-globe"></i> Xem tất cả trọ hệ thống
+                        </a>
+                    @endif
+                @endif
                 <div id="live-activity-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-400 select-none shadow-sm transition-all duration-500">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span id="live-activity-text">24 người đang xem khu vực Đống Đa</span>
@@ -301,6 +457,29 @@
                     </label>
                 </div>
             </div>
+        </div>
+
+        <!-- SMART SEARCH DID YOU MEAN BANNER -->
+        <div id="smart-search-did-you-mean-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs backdrop-blur-md">
+            <div class="flex items-center gap-2.5 text-emerald-300">
+                <i class="fa-solid fa-wand-magic-sparkles text-sm text-emerald-400 animate-pulse"></i>
+                <span>Có phải bạn muốn tìm: <strong id="smart-search-did-you-mean-text" onclick="applyDidYouMeanSearch()" class="text-white cursor-pointer underline underline-offset-4 font-bold hover:text-emerald-300 transition-colors"></strong>?</span>
+            </div>
+            <button type="button" onclick="applyDidYouMeanSearch()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-[11px] shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-check"></i> Áp dụng ngay
+            </button>
+        </div>
+
+        <!-- SMART SEARCH EMPTY STATE -->
+        <div id="smart-search-empty-state" class="hidden mb-16 py-16 px-4 text-center rounded-3xl bg-slate-900/30 border border-slate-800/60 backdrop-blur-md">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl shadow-xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-200 mb-1.5">Không tìm thấy phòng trọ phù hợp</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
+            <button type="button" onclick="resetAllSearchFilters()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+            </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16" id="rooms-grid">
@@ -876,52 +1055,6 @@
         </div> <!-- End of .renty-split-right -->
     </main>
 
-    <!-- FLOATING COMPARE BAR -->
-    <div id="compare-dock" class="compare-floating-bar hidden">
-        <div class="compare-floating-copy">
-            <div class="compare-floating-icon">
-                <i class="fa-solid fa-code-compare"></i>
-            </div>
-            <div class="hidden sm:block">
-                <strong class="text-xs font-bold text-slate-200">So sánh phòng</strong>
-                <span class="text-[10px] text-slate-400">Chọn tối đa 3 phòng</span>
-            </div>
-        </div>
-
-        <!-- Dynamic Room Thumbnails List -->
-        <div id="compare-thumbnails" class="compare-floating-thumbnails flex items-center gap-2"></div>
-
-        <div class="compare-floating-actions flex items-center gap-2">
-            <button type="button" onclick="clearCompare()" class="compare-clear-btn px-3 py-1.5 rounded-xl text-[11px] font-bold">
-                Hủy
-            </button>
-            <button type="button" onclick="openCompareModal()" id="compare-btn-submit" class="compare-submit-btn px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1">
-                So sánh ngay (0)
-            </button>
-        </div>
-    </div>
-
-    <!-- ROOM COMPARISON MODAL -->
-    <div id="compare-modal" class="compare-modal hidden">
-        <div class="compare-panel animate-fade-in">
-            <button type="button" onclick="closeCompareModal()" class="compare-close">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="compare-panel-header">
-                <h2><i class="fa-solid fa-code-compare text-emerald-400"></i> So sánh phòng đã chọn</h2>
-                <p>Vuốt ngang trên điện thoại để xem đủ các phòng.</p>
-            </div>
-
-            <div class="compare-table-wrap">
-                <table class="compare-table">
-                    <thead id="compare-table-head"></thead>
-                    <tbody id="compare-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- QUICK ROOM PREVIEW -->
     <div id="quick-room-preview" class="quick-preview-overlay hidden" aria-hidden="true">
         <div class="quick-preview-panel" role="dialog" aria-modal="true" aria-labelledby="quick-preview-title">
@@ -1363,6 +1496,7 @@
     </div>
 
     <!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
+    <script src="{{ asset('js/rentry.js') }}?v={{ time() }}"></script>
 
     <!-- HOT AREAS MODAL -->
     <div id="hot-areas-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -1683,42 +1817,142 @@
     </div>
 </div>
 
-<!-- DETAILED COMPARISON MODAL -->
-<div id="renty-compare-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md px-4 py-6">
-    <div class="w-full max-w-4xl bg-[#0b0f19] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-fade-in">
+<!-- DETAILED COMPARISON MODAL (MATCHING SPEC HÌNH 23.2) -->
+<div id="renty-compare-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/80 backdrop-blur-md px-4 py-6">
+    <div class="w-full max-w-3xl bg-[#0c1017] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fade-in p-6">
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-slate-800/80 bg-slate-900/40 flex justify-between items-center">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
-                    <i class="fa-solid fa-code-compare text-emerald-400"></i>
+        <div class="flex justify-between items-start pb-4 border-b border-slate-800/80 mb-4">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="fa-solid fa-code-compare text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-extrabold text-slate-100 uppercase tracking-wider">Bảng So Sánh Chi Tiết</h3>
-                    <p class="text-[10px] text-slate-500 mt-0.5">So sánh thông số, giá cả và tiện ích của các phòng</p>
+                    <h3 class="text-base font-extrabold text-white">So sánh phòng đã chọn</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Vuốt ngang trên điện thoại để xem đủ các phòng.</p>
                 </div>
             </div>
-            <button type="button" onclick="hideCompareModal()" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="copyCompareShareLink()" title="Sao chép link so sánh" class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm">
+                    <i class="fa-solid fa-share-nodes text-xs"></i>
+                    <span class="hidden sm:inline">Chia sẻ</span>
+                </button>
+                <button type="button" onclick="hideCompareModal()" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
         </div>
         
         <!-- Table Container -->
-        <div class="p-6 overflow-auto flex-grow">
-            <div class="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/20">
-                <table class="w-full text-left text-xs text-slate-300 min-w-[600px] border-collapse" id="compare-table">
-                    <!-- Dynamic comparison table will be populated by JS -->
-                </table>
+        <div class="overflow-x-auto flex-grow rounded-xl border border-slate-800/80 bg-slate-950/40">
+            <table class="w-full text-left text-xs text-slate-200 min-w-[500px] border-collapse compare-table" id="tblCompare">
+                <!-- Populated by JS -->
+            </table>
+        </div>
+
+        <!-- AI Recommendation Insight Box -->
+        <div id="compare-ai-box" class="hidden mt-4 p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-slate-200 shadow-xl relative animate-fade-in">
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-emerald-400 text-xs">Phân tích so sánh AI</h4>
+                        <button type="button" onclick="document.getElementById('compare-ai-box').classList.add('hidden')" class="text-slate-500 hover:text-white transition-colors">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+                    <div id="compare-ai-content" class="mt-2 text-[11px] text-slate-300 leading-relaxed"></div>
+                </div>
             </div>
         </div>
-        
+
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/20 flex justify-end gap-3">
-            <button type="button" onclick="hideCompareModal()" class="px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-bold text-slate-350 hover:bg-slate-850 hover:text-white transition-all">
-                Đóng
+        <div class="pt-4 mt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
+            <button type="button" onclick="generateAiComparison()" id="compare-ai-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-emerald-400 text-xs font-bold transition-all">
+                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                <span>Tư vấn so sánh bằng AI</span>
             </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="clearCompareList(); hideCompareModal();" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors">
+                    <i class="fa-solid fa-trash-can mr-1 text-xs"></i> Xóa tất cả
+                </button>
+                <button type="button" onclick="hideCompareModal()" class="px-4 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all">
+                    Đóng
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- RENTY TOAST NOTIFICATION CONTAINER -->
+<div id="renty-toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
+
+<script>
+    function showRentyToast(message, type = 'success', customTitle = null) {
+        const container = document.getElementById('renty-toast-container');
+        if (!container) return;
+
+        let styleClasses = 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-500/15';
+        let iconBg = 'bg-emerald-500/15';
+        let icon = 'fa-circle-check text-emerald-400';
+        let defaultTitle = 'Đăng nhập thành công!';
+
+        if (type === 'warning') {
+            styleClasses = 'bg-slate-900/95 border-amber-500/40 text-amber-300 shadow-amber-500/15';
+            iconBg = 'bg-amber-500/15';
+            icon = 'fa-triangle-exclamation text-amber-400';
+            defaultTitle = 'Cảnh báo';
+        } else if (type === 'error') {
+            styleClasses = 'bg-slate-900/95 border-rose-500/40 text-rose-300 shadow-rose-500/15';
+            iconBg = 'bg-rose-500/15';
+            icon = 'fa-circle-exclamation text-rose-400';
+            defaultTitle = 'Thông báo';
+        }
+
+        const title = customTitle || defaultTitle;
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${styleClasses}`;
+
+        toast.innerHTML = `
+            <div class="w-8 h-8 rounded-xl ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid ${icon} text-base"></i>
+            </div>
+            <div class="flex-grow min-w-0">
+                <h4 class="font-extrabold text-white text-xs tracking-wide">${title}</h4>
+                <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">${message}</p>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-slate-500 hover:text-white transition-colors shrink-0 p-1">
+                <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+        `;
+
+        container.appendChild(toast);
+
+        // Hiệu ứng trượt vào
+        setTimeout(() => {
+            toast.classList.remove('translate-x-10', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+        }, 50);
+
+        // Tự động tắt sau 4.5 giây
+        setTimeout(() => {
+            toast.classList.remove('translate-x-0', 'opacity-100');
+            toast.classList.add('translate-x-10', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 4500);
+    }
+    window.showRentyToast = showRentyToast;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.rentySessionSuccess) {
+            showRentyToast(window.rentySessionSuccess, 'success');
+        }
+        if (window.rentySessionError) {
+            showRentyToast(window.rentySessionError, 'error');
+        }
+    });
+</script>
 
 </body>
 </html>

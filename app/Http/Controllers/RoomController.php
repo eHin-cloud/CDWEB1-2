@@ -80,6 +80,25 @@ class RoomController extends Controller
     public function create()
     {
         $user = Auth::user();
+        $tenantId = $user->tenant_id;
+
+        // BƯỚC 3: Kiểm tra chủ trọ đã hoàn thiện hồ sơ MST/CCCD & được duyệt chưa
+        if ($user->role !== 'admin') {
+            $profile = \App\Models\LandlordProfile::where('tenant_id', $tenantId)
+                ->orWhere('user_id', $user->id)
+                ->latest()
+                ->first();
+            $tenant = \App\Models\Tenant::find($tenantId);
+
+            $hasLegalInfo = !empty($profile?->national_id) && !empty($profile?->business_license);
+            $isApproved = ($profile?->status === 'approved') || (($tenant?->verification_status ?? '') === 'kyc_verified');
+
+            if (!$hasLegalInfo || !$isApproved) {
+                return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
+                    ->with('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
+            }
+        }
+
         $buildings = Building::where('tenant_id', $user->tenant_id)->get();
         return view('admin.rooms.create', compact('buildings'));
     }
@@ -112,6 +131,23 @@ class RoomController extends Controller
     {
         $user = Auth::user();
         $tenantId = $user->tenant_id;
+
+        // BƯỚC 3: Kiểm tra điều kiện đăng tin công khai
+        if ($user->role !== 'admin') {
+            $profile = \App\Models\LandlordProfile::where('tenant_id', $tenantId)
+                ->orWhere('user_id', $user->id)
+                ->latest()
+                ->first();
+            $tenant = \App\Models\Tenant::find($tenantId);
+
+            $hasLegalInfo = !empty($profile?->national_id) && !empty($profile?->business_license);
+            $isApproved = ($profile?->status === 'approved') || (($tenant?->verification_status ?? '') === 'kyc_verified');
+
+            if (!$hasLegalInfo || !$isApproved) {
+                return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
+                    ->with('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
+            }
+        }
 
         // 1. Chuyển đổi số Full-width thành Half-width chuẩn & trim khoảng trắng (bao gồm khoảng trắng Nhật/Trung)
         $input = $request->all();

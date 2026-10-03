@@ -15,6 +15,7 @@ class Ticket extends Model
         'description',
         'image_path',
         'category',
+        'urgency',
         'specific_location',
         'status',
         'assigned_to'

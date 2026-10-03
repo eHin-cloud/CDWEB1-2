@@ -32,12 +32,21 @@ use App\Http\Controllers\HousekeepingController;
 Route::get('dashboard', [CrudUserController::class, 'dashboard']);
 
 Route::get('login', [CrudUserController::class, 'login'])->name('login');
-Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:5,1')->name('user.authUser');
+Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:30,1')->name('user.authUser');
 
 Route::get('create', [CrudUserController::class, 'createUser'])->name('user.createUser');
-Route::post('create', [CrudUserController::class, 'postUser'])->middleware('throttle:3,1')->name('user.postUser');
+Route::post('create', [CrudUserController::class, 'postUser'])->middleware('throttle:10,1')->name('user.postUser');
+Route::get('guest/verify', [CrudUserController::class, 'showVerifyOtp'])->name('guest.verify');
+Route::post('guest/verify-otp', [CrudUserController::class, 'verifyGuestOtp'])->middleware('throttle:10,1')->name('guest.verifyOtp');
+Route::post('guest/send-otp', [CrudUserController::class, 'sendGuestOtp'])->middleware('throttle:5,1')->name('guest.sendOtp');
+Route::get('tenant/onboarding/preferences', [CrudUserController::class, 'showPreferences'])->middleware('auth')->name('tenant.preferences');
+Route::post('tenant/onboarding/preferences', [CrudUserController::class, 'savePreferences'])->middleware('auth')->name('tenant.preferences.save');
+
 Route::get('landlord/register', [LandlordOnboardingController::class, 'create'])->name('landlord.register');
-Route::post('landlord/register', [LandlordOnboardingController::class, 'store'])->middleware('throttle:3,1')->name('landlord.register.store');
+Route::post('landlord/register', [LandlordOnboardingController::class, 'store'])->middleware('throttle:10,1')->name('landlord.register.store');
+Route::get('landlord/verify', [LandlordOnboardingController::class, 'showVerifyForm'])->name('landlord.verify');
+Route::post('landlord/send-otp', [LandlordOnboardingController::class, 'sendOtp'])->middleware('throttle:5,1')->name('landlord.sendOtp');
+Route::post('landlord/verify-otp', [LandlordOnboardingController::class, 'verifyOtp'])->middleware('throttle:10,1')->name('landlord.verifyOtp');
 
 Route::middleware('role:admin')->group(function () {
     Route::get('read', [CrudUserController::class, 'readUser'])->name('user.readUser');
@@ -67,12 +76,21 @@ Route::get('signout', [CrudUserController::class, 'signOut'])->name('signout');
 \Laragear\WebAuthn\Http\Routes::register();
 
 Route::get('/', function () {
+    return redirect('/renty');
+});
+
+Route::get('/home', function () {
+    return redirect('/renty');
+})->name('home');
+
+Route::get('/portal', function () {
     return view('index');
 })->name('smartroom.portal');
 
 Route::get('/smartroom/resident', [ResidentPortalController::class, 'index'])->name('smartroom.resident');
 Route::post('/smartroom/resident/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
 Route::post('/smartroom/resident/tickets', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store');
+Route::post('/smartroom/resident/tickets/store', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store.alias');
 Route::get('/smartroom/resident/bills/{id}/qr', [ResidentPortalController::class, 'billQr'])->name('smartroom.resident.bills.qr');
 Route::post('/smartroom/resident/contract/{id}/request-renewal', [ResidentPortalController::class, 'requestRenewal'])->name('smartroom.resident.contract.request_renewal');
 
@@ -143,7 +161,10 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
     Route::post('/smartroom/admin/ticket/{id}/update', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.ticket.update');
+    Route::post('/smartroom/admin/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.tickets.status');
+    Route::get('/smartroom/admin/tickets', [AdminDashboardController::class, 'ticketsIndex'])->name('smartroom.admin.tickets.index');
     Route::get('/smartroom/admin/tickets/poll', [AdminDashboardController::class, 'pollTickets'])->name('smartroom.admin.tickets.poll');
+    Route::post('/smartroom/admin/profile', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');
@@ -160,7 +181,14 @@ Route::middleware('admin')->group(function () {
         Route::post('/smartroom/admin/notifications/contracts', [AdminDashboardController::class, 'notifyContracts'])->name('smartroom.admin.notifications.contracts');
         Route::post('/smartroom/admin/notifications/maintenance', [AdminDashboardController::class, 'notifyMaintenance'])->name('smartroom.admin.notifications.maintenance');
         Route::post('/smartroom/admin/notifications/run-all', [AdminDashboardController::class, 'notifyAll'])->name('smartroom.admin.notifications.run_all');
+
+        // IoT Smart Metering Management & Realtime Dashboard
+        Route::get('/smartroom/admin/iot/summary', [\App\Http\Controllers\IotMeteringController::class, 'facilitySummary'])->name('smartroom.admin.iot.summary');
+        Route::get('/smartroom/admin/iot/rooms/{id}/realtime', [\App\Http\Controllers\IotMeteringController::class, 'roomRealtime'])->name('smartroom.admin.iot.room_realtime');
+        Route::post('/smartroom/admin/iot/sync-billing', [\App\Http\Controllers\IotMeteringController::class, 'syncBilling'])->name('smartroom.admin.iot.sync_billing');
+        Route::post('/smartroom/admin/iot/simulate', [\App\Http\Controllers\IotMeteringController::class, 'simulate'])->name('smartroom.admin.iot.simulate');
     });
+
 
     // Building Management (Cơ sở lưu trú)
     Route::prefix('smartroom/admin/buildings')->name('admin.buildings.')->middleware('role:landlord')->group(function () {
@@ -236,7 +264,18 @@ Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::c
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
 
 $rentyRooms = function () {
-    $rooms = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews'])->get();
+    $user = auth()->user();
+    $query = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews']);
+
+    // Nếu người dùng đăng nhập là chủ trọ hoặc quản lý có tenant_id (và không phải Superadmin),
+    // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó
+    if ($user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin()) {
+        if (!request()->boolean('all_tenants')) {
+            $query->where('tenant_id', $user->tenant_id);
+        }
+    }
+
+    $rooms = $query->get();
     
     $mappedRooms = $rooms->map(function($room) {
         $num = intval($room->room_number);
@@ -449,7 +488,12 @@ $rentyRooms = function () {
 };
 
 $rentyPage = function () use ($rentyRooms) {
-    $recentReviews = \App\Models\Review::with('room')->latest()->take(5)->get();
+    $user = auth()->user();
+    $reviewsQuery = \App\Models\Review::with('room');
+    if ($user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin() && !request()->boolean('all_tenants')) {
+        $reviewsQuery->whereHas('room', fn ($q) => $q->where('tenant_id', $user->tenant_id));
+    }
+    $recentReviews = $reviewsQuery->latest()->take(5)->get();
     return view('rentry.rentry', [
         'rooms' => $rentyRooms(),
         'recentReviews' => $recentReviews
@@ -457,6 +501,14 @@ $rentyPage = function () use ($rentyRooms) {
 };
 
 Route::get('/renty', $rentyPage)->name('renty.user');
+
+Route::get('/renty/room-3d', function () {
+    return view('rentry.room_3d');
+})->name('renty.room.3d');
+
+Route::get('/renty/room/{id}/3d', function ($id) {
+    return view('rentry.room_3d', ['roomId' => $id]);
+})->name('renty.room.detail.3d');
 
 Route::get('/renty/room/{id}', function ($id) use ($rentyRooms) {
     $room = $rentyRooms()->firstWhere('id', (int) $id);
@@ -521,7 +573,7 @@ Route::get('/renty/notifications', function () {
     $notifications = collect();
 
     if ($user->isAdmin()) {
-        // Fetch verifications pending
+        // 1. Superadmin: Duyệt KYC & Báo cáo sai phạm
         $verifications = \App\Models\LandlordVerificationRequest::where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->take(5)
@@ -529,16 +581,15 @@ Route::get('/renty/notifications', function () {
             ->map(function ($item) {
                 return [
                     'id' => 'verify_' . $item->id,
-                    'title' => 'Duyệt KYC: ' . $item->landlord_name,
-                    'message' => 'Yêu cầu xác minh tài khoản chủ trọ từ ' . $item->landlord_name . '.',
-                    'time' => $item->created_at->diffForHumans(),
+                    'title' => 'Duyệt KYC: ' . ($item->landlord_name ?? 'Chủ trọ mới'),
+                    'message' => 'Yêu cầu xác minh danh tính chủ trọ đang chờ bạn phê duyệt.',
+                    'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
                     'link' => route('admin.verifications.index'),
                     'icon' => 'fa-user-shield',
                     'color' => 'text-amber-500'
                 ];
             });
 
-        // Fetch pending reports
         $reports = \App\Models\RoomReport::where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->take(5)
@@ -547,35 +598,172 @@ Route::get('/renty/notifications', function () {
                 return [
                     'id' => 'report_' . $item->id,
                     'title' => 'Báo cáo vi phạm',
-                    'message' => 'Phòng ID #' . $item->room_id . ' bị báo cáo: ' . $item->description,
-                    'time' => $item->created_at->diffForHumans(),
+                    'message' => 'Phòng #' . $item->room_id . ' bị báo cáo: ' . \Illuminate\Support\Str::limit($item->description, 60),
+                    'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
                     'link' => route('smartroom.admin'),
                     'icon' => 'fa-flag',
                     'color' => 'text-rose-500'
                 ];
             });
 
-        // Merge notifications
         $notifications = $verifications->concat($reports)->sortByDesc('time')->values();
-    } else {
-        // Landlord or tenant notifications
-        $logs = \App\Models\NotificationLog::where('tenant_id', $user->tenant_id)
+
+    } elseif ($user->canAccessLandlordDashboard() && $user->tenant_id) {
+        // 2. Chủ trọ / Quản lý cơ sở: Nhận thông báo sự cố, khách liên hệ, hóa đơn quá hạn, hợp đồng của cơ sở mình
+        $tenantId = $user->tenant_id;
+
+        // Sự cố / Báo hỏng từ cư dân gửi lên
+        $tickets = \App\Models\Ticket::with(['room'])
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', ['pending', 'processing'])
             ->orderBy('created_at', 'desc')
-            ->take(8)
+            ->take(4)
             ->get()
             ->map(function ($item) {
+                $roomNum = $item->room?->room_number ?? '';
                 return [
-                    'id' => 'log_' . $item->id,
-                    'title' => $item->subject ?? 'Thông báo hệ thống',
-                    'message' => $item->message,
-                    'time' => $item->created_at->diffForHumans(),
-                    'link' => '#',
-                    'icon' => 'fa-bell',
-                    'color' => 'text-indigo-500'
+                    'id' => 'ticket_' . $item->id,
+                    'title' => 'Sự cố P.' . $roomNum . ': ' . $item->title,
+                    'message' => \Illuminate\Support\Str::limit($item->description, 80),
+                    'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                    'link' => route('smartroom.admin') . '#tickets',
+                    'icon' => 'fa-wrench',
+                    'color' => 'text-amber-400'
                 ];
             });
 
-        $notifications = collect($logs);
+        // Khách gửi liên hệ xem phòng từ Renty
+        $contacts = \App\Models\ContactRequest::with('room')
+            ->whereHas('room', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(4)
+            ->get()
+            ->map(function ($item) {
+                $roomNum = $item->room?->room_number ?? '';
+                return [
+                    'id' => 'contact_' . $item->id,
+                    'title' => 'Khách hỏi thuê P.' . $roomNum,
+                    'message' => $item->name . ' (' . $item->phone . ') gửi yêu cầu tư vấn xem phòng.',
+                    'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                    'link' => route('smartroom.admin'),
+                    'icon' => 'fa-phone-volume',
+                    'color' => 'text-emerald-400'
+                ];
+            });
+
+        // Hóa đơn quá hạn / chưa thanh toán của cơ sở
+        $bills = \App\Models\Bill::with('room')
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', ['overdue', 'pending'])
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function ($item) {
+                $roomNum = $item->room?->room_number ?? '';
+                $isOverdue = $item->status === 'overdue';
+                return [
+                    'id' => 'bill_' . $item->id,
+                    'title' => ($isOverdue ? 'Hóa đơn quá hạn P.' : 'Chờ thu tiền P.') . $roomNum,
+                    'message' => 'Tháng ' . $item->billing_month . ' - Số tiền: ' . number_format($item->total_amount) . 'đ',
+                    'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                    'link' => route('smartroom.admin') . '#bills',
+                    'icon' => 'fa-file-invoice-dollar',
+                    'color' => $isOverdue ? 'text-rose-400' : 'text-sky-400'
+                ];
+            });
+
+        // Hợp đồng chưa ký số
+        $contracts = \App\Models\Contract::with('room')
+            ->where('tenant_id', $tenantId)
+            ->where('is_signed', false)
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function ($item) {
+                $roomNum = $item->room?->room_number ?? '';
+                return [
+                    'id' => 'contract_' . $item->id,
+                    'title' => 'Hợp đồng P.' . $roomNum . ' chờ ký',
+                    'message' => 'Mã HĐ: ' . $item->contract_code . ' đang chờ xác nhận chữ ký số.',
+                    'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                    'link' => route('smartroom.admin') . '#contracts',
+                    'icon' => 'fa-file-signature',
+                    'color' => 'text-violet-400'
+                ];
+            });
+
+        $notifications = $tickets->concat($contacts)->concat($bills)->concat($contracts)->values();
+
+    } elseif ($user->isResident()) {
+        // 3. Cư dân: Chỉ nhận thông báo liên quan đến phòng mình đang thuê
+        $resident = \App\Models\Resident::where('user_id', $user->id)
+            ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($user->phone))
+            ->first();
+
+        $notifications = collect();
+
+        if ($resident) {
+            // Hóa đơn phòng của cư dân
+            $residentBills = \App\Models\Bill::where('room_id', $resident->room_id)
+                ->orderBy('created_at', 'desc')
+                ->take(3)
+                ->get()
+                ->map(function ($item) {
+                    $isPaid = $item->status === 'paid';
+                    return [
+                        'id' => 'res_bill_' . $item->id,
+                        'title' => $isPaid ? 'Đã thanh toán hóa đơn' : 'Hóa đơn tiền phòng mới',
+                        'message' => 'Hóa đơn tháng ' . $item->billing_month . ': ' . number_format($item->total_amount) . 'đ (' . ($isPaid ? 'Đã thu' : 'Chưa thu') . ')',
+                        'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                        'link' => route('smartroom.resident') . '#bills',
+                        'icon' => 'fa-receipt',
+                        'color' => $isPaid ? 'text-emerald-400' : 'text-amber-400'
+                    ];
+                });
+
+            // Phiếu sự cố của cư dân
+            $residentTickets = \App\Models\Ticket::where('resident_id', $resident->id)
+                ->orderBy('created_at', 'desc')
+                ->take(3)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => 'res_ticket_' . $item->id,
+                        'title' => 'Báo hỏng: ' . $item->title,
+                        'message' => 'Trạng thái: ' . ($item->status === 'resolved' ? 'Đã xử lý xong' : 'Đang xử lý'),
+                        'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                        'link' => route('smartroom.resident') . '#tickets',
+                        'icon' => 'fa-screwdriver-wrench',
+                        'color' => $item->status === 'resolved' ? 'text-emerald-400' : 'text-sky-400'
+                    ];
+                });
+
+            $notifications = $residentBills->concat($residentTickets)->values();
+        }
+
+    } else {
+        // 4. Khách tìm phòng (Guest)
+        $notifications = collect([
+            [
+                'id' => 'guest_tip_1',
+                'title' => 'Khám phá phòng trọ 360°',
+                'message' => 'Trải nghiệm xem phòng thực tế ảo 3D trực quan trước khi đến xem trực tiếp.',
+                'time' => 'Gợi ý',
+                'link' => route('renty.room.3d'),
+                'icon' => 'fa-cube',
+                'color' => 'text-indigo-400'
+            ],
+            [
+                'id' => 'guest_tip_2',
+                'title' => 'Mẹo thuê trọ an toàn',
+                'message' => 'Kiểm tra chủ trọ có huy hiệu Xác minh KYC để tránh rủi ro lừa đảo tiền cọc.',
+                'time' => 'An toàn',
+                'link' => route('renty.user'),
+                'icon' => 'fa-shield-halved',
+                'color' => 'text-emerald-400'
+            ]
+        ]);
     }
 
     // Fallback if empty to make the tray look nice and realistic

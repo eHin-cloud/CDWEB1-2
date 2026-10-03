@@ -96,14 +96,20 @@ class HousekeepingController extends Controller
             ['cleaning_status' => $newCleaningStatus]
         );
 
+        $message = $newCleaningStatus === 'clean' || $newCleaningStatus === 'inspected'
+            ? 'Phòng đã chuyển sang trạng thái Đã sạch (Clean), sẵn sàng đón khách.'
+            : "Phòng {$room->room_number} đang được nhân viên buồng phòng dọn dẹp.";
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Phòng {$room->room_number} đã chuyển sang trạng thái: {$newCleaningStatus}",
-                'room' => $room
+                'code' => $newCleaningStatus === 'clean' ? 'ERR_28_04' : 'SUCCESS',
+                'message' => $message,
+                'room' => $room,
+                'status_label' => $newCleaningStatus === 'clean' ? 'Đã sạch (Clean)' : 'Đang dọn dẹp'
             ]);
         }
 
-        return back()->with('success', "Phòng {$room->room_number} đã cập nhật vệ sinh thành công.");
+        return back()->with('success', $message)->with('code', $newCleaningStatus === 'clean' ? 'ERR_28_04' : null);
     }
 }
