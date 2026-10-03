@@ -1,81 +1,20 @@
 @echo off
+chcp 65001 > nul
 setlocal enabledelayedexpansion
 title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
+
+:: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher
+if "%1" neq "--cli" (
+    start "" powershell -WindowStyle Normal -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    exit /b 0
+)
+
 mode con: cols=110 lines=42
+chcp 65001 >nul
 
 :: ======================================================================
-:: DYNAMIC PHP & SYSTEM ENVIRONMENT DISCOVERY (AUTO-PILOT)
+:: INITIAL ENVIRONMENT SCAN (AUTO-PILOT)
 :: ======================================================================
-echo.
-echo    [ KHOI CHAY ] Dang phat hien moi truong he thong...
-echo    --------------------------------------------------
-
-:: Phat hien PHP.exe tu dong
-set "PHP_CMD="
-where php >nul 2>&1
-if %errorlevel% equ 0 (
-    set "PHP_CMD=php"
-    echo    [+] Phien ban PHP: Da bat dau voi bien moi truong he thong [PATH].
-    goto PHP_DETECTED
-)
-
-echo    [!] Canh bao: Khong tim thay PHP trong PATH. Dang quet thu muc thong dung...
-if exist "C:\xampp\php\php.exe" (
-    set PHP_CMD="C:\xampp\php\php.exe"
-    echo    [+] Phat hien PHP tu XAMPP: C:\xampp\php\php.exe
-    goto PHP_DETECTED
-)
-
-for /d %%d in (C:\laragon\bin\php\php-*) do (
-    if exist "%%d\php.exe" (
-        set PHP_CMD="%%d\php.exe"
-        echo    [+] Phat hien PHP tu Laragon: %%d\php.exe
-        goto PHP_DETECTED
-    )
-)
-
-:: Neu khong tim thay PHP, kiem tra Docker
-where docker >nul 2>&1
-if %errorlevel% equ 0 (
-    color 0e
-    echo    [!] Khong tim thay PHP tren he thong, nhung da phat hien DOCKER!
-    echo    Ban co the khoi chay du an hoan toan bang Docker Compose.
-    echo.
-    set /p use_docker_choice="   >> Ban co muon khoi chay du an bang DOCKER ngay khong? [y/n]: "
-    if /i "!use_docker_choice!"=="y" goto DOCKER_RUN
-)
-
-color 0c
-echo    [LOI CRITICAL] Khong tim thay PHP tren he thong!
-echo    Vui long cai dat PHP [XAMPP/Laragon] va them vao PATH hoac su dung Docker.
-pause
-exit /b 1
-
-:PHP_DETECTED
-
-
-:: Phat hien Composer tu dong
-where composer >nul 2>&1
-if %errorlevel% equ 0 (
-    set COMPOSER_CMD=composer
-) else (
-    if exist "composer.phar" (
-        set COMPOSER_CMD=!PHP_CMD! composer.phar
-        echo    [+] Phat hien composer.phar trong thu muc hien tai.
-    ) else (
-        echo    [!] Canh bao: Khong tim thay Composer. Mot so tinh nang khoi tao se bi han che.
-        set COMPOSER_CMD=composer
-    )
-)
-
-:: Kiem tra Node.js / NPM
-where npm >nul 2>&1
-if %errorlevel% equ 0 (
-    echo    [+] Phien ban NPM: Da san sang hoat dong.
-) else (
-    echo    [!] Canh bao: Khong tim thay Node.js / NPM. Hay cai dat de Vite asset build hoat dong.
-)
-
 :: Phat hien IP mang noi bo tu dong (Local IP Discovery cho mobile testing)
 set LOCAL_IP=127.0.0.1
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
@@ -87,10 +26,34 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
         )
     )
 )
-echo    [+] IP Mang noi bo duoc tim thay: !LOCAL_IP! (Ho tro test tu dien thoai)
 
-:: Doc file .env de lay ten va port Database
-set DB_NAME=Unknown
+:: Phat hien so bo PHP (khong dung chuong trinh neu chua co PHP de ho tro Docker)
+set "PHP_CMD="
+if exist "D:\xampp\php\php.exe" (
+    set "PHP_CMD=D:\xampp\php\php.exe"
+    set "PATH=D:\xampp\php;!PATH!"
+) else if exist "C:\xampp\php\php.exe" (
+    set "PHP_CMD=C:\xampp\php\php.exe"
+    set "PATH=C:\xampp\php;!PATH!"
+) else (
+    where php >nul 2>&1
+    if !errorlevel! equ 0 set "PHP_CMD=php"
+)
+
+:: Phat hien Composer
+where composer >nul 2>&1
+if !errorlevel! equ 0 (
+    set COMPOSER_CMD=composer
+) else (
+    if exist "composer.phar" (
+        set COMPOSER_CMD=!PHP_CMD! composer.phar
+    ) else (
+        set COMPOSER_CMD=composer
+    )
+)
+
+:: Doc file .env de lay thong tin DB
+set DB_NAME=quan_ly_nha_tro
 set DB_PORT=3306
 if exist .env (
     for /f "usebackq tokens=1,2 delims==" %%i in (".env") do (
@@ -100,27 +63,237 @@ if exist .env (
         if "!var_name!"=="DB_PORT" set DB_PORT=!var_val!
     )
 )
-echo    [+] Thong tin DB (.env): Ten CSDL=!DB_NAME!, Cong=!DB_PORT!
-timeout /t 2 > nul
 
 :MENU
+:TAB_MENU
 cls
 color 0b
 echo.
-echo    +======================================================================================+
-echo    ^|               ____                        _   ____                                   ^|
-echo    ^|             / ___^| _ __ ___   __ _ _ __ ^| ^|_^|  _ \  ___   ___  _ __ ___              ^|
-echo    ^|            \___ \^| '_ ` _ \ / _` ^| '_ \^| __^| ^|_^) ^|/ _ \ / _ \^| '_ ` _ \              ^|
-echo    ^|             ___^) ^| ^| ^| ^| ^| ^| ^(_^| ^| ^|  ^| ^| ^|_^|  _ ^<^| ^(_^) ^| ^(_^) ^| ^| ^| ^| ^| ^|            ^|
-echo    ^|           ^|____/^|_^| ^|_^| ^|_^|\__,_^|_^|   ^|_^|\__^|_^| \_\\___/ \___/^|_^| ^|_^| ^|_^|            ^|
-echo    ^|                              _     ____             _                                ^|
-echo    ^|                        __ _ ^(_^)   ^|  _ \  ___ _ __ ^| ^|_ _   _                        ^|
-echo    ^|                       / _` ^|      ^| ^|_^) ^|/ _ \ '_ \^| __^| ^| ^| ^|                       ^|
-echo    ^|                      ^| ^(_^| ^|_  _  ^|  _ ^<^|  __/ ^| ^| ^| ^|_^| ^|_^| ^|                       ^|
-echo    ^|                       \__,_^(_^)^(_^) ^|_^| \_\\___^|_^| ^|_^|\__^|\__, ^|                       ^|
-echo    ^|                                                         ^|___/                        ^|
-echo    +======================================================================================+
-echo                                 SYSTEM ORCHESTRATOR v8.0 [SUPER AUTO]
+echo    ====================================================================================================
+echo                     SMARTROOM ^& RENTY - TRINH KHOI CHAY HE THONG [RUN SELECTOR]
+echo    ====================================================================================================
+echo      [TAB 1: DOCKER COMPOSE]       ^|  [TAB 2: XAMPP STACK]          ^|  [TAB 3: WAMPP STACK]
+echo    --------------------------------+---------------------------------+---------------------------------
+echo      * Container hoa toan dien     ^|  * May chu cuc bo XAMPP        ^|  * May chu cuc bo WampServer
+echo      * Web App: Port 8088          ^|  * Web App: Port 8000          ^|  * Web App: Port 8000
+echo      * MySQL Docker: Port 3309     ^|  * MySQL XAMPP: Port 3306      ^|  * MySQL WAMPP: Port 3306/3308
+echo      * Reverb WS: Port 8085        ^|  * Vite Dev Hot-Reload         ^|  * Vite Dev Hot-Reload
+echo      * Khong lo xung dot moi truong^|  * Nhan dien D:\, C:\xampp...  ^|  * Tu dong quet WampServer
+echo    ====================================================================================================
+echo.
+echo      >> VUI LONG CHON PHUONG THUC BAN MUON KHOI CHAY DU AN:
+echo.
+echo         [1] CHAY BANG DOCKER    ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)
+echo         [2] CHAY BANG XAMPP     ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)
+echo         [3] CHAY BANG WAMPP     ---^> Khoi chay bang PHP ^& MySQL cua WampServer
+echo.
+echo      ----------------------------------------------------------------------------------------------
+echo         [4] MENU NANG CAO       ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan
+echo         [0] THOAT CHUONG TRINH
+echo.
+echo    ====================================================================================================
+echo.
+set /p tab_choice="   >> Nhap lua chon cua ban (1-4 hoac 0 de thoat): "
+
+if "%tab_choice%"=="1" goto RUN_VIA_DOCKER
+if "%tab_choice%"=="2" goto RUN_VIA_XAMPP
+if "%tab_choice%"=="3" goto RUN_VIA_WAMPP
+if "%tab_choice%"=="4" goto ADVANCED_MENU
+if "%tab_choice%"=="0" goto EXIT_CLEAN
+goto TAB_MENU
+
+:: ======================================================================
+:: RUN HANDLERS: DOCKER / XAMPP / WAMPP
+:: ======================================================================
+
+:RUN_VIA_DOCKER
+cls
+color 0a
+echo.
+echo    ====================================================================
+echo    [ TAB 1: DOCKER ] DANG KHOI DONG MOI TRUONG DOCKER COMPOSE...
+echo    ====================================================================
+echo.
+goto DOCKER_AUTO_RUN
+
+:RUN_VIA_XAMPP
+cls
+color 0a
+echo.
+echo    ====================================================================
+echo    [ TAB 2: XAMPP ] KHOI CHAY MOI TRUONG BANG XAMPP (PHP + MYSQL)
+echo    ====================================================================
+echo.
+
+:: 1. Phat hien PHP XAMPP
+set "XAMPP_PHP="
+set "XAMPP_DIR="
+if exist "D:\xampp\php\php.exe" (
+    set "XAMPP_PHP=D:\xampp\php\php.exe"
+    set "XAMPP_DIR=D:\xampp"
+) else if exist "C:\xampp\php\php.exe" (
+    set "XAMPP_PHP=C:\xampp\php\php.exe"
+    set "XAMPP_DIR=C:\xampp"
+) else if exist "E:\xampp\php\php.exe" (
+    set "XAMPP_PHP=E:\xampp\php\php.exe"
+    set "XAMPP_DIR=E:\xampp"
+) else (
+    where php >nul 2>&1
+    if !errorlevel! equ 0 (
+        set "XAMPP_PHP=php"
+    )
+)
+
+if not defined XAMPP_PHP (
+    color 0c
+    echo    [ LOI ] Khong tim thay thu muc cai dat XAMPP tren may!
+    echo    Kiem tra cac duong dan: D:\xampp, C:\xampp, E:\xampp hoac PHP trong PATH.
+    echo.
+    pause
+    goto TAB_MENU
+)
+
+echo    [1/3] [+] Da xac dinh PHP XAMPP: !XAMPP_PHP!
+set "PHP_CMD=!XAMPP_PHP!"
+if defined XAMPP_DIR (
+    set "PATH=!XAMPP_DIR!\php;!PATH!"
+)
+
+:: 2. Kiem tra va khoi dong MySQL XAMPP
+echo    [2/3] [+] Dang kiem tra CSDL MySQL XAMPP...
+tasklist /fi "imagename eq mysqld.exe" | findstr /i "mysqld.exe" > nul
+if !errorlevel! neq 0 (
+    echo    [!] MySQL chua bat! Dang tu dong khoi dong MySQL tu XAMPP...
+    if defined XAMPP_DIR (
+        if exist "!XAMPP_DIR!\mysql_start.bat" (
+            start /b "" "!XAMPP_DIR!\mysql_start.bat" >nul 2>&1
+            timeout /t 3 > nul
+        )
+    )
+    tasklist /fi "imagename eq mysqld.exe" | findstr /i "mysqld.exe" > nul
+    if !errorlevel! neq 0 (
+        color 0e
+        echo    [!] Khong the tu dong bat MySQL. Vui long mo XAMPP Control Panel va nhan Start MySQL!
+        echo.
+        pause
+    ) else (
+        echo    ^|---^> [OK] MySQL XAMPP da khoi dong thanh cong.
+    )
+) else (
+    echo    ^|---^> [OK] MySQL XAMPP dang hoat dong san sang.
+)
+
+:: 3. Dong bo cau hinh .env cho XAMPP
+if exist .env (
+    findstr /C:"DB_HOST=mysql" .env > nul
+    if !errorlevel! equ 0 (
+        echo    [!] Phat hien .env dang tro Docker. Dang chuyen sang MySQL XAMPP (127.0.0.1:3306)...
+        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=qlphongtro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
+        call !PHP_CMD! artisan config:clear > nul 2>&1
+    )
+)
+
+echo    [3/3] [+] Dang khoi chay Server Laravel va Vite...
+set MODE=DEV
+goto PROCESS
+
+:RUN_VIA_WAMPP
+cls
+color 0b
+echo.
+echo    ====================================================================
+echo    [ TAB 3: WAMPP ] KHOI CHAY MOI TRUONG BANG WAMP (PHP + MYSQL)
+echo    ====================================================================
+echo.
+
+:: 1. Phat hien PHP WAMP
+set "WAMP_PHP="
+set "WAMP_DIR="
+for %%d in (C D E F) do (
+    if exist "%%d:\wamp64\bin\php" (
+        for /d %%p in (%%d:\wamp64\bin\php\php*) do (
+            if exist "%%p\php.exe" (
+                set "WAMP_PHP=%%p\php.exe"
+                set "WAMP_DIR=%%d:\wamp64"
+            )
+        )
+    )
+    if exist "%%d:\wamp\bin\php" (
+        for /d %%p in (%%d:\wamp\bin\php\php*) do (
+            if exist "%%p\php.exe" (
+                set "WAMP_PHP=%%p\php.exe"
+                set "WAMP_DIR=%%d:\wamp"
+            )
+        )
+    )
+)
+
+if not defined WAMP_PHP (
+    where php >nul 2>&1
+    if !errorlevel! equ 0 (
+        set "WAMP_PHP=php"
+    )
+)
+
+if not defined WAMP_PHP (
+    color 0c
+    echo    [ LOI ] Khong tim thay WampServer tai C:\wamp64, D:\wamp64, C:\wamp!
+    echo    Vui long kiem tra WampServer hoac chon chay bang XAMPP hoac Docker.
+    echo.
+    pause
+    goto TAB_MENU
+)
+
+echo    [1/3] [+] Da xac dinh PHP Wamp: !WAMP_PHP!
+set "PHP_CMD=!WAMP_PHP!"
+if defined WAMP_DIR (
+    for %%i in (!WAMP_PHP!) do set "WAMP_PHP_BIN=%%~dpi"
+    set "PATH=!WAMP_PHP_BIN!;!PATH!"
+)
+
+:: 2. Kiem tra MySQL WampServer
+echo    [2/3] [+] Dang kiem tra CSDL MySQL WAMP...
+tasklist /fi "imagename eq mysqld.exe" | findstr /i "mysqld.exe" > nul
+if !errorlevel! neq 0 (
+    color 0e
+    echo    [!] MySQL Wamp chua bat! Vui long bat WampServer (Bieu tuong W mau xanh la).
+    pause
+) else (
+    echo    ^|---^> [OK] MySQL WAMP dang hoat dong san sang.
+)
+
+:: 3. Dong bo cau hinh .env cho WAMP
+if exist .env (
+    findstr /C:"DB_HOST=mysql" .env > nul
+    if !errorlevel! equ 0 (
+        echo    [!] Phat hien .env dang tro Docker. Dang chuyen sang MySQL WAMP (127.0.0.1:3306)...
+        powershell -Command "$c = gc .env; $c = $c -replace '^DB_HOST=.*', 'DB_HOST=127.0.0.1'; $c = $c -replace '^DB_PORT=.*', 'DB_PORT=3306'; $c = $c -replace '^DB_DATABASE=.*', 'DB_DATABASE=qlphongtro'; $c = $c -replace '^DB_USERNAME=.*', 'DB_USERNAME=root'; $c = $c -replace '^DB_PASSWORD=.*', 'DB_PASSWORD='; $c | Out-File -encoding utf8 .env"
+        call !PHP_CMD! artisan config:clear > nul 2>&1
+    )
+)
+
+echo    [3/3] [+] Dang khoi chay Server Laravel va Vite...
+set MODE=DEV
+goto PROCESS
+
+:: ======================================================================
+:: ADVANCED MANAGEMENT MENU (TOAN BO CONG CU HE THONG)
+:: ======================================================================
+:ADVANCED_MENU
+cls
+color 0b
+echo.
+echo    +==================================================================================================+
+echo    ^|   ____                        _   ____                         ____             _                ^|
+echo    ^|  / ___^| _ __ ___   __ _ _ __ ^| ^|_^|  _ \  ___   ___  _ __ ___   ^|  _ \  ___ _ __ ^| ^|_ _   _        ^|
+echo    ^|  \___ \^| '_  _ \ / _ ^| '__^|^| __^| ^|_^) ^|/ _ \ / _ \^| '_  _ \  ^| ^|_^) ^|/ _ \ '_ \^| __^| ^| ^| ^|       ^|
+echo    ^|   ___^) ^| ^| ^| ^| ^| ^| (_^| ^| ^|   ^| ^|_^|  _ ^<^| ^(_^) ^| ^(_^) ^| ^| ^| ^| ^| ^| ^|  _ ^<^|  __/ ^| ^| ^| ^|_^| ^|_^| ^|       ^|
+echo    ^|  ^|____/^|_^| ^|_^| ^|_^|\__,_^|_^|    \__^|_^| \_\\___/ \___/^|_^| ^|_^| ^|_^| ^|_^| \_\\___^|_^| ^|_^|\__^|\__, ^|       ^|
+echo    ^|                                                                                  ^|___/         ^|
+echo    ^|            [+] SMARTROOM (Quan Tri Tro)   x   [+] RENTY (Thue Phong Thong Minh)                  ^|
+echo    ^|                             --- MENU NANG CAO ^& QUAN TRI HE THONG ---                           ^|
+echo    +==================================================================================================+
+echo                        SMARTROOM ^& RENTY ORCHESTRATOR v8.0 [SUPER AUTO-PILOT]
 echo.
 echo    [1] DEV MODE          - Che do Lap trinh (Hot Reloading bang Vite Server)
 echo    [2] STABLE RUN        - Che do On dinh (Chay bang file Production Build - nhanh hon)
@@ -131,11 +304,13 @@ echo    [6] INITIALIZE        - Tai moi thu vien (Composer Install + NPM Install
 echo    [7] UPGRADE SYSTEM    - [SUA LOI] Dong bo hoa va Cap nhat lai khoa composer.lock
 echo    [8] HEALTH DIAGNOSTIC - [MOI] Kiem tra suc khoe toan dien he thong du an
 echo    [9] LOG MANAGEMENT    - [MOI] Xem, theo doi va xoa sach nhat ky loi Laravel
-echo    [10] DOCKER RUN       - [MOI] Chay bang Docker Compose + MySQL rieng
-echo    [11] EXIT             - Thoat
+echo    [10] DOCKER CONTROL   - [MOI] Bang dieu khien chuyen sau Docker Compose
+echo    [11] QUAY LAI BANG TAB- Quay lai man hinh chon moi truong (Docker / XAMPP / WAMPP)
+echo    [12] AUTO-SYNC GIT    - [MOI] Bat tien trinh tu dong lang nghe va keo code tu Git
+echo    [0]  EXIT             - Thoat
 echo.
 echo    ----------------------------------------------------------------------------------------
-set /p choice="   >> Nhap lua chon cua ban (1-11): "
+set /p choice="   >> Nhap lua chon cua ban (0-12): "
 
 if "%choice%"=="1" goto DEV_MODE
 if "%choice%"=="2" goto STABLE_RUN
@@ -147,8 +322,26 @@ if "%choice%"=="7" goto UPGRADE_ALL
 if "%choice%"=="8" goto DIAGNOSTICS
 if "%choice%"=="9" goto LOG_MGMT
 if "%choice%"=="10" goto DOCKER_RUN
-if "%choice%"=="11" goto EXIT_CLEAN
-goto MENU
+if "%choice%"=="11" goto TAB_MENU
+if "%choice%"=="12" goto AUTO_SYNC
+if "%choice%"=="0" goto EXIT_CLEAN
+goto ADVANCED_MENU
+
+:AUTO_SYNC
+cls
+color 0b
+echo.
+echo    ====================================================================
+echo    [ AUTO-SYNC ] KHOI CHAY TIEN TRINH TU DONG DONG BO GIT (DAEMON)
+echo    ====================================================================
+echo.
+start "SmartRoom Auto-Sync Daemon" powershell -ExecutionPolicy Bypass -NoExit -File "%~dp0auto-sync.ps1"
+echo    [+] Da kich hoat tien trinh Auto-Sync Git Daemon trong mot cua so moi!
+echo    Cua so se dinh ky kiem tra commit moi tu GitHub.
+echo    Khi May 1 push code, May 2 se tu dong pull, migrate va build tai nguyen.
+echo.
+pause
+goto ADVANCED_MENU
 
 :INITIALIZE
 cls
@@ -209,9 +402,17 @@ if "!docker_choice!"=="6" goto DOCKER_DOWN
 goto DOCKER_RUN
 
 :DOCKER_BACK_TO_MENU
-if defined PHP_CMD (goto MENU) else (exit /b 0)
+goto TAB_MENU
 
 :DOCKER_CHECK_CLI
+where docker >nul 2>&1
+if %errorlevel% neq 0 (
+    if exist "%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin\docker.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin;!PATH!"
+    ) else if exist "%ProgramFiles%\Docker\Docker\resources\bin\docker.exe" (
+        set "PATH=%ProgramFiles%\Docker\Docker\resources\bin;!PATH!"
+    )
+)
 where docker >nul 2>&1
 if %errorlevel% neq 0 (
     color 0c
@@ -225,11 +426,33 @@ exit /b 0
 call :DOCKER_CHECK_CLI
 docker info >nul 2>&1
 if %errorlevel% neq 0 (
+    echo    [!] Docker Desktop chua bat. Dang tu dong khoi dong Docker Desktop...
+    set "DOCKER_APP="
+    if exist "%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe" (
+        set "DOCKER_APP=%LOCALAPPDATA%\Programs\DockerDesktop\Docker Desktop.exe"
+    ) else if exist "%ProgramFiles%\Docker\Docker\Docker Desktop.exe" (
+        set "DOCKER_APP=%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
+    )
+    if defined DOCKER_APP (
+        start "" "!DOCKER_APP!"
+    ) else (
+        start "" "Docker Desktop" >nul 2>&1
+    )
+    echo    [!] Dang doi Docker Engine khoi dong hoan tat...
+    for /l %%k in (1,1,20) do (
+        timeout /t 2 > nul
+        docker info >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo    ^|---^> [OK] Docker Desktop da khoi dong va san sang.
+            goto DOCKER_DAEMON_READY
+        )
+    )
     color 0c
-    echo    [ LOI ] Docker Daemon chua chay! Vui long bat Docker Desktop tren Windows.
+    echo    [ LOI ] Docker Daemon chua chay xong! Vui long kiem tra Docker Desktop tren Windows.
     pause
     goto DOCKER_RUN
 )
+:DOCKER_DAEMON_READY
 if not exist ".docker-config" (
     mkdir ".docker-config" >nul 2>&1
 )
@@ -253,8 +476,8 @@ if not exist .env (
     )
     echo    [+] Da khoi tao .env cho Docker.
 )
-echo    [1/3] Dang khoi chay cac container (Build ^& Run Background)...
-docker compose up -d --build
+echo    [1/3] Dang khoi chay cac container (Background)...
+docker compose up -d
 if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong the khoi chay Docker Compose. Hay kiem tra logs.
@@ -277,7 +500,7 @@ for /l %%i in (1,1,30) do (
 :DOCKER_READY_LAUNCH
 echo.
 echo    [3/3] Dang mo website tren trinh duyet...
-start "" "http://localhost:8088/renty"
+call :LAUNCH_APP_WINDOW "http://localhost:8088/renty"
 
 cls
 color 0b
@@ -1004,7 +1227,7 @@ echo    [1] Trang chu Website              - http://127.0.0.1:!PORT!/
 echo    [2] Vong quay ^& Doi diem thuong     - http://127.0.0.1:!PORT!/rewards
 echo    [3] Dat lich ^& Lich su sua chua    - http://127.0.0.1:!PORT!/profile
 echo    [4] So sanh san pham               - http://127.0.0.1:!PORT!/compare
-echo    [5] Dang nhap / Dang ky            - http://127.0.0.1:!PORT!/login_register
+echo    [5] Dang nhap / Dang ky            - http://127.0.0.1:!PORT!/login
 echo.
 echo    --- HE THONG QUAN TRI (ADMIN PORTAL) ---
 echo    [6] Tong quan Admin Dashboard      - http://127.0.0.1:!PORT!/admin
@@ -1024,7 +1247,7 @@ if "!sitemap_choice!"=="1" start http://127.0.0.1:!PORT!/ & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="2" start http://127.0.0.1:!PORT!/rewards & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="3" start http://127.0.0.1:!PORT!/profile & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="4" start http://127.0.0.1:!PORT!/compare & goto VIEW_SITEMAP
-if "!sitemap_choice!"=="5" start http://127.0.0.1:!PORT!/login_register & goto VIEW_SITEMAP
+if "!sitemap_choice!"=="5" start http://127.0.0.1:!PORT!/login & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="6" start http://127.0.0.1:!PORT!/admin & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="7" start http://127.0.0.1:!PORT!/admin/repair-tickets & goto VIEW_SITEMAP
 if "!sitemap_choice!"=="8" start http://127.0.0.1:!PORT!/admin/service-invoices & goto VIEW_SITEMAP
@@ -1175,6 +1398,10 @@ color 0c
 echo    [!] Canh bao: Toan bo du lieu cu trong Database (!DB_NAME!) se bi xoa sach!
 set /p confirm="    >> Ban co chac chan muon tiep tuc? (y/n): "
 if /i "%confirm%" neq "y" goto MENU
+
+call :ENSURE_MYSQL
+if !errorlevel! neq 0 goto MENU
+
 call !PHP_CMD! artisan migrate:fresh --seed
 call !PHP_CMD! artisan optimize:clear
 echo    [ OK ] Database va Seeders da lam moi thanh cong!
@@ -1202,13 +1429,8 @@ if !errorlevel! equ 0 (
     )
     echo    [+] Dang dung SQLite, bo qua kiem tra MySQL.
 ) else (
-    tasklist /fi "imagename eq mysqld.exe" | findstr /i "mysqld.exe" > nul
-    if !errorlevel! neq 0 (
-        color 0c
-        echo    [ LOI ] Co so du lieu MySQL chua bat! Vui long bat MySQL tren XAMPP/Laragon.
-        pause
-        goto MENU
-    )
+    call :ENSURE_MYSQL
+    if !errorlevel! neq 0 goto MENU
     echo    [+] MySQL dang ket noi tot - CSDL: !DB_NAME!, Cong CSDL: !DB_PORT!.
 )
 
@@ -1268,7 +1490,7 @@ if "!SERVER_READY!"=="1" (
 ) else (
     echo    [!] Chua xac nhan duoc server san sang, van mo web de ban kiem tra.
 )
-start "" "!AUTO_OPEN_URL!"
+call :LAUNCH_APP_WINDOW "!AUTO_OPEN_URL!"
 
 cls
 color 0b
@@ -1278,13 +1500,19 @@ echo    ^|                 SmartRoom ^& Renty CHAY TU DONG HOA THANH CONG       
 echo    +======================================================================================+
 echo    ^|                                                                                      ^|
 echo    ^|  [+] Website nguoi thue:  http://127.0.0.1:!PORT!/renty                              ^|
-echo    ^|  [+] Localhost URL:       http://127.0.0.1:!PORT!/                                    ^|
-echo    ^|  [+] Local Network URL:   http://!LOCAL_IP!:!PORT!/                                   ^|
+echo    ^|  [+] Dang nhap / Login:   http://127.0.0.1:!PORT!/login                              ^|
 echo    ^|  [+] Admin Portal:        http://127.0.0.1:!PORT!/smartroom/admin                    ^|
+echo    ^|  [+] Local Network URL:   http://!LOCAL_IP!:!PORT!/                                   ^|
 echo    ^|                                                                                      ^|
-echo    ^|  [*] Meo kiem thu: Dung dien thoai / may tinh bang ket noi cung mang Wi-Fi voi may   ^|
-echo    ^|      tinh, roi truy cap vao duong dan Local Network URL o tren de test thiet bi di   ^|
-echo    ^|      dong cuc ky de dang va thuc te.                                                 ^|
+echo    ^|  [*] TAI KHOAN DEMO (Tat ca dung mat khau: 123456):                                 ^|
+echo    ^|      - Admin he thong:   admin1, admin2                                              ^|
+echo    ^|      - Chu tro (8 KYC):  chutro1 .. chutro8  (Chua KYC: chutro9, chutro10)           ^|
+echo    ^|      - Quan ly:          quanly1_1 .. quanly8                                        ^|
+echo    ^|      - Le tan:           letan1_1 .. letan8                                          ^|
+echo    ^|      - Buong phong:      buongphong1_1 .. buongphong8                                ^|
+echo    ^|      - Cu dan phong:     cudan_1 .. cudan_120                                        ^|
+echo    ^|      - Khach vang lai:   khach1 .. khach10                                           ^|
+echo    ^|      (Xem danh sach chi tiet 172 tai khoan tai tep 'taikhoan')                      ^|
 echo    ^|                                                                                      ^|
 echo    +======================================================================================+
 echo.
@@ -1295,9 +1523,60 @@ echo    [!] Dang giai phong va tat toan bo tien trinh ngam php/node...
 taskkill /f /im php.exe >nul 2>&1
 taskkill /f /im node.exe >nul 2>&1
 :: ======================================================================
+:: HELPER: DAM BAO MYSQL DA KHOI DONG VA SAN SANG
+:: ======================================================================
+:ENSURE_MYSQL
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
+if !errorlevel! equ 0 (
+    if exist "D:\xampp\mysql\bin\mysql.exe" (
+        "D:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+    ) else if exist "C:\xampp\mysql\bin\mysql.exe" (
+        "C:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+    )
+    exit /b 0
+)
+
+echo.
+echo    [!] MySQL (Port 3306) chua mo. Dang tu dong khoi dong MySQL XAMPP...
+if exist "D:\xampp\mysql\bin\mysqld.exe" (
+    start "" /b "cmd.exe" /c "cd /d D:\xampp && mysql\bin\mysqld.exe --defaults-file=mysql\bin\my.ini --standalone"
+) else if exist "C:\xampp\mysql\bin\mysqld.exe" (
+    start "" /b "cmd.exe" /c "cd /d C:\xampp && mysql\bin\mysqld.exe --defaults-file=mysql\bin\my.ini --standalone"
+)
+
+for /l %%i in (1,1,10) do (
+    timeout /t 1 > nul
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
+    if !errorlevel! equ 0 (
+        echo    ^|---^> [OK] MySQL da khoi dong thanh cong va san sang tren cong 3306!
+        if exist "D:\xampp\mysql\bin\mysql.exe" (
+            "D:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+        ) else if exist "C:\xampp\mysql\bin\mysql.exe" (
+            "C:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS qlphongtro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
+        )
+        exit /b 0
+    )
+)
+
+color 0c
+echo    [ LOI CRITICAL ] Khong the ket noi CSDL MySQL (Port 3306)!
+echo    Vui long mo XAMPP Control Panel va nhan Start ben canh MySQL.
+pause
+exit /b 1
+
+:: ======================================================================
 :: EXIT SYSTEM CLEANLY (THOAT CO CHE AN TOAN TRA VE MA 0)
 :: ======================================================================
 :EXIT_CLEAN
 :: Reset lai errorlevel ve 0 tranh lỗi do cac lenh taskkill truoc do de lai
 cmd /c "exit /b 0"
 exit /b 0
+
+:: ======================================================================
+:: MO TRANG WEB TREN TRINH DUYET MAC DINH (CO TAB VA THANH DIA CHI)
+:: ======================================================================
+:LAUNCH_APP_WINDOW
+set "APP_URL=%~1"
+start "" "%APP_URL%"
+exit /b 0
+

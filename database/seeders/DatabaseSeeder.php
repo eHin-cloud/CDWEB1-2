@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call(ContractSeeder::class);
+        $this->call(SystemUsersSeeder::class);
         $this->call(HospitalityUsersSeeder::class);
         $this->call(HospitalityDummyDataSeeder::class);
     }

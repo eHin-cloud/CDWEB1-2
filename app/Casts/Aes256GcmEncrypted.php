@@ -57,6 +57,21 @@ class Aes256GcmEncrypted implements CastsAttributes
 
         // Fallback 2: Thử với AAD không có tenantId nếu decrypt thất bại
         if ($plaintext === false) {
+            $fallbackAad = $model->getTable() . ':platform:' . $key;
+            if ($fallbackAad !== $aad) {
+                $plaintext = openssl_decrypt(
+                    $ciphertext,
+                    'aes-256-gcm',
+                    SensitiveData::encryptionKey(),
+                    OPENSSL_RAW_DATA,
+                    $iv,
+                    $tag,
+                    $fallbackAad
+                );
+            }
+        }
+
+        if ($plaintext === false) {
             \Illuminate\Support\Facades\Log::warning("Unable to decrypt sensitive attribute {$key} on " . get_class($model) . " #{$model->getKey()}. Returning fallback null.");
             return null;
         }

@@ -181,7 +181,18 @@
                                         <span class="px-2 py-0.5 rounded bg-slate-500/10 text-slate-400 border border-slate-500/20 font-bold uppercase text-[9px]">Standard</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-xs font-semibold text-indigo-400">{{ $room->building->name ?? 'N/A' }}</td>
+                                <td class="px-6 py-4 text-xs">
+                                    <div class="font-semibold text-indigo-400">{{ $room->building->name ?? 'N/A' }}</div>
+                                    @if(!empty($room->building?->address))
+                                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room->building->address) }}" 
+                                           target="_blank" 
+                                           title="Xem trên Google Maps: {{ $room->building->address }}" 
+                                           class="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-blue-400 transition mt-0.5 max-w-[220px] truncate">
+                                            <i class="fa-solid fa-location-dot text-rose-400 text-[10px] shrink-0"></i>
+                                            <span class="truncate">{{ $room->building->address }}</span>
+                                        </a>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-xs text-slate-400">Tầng {{ $room->floor }}</td>
                                 <td class="px-6 py-4 text-xs text-slate-400">{{ $room->area }} m²</td>
                                 <td class="px-6 py-4 text-xs">

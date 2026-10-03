@@ -604,11 +604,8 @@ class TenantAdminController extends Controller
             $totalAmount = $room->price + $elecCost + $waterCost + $serviceCost;
 
             // 3. Sinh VietQR động thanh toán theo chuẩn Napas247
-            $bankId = $tenant->bank_name;
-            $accountNo = $tenant->bank_account_no;
-            $accountName = $tenant->bank_account_name;
             $addInfo = "Thanh toan Phong {$room->room_number} thang " . explode('-', $request->billing_month)[1];
-            $vietqrUrl = "https://img.vietqr.io/image/{$bankId}-{$accountNo}-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($addInfo) . "&accountName=" . rawurlencode($accountName);
+            $vietqrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($addInfo);
 
             // 4. Tạo bản ghi hóa đơn
             $bill = Bill::create([

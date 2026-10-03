@@ -17,7 +17,7 @@
     <div class="min-h-screen">
         <header class="sticky top-0 z-20 border-b border-slate-900 bg-[#080b11]/90 backdrop-blur">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-                <a href="{{ route('smartroom.portal') }}" class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="flex items-center gap-3">
                     <span class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
                         <i class="fa-solid fa-hotel"></i>
                     </span>
@@ -62,24 +62,47 @@
                     <p class="text-sm text-slate-400 mt-2">Vui lòng liên hệ ban quản lý để kích hoạt hồ sơ cư dân.</p>
                 </section>
             @else
-                <section class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500">Cư dân</div>
-                        <div class="mt-2 text-xl font-black">{{ $resident->name }}</div>
+                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
+                            <span>Cư dân</span>
+                            <i class="fa-solid fa-user text-slate-400"></i>
+                        </div>
+                        <div class="mt-2 text-xl font-black truncate" title="{{ $resident->name }}">{{ $resident->name }}</div>
                         <div class="mt-1 text-xs text-slate-400">{{ $resident->phone }}</div>
                     </div>
                     <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500">Phòng</div>
+                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
+                            <span>Phòng</span>
+                            <i class="fa-solid fa-door-open text-indigo-400"></i>
+                        </div>
                         <div class="mt-2 text-xl font-black text-indigo-300">P. {{ $room->room_number }}</div>
-                        <div class="mt-1 text-xs text-slate-400">{{ $room->building->name ?? 'Chưa có tòa nhà' }}</div>
+                        <div class="mt-1 text-xs text-slate-400 truncate" title="{{ $room->building->name ?? 'Chưa có tòa nhà' }}">{{ $room->building->name ?? 'Chưa có tòa nhà' }}</div>
+                    </div>
+                    <div class="panel rounded-2xl p-5 border-l-4 border-l-emerald-500">
+                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
+                            <span>Chủ trọ / QL</span>
+                            <i class="fa-solid fa-user-tie text-emerald-400"></i>
+                        </div>
+                        <div class="mt-2 text-xl font-black text-emerald-300 truncate" title="{{ $landlordName }}">{{ $landlordName }}</div>
+                        <div class="mt-1 text-xs text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-phone text-[10px] text-emerald-400"></i>
+                            <a href="tel:{{ $landlordPhone }}" class="hover:underline text-slate-200 font-semibold">{{ $landlordPhone }}</a>
+                        </div>
                     </div>
                     <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500">Nợ cần thanh toán</div>
+                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
+                            <span>Nợ cần thanh toán</span>
+                            <i class="fa-solid fa-receipt text-amber-400"></i>
+                        </div>
                         <div class="mt-2 text-xl font-black text-amber-300">{{ number_format($unpaidTotal) }} VND</div>
                         <div class="mt-1 text-xs text-slate-400">{{ $bills->where('status', '!=', 'paid')->count() }} hóa đơn</div>
                     </div>
                     <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500">Sự cố đang mở</div>
+                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
+                            <span>Sự cố đang mở</span>
+                            <i class="fa-solid fa-screwdriver-wrench text-cyan-400"></i>
+                        </div>
                         <div class="mt-2 text-xl font-black text-cyan-300">{{ $tickets->where('status', '!=', 'resolved')->count() }}</div>
                         <div class="mt-1 text-xs text-slate-400">Bảo trì / sửa chữa</div>
                     </div>
@@ -146,6 +169,33 @@
                 <section id="resident-tab-contract" class="resident-section panel rounded-2xl p-6 hidden">
                     <h2 class="text-lg font-black mb-5">Hợp đồng của tôi</h2>
                     @if($contract)
+                        <div class="mb-5 p-4 rounded-xl bg-slate-950/60 border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg">
+                                    <i class="fa-solid fa-building-user"></i>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase text-emerald-400 font-bold tracking-wider">Bên cho thuê / Ban quản lý</div>
+                                    <div class="text-base font-black text-white mt-0.5">{{ $landlordName }}</div>
+                                    <div class="text-xs text-slate-400">{{ $tenant?->name ?? ($room->building->name ?? 'Cơ sở trọ SmartRoom') }}</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-4 text-xs">
+                                <div class="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                                    <i class="fa-solid fa-phone text-emerald-400"></i>
+                                    <span class="text-slate-400">Hotline:</span>
+                                    <a href="tel:{{ $landlordPhone }}" class="text-emerald-300 font-bold hover:underline">{{ $landlordPhone }}</a>
+                                </div>
+                                @if($tenant?->bank_name && $tenant?->bank_account_no)
+                                    <div class="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                                        <i class="fa-solid fa-credit-card text-indigo-400"></i>
+                                        <span class="text-slate-400">TK thuê:</span>
+                                        <span class="text-slate-200 font-bold">{{ $tenant->bank_name }} - {{ $tenant->bank_account_no }} ({{ $tenant->bank_account_name ?? $landlordName }})</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             <div class="rounded-xl bg-slate-950/40 border border-slate-800 p-4">
                                 <div class="text-xs text-slate-500 font-bold uppercase">Mã hợp đồng</div>

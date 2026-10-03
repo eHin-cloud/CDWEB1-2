@@ -561,6 +561,7 @@
             });
         }
 
+        let isFormSubmitting = false;
         const form = document.getElementById('edit-room-form');
         form.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -569,6 +570,11 @@
             if (!isOk) {
                 alert('Vui lòng kiểm tra lại thông tin form.');
                 return false;
+            }
+
+            isFormSubmitting = true;
+            if (typeof observer !== 'undefined' && observer) {
+                observer.disconnect();
             }
 
             const submitBtn = document.getElementById('submit-btn');
@@ -606,15 +612,19 @@
 
         // 4. MutationObserver giám sát việc hack sửa thuộc tính DOM
         const targetBtn = document.getElementById('submit-btn');
-        const observer = new MutationObserver((mutationsList) => {
-            for (let mutation of mutationsList) {
-                if (mutation.type === 'attributes') {
-                    alert('Phát hiện hành vi can thiệp hệ thống!');
-                    window.location.reload();
+        let observer = null;
+        if (targetBtn) {
+            observer = new MutationObserver((mutationsList) => {
+                if (isFormSubmitting) return;
+                for (let mutation of mutationsList) {
+                    if (mutation.type === 'attributes') {
+                        alert('Phát hiện hành vi can thiệp hệ thống!');
+                        window.location.reload();
+                    }
                 }
-            }
-        });
-        observer.observe(targetBtn, { attributes: true });
+            });
+            observer.observe(targetBtn, { attributes: true });
+        }
     </script>
     <script src="{{ asset('js/admin-sidebar.js') }}"></script>
 </body>

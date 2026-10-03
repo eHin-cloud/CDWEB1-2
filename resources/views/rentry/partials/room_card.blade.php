@@ -218,7 +218,7 @@
    <!-- Card footer action -->
    <div class="px-5 pb-5 pt-3 border-t border-slate-900/50 flex justify-between items-center bg-slate-950/20 gap-3">
        <label class="flex items-center gap-2 text-xs font-bold text-slate-400 cursor-pointer hover:text-slate-355 transition-colors">
-           <input type="checkbox" onchange="toggleCompare('{{ $room['id'] }}', this)" class="compare-checkbox w-4 h-4 rounded border-slate-800 bg-slate-900 text-emerald-600 focus:ring-0 focus:ring-offset-0">
+           <input type="checkbox" value="{{ $room['id'] }}" data-room-id="{{ $room['id'] }}" onchange="toggleCompare('{{ $room['id'] }}', this)" class="compare-checkbox rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" style="accent-color: #10b981; width: 17px; height: 17px;">
            <span>So sánh</span>
        </label>
        <div class="flex items-center gap-3">

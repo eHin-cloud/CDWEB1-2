@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Đăng nhập hệ thống quản lý SmartRoom & Renty.">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $titles[$page] ?? $titles['login'] }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,10 +28,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     <style>
-        .toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.75rem;max-width:400px;width:calc(100% - 3rem)}
-        .toast-card{background:rgba(15,23,42,.6);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:1px solid rgba(255,255,255,.08);border-left-width:4px;padding:1rem 1.25rem;border-radius:1rem;box-shadow:0 10px 30px -5px rgba(0,0,0,.3);display:flex;align-items:flex-start;gap:.75rem;transform:translateX(120%);transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .toast-card.show{transform:translateX(0)}
+        .toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:99999;display:flex;flex-direction:column;gap:.75rem;max-width:420px;width:calc(100% - 3rem);pointer-events:none}
+        .toast-card{background:rgba(15,23,42,.95);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,.1);border-left:4px solid #10b981;padding:1rem 1.25rem;border-radius:1rem;box-shadow:0 20px 40px -10px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);display:flex;align-items:flex-start;gap:.875rem;pointer-events:auto;transform:translateX(120%);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .toast-card.show{transform:translateX(0);opacity:1}
         .toast-success{border-left-color:#10b981}.toast-error{border-left-color:#ef4444}.toast-info{border-left-color:#3b82f6}
+        .verification-pill{transition:opacity .25s ease,border-color .25s ease,background-color .25s ease,box-shadow .25s ease,transform .25s ease}
+        .verification-pill:has(input:checked){border-color:rgba(99,102,241,.8);background:rgba(99,102,241,.12);box-shadow:0 0 15px -3px rgba(99,102,241,.3)}
+        .verification-pill:has(input[value="phone"]:checked){border-color:rgba(16,185,129,.8);background:rgba(16,185,129,.12);box-shadow:0 0 15px -3px rgba(16,185,129,.3)}
+        .radio-indicator{display:flex;align-items:center;justify-content:center;border-radius:9999px;border-width:2px;border-color:#475569;transition:all .25s ease;flex-shrink:0}
+        .radio-dot{border-radius:9999px;transform:scale(0);opacity:0;transition:transform .25s cubic-bezier(.16,1,.3,1),opacity .25s ease}
+        .verification-pill:has(input:checked) .radio-dot,.verification-pill input:checked ~ div .radio-dot{transform:scale(1)!important;opacity:1!important}
+        .verification-pill:has(input[value="phone"]:checked) .radio-indicator,.verification-pill input[value="phone"]:checked ~ div.radio-indicator{border-color:#10b981!important}
+        .verification-pill:has(input[value="phone"]:checked) .radio-dot,.verification-pill input[value="phone"]:checked ~ div .radio-dot{background-color:#10b981!important}
+        .verification-pill:has(input[value="email"]:checked) .radio-indicator,.verification-pill input[value="email"]:checked ~ div.radio-indicator{border-color:#818cf8!important}
+        .verification-pill:has(input[value="email"]:checked) .radio-dot,.verification-pill input[value="email"]:checked ~ div .radio-dot{background-color:#818cf8!important}
+        .email-hint-transition{transition:opacity .25s ease,max-height .25s ease,transform .25s ease,margin .25s ease;overflow:hidden}
+        .email-hint-hidden{opacity:0;max-height:0;margin-top:0!important;transform:translateY(-4px);pointer-events:none}
+        .email-hint-visible{opacity:1;max-height:48px;margin-top:.375rem!important;transform:translateY(0);pointer-events:auto}
     </style>
 </head>
 <body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
@@ -40,7 +53,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <header class="container mx-auto px-6 py-6 flex justify-between items-center relative z-10 {{ in_array($page, ['list', 'read', 'update']) ? 'border-b border-slate-900' : '' }}">
-        <a href="{{ route('smartroom.portal') }}" class="flex items-center gap-3 group">
+        <a href="{{ route('renty.user') }}" class="flex items-center gap-3 group">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-all">
                 <i class="fa-solid fa-hotel text-white text-lg"></i>
             </div>
@@ -380,9 +393,9 @@
             </script>
         </main>
     @else
-        <main class="flex-grow flex items-center justify-center px-4 py-8 relative z-10 {{ $page === 'login' ? 'login-main-stage' : '' }}">
-            <div class="{{ $page === 'login' ? 'login-hero-shell' : (($page === 'create' || $page === 'update') ? 'register-card-upgraded' : 'w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:border-slate-700/60 transition-all duration-300') }}">
-                @if($page === 'login')
+        <main class="flex-grow flex items-center justify-center px-4 py-8 relative z-10 {{ (in_array($page, ['login', 'create']) && !Auth::check()) ? 'login-main-stage' : '' }}">
+            <div class="{{ (in_array($page, ['login', 'create']) && !Auth::check()) ? 'login-hero-shell' : (($page === 'create' || $page === 'update') ? 'register-card-upgraded' : 'w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:border-slate-700/60 transition-all duration-300') }}">
+                @if(in_array($page, ['login', 'create']) && !Auth::check())
                     <section class="login-visual-panel">
                         <div class="login-visual-copy">
                             <p class="login-eyebrow">SmartRoom &amp; Renty</p>
@@ -455,34 +468,313 @@
                             <span><strong>Renty</strong> Review</span>
                         </div>
                     </section>
-                    <section class="login-card-upgraded">
-                        <div class="text-center mb-8">
-                            <p class="login-form-kicker">Đăng nhập hệ thống</p>
-                            <h2 class="text-3xl font-extrabold tracking-tight text-slate-50 mb-2">Chào Mừng Trở Lại</h2>
-                            <p class="text-xs text-slate-400">Đăng nhập tài khoản quản lý nhà trọ của bạn</p>
+                    <section class="login-card-upgraded auth-card-modern p-6 sm:p-8 flex flex-col justify-between">
+                        <div>
+                            <!-- Header / Title -->
+                            <div class="text-center mb-6">
+                                <p class="login-form-kicker flex items-center justify-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-indigo-400">
+                                    <i class="fa-solid fa-shield-halved"></i> Xác thực tài khoản
+                                </p>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">SmartRoom &amp; Renty</h2>
+                                <p class="text-xs text-slate-400 mt-1.5">Đăng nhập tài khoản hoặc đăng ký để khám phá tiện ích trọ</p>
+                            </div>
+
+                            <!-- Auth Nav Tabs inspired by SinghDigamber react-login-signup-ui-template -->
+                            <div class="auth-tabs-nav mb-6" role="tablist">
+                                <button type="button" id="tab-btn-signin" onclick="switchAuthTab('signin')" class="auth-tab-btn active" role="tab" aria-selected="true">
+                                    <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+                                    <span>Đăng Nhập</span>
+                                </button>
+                                <button type="button" id="tab-btn-signup" onclick="switchAuthTab('signup')" class="auth-tab-btn" role="tab" aria-selected="false">
+                                    <i class="fa-solid fa-user-plus text-xs"></i>
+                                    <span>Đăng Ký</span>
+                                </button>
+                            </div>
+
+                            <!-- PANE 1: SIGN IN FORM -->
+                            <div id="auth-panel-signin" class="auth-tab-pane active" role="tabpanel">
+                                @if(session('error'))
+                                    <div class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3 mb-4 shadow-lg shadow-rose-500/5">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base mt-0.5 shrink-0"></i>
+                                        <div class="flex-grow">
+                                            <p class="font-bold text-rose-200">Đăng nhập không thành công!</p>
+                                            <p class="text-[11px] text-rose-300/90 mt-0.5 leading-relaxed">{{ session('error') }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if(session('success'))
+                                    <div class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-3 mb-4 shadow-lg shadow-emerald-500/5">
+                                        <i class="fa-solid fa-circle-check text-emerald-400 text-base mt-0.5 shrink-0"></i>
+                                        <div class="flex-grow">
+                                            <p class="font-bold text-emerald-200">Thành công!</p>
+                                            <p class="text-[11px] text-emerald-300/90 mt-0.5 leading-relaxed">{{ session('success') }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <form action="{{ route('user.authUser') }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    <div class="auth-input-group">
+                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-login">Tên đăng nhập, Số điện thoại hoặc Email</label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-user-check auth-input-icon"></i>
+                                            <input type="text" name="login" id="signin-login" required class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" placeholder="Nhập tên đăng nhập, số điện thoại hoặc email" value="{{ old('login') }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="auth-input-group">
+                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-password">Mật khẩu</label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-lock auth-input-icon"></i>
+                                            <input type="password" name="password" id="signin-password" required class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" placeholder="••••••••">
+                                            <button type="button" onclick="togglePasswordVisibility('signin-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu" aria-label="Hiện / Ẩn mật khẩu">
+                                                <i class="fa-solid fa-eye-slash"></i>
+                                            </button>
+                                        </div>
+                                        @if(session('error'))
+                                            <p class="text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i> Tài khoản hoặc mật khẩu không chính xác
+                                            </p>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex items-center justify-between text-xs pt-1">
+                                        <label class="auth-checkbox-label">
+                                            <input type="checkbox" name="remember" id="signin-remember" checked>
+                                            <span>Ghi nhớ đăng nhập</span>
+                                        </label>
+                                        <a href="#" onclick="showToast('Vui lòng liên hệ Admin qua hotline để cấp lại quyền truy cập.', 'info'); return false;" class="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+                                            Quên mật khẩu?
+                                        </a>
+                                    </div>
+
+                                    <button type="submit" class="login-submit-button w-full py-3 px-4 rounded-xl text-white font-bold text-sm transform active:scale-95 transition-all duration-200 shadow-lg shadow-indigo-500/25 mt-2 flex items-center justify-center gap-2">
+                                        <span>Đăng Nhập Hệ Thống</span>
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- PANE 2: SIGN UP FORM (KHÁCH THUÊ) -->
+                            <div id="auth-panel-signup" class="auth-tab-pane" role="tabpanel">
+                                <form id="form-signup-guest" action="{{ route('user.postUser') }}" method="POST" class="space-y-3.5" onsubmit="return handleSignupSubmit(event)">
+                                    @csrf
+                                    
+                                    <!-- Tên đăng nhập & Họ và Tên -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div class="auth-input-group">
+                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-username">
+                                                Tên đăng nhập <span class="text-rose-400 font-bold">*</span>
+                                            </label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-user-tag auth-input-icon"></i>
+                                                <input type="text" 
+                                                       name="username" 
+                                                       id="signup-username" 
+                                                       required
+                                                       minlength="3"
+                                                       maxlength="50"
+                                                       class="auth-input-field @error('username') border-rose-500 ring-1 ring-rose-500/40 @enderror" 
+                                                       placeholder="Ví dụ: nguyenvana" 
+                                                       value="{{ old('username') }}"
+                                                       onblur="validateSignupUsernameBlur(this)">
+                                            </div>
+                                            <div id="signup-username-feedback" class="mt-1 text-[11px] {{ $errors->has('username') ? 'text-rose-400 font-semibold block' : 'hidden' }}">
+                                                @error('username')
+                                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}</span>
+                                                @else
+                                                    <span id="signup-username-msg" class="flex items-center gap-1.5"></span>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="auth-input-group">
+                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-name">
+                                                Họ và Tên <span class="text-rose-400 font-bold">*</span>
+                                            </label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-id-card auth-input-icon"></i>
+                                                <input type="text" name="name" id="signup-name" required class="auth-input-field @error('name') border-rose-500 ring-1 ring-rose-500/40 @enderror" placeholder="Nguyễn Văn A" value="{{ old('name') }}">
+                                            </div>
+                                            @error('name')
+                                                <p class="mt-1 text-[11px] font-semibold text-rose-400 flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
+                                                </p>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Số điện thoại & Email -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div class="auth-input-group">
+                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-phone" id="signup-phone-label">
+                                                Số điện thoại <span class="text-rose-400 font-bold" id="signup-phone-badge">*</span>
+                                            </label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-phone auth-input-icon"></i>
+                                                <input type="tel" 
+                                                       name="phone" 
+                                                       id="signup-phone" 
+                                                       required
+                                                       maxlength="10" 
+                                                       pattern="^0[0-9]{9}$" 
+                                                       inputmode="numeric" 
+                                                       autocomplete="tel" 
+                                                       class="auth-input-field @error('phone') border-rose-500 ring-1 ring-rose-500/40 @enderror" 
+                                                       placeholder="0901234567" 
+                                                       value="{{ old('phone') }}"
+                                                       oninput="validatePhoneInput(this)"
+                                                       onblur="validatePhoneBlur(this)">
+                                            </div>
+                                            <div id="signup-phone-feedback" class="mt-1 text-[11px] {{ $errors->has('phone') ? 'text-rose-400 font-semibold block' : 'hidden' }}">
+                                                @error('phone')
+                                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}</span>
+                                                @else
+                                                    <span id="signup-phone-msg" class="flex items-center gap-1.5"></span>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="auth-input-group">
+                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-email" id="signup-email-label">
+                                                Email
+                                            </label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-envelope auth-input-icon"></i>
+                                                <input type="email" 
+                                                       name="email" 
+                                                       id="signup-email" 
+                                                       class="auth-input-field @error('email') border-rose-500 ring-1 ring-rose-500/40 @enderror" 
+                                                       placeholder="nguyenvana@gmail.com" 
+                                                       value="{{ old('email') }}"
+                                                       oninput="handleEmailInput(this)"
+                                                       onblur="handleEmailBlur(this)">
+                                            </div>
+                                            <div id="signup-email-feedback" class="mt-1 text-[11px] {{ $errors->has('email') ? 'text-rose-400 font-semibold block' : 'hidden' }}">
+                                                @error('email')
+                                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}</span>
+                                                @else
+                                                    <span id="signup-email-msg" class="flex items-center gap-1.5"></span>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Phương thức nhận mã OTP xác minh -->
+                                    <div class="auth-input-group">
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <label class="block text-xs font-semibold text-slate-300">
+                                                Phương thức nhận OTP xác minh <span class="text-rose-400 font-bold">*</span>
+                                            </label>
+                                            <span class="text-[10px] text-slate-500">Mã gồm 6 chữ số</span>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2.5" id="signup-verification-group">
+                                            <!-- Qua SĐT (luôn khả dụng) -->
+                                            <label class="verification-pill relative flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-700/80 bg-slate-900/60 cursor-pointer transition-all hover:border-emerald-500/50" for="signup-method-phone" id="signup-pill-phone">
+                                                <input type="radio" name="verification_method" id="signup-method-phone" value="phone" {{ old('verification_method', 'phone') === 'phone' ? 'checked' : '' }} onchange="onSignupMethodChange('phone')" class="hidden">
+                                                <div class="radio-indicator w-4 h-4">
+                                                    <div class="radio-dot w-2 h-2"></div>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <span class="text-xs font-bold text-white flex items-center gap-1.5 truncate">
+                                                        <i class="fa-solid fa-phone text-emerald-400 text-xs"></i> Qua SĐT
+                                                    </span>
+                                                </div>
+                                            </label>
+
+                                            <!-- Qua Email (mờ đi nếu ô email trống) -->
+                                            <label class="verification-pill relative flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-700/80 bg-slate-900/60 cursor-pointer transition-all hover:border-indigo-500/50" for="signup-method-email" id="signup-pill-email">
+                                                <input type="radio" name="verification_method" id="signup-method-email" value="email" {{ old('verification_method') === 'email' ? 'checked' : '' }} onchange="onSignupMethodChange('email')" class="hidden">
+                                                <div class="radio-indicator w-4 h-4">
+                                                    <div class="radio-dot w-2 h-2"></div>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <span class="text-xs font-bold text-white flex items-center gap-1.5 truncate">
+                                                        <i class="fa-solid fa-envelope text-indigo-400 text-xs"></i> Qua Email
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Tooltip cảnh báo khi email chưa nhập hoặc chưa hợp lệ -->
+                                        <div id="email-method-hint" class="email-hint-transition text-[11px] text-amber-400/90 flex items-center gap-1.5 email-hint-hidden" aria-live="polite">
+                                            <i id="email-method-hint-icon" class="fa-solid fa-circle-info text-[10px] shrink-0"></i>
+                                            <span id="email-method-hint-text">Vui lòng nhập email để dùng phương thức này</span>
+                                        </div>
+
+                                        @error('verification_method')
+                                            <p class="mt-1 text-[11px] font-semibold text-rose-400 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
+                                            </p>
+                                        @enderror
+                                    </div>
+
+                                    <!-- Mật khẩu -->
+                                    <div class="auth-input-group">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-xs font-semibold text-slate-300" for="signup-password">Mật khẩu bảo vệ</label>
+                                            <span id="signup-pwd-status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tối thiểu 6 ký tự</span>
+                                        </div>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-lock auth-input-icon"></i>
+                                            <input type="password" name="password" id="signup-password" oninput="evalPasswordStrength(this.value)" required class="auth-input-field @error('password') border-rose-500 ring-1 ring-rose-500/40 @enderror" placeholder="••••••••">
+                                            <button type="button" onclick="togglePasswordVisibility('signup-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu" aria-label="Hiện / Ẩn mật khẩu">
+                                                <i class="fa-solid fa-eye-slash"></i>
+                                            </button>
+                                        </div>
+                                        @error('password')
+                                            <p class="mt-1 text-[11px] font-semibold text-rose-400 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
+                                            </p>
+                                        @enderror
+                                        <!-- Password Strength Indicator -->
+                                        <div id="signup-strength-box" class="auth-strength-container mt-1.5">
+                                            <div class="auth-strength-track">
+                                                <div class="auth-strength-segment"></div>
+                                                <div class="auth-strength-segment"></div>
+                                                <div class="auth-strength-segment"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Checkbox Điều khoản -->
+                                    <div class="pt-1">
+                                        <label class="auth-checkbox-label">
+                                            <input type="checkbox" id="signup-terms" required checked>
+                                            <span class="text-[11px] leading-tight text-slate-400">Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của SmartRoom &amp; Renty</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Nút Tiếp Tục & Nhận OTP (Gradient tím-xanh đồng bộ) -->
+                                    <button type="submit" id="btn-submit-signup" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transform active:scale-95 transition-all duration-200 mt-2 flex items-center justify-center gap-2">
+                                        <span>Tiếp Tục &amp; Nhận Mã OTP</span>
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    </button>
+                                    <p class="text-[11px] text-center text-slate-500 mt-1">Hệ thống sẽ gửi mã OTP để kích hoạt tài khoản khách thuê của bạn</p>
+                                </form>
+                            </div>
                         </div>
-                        <form action="{{ route('user.authUser') }}" method="POST" class="space-y-5">
-                            @csrf
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-2" for="login">Tên đăng nhập hoặc Số điện thoại</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user"></i></span>
-                                    <input type="text" name="login" id="login" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="Nhập tên đăng nhập hoặc số điện thoại">
-                                </div>
+
+                        <!-- Card Footer Actions -->
+                        <div class="mt-6 pt-5 border-t border-slate-800/80 text-center space-y-2.5">
+                            <div id="footer-switch-to-signup" class="text-xs text-slate-400">
+                                Chưa có tài khoản?
+                                <button type="button" onclick="switchAuthTab('signup')" class="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">
+                                    Đăng ký ngay
+                                </button>
+                            </div>
+                            <div id="footer-switch-to-signin" class="text-xs text-slate-400 hidden">
+                                Đã có tài khoản?
+                                <button type="button" onclick="switchAuthTab('signin')" class="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">
+                                    Quay lại Đăng nhập
+                                </button>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-2" for="password">Mật khẩu</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-lock"></i></span>
-                                    <input type="password" name="password" id="password" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="••••••••">
-                                </div>
+                                <a href="{{ route('landlord.register', ['reset' => 1]) }}" onclick="['input-username', 'input-fullname', 'input-phone', 'input-email', 'input-password'].forEach(id => sessionStorage.removeItem('landlord_reg_' + id)); sessionStorage.removeItem('landlord_reg_method');" class="login-register-link inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold transition-all">
+                                    <i class="fa-solid fa-house-chimney-user mr-1.5 text-indigo-300"></i> Dành cho Chủ Trọ: Đăng Ký Hệ Thống Quản Lý
+                                </a>
                             </div>
-                            <button type="submit" class="login-submit-button w-full py-3 px-4 rounded-xl text-white font-semibold text-sm transform active:scale-95 transition-all duration-200">Đăng Nhập Hệ Thống</button>
-                        </form>
-                        <div class="mt-8 pt-6 border-t border-slate-800/60 text-center space-y-3">
-                            <p class="text-xs text-slate-400">Chưa có tài khoản quản lý?</p>
-                            <a href="{{ route('landlord.register') }}" class="login-register-link inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold transition-all">Đăng ký chủ trọ mới</a>
-                            <a href="{{ route('user.createUser') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all">Đăng ký tài khoản khách</a>
                         </div>
                     </section>
                 @elseif($page === 'create' || $page === 'update')
@@ -521,21 +813,26 @@
                             <label class="block text-xs font-semibold text-slate-300 mb-2" for="phone">Số điện thoại</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-phone"></i></span>
-                                <input type="tel" name="phone" id="phone" value="{{ old('phone', $editing ? $user->phone : '') }}" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="0901234567">
+                                <input type="tel" name="phone" id="phone" value="{{ old('phone', $editing ? $user->phone : '') }}" required maxlength="10" pattern="^0[0-9]{9}$" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all @error('phone') border-rose-500 ring-1 ring-rose-500/40 @enderror" placeholder="0901234567">
                             </div>
+                            @error('phone')
+                                <p class="text-xs text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                         <div class="register-field">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="email">Địa chỉ Email (Không bắt buộc)</label>
+                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="email">Địa chỉ Email</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope"></i></span>
-                                <input type="email" name="email" id="email" value="{{ old('email', $editing ? $user->email : '') }}" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="admin@example.com (tùy chọn)">
+                                <input type="email" name="email" id="email" value="{{ old('email', $editing ? $user->email : '') }}" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="admin@example.com">
                             </div>
                         </div>
                         <div class="register-field register-field-wide">
                             <label class="block text-xs font-semibold text-slate-300 mb-2" for="like">Ghi chú / Mô tả</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-heart"></i></span>
-                                <input type="text" name="like" id="like" value="{{ old('like', $editing ? $user->like : '') }}" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ Auth::check() ? 'Ghi chú công việc hoặc vai trò' : 'Ví dụ: Tìm phòng trọ khu vực Quận 10' }}">
+                                <input type="text" name="like" id="like" value="{{ old('like', $editing ? $user->like : '') }}" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ Auth::check() ? 'Ghi chú công việc hoặc vai trò' : 'Ví dụ: Tìm phòng trọ khu vực Quận 10' }}">
                             </div>
                         </div>
                         <div class="register-field register-field-wide">
@@ -576,6 +873,43 @@
                         <a href="{{ route('user.list') }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 transition-all">Quay Lại Danh Sách</a>
                         <a href="{{ route('user.updateUser', ['id' => $messi->id]) }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-indigo-650 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition-all">Chỉnh Sửa</a>
                     </div>
+                @elseif($page === 'login' && Auth::check())
+                    @php
+                        $currentUser = Auth::user();
+                        $targetRoute = match (true) {
+                            $currentUser->isAdmin() => route('user.list'),
+                            $currentUser->canAccessLandlordDashboard() => route('smartroom.admin'),
+                            $currentUser->isResident() => route('smartroom.resident'),
+                            default => route('renty.user'),
+                        };
+                        $targetLabel = match (true) {
+                            $currentUser->isAdmin() => 'Danh Sách Quản Trị Viên',
+                            $currentUser->canAccessLandlordDashboard() => 'Bảng Quản Trị Chủ Trọ',
+                            $currentUser->isResident() => 'Cổng Cư Dân',
+                            default => 'Trang Chủ Renty',
+                        };
+                    @endphp
+                    <div class="text-center py-4">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 mb-4 shadow-inner">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Bạn Đang Đăng Nhập</h2>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                            Tài khoản: <strong class="text-indigo-300">{{ $currentUser->name ?? $currentUser->username }}</strong><br>
+                            Vai trò: <span class="px-2 py-0.5 rounded-md bg-indigo-950 border border-indigo-500/30 text-indigo-300 text-[11px] font-semibold">{{ $currentUser->roleRecord->name ?? $currentUser->role ?? 'Thành viên' }}</span>
+                        </p>
+                        
+                        <div class="mt-6 flex flex-col gap-2.5">
+                            <a href="{{ $targetRoute }}" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2">
+                                <span>Đi Đến {{ $targetLabel }}</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                            <a href="{{ route('signout') }}" class="w-full py-2.5 px-4 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-rose-500/30 text-rose-400 text-xs font-semibold transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+                                <span>Đăng Xuất Tài Khoản</span>
+                            </a>
+                        </div>
+                    </div>
                 @endif
             </div>
         </main>
@@ -587,20 +921,540 @@
 
     <script>
         function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
             const card = document.createElement('div');
             card.className = `toast-card toast-${type}`;
             let icon = 'fa-circle-info';
-            if (type === 'success') icon = 'fa-circle-check';
-            if (type === 'error') icon = 'fa-circle-exclamation';
-            card.innerHTML = `<i class="fa-solid ${icon} mt-0.5 text-lg ${type === 'success' ? 'text-emerald-400' : (type === 'error' ? 'text-red-400' : 'text-blue-400')}"></i><div class="flex-grow"><p class="text-xs font-medium text-slate-200 leading-relaxed">${message}</p></div>`;
+            let iconBg = 'bg-sky-500/15 border-sky-500/25 text-sky-400';
+            let title = 'Thông Báo';
+            if (type === 'success') {
+                icon = 'fa-circle-check';
+                iconBg = 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400';
+                title = 'Đăng nhập thành công!';
+            } else if (type === 'error') {
+                icon = 'fa-circle-exclamation';
+                iconBg = 'bg-rose-500/15 border-rose-500/25 text-rose-400';
+                title = 'Thông Báo Lỗi';
+            }
+
+            card.innerHTML = `
+                <div class="w-8 h-8 rounded-xl ${iconBg} border flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                    <i class="fa-solid ${icon} text-sm"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h4 class="font-extrabold text-white text-xs tracking-wide">${title}</h4>
+                    <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">${message}</p>
+                </div>
+                <button type="button" onclick="this.closest('.toast-card').remove()" class="text-slate-500 hover:text-white transition-colors shrink-0 p-1">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            `;
             container.appendChild(card);
-            setTimeout(() => card.classList.add('show'), 10);
+            requestAnimationFrame(() => card.classList.add('show'));
             setTimeout(() => {
                 card.classList.remove('show');
                 setTimeout(() => card.remove(), 400);
             }, 4500);
         }
+
+        // =========================================================
+        // SINGHDIGAMBER TEMPLATE + SMARTROOM MODERN AUTH SCRIPTS
+        // =========================================================
+        function switchAuthTab(tab, updateHistory = true) {
+            const btnSignin = document.getElementById('tab-btn-signin');
+            const btnSignup = document.getElementById('tab-btn-signup');
+            const panelSignin = document.getElementById('auth-panel-signin');
+            const panelSignup = document.getElementById('auth-panel-signup');
+            const footerSignup = document.getElementById('footer-switch-to-signup');
+            const footerSignin = document.getElementById('footer-switch-to-signin');
+
+            if (!btnSignin || !btnSignup || !panelSignin || !panelSignup) return;
+
+            if (tab === 'signin') {
+                btnSignin.classList.add('active');
+                btnSignin.setAttribute('aria-selected', 'true');
+                btnSignup.classList.remove('active');
+                btnSignup.setAttribute('aria-selected', 'false');
+
+                panelSignin.classList.add('active');
+                panelSignup.classList.remove('active');
+
+                if (footerSignup) footerSignup.classList.remove('hidden');
+                if (footerSignin) footerSignin.classList.add('hidden');
+
+                if (updateHistory && window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, "{{ route('login') }}");
+                }
+            } else if (tab === 'signup') {
+                btnSignup.classList.add('active');
+                btnSignup.setAttribute('aria-selected', 'true');
+                btnSignin.classList.remove('active');
+                btnSignin.setAttribute('aria-selected', 'false');
+
+                panelSignup.classList.add('active');
+                panelSignin.classList.remove('active');
+
+                if (footerSignin) footerSignin.classList.remove('hidden');
+                if (footerSignup) footerSignup.classList.add('hidden');
+
+                if (updateHistory && window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, "{{ route('user.createUser') }}");
+                }
+            }
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            }
+        }
+
+        function evalPasswordStrength(pwd) {
+            const box = document.getElementById('signup-strength-box');
+            const status = document.getElementById('signup-pwd-status');
+            if (!box || !status) return;
+
+            box.className = 'auth-strength-container mt-1.5';
+
+            if (!pwd || pwd.length === 0) {
+                status.textContent = 'Tối thiểu 6 ký tự';
+                status.className = 'text-[10px] font-bold text-slate-500 uppercase tracking-wider';
+                return;
+            }
+
+            let score = 0;
+            if (pwd.length >= 6) score++;
+            if (pwd.length >= 8 && /[0-9]/.test(pwd)) score++;
+            if (pwd.length >= 8 && /[^A-Za-z0-9]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+
+            if (score <= 1) {
+                box.classList.add('strength-weak');
+                status.textContent = 'Độ mạnh: Yếu';
+                status.className = 'text-[10px] font-bold text-red-400 uppercase tracking-wider';
+            } else if (score === 2) {
+                box.classList.add('strength-medium');
+                status.textContent = 'Độ mạnh: Trung bình';
+                status.className = 'text-[10px] font-bold text-amber-400 uppercase tracking-wider';
+            } else {
+                box.classList.add('strength-strong');
+                status.textContent = 'Độ mạnh: Rất tốt';
+                status.className = 'text-[10px] font-bold text-emerald-400 uppercase tracking-wider';
+            }
+        }
+
+        function appendTagToLike(tag) {
+            const input = document.getElementById('signup-like');
+            if (!input) return;
+            const current = input.value.trim();
+            if (!current) {
+                input.value = tag;
+            } else if (!current.toLowerCase().includes(tag.toLowerCase())) {
+                input.value = current + ', ' + tag;
+            }
+            input.focus();
+        }
+
+        function validateSignupUsernameBlur(input) {
+            const val = input.value.trim();
+            const feedback = document.getElementById('signup-username-feedback');
+            const msg = document.getElementById('signup-username-msg');
+            if (!feedback) return;
+
+            if (!val) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Vui lòng nhập tên đăng nhập (bắt buộc)';
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9_-]{3,50}$/.test(val)) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Tên đăng nhập từ 3–50 ký tự, chỉ gồm chữ cái, số, gạch nối (-) hoặc gạch dưới (_)';
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            // Gọi API kiểm tra trùng Username real-time
+            fetch('/api/auth/check-availability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ type: 'username', value: val })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.available === false) {
+                    feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ' + data.message;
+                    input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                    input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                } else {
+                    feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
+                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> ' + data.message;
+                    input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                    input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                }
+            })
+            .catch(() => {});
+        }
+
+        function validatePhoneInput(input) {
+            input.value = input.value.replace(/\D/g, '').slice(0, 10);
+            const val = input.value;
+            const feedback = document.getElementById('signup-phone-feedback');
+            const msg = document.getElementById('signup-phone-msg');
+            if (!feedback) return;
+
+            if (!val) {
+                feedback.className = 'mt-1 text-[11px] text-slate-400 hidden';
+                if (msg) msg.innerHTML = '';
+                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40', 'border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            feedback.classList.remove('hidden');
+
+            if (!val.startsWith('0')) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Số điện thoại phải bắt đầu bằng chữ số 0';
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+            } else if (val.length < 10) {
+                feedback.className = 'mt-1 text-[11px] font-medium text-amber-400 block';
+                if (msg) msg.innerHTML = `<i class="fa-solid fa-circle-info text-[10px]"></i> Số điện thoại 10 số (đã nhập ${val.length}/10 số)`;
+                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40', 'border-emerald-500', 'ring-emerald-500/30');
+            } else if (val.length === 10) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> Số điện thoại hợp lệ (10 số)';
+                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+            }
+        }
+
+        function validatePhoneBlur(input) {
+            const val = input.value.trim();
+            const feedback = document.getElementById('signup-phone-feedback');
+            const msg = document.getElementById('signup-phone-msg');
+            if (!feedback) return;
+
+            if (!val) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Vui lòng nhập số điện thoại (10 chữ số)';
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            if (!/^0[0-9]{9}$/.test(val)) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Số điện thoại phải gồm đúng 10 chữ số bắt đầu bằng số 0';
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            // Gọi API kiểm tra trùng SĐT real-time
+            fetch('/api/auth/check-availability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ phone: val })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.available === false) {
+                    feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ' + data.message;
+                    input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                    input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                } else {
+                    feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
+                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> ' + data.message;
+                    input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                    input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                }
+            })
+            .catch(() => {});
+        }
+
+        // =========================================================
+        // LOGIC QUẢN LÝ PHƯƠNG THỨC OTP & TRẠNG THÁI EMAIL
+        // =========================================================
+        let guestEmailDebounceTimer = null;
+
+        function isEmailValidFormat(email) {
+            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
+        }
+
+        function updateEmailOtpState() {
+            const emailInput = document.getElementById('signup-email');
+            const pillEmail = document.getElementById('signup-pill-email');
+            const pillPhone = document.getElementById('signup-pill-phone');
+            const radioEmail = document.getElementById('signup-method-email');
+            const radioPhone = document.getElementById('signup-method-phone');
+            const hint = document.getElementById('email-method-hint');
+            const hintText = document.getElementById('email-method-hint-text');
+            const hintIcon = document.getElementById('email-method-hint-icon');
+
+            if (!emailInput || !pillEmail || !radioEmail) return;
+
+            const val = emailInput.value.trim();
+            const isValid = isEmailValidFormat(val);
+
+            if (isValid) {
+                // Email hợp lệ: Enable phương thức nhận qua Email
+                radioEmail.disabled = false;
+                pillEmail.classList.remove('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+                pillEmail.removeAttribute('title');
+
+                // Ẩn tooltip cảnh báo mượt mà
+                if (hint) {
+                    hint.className = 'email-hint-transition text-[11px] text-amber-400/90 flex items-center gap-1.5 email-hint-hidden';
+                }
+            } else {
+                // Email chưa hợp lệ hoặc để trống: Disable phương thức nhận qua Email
+                const wasChecked = radioEmail.checked;
+                radioEmail.disabled = true;
+                pillEmail.classList.add('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+
+                // Cập nhật nội dung tooltip chính xác
+                if (!val) {
+                    if (hintText) hintText.textContent = 'Vui lòng nhập email để dùng phương thức này';
+                    if (hintIcon) hintIcon.className = 'fa-solid fa-circle-info text-[10px] shrink-0 text-amber-400';
+                    if (hint) hint.className = 'email-hint-transition text-[11px] text-amber-400/90 flex items-center gap-1.5 email-hint-visible';
+                    pillEmail.setAttribute('title', 'Vui lòng nhập email để dùng phương thức này');
+                } else {
+                    if (hintText) hintText.textContent = 'Định dạng email chưa hợp lệ';
+                    if (hintIcon) hintIcon.className = 'fa-solid fa-circle-exclamation text-[10px] shrink-0 text-rose-400';
+                    if (hint) hint.className = 'email-hint-transition text-[11px] text-rose-400/90 flex items-center gap-1.5 email-hint-visible';
+                    pillEmail.setAttribute('title', 'Định dạng email chưa hợp lệ');
+                }
+
+                // AUTO-SWITCH: Nếu đang chọn "Qua Email" mà email bị sửa/xóa không hợp lệ -> Tự chuyển về SĐT
+                if (wasChecked) {
+                    if (radioPhone) {
+                        radioPhone.checked = true;
+                        onSignupMethodChange('phone');
+
+                        // Hiệu ứng highlight mượt trên ô SĐT
+                        if (pillPhone) {
+                            pillPhone.classList.add('ring-2', 'ring-emerald-400/60');
+                            setTimeout(() => pillPhone.classList.remove('ring-2', 'ring-emerald-400/60'), 600);
+                        }
+
+                        // Thông báo nhỏ
+                        if (typeof showToast === 'function') {
+                            showToast('Đã chuyển sang xác minh qua SĐT vì email không hợp lệ', 'info');
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleEmailInput(input) {
+            // Lắng nghe trực tiếp sự kiện input với debounce 300ms
+            clearTimeout(guestEmailDebounceTimer);
+            guestEmailDebounceTimer = setTimeout(() => {
+                updateEmailOtpState();
+            }, 300);
+        }
+
+        function handleEmailBlur(input) {
+            clearTimeout(guestEmailDebounceTimer);
+            updateEmailOtpState();
+            const val = input.value.trim();
+            const feedback = document.getElementById('signup-email-feedback');
+            const msg = document.getElementById('signup-email-msg');
+            if (!feedback) return;
+
+            if (!val) {
+                feedback.className = 'hidden';
+                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40', 'border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            if (!isEmailValidFormat(val)) {
+                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Địa chỉ email không đúng định dạng hợp lệ';
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                return;
+            }
+
+            // Gọi API kiểm tra trùng Email real-time
+            fetch('/api/auth/check-availability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ email: val })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.available === false) {
+                    feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
+                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ' + data.message;
+                    input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                    input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                } else {
+                    feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
+                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> ' + data.message;
+                    input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                    input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                }
+            })
+            .catch(() => {});
+        }
+
+        function onSignupMethodChange(method) {
+            const phoneInput = document.getElementById('signup-phone');
+            const emailInput = document.getElementById('signup-email');
+
+            // Số điện thoại LUÔN LUÔN là bắt buộc
+            if (phoneInput) {
+                phoneInput.setAttribute('required', 'required');
+            }
+
+            if (method === 'email') {
+                if (emailInput && !emailInput.value.trim()) {
+                    emailInput.focus();
+                    showToast('Vui lòng nhập email để nhận mã OTP xác minh', 'info');
+                }
+            }
+        }
+
+        function handleSignupSubmit(e) {
+            const phoneInput = document.getElementById('signup-phone');
+            const emailInput = document.getElementById('signup-email');
+            const methodEl = document.querySelector('input[name="verification_method"]:checked');
+            const method = methodEl ? methodEl.value : 'phone';
+
+            // 0. Validate Tên đăng nhập (BẮT BUỘC 3-50 ký tự)
+            const usernameInput = document.getElementById('signup-username');
+            const usernameVal = usernameInput ? usernameInput.value.trim() : '';
+            if (!usernameVal) {
+                e.preventDefault();
+                if (usernameInput) {
+                    validateSignupUsernameBlur(usernameInput);
+                    usernameInput.focus();
+                }
+                showToast('Tên đăng nhập là bắt buộc. Vui lòng nhập tên đăng nhập của bạn.', 'error');
+                return false;
+            }
+            if (!/^[a-zA-Z0-9_-]{3,50}$/.test(usernameVal)) {
+                e.preventDefault();
+                if (usernameInput) {
+                    validateSignupUsernameBlur(usernameInput);
+                    usernameInput.focus();
+                }
+                showToast('Tên đăng nhập từ 3–50 ký tự, chỉ gồm chữ cái, số, gạch nối (-) hoặc gạch dưới (_)', 'error');
+                return false;
+            }
+
+            // 1. Validate Số điện thoại (BẮT BUỘC 10 số bắt đầu bằng 0)
+            const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+            if (!phoneVal || !/^0[0-9]{9}$/.test(phoneVal)) {
+                e.preventDefault();
+                if (phoneInput) {
+                    validatePhoneBlur(phoneInput);
+                    phoneInput.focus();
+                }
+                showToast('Số điện thoại là bắt buộc (phải gồm đúng 10 số bắt đầu bằng số 0)', 'error');
+                return false;
+            }
+
+            // 2. Validate Phương thức nhận OTP
+            if (method === 'email') {
+                const emailVal = emailInput ? emailInput.value.trim() : '';
+                if (!emailVal) {
+                    e.preventDefault();
+                    if (emailInput) emailInput.focus();
+                    showToast('Bạn đã chọn nhận OTP qua Email, vui lòng nhập địa chỉ email.', 'error');
+                    return false;
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                    e.preventDefault();
+                    if (emailInput) {
+                        emailInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                        emailInput.focus();
+                    }
+                    showToast('Địa chỉ email không đúng định dạng hợp lệ.', 'error');
+                    return false;
+                }
+            } else {
+                // Nếu điền email tùy chọn nhưng sai định dạng
+                const emailVal = emailInput ? emailInput.value.trim() : '';
+                if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                    e.preventDefault();
+                    if (emailInput) {
+                        emailInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                        emailInput.focus();
+                    }
+                    showToast('Địa chỉ email tùy chọn không đúng định dạng hợp lệ.', 'error');
+                    return false;
+                }
+            }
+
+            // 3. Validate Checkbox Điều khoản
+            const termsCheckbox = document.getElementById('signup-terms');
+            if (termsCheckbox && !termsCheckbox.checked) {
+                e.preventDefault();
+                showToast('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật.', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Refresh page if restored from bfcache (browser back/forward) to prevent stale CSRF tokens
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(($page === 'create' && !Auth::check()) || $errors->has('phone') || $errors->has('email') || $errors->has('name') || $errors->has('password') || old('phone') || old('email'))
+                switchAuthTab('signup', false);
+            @endif
+
+            // Khởi tạo trạng thái radio OTP theo email hiện tại
+            updateEmailOtpState();
+
+            const checkedMethod = document.querySelector('input[name="verification_method"]:checked');
+            if (checkedMethod) {
+                onSignupMethodChange(checkedMethod.value);
+            }
+        });
 
         @if(session('success'))
             showToast(@json(session('success')), "success");

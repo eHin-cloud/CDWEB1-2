@@ -224,4 +224,36 @@ class Room extends Model
             $room->syncOccupancyStatus();
         }
     }
+
+    public function iotDevices(): HasMany
+    {
+        return $this->hasMany(IotDevice::class);
+    }
+
+    public function iotTelemetries(): HasMany
+    {
+        return $this->hasMany(IotMeterTelemetry::class);
+    }
+
+    public function latestElectricTelemetry()
+    {
+        return $this->hasOne(IotMeterTelemetry::class)->ofMany(
+            ['recorded_at' => 'max', 'id' => 'max'],
+            function ($query) {
+                $query->where('meter_type', 'electricity');
+            }
+        );
+    }
+
+    public function latestWaterTelemetry()
+    {
+        return $this->hasOne(IotMeterTelemetry::class)->ofMany(
+            ['recorded_at' => 'max', 'id' => 'max'],
+            function ($query) {
+                $query->where('meter_type', 'water');
+            }
+        );
+    }
 }
+
+
