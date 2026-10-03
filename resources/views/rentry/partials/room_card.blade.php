@@ -1,4 +1,4 @@
-<div class="room-item-card glass-card rounded-2xl overflow-hidden group flex flex-col justify-between relative" 
+<div class="room-item-card glass-card rounded-2xl overflow-hidden group flex flex-col justify-between relative {{ (isset($loop) && $loop->iteration > 9) ? 'hidden' : '' }}" 
      data-room-id="{{ $room['id'] }}"
      data-price="{{ $room['price'] }}" 
      data-rating="{{ $room['rating'] }}" 
@@ -44,7 +44,7 @@
        @endphp
        <!-- Room photo -->
        <div class="room-card-media h-48 bg-slate-950 relative overflow-hidden border-b border-slate-900 group">
-           <a href="{{ route('renty.room.show', $room['id']) }}" class="absolute inset-0 z-0 renty-card-carousel" aria-label="Xem chi tiết phòng {{ $room['room_number'] }}">
+           <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')" class="absolute inset-0 z-0 renty-card-carousel" aria-label="Xem chi tiết phòng {{ $room['room_number'] }}">
                @foreach($cardImages as $imageIndex => $imageUrl)
                    <img src="{{ $imageUrl }}" alt="Ảnh {{ $imageIndex + 1 }} phòng {{ $room['room_number'] }}" class="renty-card-carousel-image" style="--carousel-delay: {{ $imageIndex * 2 }}s;" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80';">
                @endforeach
@@ -102,7 +102,7 @@
        <!-- Details -->
        <div class="p-5 flex-grow flex flex-col justify-between">
            <div>
-               <div class="viewed-room-strip" aria-hidden="true">
+               <div class="viewed-room-strip hidden" aria-hidden="true">
                    <span class="viewed-room-strip-icon">
                        <i class="fa-solid fa-eye"></i>
                        <i class="fa-solid fa-check"></i>
@@ -111,7 +111,7 @@
                </div>
                <div class="flex justify-between items-start mb-2 gap-2">
                    <h3 class="font-bold text-slate-200 text-sm group-hover:text-emerald-400 transition-all line-clamp-1">
-                       <a href="{{ route('renty.room.show', $room['id']) }}">{{ $room['title'] }}</a>
+                       <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')">{{ $room['title'] }}</a>
                    </h3>
                    <div class="relative group/rating flex items-center gap-1 text-xs text-amber-400 font-bold shrink-0 cursor-pointer py-1 px-1.5 rounded-lg hover:bg-amber-500/10 transition-colors">
                        <i class="fa-solid fa-star text-[10px]"></i> <span>{{ $room['rating'] }}</span>
@@ -225,7 +225,7 @@
            <button type="button" onclick="openReportModal('{{ $room['id'] }}', '{{ e($room['title']) }}')" class="room-report-button text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1">
                <i class="fa-solid fa-flag"></i> Báo cáo
            </button>
-           <a href="{{ route('renty.room.show', $room['id']) }}" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+           <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                <span>Chi tiết review</span> <i class="fa-solid fa-angle-right"></i>
            </a>
        </div>

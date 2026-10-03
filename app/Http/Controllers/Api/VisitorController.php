@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\Review;
 use App\Services\AiManagementService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class VisitorController extends Controller
 {
@@ -88,6 +89,227 @@ class VisitorController extends Controller
         return response()->json([
             'success' => true,
             'count' => $result->count(),
+            'rooms' => $result
+        ]);
+    }
+
+    /**
+     * Cổng tìm kiếm & Bộ lọc phòng trọ thông minh Renty (FEAT_21_SMART_SEARCH)
+     * GET /api/renty/filter
+     */
+    public function filter(Request $request)
+    {
+        // 1. Kiểm tra ký tự chữ vào ô giá hoặc diện tích (ERR_21_03)
+        $rawMinPrice = $request->input('min_price', $request->input('price_min'));
+        $rawMaxPrice = $request->input('max_price', $request->input('price_max'));
+        $rawMinArea = $request->input('min_area', $request->input('area_min'));
+        $rawMaxArea = $request->input('max_area', $request->input('area_max'));
+
+        if ($rawMinPrice !== null && $rawMinPrice !== '' && !is_numeric($rawMinPrice)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_21_03',
+                'message' => 'Giá phòng và diện tích chỉ được nhập số.',
+                'errors' => ['min_price' => ['Giá phòng và diện tích chỉ được nhập số.']]
+            ], 422);
+        }
+
+        if ($rawMaxPrice !== null && $rawMaxPrice !== '' && !is_numeric($rawMaxPrice)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_21_03',
+                'message' => 'Giá phòng và diện tích chỉ được nhập số.',
+                'errors' => ['max_price' => ['Giá phòng và diện tích chỉ được nhập số.']]
+            ], 422);
+        }
+
+        if ($rawMinArea !== null && $rawMinArea !== '' && !is_numeric($rawMinArea)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_21_03',
+                'message' => 'Giá phòng và diện tích chỉ được nhập số.',
+                'errors' => ['min_area' => ['Giá phòng và diện tích chỉ được nhập số.']]
+            ], 422);
+        }
+
+        if ($rawMaxArea !== null && $rawMaxArea !== '' && !is_numeric($rawMaxArea)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_21_03',
+                'message' => 'Giá phòng và diện tích chỉ được nhập số.',
+                'errors' => ['max_area' => ['Giá phòng và diện tích chỉ được nhập số.']]
+            ], 422);
+        }
+
+        $minPrice = ($rawMinPrice !== null && $rawMinPrice !== '') ? (float) $rawMinPrice : null;
+        $maxPrice = ($rawMaxPrice !== null && $rawMaxPrice !== '') ? (float) $rawMaxPrice : null;
+        $minArea = ($rawMinArea !== null && $rawMinArea !== '') ? (float) $rawMinArea : null;
+        $maxArea = ($rawMaxArea !== null && $rawMaxArea !== '') ? (float) $rawMaxArea : null;
+
+        // 2. Validate Min > Max (ERR_21_01 & ERR_21_02)
+        if ($minPrice !== null && $maxPrice !== null && $minPrice > $maxPrice) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_21_01',
+                'message' => 'Giá tối thiểu không thể lớn hơn giá tối đa.',
+                'errors' => [
+                    'min_price' => ['Giá tối thiểu không thể lớn hơn giá tối đa.'],
+                    'price' => ['Khoảng giá lọc không hợp lệ: Giá tối thiểu không được lớn hơn giá tối đa']
+                ]
+            ], 422);
+        }
+
+        if ($minArea !== null && $maxArea !== null && $minArea > $maxArea) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_21_02',
+                'message' => 'Diện tích tối thiểu không thể lớn hơn diện tích tối đa.',
+                'errors' => [
+                    'min_area' => ['Diện tích tối thiểu không thể lớn hơn diện tích tối đa.']
+                ]
+            ], 422);
+        }
+
+        // Cache Tags / Key cho Redis và File Cache
+        $cacheKey = 'renty_filter_' . md5(json_encode($request->all()));
+
+        $rooms = Cache::remember($cacheKey, 60, function () use ($request, $minPrice, $maxPrice, $minArea, $maxArea) {
+            $query = Room::with(['building', 'reviews']);
+
+            // Lọc khoảng giá
+            if ($minPrice !== null) {
+                $query->where('price', '>=', (int) $minPrice);
+            }
+            if ($maxPrice !== null) {
+                $query->where('price', '<=', (int) $maxPrice);
+            }
+
+            // Lọc diện tích
+            if ($minArea !== null) {
+                $query->where('area', '>=', $minArea);
+            }
+            if ($maxArea !== null) {
+                $query->where('area', '<=', $maxArea);
+            }
+
+            // Loại phòng (room_type)
+            if ($request->filled('room_type')) {
+                $roomType = trim((string) $request->input('room_type'));
+                $query->where(function ($q) use ($roomType) {
+                    $q->where('room_type', $roomType)
+                      ->orWhereHas('building', function ($bq) use ($roomType) {
+                          $bq->where('name', 'like', "%{$roomType}%");
+                      });
+                });
+            }
+
+            // Trạng thái phòng (mặc định cho phép lọc hoặc lấy phòng trống)
+            $status = $request->input('status', 'all');
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+
+            // Bộ lọc tiện ích (Bắt buộc phòng phải có TẤT CẢ các tiện ích đã chọn)
+            if ($request->has('amenities')) {
+                $amenities = $request->input('amenities');
+                if (is_string($amenities)) {
+                    $amenities = array_filter(array_map('trim', explode(',', $amenities)));
+                }
+                if (is_array($amenities) && count($amenities) > 0) {
+                    foreach ($amenities as $amenity) {
+                        $trimmedAmenity = trim($amenity);
+                        if ($trimmedAmenity !== '') {
+                            $query->where(function ($subQ) use ($trimmedAmenity) {
+                                $subQ->whereJsonContains('amenities', $trimmedAmenity)
+                                     ->orWhere('amenities', 'like', '%"' . $trimmedAmenity . '"%')
+                                     ->orWhere('amenities', 'like', '%' . $trimmedAmenity . '%');
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Lọc theo từ khóa tìm kiếm (q / keyword)
+            $keyword = trim((string) $request->input('q', $request->input('keyword', '')));
+            if ($keyword !== '') {
+                $query->where(function ($kq) use ($keyword) {
+                    $kq->where('room_number', 'like', "%{$keyword}%")
+                       ->orWhere('description', 'like', "%{$keyword}%")
+                       ->orWhereHas('building', function ($bq) use ($keyword) {
+                           $bq->where('name', 'like', "%{$keyword}%")
+                              ->orWhere('address', 'like', "%{$keyword}%");
+                       });
+                });
+            }
+
+            // Lọc theo đánh giá tối thiểu (rating)
+            if ($request->filled('rating') && $request->input('rating') !== 'all') {
+                $minRating = (float) $request->input('rating');
+                $query->whereHas('reviews', function ($rq) use ($minRating) {
+                    $rq->havingRaw('AVG(rating) >= ?', [$minRating]);
+                });
+            }
+
+            // Sắp xếp (sort_by)
+            $sortBy = $request->input('sort_by', 'default');
+            match ($sortBy) {
+                'price_asc' => $query->orderBy('price', 'asc'),
+                'price_desc' => $query->orderBy('price', 'desc'),
+                'area_desc' => $query->orderBy('area', 'desc'),
+                'newest' => $query->orderBy('created_at', 'desc'),
+                default => $query->orderBy('id', 'asc'),
+            };
+
+            return $query->get();
+        });
+
+        // Kịch bản ERR_21_04: Không tìm thấy phòng nào phù hợp với bộ lọc
+        if ($rooms->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'count' => 0,
+                'rooms' => [],
+                'error_code' => 'ERR_21_04',
+                'message' => 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.'
+            ]);
+        }
+
+        $total = $rooms->count();
+
+        // Xử lý phân trang
+        $page = max(1, (int) $request->input('page', 1));
+        $perPageInput = $request->input('per_page', $request->input('limit'));
+        $perPage = ($perPageInput !== null && $perPageInput !== 'all') ? max(1, min(50, (int) $perPageInput)) : 9;
+
+        $pagedRooms = ($perPageInput === 'all') ? $rooms : $rooms->forPage($page, $perPage)->values();
+
+        $result = $pagedRooms->map(function ($room) {
+            $ratingAvg = round((float) ($room->reviews->avg('rating') ?: 5.0), 1);
+            return [
+                'id' => $room->id,
+                'room_number' => $room->room_number,
+                'floor' => $room->floor,
+                'status' => $room->status,
+                'price' => (int) $room->price,
+                'price_formatted' => number_format($room->price, 0, ',', '.') . ' VNĐ',
+                'area' => (float) $room->area,
+                'area_formatted' => $room->area . ' m²',
+                'amenities' => $room->amenities ?? [],
+                'building_name' => $room->building->name ?? 'Tòa nhà',
+                'address' => $room->building->address ?? 'Đang cập nhật',
+                'rating_avg' => $ratingAvg,
+                'reviews_count' => $room->reviews->count(),
+                'cover_image' => $room->cover_image ?? '/images/room-placeholder.jpg',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'count' => $result->count(),
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => (int) ceil($total / $perPage),
             'rooms' => $result
         ]);
     }

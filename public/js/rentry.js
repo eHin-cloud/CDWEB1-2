@@ -520,6 +520,10 @@ function renderViewedRooms() {
         const isViewed = viewedIds.includes(String(card.dataset.roomId));
         card.dataset.viewed = isViewed ? 'true' : 'false';
         card.classList.toggle('room-card-viewed', isViewed);
+        const strip = card.querySelector('.viewed-room-strip');
+        if (strip) {
+            strip.classList.toggle('hidden', !isViewed);
+        }
     });
 
     if (!section || !list) return;
@@ -542,6 +546,9 @@ function renderViewedRooms() {
         </a>
     `).join('');
 }
+window.saveViewedRoom = saveViewedRoom;
+window.clearViewedRooms = clearViewedRooms;
+window.renderViewedRooms = renderViewedRooms;
 
 function getDynamicLocations() {
     const locations = new Set();
@@ -1604,17 +1611,22 @@ async function executeSmartSearchApi(params) {
     if (params.loftChecked) amenities.push('loft');
     if (params.balconyChecked) amenities.push('balcony');
     if (params.wcChecked) amenities.push('wc');
+    if (document.getElementById('tag-ac')?.checked) amenities.push('air_conditioner');
+    if (document.getElementById('tag-washer')?.checked) amenities.push('washing_machine');
 
     let effectiveMaxPrice = params.maxPriceVal;
     if (effectiveMaxPrice === null && params.filterPrice && params.filterPrice !== 'all') {
         effectiveMaxPrice = parseInt(params.filterPrice);
     }
 
+    const sortBy = document.getElementById('sort_by')?.value || 'default';
+
     const searchParams = new URLSearchParams();
     if (params.query) searchParams.set('q', params.query);
     if (params.minPriceVal !== null) searchParams.set('min_price', params.minPriceVal);
     if (effectiveMaxPrice !== null) searchParams.set('max_price', effectiveMaxPrice);
     if (params.filterRating && params.filterRating !== 'all') searchParams.set('rating', params.filterRating);
+    if (sortBy !== 'default') searchParams.set('sort_by', sortBy);
     if (params.hideRented) searchParams.set('status', 'empty');
     if (amenities.length > 0) searchParams.set('amenities', amenities.join(','));
     searchParams.set('page', rentyCurrentPage);
@@ -1625,6 +1637,7 @@ async function executeSmartSearchApi(params) {
         min_price: params.minPriceVal,
         max_price: effectiveMaxPrice,
         rating: params.filterRating,
+        sort_by: sortBy,
         status: params.hideRented ? 'empty' : 'all',
         amenities: amenities
     });
@@ -1668,7 +1681,7 @@ async function executeSmartSearchApi(params) {
             resultsCountEl.textContent = `Tìm thấy ${total} phòng`;
         }
 
-        // 3. Xử lý hiển thị danh sách phòng & Empty State
+        // 3. Xử lý hiển thị danh sách phòng & Empty State (ERR_21_04)
         const roomsGrid = document.getElementById('rooms-grid');
         const emptyState = document.getElementById('smart-search-empty-state');
 
@@ -1730,13 +1743,37 @@ function filterItems(options = {}) {
     const minPriceInput = document.getElementById('filter-price-min');
     const maxPriceInput = document.getElementById('filter-price-max');
     const priceErrorEl = document.getElementById('filter-price-error');
+    const priceErrorTextEl = document.getElementById('filter-price-error-text');
 
-    const minPriceVal = minPriceInput && minPriceInput.value.trim() !== '' ? parseInt(minPriceInput.value) : null;
-    const maxPriceVal = maxPriceInput && maxPriceInput.value.trim() !== '' ? parseInt(maxPriceInput.value) : null;
+    const rawMin = minPriceInput ? minPriceInput.value.trim() : '';
+    const rawMax = maxPriceInput ? maxPriceInput.value.trim() : '';
+    const isDigitsOnly = val => /^\d+$/.test(val);
 
+    // Bẫy lỗi ERR_21_03: Giá phòng chỉ được nhập số
+    if ((rawMin !== '' && !isDigitsOnly(rawMin)) || (rawMax !== '' && !isDigitsOnly(rawMax))) {
+        if (rawMin !== '' && !isDigitsOnly(rawMin) && minPriceInput) {
+            minPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        }
+        if (rawMax !== '' && !isDigitsOnly(rawMax) && maxPriceInput) {
+            maxPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        }
+        if (priceErrorTextEl) {
+            priceErrorTextEl.textContent = 'Giá phòng và diện tích chỉ được nhập số.';
+        }
+        if (priceErrorEl) priceErrorEl.classList.remove('hidden');
+        return;
+    }
+
+    const minPriceVal = rawMin !== '' ? parseInt(rawMin, 10) : null;
+    const maxPriceVal = rawMax !== '' ? parseInt(rawMax, 10) : null;
+
+    // Bẫy lỗi ERR_21_01: Min > Max
     if (minPriceVal !== null && maxPriceVal !== null && minPriceVal > maxPriceVal) {
         if (minPriceInput) minPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
         if (maxPriceInput) maxPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (priceErrorTextEl) {
+            priceErrorTextEl.textContent = 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)';
+        }
         if (priceErrorEl) priceErrorEl.classList.remove('hidden');
         return; // Dừng lọc khi khoảng giá không hợp lệ
     } else {
@@ -1752,29 +1789,18 @@ function filterItems(options = {}) {
     const balconyEl = document.getElementById('tag-balcony');
     const balconyChecked = balconyEl ? balconyEl.checked : false;
     const wcChecked = document.getElementById('tag-wc') ? document.getElementById('tag-wc').checked : false;
+    const acChecked = document.getElementById('tag-ac') ? document.getElementById('tag-ac').checked : false;
+    const washerChecked = document.getElementById('tag-washer') ? document.getElementById('tag-washer').checked : false;
     const hideRented = document.getElementById('hide-rented-toggle') ? document.getElementById('hide-rented-toggle').checked : false;
 
-    // Chuyển hướng xử lý lọc sang Backend Smart Search API
-    executeSmartSearchApi({
-        query: query.trim(),
-        filterPrice: filterPrice,
-        filterRating: filterRating,
-        minPriceVal: minPriceVal,
-        maxPriceVal: maxPriceVal,
-        petChecked: petChecked,
-        loftChecked: loftChecked,
-        balconyChecked: balconyChecked,
-        wcChecked: wcChecked,
-        hideRented: hideRented
-    });
-    return;
+    setSearchSkeletonLoading(false);
 
     let matches = [];
 
     document.querySelectorAll('.room-item-card').forEach(card => {
-        const title = card.getAttribute('data-title').toLowerCase();
-        const price = parseInt(card.getAttribute('data-price'));
-        const rating = parseFloat(card.getAttribute('data-rating'));
+        const title = (card.getAttribute('data-title') || '').toLowerCase();
+        const price = parseInt(card.getAttribute('data-price') || 0);
+        const rating = parseFloat(card.getAttribute('data-rating') || 0);
         const distance = parseFloat(card.getAttribute('data-distance') || 0);
         const pets = card.getAttribute('data-pets') === 'true';
         const loft = card.getAttribute('data-loft') === 'true';
@@ -1782,18 +1808,17 @@ function filterItems(options = {}) {
         const wc = card.getAttribute('data-wc') === 'true';
         const status = card.getAttribute('data-status');
         const searchableText = normalizeText(
-            `${card.getAttribute('data-title')} ` +
-            `${card.getAttribute('data-area-name')} ` +
+            `${card.getAttribute('data-title') || ''} ` +
+            `${card.getAttribute('data-area-name') || ''} ` +
             `${card.getAttribute('data-address') || ''} ` +
             `${card.getAttribute('data-location-desc') || ''} ` +
             `${card.getAttribute('data-space-desc') || ''} ` +
             `${card.getAttribute('data-scenery-desc') || ''} ` +
-            `${card.textContent}`
+            `${card.textContent || ''}`
         );
 
         let matchesQuery = true;
         if (normalizedQuery.trim() !== '') {
-            // 1. Loại bỏ các từ quan hệ thừa ở đầu hoặc trong query để tìm kiếm cụm từ sạch
             const cleanQuery = normalizedQuery
                 .replace(/^(gan|o|tim|cho thue|khu vuc|xung quanh)\s+/g, '')
                 .replace(/\b(gan|o|tim|cho thue|khu vuc|xung quanh)\b/g, '')
@@ -1802,47 +1827,21 @@ function filterItems(options = {}) {
 
             const containsFullQuery = searchableText.includes(cleanQuery);
 
-            // 2. Thử so khớp các từ khóa quan trọng với độ phủ cao (Ratio Matching)
             const stopWords = [
                 'tim', 'phong', 'tro', 'duoi', 'o', 'gan', 'dai', 'hoc', 'trieu', 'tr', 'gia',
                 'co', 'khong', 'cho', 'thue', 'can', 'ho', 'va', 'voi', 'trong', 'ngoai',
                 'dep', 're', 'nha', 'chinh', 'chu', 'thang'
             ];
 
-            // Loại bỏ từ khóa tiện ích đã được bóc tách
-            const amenityWords = [];
-            if (parsedSearch.amenities.pets) amenityWords.push('thu', 'cung', 'pet', 'pets');
-            if (parsedSearch.amenities.loft) amenityWords.push('gac', 'lung', 'xep');
-            if (parsedSearch.amenities.balcony) amenityWords.push('ban', 'cong');
-            if (parsedSearch.amenities.wc) amenityWords.push('khep', 'kin', 'wc', 've', 'sinh', 'toilet');
+            const importantTerms = (parsedSearch.keywords || []).filter(term => !stopWords.includes(term));
 
-            // Loại bỏ từ khóa địa danh đã được bóc tách
-            const locationWords = [];
-            parsedSearch.locations.forEach(loc => {
-                locationWords.push(...loc.split(/\s+/));
-            });
-
-            const importantTerms = parsedSearch.keywords.filter(term => {
-                return !stopWords.includes(term) && 
-                       !amenityWords.includes(term) && 
-                       !locationWords.includes(term);
-            });
-
-            // So khớp thông minh:
             let matchesAllTerms = false;
             if (importantTerms.length === 0) {
                 matchesAllTerms = true;
             } else {
                 const matchCount = importantTerms.filter(term => searchableText.includes(term)).length;
                 const matchRatio = matchCount / importantTerms.length;
-                
-                if (importantTerms.length <= 2) {
-                    // Nếu từ khóa ngắn (1-2 từ), yêu cầu khớp 100% (ví dụ: "metro", "thu duc")
-                    matchesAllTerms = (matchRatio === 1);
-                } else {
-                    // Nếu từ khóa dài (từ 3 từ trở lên), cho phép khớp tối thiểu 70% số từ để hỗ trợ tìm tự do 
-                    matchesAllTerms = (matchRatio >= 0.7);
-                }
+                matchesAllTerms = importantTerms.length <= 2 ? (matchRatio === 1) : (matchRatio >= 0.7);
             }
 
             matchesQuery = containsFullQuery || matchesAllTerms;
@@ -1876,13 +1875,11 @@ function filterItems(options = {}) {
         if (loftChecked && !loft) matchesTags = false;
         if (balconyChecked && !balcony) matchesTags = false;
         if (wcChecked && !wc) matchesTags = false;
-        if (parsedSearch.amenities.pets && !pets) matchesTags = false;
-        if (parsedSearch.amenities.loft && !loft) matchesTags = false;
-        if (parsedSearch.amenities.balcony && !balcony) matchesTags = false;
-        if (parsedSearch.amenities.wc && !wc) matchesTags = false;
+        if (acChecked && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
+        if (washerChecked && !searchableText.includes('may giat')) matchesTags = false;
 
         let matchesLocation = true;
-        if (parsedSearch.locations.length > 0) {
+        if (parsedSearch.locations && parsedSearch.locations.length > 0) {
             matchesLocation = parsedSearch.locations.some(location => searchableText.includes(location));
         }
 
@@ -1900,30 +1897,59 @@ function filterItems(options = {}) {
         }
     });
 
+    // Sắp xếp danh sách phòng
+    const sortBy = document.getElementById('sort_by') ? document.getElementById('sort_by').value : 'default';
+    if (sortBy === 'price_asc') {
+        matches.sort((a, b) => parseInt(a.getAttribute('data-price') || 0) - parseInt(b.getAttribute('data-price') || 0));
+    } else if (sortBy === 'price_desc') {
+        matches.sort((a, b) => parseInt(b.getAttribute('data-price') || 0) - parseInt(a.getAttribute('data-price') || 0));
+    } else if (sortBy === 'newest') {
+        matches.sort((a, b) => parseInt(b.getAttribute('data-room-id') || 0) - parseInt(a.getAttribute('data-room-id') || 0));
+    }
+
+    const roomsGrid = document.getElementById('rooms-grid');
+    if (roomsGrid) {
+        matches.forEach(card => roomsGrid.appendChild(card));
+    }
+
     const matchesCount = matches.length;
-    document.getElementById('results-count').textContent = `Tìm thấy ${matchesCount} phòng`;
-
-    // Calculate total pages
-    const totalPages = Math.ceil(matchesCount / rentyItemsPerPage);
-    if (rentyCurrentPage > totalPages) {
-        rentyCurrentPage = totalPages || 1;
-    }
-    if (rentyCurrentPage < 1) {
-        rentyCurrentPage = 1;
+    const resultsCountEl = document.getElementById('results-count');
+    if (resultsCountEl) {
+        resultsCountEl.textContent = `Tìm thấy ${matchesCount} phòng`;
     }
 
-    const startIndex = (rentyCurrentPage - 1) * rentyItemsPerPage;
-    const endIndex = startIndex + rentyItemsPerPage;
+    // Xử lý Empty State ERR_21_04
+    const emptyState = document.getElementById('smart-search-empty-state');
+    if (matchesCount === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (roomsGrid) roomsGrid.classList.add('hidden');
+        renderPaginationControls(0);
+    } else {
+        if (emptyState) emptyState.classList.add('hidden');
+        if (roomsGrid) roomsGrid.classList.remove('hidden');
 
-    matches.forEach((card, index) => {
-        if (index >= startIndex && index < endIndex) {
-            card.classList.remove('hidden');
-        } else {
-            card.classList.add('hidden');
+        // Phân trang 9 phòng/trang
+        const totalPages = Math.ceil(matchesCount / rentyItemsPerPage);
+        if (rentyCurrentPage > totalPages) {
+            rentyCurrentPage = totalPages || 1;
         }
-    });
+        if (rentyCurrentPage < 1) {
+            rentyCurrentPage = 1;
+        }
 
-    renderPaginationControls(totalPages);
+        const startIndex = (rentyCurrentPage - 1) * rentyItemsPerPage;
+        const endIndex = startIndex + rentyItemsPerPage;
+
+        matches.forEach((card, index) => {
+            if (index >= startIndex && index < endIndex) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        renderPaginationControls(totalPages);
+    }
 
     // Fit map bounds to visible markers
     if (rentyMap && typeof L !== 'undefined') {
@@ -1970,15 +1996,25 @@ function fetchLiveSmartSearch(query) {
 
     rentySmartSearchDebounce = setTimeout(async () => {
         try {
-            const res = await fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(trimmed)}&limit=5`);
-            const data = await res.json();
+            const startTime = performance.now();
+            // Gọi song song API autocomplete (Search Engine) và Smart Search (Correction)
+            const [resAuto, resSmart] = await Promise.all([
+                fetch(`/api/renty/rooms/autocomplete?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null),
+                fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null)
+            ]);
+
+            const autoData = resAuto ? await resAuto.json() : null;
+            const data = resSmart ? await resSmart.json() : null;
+            const latency = Math.round(performance.now() - startTime);
 
             if (loadingEl) loadingEl.classList.add('hidden');
 
-            if (!data.success) return;
+            // Hiển thị độ trễ Search Engine nếu có
+            const heroLatencyEl = document.getElementById('hero-live-latency');
+            if (heroLatencyEl) heroLatencyEl.textContent = `${latency}ms (${autoData?.source || 'engine'})`;
 
             // 1. Xử lý hiển thị "Có phải bạn muốn tìm..." khi phát hiện gõ nhầm / sai chính tả
-            if (data.has_correction && data.did_you_mean && data.did_you_mean.toLowerCase() !== trimmed.toLowerCase()) {
+            if (data && data.has_correction && data.did_you_mean && data.did_you_mean.toLowerCase() !== trimmed.toLowerCase()) {
                 currentSmartSearchCorrection = data.did_you_mean;
                 if (didYouMeanBox && didYouMeanBtn) {
                     didYouMeanBtn.textContent = data.did_you_mean;
@@ -1996,26 +2032,31 @@ function fetchLiveSmartSearch(query) {
                 document.getElementById('smart-search-suggestion')?.classList.add('hidden');
             }
 
-            // 2. Xử lý hiển thị danh sách phòng xem nhanh (Live Previews)
+            // 2. Danh sách phòng gợi ý từ Search Engine hoặc Smart Search
+            const candidateRooms = (autoData && autoData.rooms && autoData.rooms.length > 0) 
+                ? autoData.rooms 
+                : (data && data.rooms ? data.rooms : []);
+
+            // 2.1 Cập nhật danh sách ở Header search panel
             if (liveResultsSection && liveRoomsList) {
-                if (data.rooms && data.rooms.length > 0) {
-                    if (liveCount) liveCount.textContent = data.count;
-                    liveRoomsList.innerHTML = data.rooms.map(room => `
-                        <a href="${room.url}" class="renty-live-room-item flex items-center justify-between p-2 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 transition-all group">
+                if (candidateRooms.length > 0) {
+                    if (liveCount) liveCount.textContent = candidateRooms.length;
+                    liveRoomsList.innerHTML = candidateRooms.map(room => `
+                        <a href="/renty/rooms/${room.id}" class="renty-live-room-item flex items-center justify-between p-2 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 transition-all group">
                             <div class="flex items-center gap-2.5 overflow-hidden">
-                                <img src="${room.cover_image}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-700/60" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'">
+                                <img src="${room.thumbnail || room.cover_image || '/images/room-placeholder.jpg'}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-700/60" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'">
                                 <div class="truncate text-left">
-                                    <h5 class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">${escapeHtml(room.title)}</h5>
+                                    <h5 class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">Phòng ${escapeHtml(room.room_number || '')} - ${escapeHtml(room.building_name || '')}</h5>
                                     <p class="text-[10px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
-                                        <span><i class="fa-solid fa-location-dot text-[8px] text-emerald-400"></i> ${escapeHtml(room.address || room.building_name)}</span>
+                                        <span><i class="fa-solid fa-location-dot text-[8px] text-emerald-400"></i> ${escapeHtml(room.building_address || room.address || '')}</span>
                                         <span>•</span>
-                                        <span>${room.area_formatted}</span>
+                                        <span>${room.area ? room.area + ' m²' : (room.area_formatted || '')}</span>
                                     </p>
                                 </div>
                             </div>
                             <div class="text-right shrink-0 pl-2">
-                                <span class="text-xs font-black text-emerald-400 block">${room.price_formatted}</span>
-                                <span class="text-[9px] text-amber-400 font-bold"><i class="fa-solid fa-star text-[8px]"></i> ${room.rating}</span>
+                                <span class="text-xs font-black text-emerald-400 block">${room.price_formatted || (room.price ? Number(room.price).toLocaleString('vi-VN') + ' đ' : '')}</span>
+                                <span class="text-[9px] text-amber-400 font-bold"><i class="fa-solid fa-star text-[8px]"></i> ${room.rating_avg || room.rating || 5.0}</span>
                             </div>
                         </a>
                     `).join('');
@@ -2024,14 +2065,47 @@ function fetchLiveSmartSearch(query) {
                     liveRoomsList.innerHTML = `
                         <div class="py-3 px-2 text-center text-[11px] text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800/60">
                             <i class="fa-solid fa-magnifying-glass text-slate-500 mb-1 block"></i>
-                            Chưa tìm thấy phòng khớp chính xác. Thử từ khoá khác hoặc nhấn gợi ý sửa lỗi phía trên.
+                            Không có kết quả khớp. Thử tìm kiếm với từ khóa khác.
                         </div>
                     `;
                     liveResultsSection.classList.remove('hidden');
                 }
             }
 
-            // 3. Nếu đang ở trang xem phòng, kích hoạt lại filterItems để tận dụng từ đã sửa
+            // 2.2 Cập nhật danh sách Autocomplete cho Hero Search Input
+            const heroDropdown = document.getElementById('hero-live-search-dropdown');
+            const heroList = document.getElementById('hero-live-rooms-list');
+            if (heroDropdown && heroList) {
+                if (candidateRooms.length > 0) {
+                    heroList.innerHTML = candidateRooms.map(room => `
+                        <a href="/renty/rooms/${room.id}" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800/80 hover:border-emerald-500/50 transition-all group">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <img src="${room.thumbnail || room.cover_image || '/images/room-placeholder.jpg'}" alt="" class="w-11 h-11 rounded-lg object-cover shrink-0 border border-slate-700/60" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'">
+                                <div class="truncate text-left">
+                                    <div class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">
+                                        Phòng ${escapeHtml(room.room_number || '')} • ${escapeHtml(room.building_name || '')}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                                        <i class="fa-solid fa-location-dot text-emerald-400 text-[9px]"></i>
+                                        <span>${escapeHtml(room.building_address || room.address || '')}</span>
+                                        <span>•</span>
+                                        <span class="text-slate-300 font-semibold">${room.area ? room.area + ' m²' : ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-3">
+                                <span class="text-xs font-extrabold text-emerald-400 block">${room.price_formatted || (room.price ? Number(room.price).toLocaleString('vi-VN') + ' đ' : '')}</span>
+                                <span class="text-[9px] text-amber-400 font-bold"><i class="fa-solid fa-star text-[8px]"></i> ${room.rating_avg || 5.0}</span>
+                            </div>
+                        </a>
+                    `).join('');
+                    heroDropdown.classList.remove('hidden');
+                } else {
+                    heroDropdown.classList.add('hidden');
+                }
+            }
+
+            // 3. Nếu đang ở trang xem phòng, kích hoạt lại filterItems
             if (document.getElementById('rooms-grid')) {
                 filterItems({ keepSkeleton: true, resetPage: false });
             }
@@ -2040,8 +2114,45 @@ function fetchLiveSmartSearch(query) {
             console.warn('Smart search request failed:', err);
             if (loadingEl) loadingEl.classList.add('hidden');
         }
-    }, 220);
+    }, 300); // Debounce chuẩn 300ms theo đúng đặc tả hệ thống
 }
+
+// Hàm lắng nghe input Hero Search với Debounce 300ms
+let heroLiveSearchTimer = null;
+function handleHeroLiveSearch(e) {
+    const val = e.target.value;
+    const heroDropdown = document.getElementById('hero-live-search-dropdown');
+
+    if (e.key === 'Escape') {
+        if (heroDropdown) heroDropdown.classList.add('hidden');
+        return;
+    }
+
+    if (e.key === 'Enter') {
+        if (heroDropdown) heroDropdown.classList.add('hidden');
+        filterItems();
+        return;
+    }
+
+    // Đồng bộ giá trị lên search-input nếu có
+    const navInput = document.getElementById('search-input');
+    if (navInput && navInput !== e.target) {
+        navInput.value = val;
+    }
+
+    // Áp dụng Debounce 300ms
+    fetchLiveSmartSearch(val);
+}
+window.handleHeroLiveSearch = handleHeroLiveSearch;
+
+// Ẩn dropdown khi click ra ngoài màn hình
+document.addEventListener('click', (e) => {
+    const heroDropdown = document.getElementById('hero-live-search-dropdown');
+    const heroInput = document.getElementById('hero-search-input');
+    if (heroDropdown && !heroDropdown.contains(e.target) && e.target !== heroInput) {
+        heroDropdown.classList.add('hidden');
+    }
+});
 
 // Áp dụng từ gợi ý sửa lỗi (Did you mean)
 function applySearchCorrection() {
@@ -2066,6 +2177,7 @@ function applySearchCorrection() {
 window.applySearchCorrection = applySearchCorrection;
 
 function openRentySearchSuggestions() {
+    document.getElementById('renty-search-suggestions')?.classList.remove('hidden');
     document.getElementById('renty-search-panel')?.classList.add('is-search-active');
     document.getElementById('renty-search-backdrop')?.classList.add('is-active');
 
@@ -2076,10 +2188,28 @@ function openRentySearchSuggestions() {
 }
 
 function blurRentySearch() {
+    document.getElementById('renty-search-suggestions')?.classList.add('hidden');
     document.getElementById('renty-search-panel')?.classList.remove('is-search-active');
     document.getElementById('renty-search-backdrop')?.classList.remove('is-active');
     document.getElementById('search-input')?.blur();
 }
+
+// Tự động đóng dropdown gợi ý khi click ra ngoài thanh tìm kiếm
+document.addEventListener('click', (e) => {
+    const searchPanel = document.getElementById('renty-search-panel');
+    const suggestions = document.getElementById('renty-search-suggestions');
+    if (searchPanel && suggestions && !searchPanel.contains(e.target)) {
+        suggestions.classList.add('hidden');
+        searchPanel.classList.remove('is-search-active');
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const suggestions = document.getElementById('renty-search-suggestions');
+        if (suggestions) suggestions.classList.add('hidden');
+    }
+});
 
 function applySearchSuggestion(query) {
     const input = document.getElementById('search-input');
@@ -4707,6 +4837,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCompareBar();
     syncCompareCheckboxes();
     checkCompareUrlParams();
+    renderViewedRooms();
 
     // Khôi phục bộ lọc từ URL nếu người dùng truy cập link chia sẻ hoặc reload
     restoreFiltersFromUrl();

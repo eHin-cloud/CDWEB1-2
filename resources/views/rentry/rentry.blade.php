@@ -67,6 +67,61 @@
         .theme-light #compare-radar-wrap h4 {
             color: #0f172a !important;
         }
+
+        /* Badge phòng đã xem */
+        .viewed-room-strip {
+            display: none !important;
+            align-items: center;
+            gap: 0.35rem;
+            width: fit-content;
+            max-width: 100%;
+            margin-bottom: 0.45rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(15, 23, 42, 0.8));
+            border: 1px solid rgba(45, 212, 191, 0.35);
+            color: #5eead4;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            line-height: 1;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+        }
+        .room-card-viewed .viewed-room-strip {
+            display: inline-flex !important;
+        }
+        .viewed-room-strip-icon {
+            position: relative;
+            display: inline-grid;
+            place-items: center;
+            width: 1.15rem;
+            height: 1.15rem;
+            border-radius: 9999px;
+            color: #2dd4bf;
+            background: rgba(15, 23, 42, 0.8);
+            font-size: 0.65rem;
+        }
+        .viewed-room-strip-icon .fa-check {
+            position: absolute;
+            right: -0.15rem;
+            bottom: -0.1rem;
+            width: 0.65rem;
+            height: 0.65rem;
+            display: grid;
+            place-items: center;
+            border-radius: 9999px;
+            background: #14b8a6;
+            color: #022c22;
+            font-size: 0.42rem;
+        }
+        .room-card-viewed {
+            border-color: rgba(45, 212, 191, 0.45) !important;
+        }
+        .theme-light .viewed-room-strip {
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(241, 245, 249, 0.95));
+            border-color: rgba(13, 148, 136, 0.35);
+            color: #0f766e;
+        }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
@@ -226,11 +281,16 @@
                 <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-emerald-400"></i> Bộ lọc chi tiết
                 </span>
-                <button type="button" onclick="resetAllFilters()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-rose-500/10 transition-all">
-                    <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
-                </button>
+                <div class="flex items-center gap-2.5">
+                    <button type="button" id="btnApplyFilter" onclick="filterItems()" class="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-900/30 flex items-center gap-1.5">
+                        <i class="fa-solid fa-filter text-[10px]"></i> Áp dụng bộ lọc
+                    </button>
+                    <button type="button" onclick="resetAllFilters()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-rose-500/10 transition-all">
+                        <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+                    </button>
+                </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Price Range Section -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
@@ -249,19 +309,29 @@
                     </div>
                     <div id="filter-price-error" class="hidden text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
+                        <span id="filter-price-error-text">Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
                     </div>
                 </div>
                 
                 <!-- Ratings -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Điểm đánh giá tối thiểu</label>
-                    <select id="filter-rating" onchange="filterItems()" class="w-full px-4 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                    <select id="filter-rating" onchange="filterItems()" class="w-full px-4 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
                         <option value="all">Mọi điểm số</option>
                         <option value="4.5">Từ 4.5⭐ trở lên</option>
                         <option value="4.0">Từ 4.0⭐ trở lên</option>
                         <option value="3.5">Từ 3.5⭐ trở lên</option>
                     </select>
+
+                    <div class="mt-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5" for="sort_by">Sắp xếp theo</label>
+                        <select id="sort_by" onchange="filterItems()" class="w-full px-3 py-1.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                            <option value="default">Mặc định</option>
+                            <option value="price_asc">Giá tăng dần</option>
+                            <option value="price_desc">Giá giảm dần</option>
+                            <option value="newest">Mới nhất</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Distance Slider Section -->
@@ -288,7 +358,7 @@
                         </div>
                     </div>
                     <!-- Dynamic Feedback Text Box -->
-                    <div class="feedback-box mt-3 p-2.5 bg-slate-950/40 border border-slate-800/80 rounded-xl flex items-center gap-2">
+                    <div class="feedback-box mt-3 p-2 bg-slate-950/40 border border-slate-800/80 rounded-xl flex items-center gap-2">
                         <i class="fa-solid fa-location-dot text-teal-400 text-xs shrink-0 animate-pulse"></i>
                         <span id="distance-feedback" class="text-[10px] text-slate-400 leading-normal font-semibold">
                             Tìm phòng trong bán kính dưới 3.0km từ Đại học Bách Khoa
@@ -300,17 +370,23 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tiện ích đặc biệt</label>
                     <div class="flex flex-wrap gap-2">
-                        <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
                             <input type="checkbox" id="tag-pets" onchange="syncFromCheckbox('pets')" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Nuôi thú cưng
                         </label>
-                        <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
                             <input type="checkbox" id="tag-loft" onchange="filterItems()" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Có gác lửng
                         </label>
-                        <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
                             <input type="checkbox" id="tag-balcony" onchange="syncFromCheckbox('balcony')" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Ban công
                         </label>
-                        <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
                             <input type="checkbox" id="tag-wc" onchange="syncFromCheckbox('wc')" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> WC khép kín
+                        </label>
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-ac" onchange="filterItems()" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Máy lạnh
+                        </label>
+                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-washer" onchange="filterItems()" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Máy giặt
                         </label>
                     </div>
                 </div>
@@ -470,15 +546,16 @@
             </button>
         </div>
 
-        <!-- SMART SEARCH EMPTY STATE -->
+        <!-- SMART SEARCH EMPTY STATE (ERR_21_04) -->
         <div id="smart-search-empty-state" class="hidden mb-16 py-16 px-4 text-center rounded-3xl bg-slate-900/30 border border-slate-800/60 backdrop-blur-md">
             <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl shadow-xl">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
-            <h3 class="text-base font-bold text-slate-200 mb-1.5">Không tìm thấy phòng trọ phù hợp</h3>
+            <h3 class="text-base font-bold text-slate-200 mb-1" id="smart-search-empty-title">Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.</h3>
+            <p class="text-[11px] text-rose-400 font-bold mb-2 tracking-wide" id="smart-search-empty-code">[ERR_21_04]</p>
             <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
-            <button type="button" onclick="resetAllSearchFilters()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
-                <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+            <button type="button" onclick="resetAllFilters()" id="btnResetFilterEmpty" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
             </button>
         </div>
 
@@ -489,7 +566,42 @@
         </div>
 
         <!-- Pagination Controls -->
-        <div id="renty-pagination" class="flex justify-center items-center gap-2 mb-12 flex-wrap"></div>
+        <div id="renty-pagination" class="flex justify-center items-center gap-2 mb-12 flex-wrap">
+            @php
+                $totalRoomsCount = count($rooms);
+                $totalPagesSSR = (int) ceil($totalRoomsCount / 9);
+            @endphp
+            @if($totalPagesSSR > 1)
+                <button type="button" 
+                        onclick="changeRentyPage(1)" 
+                        class="px-4 py-2 rounded-xl bg-slate-900/40 border border-slate-800/85 hover:border-emerald-500/40 hover:text-emerald-400 transition-all font-bold text-xs flex items-center justify-center gap-1.5 opacity-40 cursor-not-allowed" 
+                        disabled>
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Trước
+                </button>
+                @for($p = 1; $p <= min(7, $totalPagesSSR); $p++)
+                    <button type="button" 
+                            onclick="changeRentyPage({{ $p }})" 
+                            class="w-9 h-9 rounded-xl font-extrabold text-xs transition-all border {{ $p === 1 ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white border-transparent shadow-lg shadow-emerald-500/20' : 'bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-emerald-500/30 hover:text-slate-200' }}">
+                        {{ $p }}
+                    </button>
+                @endfor
+                @if($totalPagesSSR > 7)
+                    <div class="relative inline-block pagination-ellipsis-container">
+                        <button type="button" onclick="makePaginationInput(this, {{ $totalPagesSSR }})" class="w-9 h-9 rounded-xl font-extrabold text-xs transition-all border bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-emerald-500/30 hover:text-slate-200 flex items-center justify-center cursor-pointer" title="Click để nhập số trang nhanh">
+                            ...
+                        </button>
+                    </div>
+                    <button type="button" onclick="changeRentyPage({{ $totalPagesSSR }})" class="w-9 h-9 rounded-xl font-extrabold text-xs transition-all border bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-emerald-500/30 hover:text-slate-200">
+                        {{ $totalPagesSSR }}
+                    </button>
+                @endif
+                <button type="button" 
+                        onclick="changeRentyPage(2)" 
+                        class="px-4 py-2 rounded-xl bg-slate-900/40 border border-slate-800/85 hover:border-emerald-500/40 hover:text-emerald-400 transition-all font-bold text-xs flex items-center justify-center gap-1.5">
+                    Sau <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            @endif
+        </div>
 
         <section id="viewed-rooms-section" class="hidden mb-16">
             <div class="flex items-center justify-between mb-4">

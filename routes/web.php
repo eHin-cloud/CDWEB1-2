@@ -501,6 +501,10 @@ $rentyPage = function () use ($rentyRooms) {
 };
 
 Route::get('/renty', $rentyPage)->name('renty.user');
+Route::get('/renty/search', $rentyPage)->name('renty.search');
+Route::get('/search', function () {
+    return redirect()->route('renty.search');
+})->name('search.redirect');
 
 Route::get('/renty/room-3d', function () {
     return view('rentry.room_3d');

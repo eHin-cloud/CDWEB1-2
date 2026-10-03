@@ -26,14 +26,15 @@
         <!-- Middle: Search Bar (Glassmorphism Renty search panel) -->
         <div id="renty-search-panel" class="renty-search-panel flex-grow max-w-md mx-4 relative block">
             <div class="relative w-full renty-search-shell">
-                <div class="renty-search-focus-ring"></div>
-                <i class="fa-solid fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 renty-search-icon"></i>
-                <input type="text" id="search-input" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-11 pr-10 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
-                <button type="button" onclick="triggerRentySearch()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-400 transition-colors w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-800/40" title="Tìm kiếm" aria-label="Tìm kiếm">
-                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                </button>
+                <div class="relative flex items-center w-full">
+                    <i class="fa-solid fa-location-dot absolute left-3.5 text-slate-500 pointer-events-none text-xs z-10 renty-search-icon"></i>
+                    <input type="text" id="search-input" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-9 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
+                    <button type="button" onclick="triggerRentySearch()" class="absolute right-2.5 text-slate-400 hover:text-emerald-400 transition-colors w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-800/40 z-10" title="Tìm kiếm" aria-label="Tìm kiếm">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </button>
+                </div>
                 
-                <div id="renty-search-suggestions" class="renty-search-suggestions">
+                <div id="renty-search-suggestions" class="renty-search-suggestions hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 p-4 rounded-2xl bg-slate-950/95 border border-slate-800/90 shadow-2xl backdrop-blur-xl">
                     <!-- Hộp gợi ý sửa lỗi (Did you mean) -->
                     <div id="renty-did-you-mean-box" class="hidden mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 text-xs">
                         <div class="flex items-center justify-between gap-2">
@@ -67,27 +68,29 @@
                     <!-- Nhóm gợi ý nhanh mặc định -->
                     <div id="renty-default-chips-section">
                         <div class="flex items-center justify-between gap-3 mb-2.5">
-                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Gợi ý nhanh</span>
-                            <span class="text-[9px] font-bold text-emerald-400">Nhấn để tìm ngay</span>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Gợi ý nhanh</span>
+                            <span class="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
+                                Nhấn để tìm ngay <i class="fa-solid fa-magnifying-glass text-[8px]"></i>
+                            </span>
                         </div>
                         <div id="renty-quick-chips-container" class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="applySearchSuggestion('Cầu Giấy')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                                <i class="fa-solid fa-location-dot text-[9px]"></i> Cầu Giấy
+                            <button type="button" onclick="applySearchSuggestion('Cầu Giấy')" class="renty-suggestion-chip px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-[9px] text-teal-400"></i> Cầu Giấy
                             </button>
-                            <button type="button" onclick="applySearchSuggestion('Bách Khoa')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                                <i class="fa-solid fa-graduation-cap text-[9px]"></i> Bách Khoa
+                            <button type="button" onclick="applySearchSuggestion('Bách Khoa')" class="renty-suggestion-chip px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-graduation-cap text-[9px] text-indigo-400"></i> Bách Khoa
                             </button>
-                            <button type="button" onclick="applySearchSuggestion('Thủ Đức')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                                <i class="fa-solid fa-location-dot text-[9px]"></i> Thủ Đức
+                            <button type="button" onclick="applySearchSuggestion('Thủ Đức')" class="renty-suggestion-chip px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-[9px] text-teal-400"></i> Thủ Đức
                             </button>
-                            <button type="button" onclick="applySearchSuggestion('Bình Thạnh')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                                <i class="fa-solid fa-location-dot text-[9px]"></i> Bình Thạnh
+                            <button type="button" onclick="applySearchSuggestion('Bình Thạnh')" class="renty-suggestion-chip px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-[9px] text-teal-400"></i> Bình Thạnh
                             </button>
-                            <button type="button" onclick="applySearchSuggestion('dưới 3 triệu')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                                <i class="fa-solid fa-tags text-[9px]"></i> Dưới 3 triệu
+                            <button type="button" onclick="applySearchSuggestion('dưới 3 triệu')" class="renty-suggestion-chip px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-tags text-[9px] text-amber-400"></i> Dưới 3 triệu
                             </button>
-                            <button type="button" onclick="applySearchSuggestion('gác lửng')" class="renty-suggestion-chip text-[10px] px-2.5 py-1">
-                                <i class="fa-solid fa-stairs text-[9px]"></i> Gác lửng
+                            <button type="button" onclick="applySearchSuggestion('gác lửng')" class="renty-suggestion-chip px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-slate-300 hover:text-emerald-300 text-[10px] font-semibold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-stairs text-[9px] text-emerald-400"></i> Gác lửng
                             </button>
                         </div>
                     </div>
