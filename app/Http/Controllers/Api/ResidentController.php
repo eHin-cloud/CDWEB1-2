@@ -141,17 +141,33 @@ class ResidentController extends Controller
         }
 
         $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category' => 'required|in:điện,nước,nội thất,khác',
+            'title' => 'required|string|min:5|max:100',
+            'description' => 'required|string|min:10',
+            'category' => 'required|in:điện,nước,nội thất,khóa cửa,khác,electric,water,furniture,lock,maintenance,housekeeping,other',
+            'urgency' => 'nullable|in:normal,urgent,emergency,Bình thường,Gấp,Khẩn cấp',
             'specific_location' => 'nullable|string|max:150',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120'
+        ], [
+            'title.required' => 'Vui lòng nhập tiêu đề sự cố cần sửa chữa',
+            'title.min' => 'Tiêu đề sự cố phải có từ 5 đến 100 ký tự.',
+            'title.max' => 'Tiêu đề sự cố tối đa 100 ký tự.',
+            'description.required' => 'Vui lòng mô tả chi tiết sự cố hư hỏng gặp phải.',
+            'description.min' => 'Mô tả sự cố phải có ít nhất 10 ký tự',
+            'category.required' => 'Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).',
+            'category.in' => 'Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).',
+            'image.max' => 'Ảnh chụp sự cố hiện trường tối đa 5MB.',
         ]);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('tickets', 'public');
         }
+
+        $urgency = match ($request->input('urgency', 'normal')) {
+            'urgent', 'Gấp' => 'urgent',
+            'emergency', 'Khẩn cấp' => 'emergency',
+            default => 'normal',
+        };
 
         $ticket = Ticket::create([
             'tenant_id' => $res->tenant_id,
@@ -160,6 +176,7 @@ class ResidentController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'category' => $request->category,
+            'urgency' => $urgency,
             'specific_location' => $request->specific_location,
             'image_path' => $imagePath ? '/storage/' . $imagePath : null,
             'status' => 'pending'
@@ -193,7 +210,8 @@ class ResidentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Gửi báo cáo sự cố thành công! Chủ nhà sẽ xử lý sớm.',
+            'code' => 'ERR_28_03',
+            'message' => 'Đã gửi yêu cầu sửa chữa sự cố thành công! Kỹ thuật viên sẽ xử lý sớm nhất.',
             'ticket' => $ticket
         ], 201);
     }

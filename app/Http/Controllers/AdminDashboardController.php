@@ -1763,6 +1763,16 @@ class AdminDashboardController extends Controller
         return redirect()->route('smartroom.admin', ['tab' => 'contact-section'])->with('success', 'Xóa yêu cầu tư vấn thành công!');
     }
 
+    public function ticketsIndex(Request $request)
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return $this->pollTickets($request);
+        }
+
+        $request->merge(['tab' => 'ticket-section']);
+        return $this->index($request);
+    }
+
     public function updateTicketStatus(Request $request, $id)
     {
         $tenantId = $this->currentTenantId();

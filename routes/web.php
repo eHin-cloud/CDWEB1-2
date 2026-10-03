@@ -90,6 +90,7 @@ Route::get('/portal', function () {
 Route::get('/smartroom/resident', [ResidentPortalController::class, 'index'])->name('smartroom.resident');
 Route::post('/smartroom/resident/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
 Route::post('/smartroom/resident/tickets', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store');
+Route::post('/smartroom/resident/tickets/store', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store.alias');
 Route::get('/smartroom/resident/bills/{id}/qr', [ResidentPortalController::class, 'billQr'])->name('smartroom.resident.bills.qr');
 Route::post('/smartroom/resident/contract/{id}/request-renewal', [ResidentPortalController::class, 'requestRenewal'])->name('smartroom.resident.contract.request_renewal');
 
@@ -160,6 +161,8 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
     Route::post('/smartroom/admin/ticket/{id}/update', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.ticket.update');
+    Route::post('/smartroom/admin/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.tickets.status');
+    Route::get('/smartroom/admin/tickets', [AdminDashboardController::class, 'ticketsIndex'])->name('smartroom.admin.tickets.index');
     Route::get('/smartroom/admin/tickets/poll', [AdminDashboardController::class, 'pollTickets'])->name('smartroom.admin.tickets.poll');
     Route::post('/smartroom/admin/profile', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update');
 

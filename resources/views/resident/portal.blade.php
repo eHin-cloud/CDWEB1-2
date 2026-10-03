@@ -37,8 +37,19 @@
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
             @if(session('success'))
-                <div class="panel rounded-xl p-4 text-sm text-emerald-300 flex items-center gap-2">
-                    <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+                <div id="resident-toast-alert" class="panel rounded-2xl p-4 text-sm text-emerald-200 bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-between shadow-xl shadow-emerald-950/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">ERR_28_03</span>
+                            <div class="font-bold text-white text-xs sm:text-sm mt-0.5">{{ session('success') }}</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('resident-toast-alert')?.remove()" class="text-slate-400 hover:text-white px-2 py-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
             @endif
             @if(session('error'))
@@ -46,7 +57,7 @@
                     <i class="fa-solid fa-triangle-exclamation"></i> {{ session('error') }}
                 </div>
             @endif
-            @if($errors->any())
+            @if(isset($errors) && $errors->any())
                 <div class="panel rounded-xl p-4 text-sm text-rose-300">
                     <div class="font-bold mb-1">Dữ liệu chưa hợp lệ</div>
                     @foreach($errors->all() as $error)
@@ -258,16 +269,16 @@
 
                 <section id="resident-tab-tickets" class="resident-section panel rounded-2xl p-6 hidden">
                     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        <form method="POST" action="{{ route('smartroom.resident.tickets.store') }}" enctype="multipart/form-data" class="xl:col-span-1 rounded-xl bg-slate-950/40 border border-slate-800 p-4 space-y-3" id="resident-ticket-form" onsubmit="return handleTicketFormSubmit(event, this)">
+                        <form method="POST" action="{{ route('smartroom.resident.tickets.store') }}" enctype="multipart/form-data" class="xl:col-span-1 rounded-xl bg-slate-950/40 border border-slate-800 p-4 space-y-3.5" id="resident-ticket-form" onsubmit="return handleTicketFormSubmit(event, this)">
                             @csrf
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-lg font-black text-slate-100 flex items-center gap-2">
-                                    <i class="fa-solid fa-headset text-indigo-400"></i> Gửi sự cố & Buồng phòng
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-900">
+                                <h2 class="text-base font-black text-slate-100 flex items-center gap-2">
+                                    <i class="fa-solid fa-headset text-indigo-400"></i> Báo Hỏng Thiết Bị & Sửa Chữa
                                 </h2>
-                                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Smart Ticket</span>
+                                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">FEAT_28_TICKETS</span>
                             </div>
 
-                            @if($errors->any())
+                            @if(isset($errors) && $errors->any())
                                 <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs space-y-1">
                                     @foreach($errors->all() as $error)
                                         <div class="flex items-center gap-1.5">
@@ -279,20 +290,39 @@
                             @endif
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Loại yêu cầu <span class="text-rose-500">*</span></label>
-                                <select name="category" id="ticket-category" required onchange="handleCategoryChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
-                                    <option value="electric">Sự cố Điện (Cháy đèn, mất điện, ổ cắm)</option>
-                                    <option value="water">Sự cố Nước (Rò rỉ ống, vòi sen, tắc bồn cầu)</option>
-                                    <option value="furniture">Trang thiết bị & Nội thất (Tủ, giường, bàn ghế)</option>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Loại sự cố <span class="text-rose-500">*</span></label>
+                                <select name="category" id="ticket-category" onchange="handleCategoryChange(this.value); clearCategoryError();" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                                    <option value="">-- Chọn phân loại sự cố --</option>
+                                    <option value="electric">Điện (Cháy đèn, mất điện, ổ cắm)</option>
+                                    <option value="water">Nước (Rò rỉ ống, vòi sen, tắc bồn cầu)</option>
+                                    <option value="lock">Khóa cửa (Kẹt khóa, hỏng chìa, bản lề)</option>
+                                    <option value="furniture">Nội thất & Trang thiết bị (Tủ, giường, bàn ghế)</option>
                                     <option value="maintenance">Bảo trì phòng định kỳ</option>
                                     <option value="housekeeping">Dịch vụ dọn phòng (Housekeeping)</option>
                                     <option value="other">Khác</option>
                                 </select>
+                                <p id="ticket-category-error" class="hidden text-xs text-rose-400 mt-1 flex items-center gap-1.5 font-medium">
+                                    <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                                    <span id="ticket-category-error-text">Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).</span>
+                                </p>
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tiêu đề yêu cầu <span class="text-rose-500">*</span></label>
-                                <input name="title" id="ticket-title" maxlength="150" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500 transition-colors" placeholder="VD: Vòi nước bồn rửa mặt bị rò rỉ">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tiêu đề sự cố <span class="text-rose-500">*</span></label>
+                                <input name="title" id="ticket-title" maxlength="100" oninput="clearTitleError()" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500 transition-colors" placeholder="VD: Máy lạnh chảy nước ở dàn lạnh">
+                                <p id="ticket-title-error" class="hidden text-xs text-rose-400 mt-1 flex items-center gap-1.5 font-medium">
+                                    <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                                    <span id="ticket-title-error-text">Vui lòng nhập tiêu đề sự cố cần sửa chữa</span>
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Mức độ khẩn cấp <span class="text-rose-500">*</span></label>
+                                <select name="urgency" id="ticket-urgency" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                                    <option value="normal" selected>Bình thường</option>
+                                    <option value="urgent">Gấp / Cần gấp</option>
+                                    <option value="emergency">Khẩn cấp</option>
+                                </select>
                             </div>
 
                             <div>
@@ -302,13 +332,13 @@
 
                             <div>
                                 <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mô tả chi tiết <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mô tả chi tiết sự cố <span class="text-rose-500">*</span></label>
                                     <span id="ticket-desc-count" class="text-[10px] text-slate-500">0/1000</span>
                                 </div>
-                                <textarea name="description" id="ticket-description" maxlength="1000" rows="4" oninput="handleDescriptionInput(this)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500 transition-colors resize-none" placeholder="Mô tả hiện trạng sự cố hoặc thời gian/yêu cầu dọn phòng cụ thể..."></textarea>
+                                <textarea name="description" id="ticket-description" maxlength="1000" rows="4" oninput="handleDescriptionInput(this)" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500 transition-colors resize-none" placeholder="Mô tả thời điểm xảy ra, mức độ rò rỉ nước..."></textarea>
                                 <p id="ticket-desc-error" class="hidden text-xs text-rose-400 mt-1 flex items-center gap-1.5 font-medium">
                                     <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
-                                    <span>Vui lòng nhập mô tả sự cố để ban quản lý nắm được nguyên nhân hư hỏng.</span>
+                                    <span id="ticket-desc-error-text">Vui lòng mô tả chi tiết sự cố hư hỏng gặp phải.</span>
                                 </p>
                             </div>
 
@@ -318,16 +348,16 @@
                             <div id="ticket-ai-result" class="hidden rounded-xl bg-slate-900/90 border border-emerald-500/20 p-3 text-xs text-slate-300 shadow-inner"></div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ảnh chụp hiện trạng (Tối đa 10MB)</label>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ảnh chụp sự cố hiện trường (Tối đa 5MB)</label>
                                 <input name="image" id="ticket-image-input" type="file" accept="image/jpeg,image/png,image/webp" onchange="validateTicketImageSize(this)" class="w-full text-xs text-slate-400 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:text-xs file:font-bold hover:file:bg-indigo-500 file:transition-colors file:cursor-pointer">
                                 <p id="ticket-image-error" class="hidden text-xs text-rose-400 mt-1 flex items-center gap-1.5 font-medium">
                                     <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
-                                    <span>Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 10MB.</span>
+                                    <span>Kích thước ảnh chụp sự cố quá lớn. Vui lòng chọn ảnh dung lượng dưới 5MB.</span>
                                 </p>
                             </div>
 
-                            <button type="submit" id="ticket-submit-btn" class="submit-btn w-full px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98]">
-                                <i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu ngay
+                            <button type="submit" id="btnSubmitTicket" name="btnSubmitTicket" class="submit-btn w-full px-4 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 transition-all active:scale-[0.98]">
+                                <i class="fa-solid fa-paper-plane"></i> Gửi phiếu báo hỏng
                             </button>
                         </form>
 
@@ -338,6 +368,7 @@
                                         <th class="px-4 py-3">Ngày</th>
                                         <th class="px-4 py-3">Phòng / Vị trí</th>
                                         <th class="px-4 py-3">Nội dung</th>
+                                        <th class="px-4 py-3">Mức độ</th>
                                         <th class="px-4 py-3">Trạng thái</th>
                                         <th class="px-4 py-3">Phụ trách</th>
                                     </tr>
@@ -345,7 +376,7 @@
                                 <tbody class="divide-y divide-slate-900">
                                     @forelse($tickets as $ticket)
                                         <tr class="hover:bg-slate-900/30">
-                                            <td class="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
+                                            <td class="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}</td>
                                             <td class="px-4 py-4 whitespace-nowrap">
                                                 <div class="font-bold text-indigo-400">P.{{ $ticket->room->room_number ?? 'N/A' }}</div>
                                                 @if($ticket->specific_location)
@@ -366,15 +397,36 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-4 whitespace-nowrap">
-                                                <span class="px-2 py-1 rounded-full text-[10px] font-bold border {{ $ticket->status === 'resolved' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20' }}">
-                                                    {{ $statusLabels[$ticket->status] ?? $ticket->status }}
+                                                @php
+                                                    $urgencyVal = $ticket->urgency ?? 'normal';
+                                                    $urgencyMeta = match($urgencyVal) {
+                                                        'urgent' => ['label' => 'Cần gấp', 'class' => 'bg-amber-500/10 text-amber-300 border-amber-500/20'],
+                                                        'emergency' => ['label' => 'Khẩn cấp', 'class' => 'bg-rose-500/10 text-rose-300 border-rose-500/20 animate-pulse'],
+                                                        default => ['label' => 'Bình thường', 'class' => 'bg-slate-800 text-slate-400 border-slate-700'],
+                                                    };
+                                                @endphp
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $urgencyMeta['class'] }}">
+                                                    {{ $urgencyMeta['label'] }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                @php
+                                                    $statusVal = $ticket->status ?? 'pending';
+                                                    $statusMeta = match($statusVal) {
+                                                        'processing' => ['label' => 'Đang xử lý', 'class' => 'bg-sky-500/10 text-sky-300 border-sky-500/20'],
+                                                        'resolved' => ['label' => 'Đã hoàn thành', 'class' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'],
+                                                        default => ['label' => 'Chờ tiếp nhận', 'class' => 'bg-amber-500/10 text-amber-300 border-amber-500/20'],
+                                                    };
+                                                @endphp
+                                                <span class="px-2 py-1 rounded-full text-[10px] font-bold border {{ $statusMeta['class'] }}">
+                                                    {{ $statusMeta['label'] }}
                                                 </span>
                                             </td>
                                             <td class="px-4 py-4 text-xs text-slate-400 whitespace-nowrap">{{ $ticket->assigned_to ?? 'Chưa phân công' }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="px-4 py-8 text-center text-xs text-slate-500">Chưa có yêu cầu sửa chữa.</td>
+                                            <td colspan="6" class="px-4 py-8 text-center text-xs text-slate-500">Chưa có yêu cầu sửa chữa.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -471,13 +523,33 @@
             }
         }
 
+        function clearCategoryError() {
+            const cat = document.getElementById('ticket-category');
+            const errorEl = document.getElementById('ticket-category-error');
+            if (cat) {
+                cat.classList.remove('border-rose-500');
+                cat.classList.add('border-slate-800');
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+        }
+
+        function clearTitleError() {
+            const title = document.getElementById('ticket-title');
+            const errorEl = document.getElementById('ticket-title-error');
+            if (title) {
+                title.classList.remove('border-rose-500');
+                title.classList.add('border-slate-800');
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+        }
+
         function handleDescriptionInput(textarea) {
             const countEl = document.getElementById('ticket-desc-count');
             const errorEl = document.getElementById('ticket-desc-error');
             if (countEl) {
                 countEl.textContent = `${textarea.value.length}/1000`;
             }
-            if (textarea.value.trim().length > 0) {
+            if (textarea.value.trim().length >= 10) {
                 textarea.classList.remove('border-rose-500');
                 textarea.classList.add('border-slate-800');
                 if (errorEl) errorEl.classList.add('hidden');
@@ -488,7 +560,7 @@
             const errorEl = document.getElementById('ticket-image-error');
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                const maxBytes = 10 * 1024 * 1024; // 10MB
+                const maxBytes = 5 * 1024 * 1024; // 5MB theo spec
                 if (file.size > maxBytes) {
                     input.value = '';
                     if (errorEl) errorEl.classList.remove('hidden');
@@ -500,17 +572,96 @@
         }
 
         function handleTicketFormSubmit(event, form) {
-            const desc = document.getElementById('ticket-description');
-            const errorEl = document.getElementById('ticket-desc-error');
+            const title = document.getElementById('ticket-title');
+            const titleError = document.getElementById('ticket-title-error');
+            const titleErrorText = document.getElementById('ticket-title-error-text');
 
-            if (!desc || !desc.value.trim()) {
+            const category = document.getElementById('ticket-category');
+            const categoryError = document.getElementById('ticket-category-error');
+            const categoryErrorText = document.getElementById('ticket-category-error-text');
+
+            const desc = document.getElementById('ticket-description');
+            const descError = document.getElementById('ticket-desc-error');
+            const descErrorText = document.getElementById('ticket-desc-error-text');
+
+            const imageInput = document.getElementById('ticket-image-input');
+
+            // 1. Kiểm tra Tiêu đề sự cố
+            const titleVal = title ? title.value.trim() : '';
+            if (!titleVal) {
+                if (event) event.preventDefault();
+                if (title) {
+                    title.classList.remove('border-slate-800');
+                    title.classList.add('border-rose-500');
+                    title.focus();
+                }
+                if (titleError) {
+                    if (titleErrorText) titleErrorText.textContent = 'Vui lòng nhập tiêu đề sự cố cần sửa chữa';
+                    titleError.classList.remove('hidden');
+                }
+                return false;
+            }
+            if (titleVal.length < 5 || titleVal.length > 100) {
+                if (event) event.preventDefault();
+                if (title) {
+                    title.classList.remove('border-slate-800');
+                    title.classList.add('border-rose-500');
+                    title.focus();
+                }
+                if (titleError) {
+                    if (titleErrorText) titleErrorText.textContent = 'Tiêu đề sự cố phải có từ 5 đến 100 ký tự';
+                    titleError.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            // 2. Kiểm tra Phân loại sự cố (ERR_28_02)
+            if (!category || !category.value) {
+                if (event) event.preventDefault();
+                if (category) {
+                    category.classList.remove('border-slate-800');
+                    category.classList.add('border-rose-500');
+                    category.focus();
+                }
+                if (categoryError) {
+                    if (categoryErrorText) categoryErrorText.textContent = 'Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).';
+                    categoryError.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            // 3. Kiểm tra Mô tả sự cố (ERR_28_01 & Min 10 chars)
+            const descVal = desc ? desc.value.trim() : '';
+            if (!descVal) {
                 if (event) event.preventDefault();
                 if (desc) {
                     desc.classList.remove('border-slate-800');
                     desc.classList.add('border-rose-500');
                     desc.focus();
                 }
-                if (errorEl) errorEl.classList.remove('hidden');
+                if (descError) {
+                    if (descErrorText) descErrorText.textContent = 'Vui lòng mô tả chi tiết sự cố hư hỏng gặp phải.';
+                    descError.classList.remove('hidden');
+                }
+                return false;
+            }
+            if (descVal.length < 10) {
+                if (event) event.preventDefault();
+                if (desc) {
+                    desc.classList.remove('border-slate-800');
+                    desc.classList.add('border-rose-500');
+                    desc.focus();
+                }
+                if (descError) {
+                    if (descErrorText) descErrorText.textContent = 'Mô tả sự cố phải có ít nhất 10 ký tự';
+                    descError.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            // 4. Kiểm tra ảnh đính kèm (<= 5MB)
+            if (imageInput && !validateTicketImageSize(imageInput)) {
+                if (event) event.preventDefault();
                 return false;
             }
 
