@@ -4522,10 +4522,10 @@ function renderComparisonTable(rooms) {
 
     rooms.forEach(room => {
         html += `
-            <th class="px-5 py-4 font-bold text-white text-xs relative group text-left">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="line-clamp-1">Phòng ${room.room_number} – ${room.building_name}</span>
-                    <button type="button" onclick="removeCompareItem(${room.id})" title="Gỡ phòng khỏi bảng so sánh" class="btnRemoveRoom w-5 h-5 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 shrink-0">
+            <th class="px-5 py-4 font-bold text-white text-xs relative group text-left min-w-[200px]">
+                <div class="flex items-start justify-between gap-2.5">
+                    <span class="whitespace-normal break-words leading-relaxed text-slate-100 font-bold" title="Phòng ${room.room_number} – ${room.building_name}">Phòng ${room.room_number} – ${room.building_name}</span>
+                    <button type="button" onclick="removeCompareItem(${room.id})" title="Gỡ phòng khỏi bảng so sánh" class="btnRemoveRoom w-5 h-5 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 shrink-0 mt-0.5">
                         <span class="text-xs leading-none">&times;</span>
                     </button>
                 </div>
@@ -4579,23 +4579,6 @@ function renderComparisonTable(rooms) {
                 ${rooms.map(r => `
                     <td class="px-5 py-4 text-slate-200 font-medium">
                         ${r.rating_avg} ⭐ <span class="text-slate-400 text-[11px]">(${r.reviews_count || 0} reviews)</span>
-                    </td>
-                `).join('')}
-            </tr>
-            <!-- Row 6: Hành động -->
-            <tr class="spec_rows hover:bg-slate-900/30 transition-all bg-slate-900/20">
-                <td class="px-5 py-4 font-semibold text-slate-400">Hành động</td>
-                ${rooms.map(r => `
-                    <td class="px-5 py-4">
-                        <div class="flex items-center gap-2">
-                            <a href="/renty/room/${r.id}#appointment" class="btnBookNow inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm">
-                                <i class="fa-regular fa-calendar-check text-[11px]"></i>
-                                <span>Hẹn xem phòng này</span>
-                            </a>
-                            <a href="/renty/room/${r.id}" class="text-[11px] font-semibold text-slate-400 hover:text-emerald-400 transition-colors">
-                                Chi tiết &rarr;
-                            </a>
-                        </div>
                     </td>
                 `).join('')}
             </tr>
