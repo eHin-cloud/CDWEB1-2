@@ -50,32 +50,6 @@
         window.rentyIsAuthenticated = @json(auth()->check());
         window.rentySessionSuccess = {!! json_encode(session('success')) !!};
         window.rentySessionError = {!! json_encode(session('error')) !!};
-
-        function allowOnlyNumbers(e) {
-            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
-            if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) return true;
-            if (/^[0-9]$/.test(e.key)) return true;
-            e.preventDefault();
-            return false;
-        }
-        function handleOnlyNumbersPaste(e) {
-            e.preventDefault();
-            const pasted = (e.clipboardData || window.clipboardData).getData('text');
-            const clean = (pasted || '').replace(/\D/g, '');
-            if (clean) document.execCommand('insertText', false, clean);
-        }
-        function sanitizeNumericInput(el) {
-            if (!el) return;
-            el.value = el.value.replace(/\D/g, '');
-            if (typeof debouncedFilterItems === 'function') {
-                debouncedFilterItems();
-            } else if (typeof filterItems === 'function') {
-                filterItems();
-            }
-        }
-        window.allowOnlyNumbers = allowOnlyNumbers;
-        window.handleOnlyNumbersPaste = handleOnlyNumbersPaste;
-        window.sanitizeNumericInput = sanitizeNumericInput;
     </script>
 
     <style>
@@ -402,11 +376,11 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="filter-price-min" onkeydown="return allowOnlyNumbers(event)" onpaste="handleOnlyNumbersPaste(event)" oninput="sanitizeNumericInput(this)" placeholder="Tối thiểu (vd: 20000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <input type="text" inputmode="numeric" id="filter-price-min" name="min_price" data-field="range_price" oninput="debouncedFilterItems()" placeholder="0 đ (Tối thiểu: vd 20000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                         <span class="text-slate-600 text-sm font-bold">-</span>
-                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="filter-price-max" onkeydown="return allowOnlyNumbers(event)" onpaste="handleOnlyNumbersPaste(event)" oninput="sanitizeNumericInput(this)" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <input type="text" inputmode="numeric" id="filter-price-max" name="max_price" data-field="range_price" oninput="debouncedFilterItems()" placeholder="10.000.000 đ (Tối đa)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                     </div>
-                    <!-- Lỗi viền đỏ và text lỗi chuẩn Hình 21.3 -->
+                    <!-- Lỗi viền đỏ và text lỗi chuẩn Hình 21.3 & DoD 1 -->
                     <div id="filter-price-error" class="hidden text-xs text-rose-400 font-bold mt-2 flex items-center gap-1.5 animate-shake">
                         <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
                         <span id="filter-price-error-text">Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
@@ -460,31 +434,35 @@
             <!-- Hàng 2: TIỆN ÍCH ĐẶC BIỆT & SẮP XẾP -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-slate-800/60">
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">TIỆN ÍCH ĐẶC BIỆT</label>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">TIỆN ÍCH</label>
                     <div class="flex flex-wrap items-center gap-2.5">
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-pets" onchange="syncFromCheckbox('pets')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <input type="checkbox" id="tag-pets" name="chkAmenities[]" value="pets" onchange="syncFromCheckbox('pets')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>Nuôi thú cưng</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-loft" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <input type="checkbox" id="tag-loft" name="chkAmenities[]" value="loft" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>Có gác lửng</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-balcony" onchange="syncFromCheckbox('balcony')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <input type="checkbox" id="tag-balcony" name="chkAmenities[]" value="balcony" onchange="syncFromCheckbox('balcony')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>Ban công</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-wc" onchange="syncFromCheckbox('wc')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <input type="checkbox" id="tag-wc" name="chkAmenities[]" value="wc" onchange="syncFromCheckbox('wc')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>WC khép kín</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-ac" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <input type="checkbox" id="tag-ac" name="chkAmenities[]" value="air_conditioner" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>Máy lạnh</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-washer" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <input type="checkbox" id="tag-washer" name="chkAmenities[]" value="washing_machine" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>Máy giặt</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-fridge" name="chkAmenities[]" value="fridge" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Tủ lạnh</span>
                         </label>
                     </div>
                 </div>

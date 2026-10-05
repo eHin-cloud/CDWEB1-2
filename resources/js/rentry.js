@@ -1798,6 +1798,7 @@ function filterItems(options = {}) {
     const wcChecked = document.getElementById('tag-wc') ? document.getElementById('tag-wc').checked : false;
     const acChecked = document.getElementById('tag-ac') ? document.getElementById('tag-ac').checked : false;
     const washerChecked = document.getElementById('tag-washer') ? document.getElementById('tag-washer').checked : false;
+    const fridgeChecked = document.getElementById('tag-fridge') ? document.getElementById('tag-fridge').checked : false;
     const hideRented = document.getElementById('hide-rented-toggle') ? document.getElementById('hide-rented-toggle').checked : false;
 
     setSearchSkeletonLoading(false);
@@ -1884,6 +1885,7 @@ function filterItems(options = {}) {
         if (wcChecked && !wc) matchesTags = false;
         if (acChecked && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
         if (washerChecked && !searchableText.includes('may giat')) matchesTags = false;
+        if (fridgeChecked && !searchableText.includes('tu lanh')) matchesTags = false;
 
         let matchesLocation = true;
         if (parsedSearch.locations && parsedSearch.locations.length > 0) {
@@ -2278,30 +2280,6 @@ function debouncedFilterItems(delay = 300) {
 }
 window.debouncedFilterItems = debouncedFilterItems;
 
-function allowOnlyNumbers(e) {
-    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
-    if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) return true;
-    if (/^[0-9]$/.test(e.key)) return true;
-    e.preventDefault();
-    return false;
-}
-window.allowOnlyNumbers = allowOnlyNumbers;
-
-function handleOnlyNumbersPaste(e) {
-    e.preventDefault();
-    const pasted = (e.clipboardData || window.clipboardData).getData('text');
-    const clean = (pasted || '').replace(/\D/g, '');
-    if (clean) document.execCommand('insertText', false, clean);
-}
-window.handleOnlyNumbersPaste = handleOnlyNumbersPaste;
-
-function sanitizeNumericInput(el) {
-    if (!el) return;
-    el.value = el.value.replace(/\D/g, '');
-    debouncedFilterItems();
-}
-window.sanitizeNumericInput = sanitizeNumericInput;
-
 function handlePricePresetChange(preset) {
     const minInput = document.getElementById('filter-price-min');
     const maxInput = document.getElementById('filter-price-max');
@@ -2359,7 +2337,7 @@ function resetAllFilters() {
     }
 
     // 5. Reset các tiện ích checkbox & visual buttons
-    ['pets', 'loft', 'balcony', 'wc'].forEach(key => {
+    ['pets', 'loft', 'balcony', 'wc', 'ac', 'washer', 'fridge'].forEach(key => {
         const checkbox = document.getElementById(`tag-${key}`);
         if (checkbox) checkbox.checked = false;
         const vbtn = document.getElementById(`vbtn-${key}`);
