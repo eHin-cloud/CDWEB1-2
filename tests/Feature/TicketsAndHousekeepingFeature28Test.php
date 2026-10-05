@@ -256,4 +256,23 @@ class TicketsAndHousekeepingFeature28Test extends TestCase
         $this->assertEquals('processing', $ticket->status);
         $this->assertEquals('Thợ Khóa Cấp Tốc', $ticket->assigned_to);
     }
+
+    /**
+     * Kiểm tra chủ trọ truy cập tab Nhiệm vụ buồng phòng ngay trong Admin Dashboard
+     */
+    public function test_landlord_can_view_housekeeping_in_admin_dashboard()
+    {
+        $tenant = $this->createTenant();
+        $this->createRoom($tenant, '101', ['status' => 'empty', 'cleaning_status' => 'clean']);
+        $this->createRoom($tenant, '102', ['status' => 'cleaning', 'cleaning_status' => 'dirty']);
+        $landlord = $this->createLandlordUser($tenant);
+
+        $response = $this->actingAs($landlord)->get('/smartroom/admin?tab=housekeeping-section');
+        $response->assertStatus(200);
+        $response->assertSee('Nhiệm Vụ Buồng Phòng');
+        $response->assertSee('CẦN DỌN DẸP');
+        $response->assertSee('PHÒNG ĐÃ SẠCH');
+        $response->assertSee('DANH SÁCH PHÒNG CHỜ VỆ SINH');
+        $response->assertSee('P.102');
+    }
 }

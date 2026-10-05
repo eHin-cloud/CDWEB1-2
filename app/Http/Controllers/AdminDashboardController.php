@@ -336,6 +336,23 @@ class AdminDashboardController extends Controller
             'resolved' => $tickets->where('status', 'resolved')->count(),
         ];
 
+        // 9. Housekeeping (Nhiệm vụ buồng phòng / Dọn dẹp)
+        $housekeepingRooms = Room::with('building')
+            ->where('tenant_id', $tenantId)
+            ->where(function ($query) {
+                $query->whereIn('status', ['cleaning'])
+                      ->orWhereIn('cleaning_status', ['dirty', 'cleaning']);
+            })
+            ->orderBy('floor')
+            ->orderBy('room_number')
+            ->get();
+
+        $cleanRoomsCount = Room::where('tenant_id', $tenantId)
+            ->where('cleaning_status', 'clean')
+            ->where('status', '!=', 'cleaning')
+            ->count();
+        $dirtyRoomsCount = $housekeepingRooms->count();
+
         return view('admin.admin', compact(
             'totalRooms',
             'occupiedRooms',
@@ -368,7 +385,10 @@ class AdminDashboardController extends Controller
             'kycRequest',
             'premiumRequest',
             'tickets',
-            'ticketStats'
+            'ticketStats',
+            'housekeepingRooms',
+            'cleanRoomsCount',
+            'dirtyRoomsCount'
         ));
     }
 

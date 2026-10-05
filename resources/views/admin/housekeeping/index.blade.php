@@ -27,12 +27,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                @if(Auth::user()->canAccessLandlordDashboard())
-                    <a href="{{ route('smartroom.admin') }}" class="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold border border-indigo-500/30 inline-flex items-center gap-1.5 transition">
-                        <i class="fa-solid fa-gauge-high"></i> Dashboard
-                    </a>
-                @endif
-                <a href="{{ route('signout') }}" class="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold border border-zinc-700/90 inline-flex items-center gap-1.5 transition">
+                <a href="{{ route('smartroom.admin') }}" class="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold border border-zinc-700/90 inline-flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-arrow-left"></i> Về Quản Trị
+                </a>
+                <a href="{{ route('signout') }}" class="px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/20 inline-flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-right-from-bracket"></i> Thoát
                 </a>
             </div>

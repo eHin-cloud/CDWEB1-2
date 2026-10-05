@@ -254,7 +254,7 @@ Route::middleware('admin')->group(function () {
 Route::middleware('auth')->prefix('smartroom/housekeeping')->name('admin.housekeeping.')->group(function () {
     Route::get('/', [HousekeepingController::class, 'index'])->name('index');
     Route::post('/{roomId}/status', [HousekeepingController::class, 'updateStatus'])->name('update');
-    Route::post('/update/{roomId}', [HousekeepingController::class, 'updateStatus'])->name('update.alias');
+    Route::post('/update/{roomId}', [HousekeepingController::class, 'updateStatus']);
 });
 
 Route::get('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContractView'])->name('smartroom.contract.sign_view');

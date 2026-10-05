@@ -2758,6 +2758,120 @@
                 </div>
             </section>
 
+            <!-- HOUSEKEEPING SECTION (NHIỆM VỤ BUỒNG PHÒNG - DỌN DẸP PHÒNG) -->
+            <section id="housekeeping-section" class="tab-content hidden space-y-6 animate-fade-in max-w-4xl mx-auto py-2">
+                <!-- Header chuẩn xác theo wireframe & hình ảnh -->
+                <div class="bg-[#0b0e14] border border-zinc-800/80 rounded-2xl px-5 py-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-zinc-800/90 border border-zinc-700/80 flex items-center justify-center text-white text-base shadow-sm shrink-0">
+                            <i class="fa-solid fa-paintbrush text-zinc-200 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-black text-white leading-tight">Nhiệm Vụ Buồng Phòng</h2>
+                            <p class="text-xs text-zinc-400 mt-0.5">
+                                {{ Auth::user()->name }} ({{ Auth::user()->building->name ?? (Auth::user()->tenant->name ?? 'SmartRoom Cầu Giấy') }}) ({{ Auth::user()->roleName() }})
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('admin.housekeeping.index') }}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold border border-zinc-700/90 inline-flex items-center gap-1.5 transition" title="Mở giao diện tối ưu cho điện thoại">
+                            <i class="fa-solid fa-mobile-screen"></i> Chế độ Mobile
+                        </a>
+                        <a href="{{ route('signout') }}" class="px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/20 inline-flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-right-from-bracket"></i> Thoát
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Toast thông báo buồng phòng -->
+                <div id="admin-housekeeping-toast" class="hidden p-4 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 rounded-2xl text-xs sm:text-sm flex items-center justify-between shadow-lg">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                        <span id="admin-housekeeping-toast-msg">Cập nhật thành công!</span>
+                    </div>
+                    <button type="button" onclick="document.getElementById('admin-housekeeping-toast').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Summary Cards chuẩn ảnh -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-[#0f1218] border border-zinc-800/90 p-5 rounded-2xl shadow-sm">
+                        <div class="text-[11px] sm:text-xs text-zinc-300 font-bold uppercase tracking-wider">CẦN DỌN DẸP</div>
+                        <div class="text-3xl sm:text-4xl font-black text-white mt-1 tracking-tight" id="admin-stat-dirty-rooms">{{ $dirtyRoomsCount ?? 0 }}</div>
+                        <div class="text-[11px] text-zinc-400 mt-1">Phòng khách vừa trả</div>
+                    </div>
+                    <div class="bg-[#0f1218] border border-zinc-800/90 p-5 rounded-2xl shadow-sm">
+                        <div class="text-[11px] sm:text-xs text-zinc-300 font-bold uppercase tracking-wider">PHÒNG ĐÃ SẠCH</div>
+                        <div class="text-3xl sm:text-4xl font-black text-white mt-1 tracking-tight" id="admin-stat-clean-rooms">{{ $cleanRoomsCount ?? 0 }}</div>
+                        <div class="text-[11px] text-zinc-400 mt-1">Sẵn sàng đón khách</div>
+                    </div>
+                </div>
+
+                <!-- Tiêu đề danh sách -->
+                <div class="flex justify-between items-center pt-2">
+                    <h3 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">DANH SÁCH PHÒNG CHỜ VỆ SINH</h3>
+                    <button type="button" onclick="window.location.reload()" class="text-xs text-zinc-300 hover:text-white inline-flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-rotate-right"></i> Làm mới
+                    </button>
+                </div>
+
+                <!-- Danh sách phòng hoặc Card trống chuẩn ảnh -->
+                @if(empty($housekeepingRooms) || $housekeepingRooms->isEmpty())
+                    <div class="bg-[#0d1016] border border-zinc-800/90 rounded-2xl py-14 px-6 text-center shadow-sm">
+                        <div class="w-16 h-16 rounded-full bg-zinc-800/60 mx-auto mb-4 flex items-center justify-center">
+                            <span class="w-3 h-3 rounded-full bg-zinc-700"></span>
+                        </div>
+                        <h4 class="text-base sm:text-lg font-black text-white">Tất Cả Phòng Đều Đã Sạch!</h4>
+                        <p class="text-xs text-zinc-400 mt-1.5">Không có phòng nào cần dọn dẹp tại thời điểm này.</p>
+                    </div>
+                @else
+                    <div class="space-y-3" id="admin-housekeeping-room-list">
+                        @foreach($housekeepingRooms as $room)
+                        <div id="admin-hk-card-{{ $room->id }}" class="room-card bg-[#0f1218] border {{ $room->cleaning_status === 'cleaning' ? 'border-orange-500/40 bg-orange-500/5' : 'border-zinc-800' }} rounded-2xl p-4 shadow-sm transition hover:border-zinc-700">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg font-black font-mono text-white tracking-wide">P.{{ $room->room_number }}</span>
+                                        <span class="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded-md border border-zinc-700">
+                                            Tầng {{ $room->floor }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-zinc-400 mt-1">
+                                        <i class="fa-solid fa-building text-[10px] mr-1"></i> {{ $room->building->name ?? 'Tòa nhà' }}
+                                    </p>
+                                </div>
+                                <div id="admin-hk-badge-{{ $room->id }}">
+                                    @if($room->cleaning_status === 'cleaning')
+                                        <span class="px-2.5 py-1 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 animate-pulse">
+                                            <span class="w-2 h-2 rounded-full bg-orange-400"></span> Đang dọn dẹp
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-rose-400"></span> Phòng bẩn (Chờ dọn)
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-zinc-800/80" id="admin-hk-actions-{{ $room->id }}">
+                                @if($room->cleaning_status !== 'cleaning')
+                                <button type="button" onclick="updateAdminHousekeeping({{ $room->id }}, 'cleaning')" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl border border-zinc-700 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-person-digging"></i> Bắt đầu dọn
+                                </button>
+                                @endif
+
+                                <button type="button" onclick="updateAdminHousekeeping({{ $room->id }}, 'clean')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 {{ $room->cleaning_status === 'cleaning' ? 'col-span-2' : '' }}">
+                                    <i class="fa-solid fa-check-double"></i> Đã dọn xong (Sạch)
+                                </button>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+
         </main>
     </div>
 
@@ -3561,6 +3675,7 @@
             else if(tabId === 'contract-section') title = "Quản Lý Hợp Đồng Online";
             else if(tabId === 'contact-section') title = "Yêu Cầu Tư Vấn & Xem Phòng";
             else if(tabId === 'ticket-section') title = "Quản Lý Sự Cố & Báo Hỏng";
+            else if(tabId === 'housekeeping-section') title = "Nhiệm Vụ Buồng Phòng";
             
             const titleEl = document.getElementById('section-title');
             if (titleEl) {
@@ -3574,6 +3689,91 @@
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + urlParams.toString();
                 window.history.pushState({ tab: tabId }, '', newUrl);
             }
+        }
+
+        // Cập nhật tiến độ dọn dẹp buồng phòng từ trang admin
+        function updateAdminHousekeeping(roomId, status) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const url = `{{ url('/smartroom/housekeeping/update') }}/${roomId}`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ cleaning_status: status })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const toast = document.getElementById('admin-housekeeping-toast');
+                    const msgEl = document.getElementById('admin-housekeeping-toast-msg');
+                    if (toast && msgEl) {
+                        msgEl.textContent = data.message;
+                        toast.classList.remove('hidden');
+                        setTimeout(() => toast.classList.add('hidden'), 5000);
+                    }
+
+                    const card = document.getElementById(`admin-hk-card-${roomId}`);
+                    const badge = document.getElementById(`admin-hk-badge-${roomId}`);
+                    const actions = document.getElementById(`admin-hk-actions-${roomId}`);
+
+                    if (status === 'clean') {
+                        if (card) {
+                            card.classList.remove('border-zinc-800', 'border-orange-500/40', 'bg-orange-500/5', 'bg-[#0f1218]');
+                            card.classList.add('border-emerald-500/40', 'bg-emerald-500/10');
+                        }
+                        if (badge) {
+                            badge.innerHTML = `<span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Đã sạch (Clean)</span>`;
+                        }
+                        if (actions) {
+                            actions.innerHTML = `<div class="col-span-2 text-center text-xs font-bold text-emerald-400 py-1"><i class="fa-solid fa-circle-check mr-1"></i> Phòng đã sạch, sẵn sàng đón khách</div>`;
+                        }
+
+                        const dirtyEl = document.getElementById('admin-stat-dirty-rooms');
+                        const cleanEl = document.getElementById('admin-stat-clean-rooms');
+                        const sidebarBadge = document.getElementById('sidebar-housekeeping-badge');
+                        if (dirtyEl) {
+                            const cur = parseInt(dirtyEl.textContent) || 0;
+                            const next = Math.max(0, cur - 1);
+                            dirtyEl.textContent = next;
+                            if (sidebarBadge) {
+                                if (next > 0) {
+                                    sidebarBadge.textContent = next;
+                                } else {
+                                    sidebarBadge.remove();
+                                }
+                            }
+                        }
+                        if (cleanEl) {
+                            const cur = parseInt(cleanEl.textContent) || 0;
+                            cleanEl.textContent = cur + 1;
+                        }
+                    } else if (status === 'cleaning') {
+                        if (card) {
+                            card.classList.add('border-orange-500/40', 'bg-orange-500/5');
+                        }
+                        if (badge) {
+                            badge.innerHTML = `<span class="px-2.5 py-1 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 animate-pulse"><span class="w-2 h-2 rounded-full bg-orange-400"></span> Đang dọn dẹp</span>`;
+                        }
+                        if (actions) {
+                            actions.innerHTML = `
+                                <button type="button" onclick="updateAdminHousekeeping(${roomId}, 'clean')" class="col-span-2 w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-check-double"></i> Đã dọn xong (Sạch)
+                                </button>
+                            `;
+                        }
+                    }
+                } else {
+                    alert(data.message || 'Không thể cập nhật trạng thái phòng.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Đã xảy ra lỗi kết nối tới máy chủ.');
+            });
         }
 
         // Add event listener to sidebar-nav-link links on DOMContentLoaded to switch tabs dynamically without page reload
