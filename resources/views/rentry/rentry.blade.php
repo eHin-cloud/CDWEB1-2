@@ -1694,9 +1694,6 @@
         </div>
     </div>
 
-    <!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
-    <script src="{{ asset('js/rentry.js') }}?v={{ time() }}"></script>
-
     <!-- HOT AREAS MODAL -->
     <div id="hot-areas-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-[#0a0f1d] border border-slate-800 rounded-3xl p-8 shadow-2xl relative max-h-[85vh] overflow-y-auto animate-fade-in">
@@ -1997,8 +1994,8 @@
     </div>
 </div>
 
-<!-- FLOATING ROOM COMPARISON BAR (CHUẨN THEO THIẾT KẾ HÌNH ẢNH MẪU) -->
-<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] bg-[#0a0d14]/95 border border-[#232733] rounded-[22px] p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 backdrop-blur-xl shadow-2xl shadow-black/80 transition-all duration-300 translate-y-24 opacity-0 pointer-events-none max-w-[95vw] overflow-x-auto no-scrollbar">
+<!-- FLOATING ROOM COMPARISON BAR (CHUẨN THEO THIẾT KẾ HÌNH ẢNH MẪU SỐ 2) -->
+<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 bg-[#0a0d14]/95 border border-[#232733] rounded-[22px] p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 backdrop-blur-xl shadow-2xl shadow-black/80 max-w-[95vw] overflow-x-auto no-scrollbar">
     <!-- Icon swap ngoài cùng bên trái -->
     <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#141720] border border-[#2a2e3d] flex items-center justify-center shrink-0 text-white shadow-inner" title="So sánh phòng">
         <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -2169,5 +2166,7 @@
     });
 </script>
 
+<!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
+<script src="{{ asset('js/rentry.js') }}?v={{ time() }}"></script>
 </body>
 </html>

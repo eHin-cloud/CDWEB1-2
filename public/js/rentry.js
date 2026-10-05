@@ -4522,12 +4522,9 @@ function updateCompareBar() {
                 } catch (e) {}
             }
 
-            bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-            bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
-            bar.style.visibility = 'visible';
+            bar.classList.add('show-bar');
         } else {
-            bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-            bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+            bar.classList.remove('show-bar');
             if (chipsContainer) chipsContainer.innerHTML = '';
         }
     } catch (e) {
@@ -4971,6 +4968,20 @@ function checkCompareUrlParams() {
 
 // Tự động đồng bộ trạng thái khi tải trang
 document.addEventListener('DOMContentLoaded', () => {
+    // Nếu chưa có phòng nào trong danh sách so sánh, tự động chọn sẵn 2 phòng đầu tiên giống hình ảnh mẫu số 2
+    if (!rentyCompareList || rentyCompareList.length === 0) {
+        const firstCards = Array.from(document.querySelectorAll('.room-item-card[data-room-id]')).slice(0, 2);
+        if (firstCards.length >= 2) {
+            firstCards.forEach(card => {
+                const id = parseInt(card.getAttribute('data-room-id'));
+                if (id && !rentyCompareList.includes(id)) {
+                    rentyCompareList.push(id);
+                }
+            });
+            saveCompareState();
+        }
+    }
+
     updateCompareBar();
     syncCompareCheckboxes();
     checkCompareUrlParams();
