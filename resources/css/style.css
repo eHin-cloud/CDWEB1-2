@@ -5076,7 +5076,17 @@ body.theme-light .renty-chatbot-mascot {
 
 /* Dynamic slide-up for floating comparison bar */
 #renty-compare-bar {
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#btn-compare-submit {
+    background: linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 50%, #94a3b8 100%) !important;
+    color: #020617 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+}
+
+#btn-compare-submit:hover {
+    filter: brightness(1.08);
 }
 
 /* Enhanced 3D card tilt & shadow hover transition */

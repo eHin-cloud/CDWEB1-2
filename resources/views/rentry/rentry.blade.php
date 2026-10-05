@@ -1997,23 +1997,39 @@
     </div>
 </div>
 
-<!-- FLOATING ROOM COMPARISON BAR -->
-<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0d121f]/90 border border-slate-800 rounded-2xl px-6 py-4 flex items-center justify-between gap-6 backdrop-blur-lg shadow-2xl transition-all duration-300 translate-y-24 opacity-0 pointer-events-none max-w-lg w-[calc(100%-2rem)]">
-    <div class="flex items-center gap-3">
-        <span class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xs shrink-0 font-bold" id="compare-count-badge">0</span>
-        <div>
-            <h4 class="text-xs font-bold text-slate-200">So sánh phòng trọ</h4>
-            <p class="text-[10px] text-slate-400">Chọn tối đa 3 phòng để so sánh chi tiết</p>
-        </div>
+<!-- FLOATING ROOM COMPARISON BAR (CHUẨN THEO THIẾT KẾ HÌNH ẢNH MẪU) -->
+<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0a0d14]/95 border border-[#232733] rounded-[22px] p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 backdrop-blur-xl shadow-2xl shadow-black/80 transition-all duration-300 translate-y-24 opacity-0 pointer-events-none max-w-[95vw] overflow-x-auto no-scrollbar">
+    <!-- Icon swap ngoài cùng bên trái -->
+    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#141720] border border-[#2a2e3d] flex items-center justify-center shrink-0 text-white shadow-inner" title="So sánh phòng">
+        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="18" r="2.2" fill="currentColor"></circle>
+            <circle cx="18" cy="6" r="2.2" fill="currentColor"></circle>
+            <path d="M6 15.8V9a3 3 0 0 1 3-3h6.5"></path>
+            <path d="M13 2.5l3.5 3.5L13 9.5"></path>
+            <path d="M18 8.2V15a3 3 0 0 1-3 3H8.5"></path>
+            <path d="M11 21.5l-3.5-3.5 3.5-3.5"></path>
+        </svg>
     </div>
-    <div class="flex items-center gap-3">
-        <button type="button" onclick="clearCompareList()" class="px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-200 hover:bg-slate-900 rounded-xl transition-all">
-            Xóa hết
-        </button>
-        <button type="button" onclick="showCompareModal()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-[10px] font-extrabold shadow-lg shadow-emerald-500/15 uppercase tracking-wider transition-all">
-            So sánh ngay
-        </button>
-    </div>
+
+    <!-- Danh sách các thẻ phòng đã chọn (Render động) -->
+    <div id="compare-selected-chips" class="flex items-center gap-2 sm:gap-2.5 shrink-0"></div>
+
+    <!-- Nút Hủy -->
+    <button type="button" onclick="clearCompareList()" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-[#141720] hover:bg-slate-800 border border-[#2a2e3d] text-white font-bold text-xs transition-all shrink-0 active:scale-95">
+        Hủy
+    </button>
+
+    <!-- Nút So sánh ngay (n) -->
+    <button type="button" onclick="showCompareModal()" id="btn-compare-submit" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 hover:brightness-105 active:scale-95 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 sm:gap-2 transition-all shrink-0">
+        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950 stroke-[2.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4-4m-4 4l4 4"/>
+        </svg>
+        <span class="flex items-center gap-1">
+            <span>So sánh ngay</span>
+            <span id="compare-submit-count">(0)</span>
+        </span>
+    </button>
+    <span class="hidden" id="compare-count-badge">0</span>
 </div>
 
 <!-- DETAILED COMPARISON MODAL (MATCHING SPEC HÌNH 23.2) -->

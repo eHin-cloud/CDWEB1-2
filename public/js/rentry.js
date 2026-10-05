@@ -4312,6 +4312,39 @@ function syncCompareCheckboxes() {
     });
 }
 
+function formatCompareTitle(rawTitle, roomId) {
+    if (!rawTitle) return `Phòng ${roomId || ''}`.trim();
+    let title = String(rawTitle).trim().replace(/^Hệ thống\s+/i, '');
+    
+    // Nếu có định dạng "Tòa nhà - Phòng XXX" -> đảo lại thành "Phòng XXX – Tòa nhà" giống hình ảnh mẫu
+    const match = title.match(/^(.*?)\s*[-–]\s*(Phòng\s*\w+.*)$/i);
+    if (match) {
+        return `${match[2].trim()} – ${match[1].trim()}`;
+    }
+    return title;
+}
+window.formatCompareTitle = formatCompareTitle;
+
+function formatComparePrice(rawPrice) {
+    if (!rawPrice && rawPrice !== 0) return '';
+    let str = String(rawPrice).trim();
+    let num = parseFloat(str.replace(/[^\d.]/g, ''));
+    if (!isNaN(num) && num > 0) {
+        if (num >= 100000) {
+            let tr = num / 1000000;
+            return (Number.isInteger(tr) ? tr : tr.toFixed(1)).replace('.0', '') + 'Tr';
+        } else if (num < 100) {
+            return (Number.isInteger(num) ? num : num.toFixed(1)).replace('.0', '') + 'Tr';
+        }
+    }
+    let trMatch = str.match(/([\d.,]+)\s*(?:tr|triệu)/i);
+    if (trMatch) {
+        return `${trMatch[1].replace(',', '.')}Tr`;
+    }
+    return str;
+}
+window.formatComparePrice = formatComparePrice;
+
 function toggleCompare(arg1, arg2) {
     let roomId = null;
     let checkbox = null;
@@ -4325,6 +4358,27 @@ function toggleCompare(arg1, arg2) {
     }
 
     if (!roomId) return;
+
+    if (!checkbox) {
+        checkbox = document.querySelector(`.compare-checkbox[value="${roomId}"], .compare-checkbox[data-room-id="${roomId}"]`);
+    }
+
+    // Cache thông tin phòng để hiển thị trên Floating Bar
+    let roomsInfo = {};
+    try {
+        roomsInfo = JSON.parse(sessionStorage.getItem('renty_compare_rooms_info') || '{}');
+    } catch (e) {}
+
+    const card = checkbox ? (checkbox.closest('.room-item-card, [data-room-id]') || document.querySelector(`[data-room-id="${roomId}"]`)) : document.querySelector(`[data-room-id="${roomId}"]`);
+    let title = checkbox?.getAttribute('data-title') || card?.getAttribute('data-title') || card?.querySelector('h3, h4, .room-title')?.textContent?.trim() || `Phòng ${roomId}`;
+    let price = checkbox?.getAttribute('data-price') || card?.getAttribute('data-price') || card?.querySelector('.room-price')?.textContent?.trim() || '';
+
+    if (title || price) {
+        roomsInfo[roomId] = { title, price };
+        try {
+            sessionStorage.setItem('renty_compare_rooms_info', JSON.stringify(roomsInfo));
+        } catch (e) {}
+    }
 
     if (checkbox && checkbox.checked) {
         if (rentyCompareList.length >= 3) {
@@ -4387,6 +4441,9 @@ window.removeCompareItem = removeCompareItem;
 function clearCompareList() {
     rentyCompareList = [];
     saveCompareState();
+    try {
+        sessionStorage.removeItem('renty_compare_rooms_info');
+    } catch (e) {}
     document.querySelectorAll('.compare-checkbox').forEach(cb => cb.checked = false);
     updateCompareBar();
 }
@@ -4394,17 +4451,60 @@ window.clearCompareList = clearCompareList;
 
 function updateCompareBar() {
     const bar = document.getElementById('renty-compare-bar');
-    const badge = document.getElementById('compare-count-badge');
-    if (!bar || !badge) return;
+    if (!bar) return;
 
-    badge.textContent = rentyCompareList.length;
+    const chipsContainer = document.getElementById('compare-selected-chips');
+    const submitCount = document.getElementById('compare-submit-count');
+    const legacyBadge = document.getElementById('compare-count-badge');
 
-    if (rentyCompareList.length > 0) {
+    const count = rentyCompareList.length;
+    if (submitCount) submitCount.textContent = `(${count})`;
+    if (legacyBadge) legacyBadge.textContent = count;
+
+    if (count > 0) {
+        if (chipsContainer) {
+            let roomsInfo = {};
+            try {
+                roomsInfo = JSON.parse(sessionStorage.getItem('renty_compare_rooms_info') || '{}');
+            } catch (e) {}
+
+            chipsContainer.innerHTML = rentyCompareList.map(roomId => {
+                let info = roomsInfo[roomId] || {};
+                const card = document.querySelector(`.room-item-card[data-room-id="${roomId}"], [data-room-id="${roomId}"]`);
+                if (card) {
+                    const domTitle = card.getAttribute('data-title') || card.querySelector('h3, h4, .room-title')?.textContent?.trim();
+                    const domPrice = card.getAttribute('data-price') || card.querySelector('.room-price')?.textContent?.trim();
+                    if (domTitle) info.title = domTitle;
+                    if (domPrice) info.price = domPrice;
+                    roomsInfo[roomId] = info;
+                }
+
+                const titleFormatted = formatCompareTitle(info.title, roomId);
+                const priceFormatted = formatComparePrice(info.price);
+                const priceDisplay = priceFormatted ? `(${priceFormatted})` : '';
+
+                return `
+                    <div class="flex items-center gap-2.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#141720] border border-[#2a2e3d] text-left shrink-0 max-w-[200px] sm:max-w-[250px]" title="${titleFormatted}">
+                        <span class="w-2 h-2 rounded-full bg-white shrink-0"></span>
+                        <div class="flex flex-col min-w-0 leading-tight">
+                            <span class="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate">${titleFormatted}</span>
+                            ${priceDisplay ? `<span class="text-[11px] sm:text-xs font-bold text-white tracking-tight">${priceDisplay}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            try {
+                sessionStorage.setItem('renty_compare_rooms_info', JSON.stringify(roomsInfo));
+            } catch (e) {}
+        }
+
         bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
         bar.classList.add('translate-y-0', 'opacity-100');
     } else {
         bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
         bar.classList.remove('translate-y-0', 'opacity-100');
+        if (chipsContainer) chipsContainer.innerHTML = '';
     }
 }
 window.updateCompareBar = updateCompareBar;
