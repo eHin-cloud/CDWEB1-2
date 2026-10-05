@@ -3158,7 +3158,8 @@ function updateDistanceSlider(val) {
     // Update feedback text
     const feedback = document.getElementById('distance-feedback');
     if (feedback) {
-        feedback.innerText = `Tìm phòng trong bán kính dưới ${val}km từ Đại học Bách Khoa`;
+        const formattedDist = (parseFloat(val) % 1 === 0) ? parseInt(val, 10) : parseFloat(val);
+        feedback.innerText = `Tìm phòng trong bán kính dưới ${formattedDist}km từ Đại học Bách Khoa`;
     }
     
     // Update active state on ticks
@@ -3473,6 +3474,25 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = `${progress}%`;
         }
     }, { passive: true });
+
+    // FEAT_21: Tự động kích hoạt bộ lọc khi truy cập /search hoặc bấm thanh tìm kiếm
+    if (window.location.pathname.includes('/search') || window.location.search.includes('q=') || window.location.search.includes('price')) {
+        const drawer = document.getElementById('filter-drawer');
+        if (drawer) drawer.classList.remove('hidden');
+    }
+
+    const searchInputEl = document.getElementById('search-input');
+    const heroSearchInputEl = document.getElementById('hero-search-input');
+    [searchInputEl, heroSearchInputEl].forEach(inp => {
+        if (inp) {
+            inp.addEventListener('focus', () => {
+                const drawer = document.getElementById('filter-drawer');
+                if (drawer && drawer.classList.contains('hidden')) {
+                    drawer.classList.remove('hidden');
+                }
+            });
+        }
+    });
 });
 
 // ════════════════════════════════════════════════════════════════════════

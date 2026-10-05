@@ -122,6 +122,76 @@
             border-color: rgba(13, 148, 136, 0.35);
             color: #0f766e;
         }
+
+        /* Custom Range Slider Styles chuẩn theo Hình 21.2 & 21.3 */
+        .custom-range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: transparent;
+            outline: none;
+            cursor: pointer;
+            margin: 8px 0;
+            display: block;
+        }
+        .custom-range-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            border-radius: 99px;
+            background: linear-gradient(
+                to right, 
+                #ffffff 0%, 
+                #ffffff var(--range-progress, 100%), 
+                #334155 var(--range-progress, 100%), 
+                #334155 100%
+            );
+            border: none;
+        }
+        .custom-range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+            transition: transform 0.15s ease;
+        }
+        .custom-range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        .custom-range-slider::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            border-radius: 99px;
+            background: #334155;
+            border: none;
+        }
+        .custom-range-slider::-moz-range-progress {
+            height: 4px;
+            border-radius: 99px;
+            background: #ffffff;
+        }
+        .custom-range-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+        }
+        /* Ẩn spinner cho input number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] { 
+            -moz-appearance: textfield; 
+        }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
@@ -276,68 +346,61 @@
         </div>
 
         <!-- Advanced Filters Dropdown (Expandable Filters) -->
-        <div id="filter-drawer" class="hidden mt-6 bg-slate-900/35 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-md animate-fade-in">
-            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/60">
-                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-emerald-400"></i> Bộ lọc chi tiết
+        <div id="filter-drawer" class="hidden mt-6 bg-[#0a0e17]/90 border border-slate-800/80 p-6 rounded-3xl backdrop-blur-md animate-fade-in shadow-2xl">
+            <div class="flex items-center justify-between pb-3 mb-5 border-b border-slate-800/60">
+                <span class="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> BỘ LỌC CHI TIẾT
                 </span>
-                <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-3">
                     <button type="button" id="btnApplyFilter" onclick="filterItems()" class="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-900/30 flex items-center gap-1.5">
                         <i class="fa-solid fa-filter text-[10px]"></i> Áp dụng bộ lọc
                     </button>
-                    <button type="button" onclick="resetAllFilters()" class="text-[11px] font-bold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-rose-500/10 transition-all">
+                    <button type="button" onclick="resetAllFilters()" class="text-xs font-semibold text-slate-400 hover:text-rose-400 flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-rose-500/10 transition-all">
                         <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
                     </button>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Price Range Section -->
+
+            <!-- Hàng 1: 3 Cột (Khoảng giá - Điểm đánh giá - Khoảng cách) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Cột 1: KHOẢNG GIÁ (VNĐ) -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Khoảng giá (VNĐ)</label>
-                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2 py-1 bg-[#0a0e17] border border-slate-800 rounded-lg text-slate-300 text-[10px] focus:border-emerald-500 focus:outline-none">
-                            <option value="all">Mức giá gợi ý</option>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">KHOẢNG GIÁ (VNĐ)</label>
+                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2.5 py-1 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                            <option value="all">Mức giá gợi ý ⌵</option>
                             <option value="3000000">Dưới 3 triệu</option>
                             <option value="4000000">Dưới 4 triệu</option>
                             <option value="5000000">Dưới 5 triệu</option>
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="number" id="filter-price-min" oninput="debouncedFilterItems()" placeholder="Tối thiểu (vd: 2000000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
-                        <span class="text-slate-600 text-xs font-bold">-</span>
-                        <input type="number" id="filter-price-max" oninput="debouncedFilterItems()" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                        <input type="text" inputmode="numeric" id="filter-price-min" oninput="debouncedFilterItems()" placeholder="Tối thiểu (vd: 20000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <span class="text-slate-600 text-sm font-bold">-</span>
+                        <input type="text" inputmode="numeric" id="filter-price-max" oninput="debouncedFilterItems()" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                     </div>
-                    <div id="filter-price-error" class="hidden text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    <!-- Lỗi viền đỏ và text lỗi chuẩn Hình 21.3 -->
+                    <div id="filter-price-error" class="hidden text-xs text-rose-400 font-bold mt-2 flex items-center gap-1.5 animate-shake">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
                         <span id="filter-price-error-text">Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
                     </div>
                 </div>
                 
-                <!-- Ratings -->
+                <!-- Cột 2: ĐIỂM ĐÁNH GIÁ TỐI THIỂU -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Điểm đánh giá tối thiểu</label>
-                    <select id="filter-rating" onchange="filterItems()" class="w-full px-4 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">ĐIỂM ĐÁNH GIÁ TỐI THIỂU</label>
+                    <select id="filter-rating" onchange="filterItems()" class="w-full px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors font-medium">
                         <option value="all">Mọi điểm số</option>
                         <option value="4.5">Từ 4.5⭐ trở lên</option>
                         <option value="4.0">Từ 4.0⭐ trở lên</option>
                         <option value="3.5">Từ 3.5⭐ trở lên</option>
                     </select>
-
-                    <div class="mt-3">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5" for="sort_by">Sắp xếp theo</label>
-                        <select id="sort_by" onchange="filterItems()" class="w-full px-3 py-1.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
-                            <option value="default">Mặc định</option>
-                            <option value="price_asc">Giá tăng dần</option>
-                            <option value="price_desc">Giá giảm dần</option>
-                            <option value="newest">Mới nhất</option>
-                        </select>
-                    </div>
                 </div>
 
-                <!-- Distance Slider Section -->
+                <!-- Cột 3: KHOẢNG CÁCH ĐẾN TRƯỜNG/TIỆN ÍCH -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Khoảng cách đến Trường/Tiện ích</label>
-                    <div class="slider-container relative mt-3 mb-2 px-1">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">KHOẢNG CÁCH ĐẾN TRƯỜNG/TIỆN ÍCH</label>
+                    <div class="slider-container relative mt-2 mb-1 px-1">
                         <input 
                             type="range" 
                             id="distance-slider" 
@@ -349,46 +412,65 @@
                             class="custom-range-slider"
                             style="--range-progress: 100%;"
                         >
-                        <!-- Explicit numeric tick marks -->
-                        <div class="slider-ticks flex justify-between px-1 mt-1 text-[10px] text-slate-500 font-semibold">
-                            <span class="tick-mark cursor-pointer transition-colors" onclick="setSliderValue(0)" data-value="0">0 km</span>
-                            <span class="tick-mark cursor-pointer transition-colors" onclick="setSliderValue(1)" data-value="1">1 km</span>
-                            <span class="tick-mark cursor-pointer transition-colors" onclick="setSliderValue(2)" data-value="2">2 km</span>
-                            <span class="tick-mark cursor-pointer transition-colors" onclick="setSliderValue(3)" data-value="3">3 km</span>
+                        <!-- 4 Mốc km -->
+                        <div class="slider-ticks flex justify-between px-0.5 mt-1 text-[11px] text-slate-400 font-medium select-none">
+                            <span class="tick-mark cursor-pointer hover:text-white transition-colors" onclick="setSliderValue(0)" data-value="0">0km</span>
+                            <span class="tick-mark cursor-pointer hover:text-white transition-colors" onclick="setSliderValue(1)" data-value="1">1km</span>
+                            <span class="tick-mark cursor-pointer hover:text-white transition-colors" onclick="setSliderValue(2)" data-value="2">2km</span>
+                            <span class="tick-mark cursor-pointer hover:text-white transition-colors" onclick="setSliderValue(3)" data-value="3">3km</span>
                         </div>
                     </div>
-                    <!-- Dynamic Feedback Text Box -->
-                    <div class="feedback-box mt-3 p-2 bg-slate-950/40 border border-slate-800/80 rounded-xl flex items-center gap-2">
-                        <i class="fa-solid fa-location-dot text-teal-400 text-xs shrink-0 animate-pulse"></i>
-                        <span id="distance-feedback" class="text-[10px] text-slate-400 leading-normal font-semibold">
-                            Tìm phòng trong bán kính dưới 3.0km từ Đại học Bách Khoa
+                    <!-- Feedback Box -->
+                    <div class="feedback-box mt-3 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl flex items-center gap-2 text-slate-300 text-xs">
+                        <i class="fa-solid fa-location-dot text-slate-400 text-xs shrink-0"></i>
+                        <span id="distance-feedback" class="text-xs text-slate-300 font-medium">
+                            Tìm phòng trong bán kính dưới 3km từ Đại học Bách Khoa
                         </span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Utilities Checkbox Group -->
+            <!-- Hàng 2: TIỆN ÍCH ĐẶC BIỆT & SẮP XẾP -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 border-t border-slate-800/60">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tiện ích đặc biệt</label>
-                    <div class="flex flex-wrap gap-2">
-                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-pets" onchange="syncFromCheckbox('pets')" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Nuôi thú cưng
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">TIỆN ÍCH ĐẶC BIỆT</label>
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-pets" onchange="syncFromCheckbox('pets')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Nuôi thú cưng</span>
                         </label>
-                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-loft" onchange="filterItems()" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Có gác lửng
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-loft" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Có gác lửng</span>
                         </label>
-                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-balcony" onchange="syncFromCheckbox('balcony')" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Ban công
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-balcony" onchange="syncFromCheckbox('balcony')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Ban công</span>
                         </label>
-                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-wc" onchange="syncFromCheckbox('wc')" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> WC khép kín
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-wc" onchange="syncFromCheckbox('wc')" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>WC khép kín</span>
                         </label>
-                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-ac" onchange="filterItems()" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Máy lạnh
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-ac" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Máy lạnh</span>
                         </label>
-                        <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0e17] border border-slate-800 text-[10px] font-bold text-slate-400 cursor-pointer hover:border-slate-700 transition-colors">
-                            <input type="checkbox" id="tag-washer" onchange="filterItems()" class="rounded border-slate-800 text-emerald-600 focus:ring-0"> Máy giặt
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-washer" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Máy giặt</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Dropdown sắp xếp góc phải theo Spec STT 3 -->
+                <div class="shrink-0 self-start md:self-auto">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" for="sort_by">SẮP XẾP THEO</label>
+                    <select id="sort_by" onchange="filterItems()" class="px-3 py-1.5 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors font-medium">
+                        <option value="default">Mặc định</option>
+                        <option value="price_asc">Giá tăng dần</option>
+                        <option value="price_desc">Giá giảm dần</option>
+                        <option value="newest">Mới nhất</option>
+                    </select>
                 </div>
             </div>
         </div>
