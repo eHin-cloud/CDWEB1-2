@@ -1694,6 +1694,9 @@
         </div>
     </div>
 
+    <!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
+    <script src="{{ asset('js/rentry.js') }}?v={{ time() }}"></script>
+
     <!-- HOT AREAS MODAL -->
     <div id="hot-areas-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-[#0a0f1d] border border-slate-800 rounded-3xl p-8 shadow-2xl relative max-h-[85vh] overflow-y-auto animate-fade-in">
@@ -1994,39 +1997,35 @@
     </div>
 </div>
 
-<!-- FLOATING ROOM COMPARISON BAR (CHUẨN THEO THIẾT KẾ HÌNH ẢNH MẪU SỐ 2) -->
-<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 bg-[#0a0d14]/95 border border-[#232733] rounded-[22px] p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 backdrop-blur-xl shadow-2xl shadow-black/80 max-w-[95vw] overflow-x-auto no-scrollbar">
-    <!-- Icon swap ngoài cùng bên trái -->
-    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#141720] border border-[#2a2e3d] flex items-center justify-center shrink-0 text-white shadow-inner" title="So sánh phòng">
-        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="6" cy="18" r="2.2" fill="currentColor"></circle>
-            <circle cx="18" cy="6" r="2.2" fill="currentColor"></circle>
-            <path d="M6 15.8V9a3 3 0 0 1 3-3h6.5"></path>
-            <path d="M13 2.5l3.5 3.5L13 9.5"></path>
-            <path d="M18 8.2V15a3 3 0 0 1-3 3H8.5"></path>
-            <path d="M11 21.5l-3.5-3.5 3.5-3.5"></path>
+<!-- FLOATING ROOM COMPARISON BAR (MATCHING USER SCREENSHOT) -->
+<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 sm:p-2 bg-[#0c1017]/95 border border-zinc-800/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-all duration-300 translate-y-28 opacity-0 pointer-events-none max-w-[96vw] sm:max-w-max select-none">
+    <!-- Icon so sánh góc trái -->
+    <div class="w-10 h-10 rounded-xl bg-[#141824] border border-zinc-800 flex items-center justify-center shrink-0 text-white shadow-inner" title="So sánh phòng">
+        <svg class="w-5 h-5 text-zinc-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="18" r="2.5"></circle>
+            <circle cx="18" cy="6" r="2.5"></circle>
+            <path d="M6 15.5V11a3 3 0 0 1 3-3h6.5"></path>
+            <path d="M18 8.5V13a3 3 0 0 1-3 3H8.5"></path>
+            <polyline points="13 5.5 15.5 8 13 10.5"></polyline>
+            <polyline points="11 13.5 8.5 16 11 18.5"></polyline>
         </svg>
     </div>
 
-    <!-- Danh sách các thẻ phòng đã chọn (Render động) -->
-    <div id="compare-selected-chips" class="flex items-center gap-2 sm:gap-2.5 shrink-0"></div>
+    <!-- Danh sách các phòng đã chọn (render động bởi JS) -->
+    <div id="compare-bar-items" class="flex items-center gap-2 max-w-[50vw] sm:max-w-none overflow-x-auto no-scrollbar py-0.5">
+        <!-- Chứa các thẻ chip phòng -->
+    </div>
 
     <!-- Nút Hủy -->
-    <button type="button" onclick="clearCompareList()" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-[#141720] hover:bg-slate-800 border border-[#2a2e3d] text-white font-bold text-xs transition-all shrink-0 active:scale-95">
+    <button type="button" onclick="clearCompareList()" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-[#141824] hover:bg-zinc-800 border border-zinc-800 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer shrink-0">
         Hủy
     </button>
 
-    <!-- Nút So sánh ngay (n) - Nền xám bạc, chữ trắng, icon trắng chuẩn hình ảnh -->
-    <button type="button" onclick="showCompareModal()" id="btn-compare-submit" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[#8c9099] hover:brightness-105 active:scale-95 text-white font-black text-xs shadow-lg flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 border border-white/20">
-        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4-4m-4 4l4 4"/>
-        </svg>
-        <span class="flex items-center gap-1">
-            <span>So sánh ngay</span>
-            <span id="compare-submit-count">(0)</span>
-        </span>
+    <!-- Nút So sánh ngay -->
+    <button type="button" onclick="showCompareModal()" id="compare-submit-btn" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-zinc-200 via-neutral-100 to-zinc-300 hover:from-white hover:to-zinc-200 text-zinc-950 font-black text-xs sm:text-sm shadow-md flex items-center gap-2 transition-all cursor-pointer shrink-0">
+        <i class="fa-solid fa-code-compare text-xs sm:text-sm"></i>
+        <span>So sánh ngay (<span id="compare-btn-count">0</span>)</span>
     </button>
-    <span class="hidden" id="compare-count-badge">0</span>
 </div>
 
 <!-- DETAILED COMPARISON MODAL (MATCHING SPEC HÌNH 23.2) -->
@@ -2166,7 +2165,5 @@
     });
 </script>
 
-<!-- JS LOGIC EXTRACTED TO resources/js/rentry.js -->
-<script src="{{ asset('js/rentry.js') }}?v={{ time() }}"></script>
 </body>
 </html>

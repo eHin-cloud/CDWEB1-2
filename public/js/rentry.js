@@ -4312,39 +4312,6 @@ function syncCompareCheckboxes() {
     });
 }
 
-function formatCompareTitle(rawTitle, roomId) {
-    if (!rawTitle) return `Phòng ${roomId || ''}`.trim();
-    let title = String(rawTitle).trim().replace(/^Hệ thống\s+/i, '');
-    
-    // Nếu có định dạng "Tòa nhà - Phòng XXX" -> đảo lại thành "Phòng XXX – Tòa nhà" giống hình ảnh mẫu
-    const match = title.match(/^(.*?)\s*[-–]\s*(Phòng\s*\w+.*)$/i);
-    if (match) {
-        return `${match[2].trim()} – ${match[1].trim()}`;
-    }
-    return title;
-}
-window.formatCompareTitle = formatCompareTitle;
-
-function formatComparePrice(rawPrice) {
-    if (!rawPrice && rawPrice !== 0) return '';
-    let str = String(rawPrice).trim();
-    let num = parseFloat(str.replace(/[^\d.]/g, ''));
-    if (!isNaN(num) && num > 0) {
-        if (num >= 100000) {
-            let tr = num / 1000000;
-            return (Number.isInteger(tr) ? tr : tr.toFixed(1)).replace('.0', '') + 'Tr';
-        } else if (num < 100) {
-            return (Number.isInteger(num) ? num : num.toFixed(1)).replace('.0', '') + 'Tr';
-        }
-    }
-    let trMatch = str.match(/([\d.,]+)\s*(?:tr|triệu)/i);
-    if (trMatch) {
-        return `${trMatch[1].replace(',', '.')}Tr`;
-    }
-    return str;
-}
-window.formatComparePrice = formatComparePrice;
-
 function toggleCompare(arg1, arg2) {
     let roomId = null;
     let checkbox = null;
@@ -4357,57 +4324,30 @@ function toggleCompare(arg1, arg2) {
         checkbox = (arg2 && typeof arg2 === 'object' && arg2.tagName === 'INPUT') ? arg2 : null;
     }
 
-    if (!roomId || isNaN(roomId)) return;
+    if (!roomId) return;
 
-    if (!checkbox) {
-        checkbox = document.querySelector(`.compare-checkbox[value="${roomId}"], .compare-checkbox[data-room-id="${roomId}"]`);
-    }
-
-    // Cache thông tin phòng để hiển thị trên Floating Bar
-    let roomsInfo = {};
-    try {
-        roomsInfo = JSON.parse(sessionStorage.getItem('renty_compare_rooms_info') || '{}');
-    } catch (e) {}
-
-    const card = checkbox ? (checkbox.closest('.room-item-card, [data-room-id]') || document.querySelector(`[data-room-id="${roomId}"]`)) : document.querySelector(`[data-room-id="${roomId}"]`);
-    let title = checkbox?.getAttribute('data-title') || card?.getAttribute('data-title') || card?.querySelector('h3, h4, .room-title')?.textContent?.trim() || `Phòng ${roomId}`;
-    let price = checkbox?.getAttribute('data-price') || card?.getAttribute('data-price') || card?.querySelector('.room-price')?.textContent?.trim() || '';
-
-    if (title || price) {
-        roomsInfo[roomId] = { title, price };
-        try {
-            sessionStorage.setItem('renty_compare_rooms_info', JSON.stringify(roomsInfo));
-        } catch (e) {}
-    }
-
-    const isCurrentlyChecked = checkbox ? checkbox.checked : !rentyCompareList.includes(roomId);
-
-    if (isCurrentlyChecked) {
-        // Người dùng chọn phòng này
+    if (checkbox && checkbox.checked) {
+        if (rentyCompareList.length >= 3) {
+            checkbox.checked = false;
+            const notify = window.showRentyToast || alert;
+            notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'ERR_23_01');
+            return;
+        }
         if (!rentyCompareList.includes(roomId)) {
-            if (rentyCompareList.length >= 3) {
-                // Tự động bỏ phòng cũ nhất để thêm phòng mới (tối đa 3 phòng, không chặn người dùng)
-                const removedOldId = rentyCompareList.shift();
-                const oldCb = document.querySelector(`.compare-checkbox[value="${removedOldId}"], .compare-checkbox[data-room-id="${removedOldId}"]`);
-                if (oldCb) oldCb.checked = false;
-
-                if (window.showRentyToast) {
-                    window.showRentyToast('Đã thêm phòng vào so sánh (tối đa 3 phòng, đã thay thế phòng cũ).', 'success', 'So sánh phòng');
-                }
-            } else {
-                if (window.showRentyToast) {
-                    window.showRentyToast('Đã thêm phòng vào danh sách so sánh.', 'success', 'So sánh phòng');
-                }
-            }
             rentyCompareList.push(roomId);
         }
-        if (checkbox) checkbox.checked = true;
-    } else {
-        // Người dùng bỏ chọn phòng
+    } else if (checkbox && !checkbox.checked) {
         rentyCompareList = rentyCompareList.filter(id => id !== roomId);
-        if (checkbox) checkbox.checked = false;
-        if (window.showRentyToast) {
-            window.showRentyToast('Đã bỏ phòng khỏi danh sách so sánh.', 'success', 'So sánh phòng');
+    } else {
+        if (rentyCompareList.includes(roomId)) {
+            rentyCompareList = rentyCompareList.filter(id => id !== roomId);
+        } else {
+            if (rentyCompareList.length >= 3) {
+                const notify = window.showRentyToast || alert;
+                notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'ERR_23_01');
+                return;
+            }
+            rentyCompareList.push(roomId);
         }
     }
 
@@ -4433,16 +4373,13 @@ function removeCompareItem(roomId) {
     syncCompareCheckboxes();
 
     if (window.showRentyToast) {
-        window.showRentyToast('Đã xóa phòng khỏi danh sách so sánh.', 'success', 'So sánh phòng');
+        window.showRentyToast('Đã xóa phòng khỏi danh sách so sánh.', 'success', 'ERR_23_03');
     }
 
     if (rentyCompareList.length < 2) {
         hideCompareModal();
     } else {
-        const modal = document.getElementById('renty-compare-modal');
-        if (modal && !modal.classList.contains('hidden')) {
-            showCompareModal();
-        }
+        showCompareModal();
     }
 }
 window.removeCompareItem = removeCompareItem;
@@ -4450,85 +4387,106 @@ window.removeCompareItem = removeCompareItem;
 function clearCompareList() {
     rentyCompareList = [];
     saveCompareState();
-    try {
-        sessionStorage.removeItem('renty_compare_rooms_info');
-    } catch (e) {}
     document.querySelectorAll('.compare-checkbox').forEach(cb => cb.checked = false);
     updateCompareBar();
-    if (window.showRentyToast) {
-        window.showRentyToast('Đã hủy danh sách so sánh phòng.', 'success', 'So sánh phòng');
-    }
 }
 window.clearCompareList = clearCompareList;
+
+function formatComparePriceCompact(price) {
+    if (!price && price !== 0) return 'Thỏa thuận';
+    const num = Number(price);
+    if (isNaN(num)) return String(price);
+    if (num >= 1000000) {
+        const tr = (num / 1000000).toFixed(1).replace(/\.0$/, '');
+        return `${tr}Tr`;
+    }
+    if (num >= 1000) {
+        return `${Math.round(num / 1000)}k`;
+    }
+    return `${num}đ`;
+}
+window.formatComparePriceCompact = formatComparePriceCompact;
+
+function getCompareRoomInfo(roomId) {
+    const id = parseInt(roomId);
+    if (window.rentyRoomsData && window.rentyRoomsData[id]) {
+        const r = window.rentyRoomsData[id];
+        return {
+            id: id,
+            title: r.title || `Phòng ${id}`,
+            price: r.price
+        };
+    }
+    const cb = document.querySelector(`.compare-checkbox[data-room-id="${id}"], .compare-checkbox[value="${id}"]`);
+    if (cb && cb.dataset) {
+        const title = cb.dataset.roomTitle || cb.dataset.title;
+        const price = cb.dataset.roomPrice || cb.dataset.price;
+        if (title) {
+            return {
+                id: id,
+                title: title,
+                price: price
+            };
+        }
+    }
+    const card = document.querySelector(`.room-item-card[data-room-id="${id}"], [data-room-id="${id}"]`);
+    if (card && card.dataset) {
+        const title = card.dataset.title || card.querySelector('h3, h4')?.textContent?.trim();
+        const price = card.dataset.price;
+        if (title) {
+            return {
+                id: id,
+                title: title,
+                price: price
+            };
+        }
+    }
+    return {
+        id: id,
+        title: `Phòng #${id}`,
+        price: null
+    };
+}
+window.getCompareRoomInfo = getCompareRoomInfo;
 
 function updateCompareBar() {
     const bar = document.getElementById('renty-compare-bar');
     if (!bar) return;
 
-    try {
-        const chipsContainer = document.getElementById('compare-selected-chips');
-        const submitCount = document.getElementById('compare-submit-count');
-        const legacyBadge = document.getElementById('compare-count-badge');
+    const itemsContainer = document.getElementById('compare-bar-items');
+    const btnCount = document.getElementById('compare-btn-count');
+    const badge = document.getElementById('compare-count-badge');
 
-        // Làm sạch dữ liệu, chỉ giữ id hợp lệ
-        rentyCompareList = Array.isArray(rentyCompareList) 
-            ? rentyCompareList.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0)
-            : [];
+    const count = rentyCompareList.length;
 
-        const count = rentyCompareList.length;
-        if (submitCount) submitCount.textContent = `(${count})`;
-        if (legacyBadge) legacyBadge.textContent = count;
+    if (btnCount) btnCount.textContent = count;
+    if (badge) badge.textContent = count;
 
-        if (count > 0) {
-            if (chipsContainer) {
-                let roomsInfo = {};
-                try {
-                    roomsInfo = JSON.parse(sessionStorage.getItem('renty_compare_rooms_info') || '{}');
-                } catch (e) {}
+    if (count === 0) {
+        bar.classList.add('translate-y-28', 'opacity-0', 'pointer-events-none');
+        bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        if (itemsContainer) itemsContainer.innerHTML = '';
+        return;
+    }
 
-                chipsContainer.innerHTML = rentyCompareList.map(roomId => {
-                    let info = roomsInfo[roomId] || {};
-                    try {
-                        const card = document.querySelector(`.room-item-card[data-room-id="${roomId}"], [data-room-id="${roomId}"]`);
-                        if (card) {
-                            const domTitle = card.getAttribute('data-title') || card.querySelector('h3, h4, .room-title')?.textContent?.trim();
-                            const domPrice = card.getAttribute('data-price') || card.querySelector('.room-price')?.textContent?.trim();
-                            if (domTitle) info.title = domTitle;
-                            if (domPrice) info.price = domPrice;
-                            roomsInfo[roomId] = info;
-                        }
-                    } catch (err) {}
+    bar.classList.remove('translate-y-28', 'opacity-0', 'pointer-events-none');
+    bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
 
-                    const titleFormatted = formatCompareTitle(info.title, roomId);
-                    const priceFormatted = formatComparePrice(info.price);
-                    const priceDisplay = priceFormatted ? `(${priceFormatted})` : '';
-
-                    return `
-                        <div class="flex items-center gap-2 sm:gap-2.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#141720] border border-[#2a2e3d] text-left shrink-0 max-w-[200px] sm:max-w-[250px] relative group" title="${titleFormatted}">
-                            <span class="w-2 h-2 rounded-full bg-white shrink-0"></span>
-                            <div class="flex flex-col min-w-0 leading-tight">
-                                <span class="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate">${titleFormatted}</span>
-                                ${priceDisplay ? `<span class="text-[11px] sm:text-xs font-bold text-white tracking-tight">${priceDisplay}</span>` : ''}
-                            </div>
-                            <button type="button" onclick="event.stopPropagation(); removeCompareItem(${roomId})" class="ml-1 text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors text-[10px]" title="Bỏ phòng này khỏi so sánh">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                    `;
-                }).join('');
-
-                try {
-                    sessionStorage.setItem('renty_compare_rooms_info', JSON.stringify(roomsInfo));
-                } catch (e) {}
-            }
-
-            bar.classList.add('show-bar');
-        } else {
-            bar.classList.remove('show-bar');
-            if (chipsContainer) chipsContainer.innerHTML = '';
-        }
-    } catch (e) {
-        console.error('[Compare Bar Update Error]', e);
+    if (itemsContainer) {
+        itemsContainer.innerHTML = rentyCompareList.map(roomId => {
+            const room = getCompareRoomInfo(roomId);
+            const priceText = formatComparePriceCompact(room.price);
+            const escapedTitle = (room.title || '').replace(/"/g, '&quot;');
+            return `
+                <div class="compare-item-chip flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-[#141824] border border-zinc-800 hover:border-zinc-700 max-w-[210px] sm:max-w-[270px] shrink-0 transition-all cursor-pointer group" onclick="removeCompareItem(${roomId})" title="Bấm để bỏ chọn ${escapedTitle}">
+                    <span class="w-2 h-2 rounded-full bg-white shrink-0 group-hover:bg-rose-400 transition-colors" title="Đang chọn"></span>
+                    <div class="flex flex-col text-left leading-tight truncate">
+                        <span class="text-[12px] sm:text-[13px] font-bold text-white truncate group-hover:text-emerald-300 transition-colors">${room.title}</span>
+                        <span class="text-[11px] sm:text-[12px] font-bold text-zinc-300">(${priceText})</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 }
 window.updateCompareBar = updateCompareBar;
@@ -4968,20 +4926,6 @@ function checkCompareUrlParams() {
 
 // Tự động đồng bộ trạng thái khi tải trang
 document.addEventListener('DOMContentLoaded', () => {
-    // Nếu chưa có phòng nào trong danh sách so sánh, tự động chọn sẵn 2 phòng đầu tiên giống hình ảnh mẫu số 2
-    if (!rentyCompareList || rentyCompareList.length === 0) {
-        const firstCards = Array.from(document.querySelectorAll('.room-item-card[data-room-id]')).slice(0, 2);
-        if (firstCards.length >= 2) {
-            firstCards.forEach(card => {
-                const id = parseInt(card.getAttribute('data-room-id'));
-                if (id && !rentyCompareList.includes(id)) {
-                    rentyCompareList.push(id);
-                }
-            });
-            saveCompareState();
-        }
-    }
-
     updateCompareBar();
     syncCompareCheckboxes();
     checkCompareUrlParams();
