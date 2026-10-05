@@ -50,6 +50,32 @@
         window.rentyIsAuthenticated = @json(auth()->check());
         window.rentySessionSuccess = {!! json_encode(session('success')) !!};
         window.rentySessionError = {!! json_encode(session('error')) !!};
+
+        function allowOnlyNumbers(e) {
+            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+            if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) return true;
+            if (/^[0-9]$/.test(e.key)) return true;
+            e.preventDefault();
+            return false;
+        }
+        function handleOnlyNumbersPaste(e) {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text');
+            const clean = (pasted || '').replace(/\D/g, '');
+            if (clean) document.execCommand('insertText', false, clean);
+        }
+        function sanitizeNumericInput(el) {
+            if (!el) return;
+            el.value = el.value.replace(/\D/g, '');
+            if (typeof debouncedFilterItems === 'function') {
+                debouncedFilterItems();
+            } else if (typeof filterItems === 'function') {
+                filterItems();
+            }
+        }
+        window.allowOnlyNumbers = allowOnlyNumbers;
+        window.handleOnlyNumbersPaste = handleOnlyNumbersPaste;
+        window.sanitizeNumericInput = sanitizeNumericInput;
     </script>
 
     <style>
@@ -376,9 +402,9 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="text" inputmode="numeric" id="filter-price-min" oninput="debouncedFilterItems()" placeholder="Tối thiểu (vd: 20000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="filter-price-min" onkeydown="return allowOnlyNumbers(event)" onpaste="handleOnlyNumbersPaste(event)" oninput="sanitizeNumericInput(this)" placeholder="Tối thiểu (vd: 20000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                         <span class="text-slate-600 text-sm font-bold">-</span>
-                        <input type="text" inputmode="numeric" id="filter-price-max" oninput="debouncedFilterItems()" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="filter-price-max" onkeydown="return allowOnlyNumbers(event)" onpaste="handleOnlyNumbersPaste(event)" oninput="sanitizeNumericInput(this)" placeholder="Tối đa (vd: 4500000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                     </div>
                     <!-- Lỗi viền đỏ và text lỗi chuẩn Hình 21.3 -->
                     <div id="filter-price-error" class="hidden text-xs text-rose-400 font-bold mt-2 flex items-center gap-1.5 animate-shake">

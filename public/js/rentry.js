@@ -2278,6 +2278,30 @@ function debouncedFilterItems(delay = 300) {
 }
 window.debouncedFilterItems = debouncedFilterItems;
 
+function allowOnlyNumbers(e) {
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+    if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) return true;
+    if (/^[0-9]$/.test(e.key)) return true;
+    e.preventDefault();
+    return false;
+}
+window.allowOnlyNumbers = allowOnlyNumbers;
+
+function handleOnlyNumbersPaste(e) {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const clean = (pasted || '').replace(/\D/g, '');
+    if (clean) document.execCommand('insertText', false, clean);
+}
+window.handleOnlyNumbersPaste = handleOnlyNumbersPaste;
+
+function sanitizeNumericInput(el) {
+    if (!el) return;
+    el.value = el.value.replace(/\D/g, '');
+    debouncedFilterItems();
+}
+window.sanitizeNumericInput = sanitizeNumericInput;
+
 function handlePricePresetChange(preset) {
     const minInput = document.getElementById('filter-price-min');
     const maxInput = document.getElementById('filter-price-max');
