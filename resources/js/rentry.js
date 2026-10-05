@@ -185,7 +185,14 @@ if (document.readyState === 'loading') {
 // Toggle advanced filters
 function toggleFilterDrawer() {
     const drawer = document.getElementById('filter-drawer');
-    drawer.classList.toggle('hidden');
+    if (!drawer) return;
+    const isHidden = drawer.classList.contains('hidden');
+    if (isHidden) {
+        drawer.classList.remove('hidden');
+        drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        drawer.classList.add('hidden');
+    }
 }
 
 function applyThemeMode(mode) {
@@ -3474,25 +3481,6 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = `${progress}%`;
         }
     }, { passive: true });
-
-    // FEAT_21: Tự động kích hoạt bộ lọc khi truy cập /search hoặc bấm thanh tìm kiếm
-    if (window.location.pathname.includes('/search') || window.location.search.includes('q=') || window.location.search.includes('price')) {
-        const drawer = document.getElementById('filter-drawer');
-        if (drawer) drawer.classList.remove('hidden');
-    }
-
-    const searchInputEl = document.getElementById('search-input');
-    const heroSearchInputEl = document.getElementById('hero-search-input');
-    [searchInputEl, heroSearchInputEl].forEach(inp => {
-        if (inp) {
-            inp.addEventListener('focus', () => {
-                const drawer = document.getElementById('filter-drawer');
-                if (drawer && drawer.classList.contains('hidden')) {
-                    drawer.classList.remove('hidden');
-                }
-            });
-        }
-    });
 });
 
 // ════════════════════════════════════════════════════════════════════════
