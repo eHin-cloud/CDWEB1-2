@@ -43,6 +43,7 @@
     <script src="{{ asset('js/google-maps-renty.js') }}"></script>
 
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <!-- Pass Laravel variables to Global JS context -->
     <script>
         window.rentyRoomsData = {!! json_encode($rooms->keyBy('id')) !!};
@@ -346,7 +347,10 @@
         </div>
 
         <!-- Advanced Filters Dropdown (Expandable Filters) -->
-        <div id="filter-drawer" class="hidden mt-6 bg-[#0a0e17]/90 border border-slate-800/80 p-6 rounded-3xl backdrop-blur-md animate-fade-in shadow-2xl">
+        @php
+            $isSearchPage = request()->is('*search*') || request()->has('filter') || request()->has('min_price') || request()->has('max_price') || request()->has('q');
+        @endphp
+        <div id="filter-drawer" class="{{ $isSearchPage ? '' : 'hidden' }} mt-6 bg-[#0a0e17]/90 border border-slate-800/80 p-6 rounded-3xl backdrop-blur-md animate-fade-in shadow-2xl">
             <div class="flex items-center justify-between pb-3 mb-5 border-b border-slate-800/60">
                 <span class="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-emerald-400"></i> BỘ LỌC CHI TIẾT
