@@ -5080,13 +5080,22 @@ body.theme-light .renty-chatbot-mascot {
 }
 
 #btn-compare-submit {
-    background: linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 50%, #94a3b8 100%) !important;
-    color: #020617 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+    background: linear-gradient(180deg, #9ca3af 0%, #858b97 50%, #6b7280 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+#btn-compare-submit svg,
+#btn-compare-submit i {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: none !important;
 }
 
 #btn-compare-submit:hover {
-    filter: brightness(1.08);
+    filter: brightness(1.1);
 }
 
 /* Enhanced 3D card tilt & shadow hover transition */

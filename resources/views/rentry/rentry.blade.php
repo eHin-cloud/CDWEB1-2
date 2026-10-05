@@ -1998,7 +1998,7 @@
 </div>
 
 <!-- FLOATING ROOM COMPARISON BAR (CHUẨN THEO THIẾT KẾ HÌNH ẢNH MẪU) -->
-<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0a0d14]/95 border border-[#232733] rounded-[22px] p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 backdrop-blur-xl shadow-2xl shadow-black/80 transition-all duration-300 translate-y-24 opacity-0 pointer-events-none max-w-[95vw] overflow-x-auto no-scrollbar">
+<div id="renty-compare-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] bg-[#0a0d14]/95 border border-[#232733] rounded-[22px] p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 backdrop-blur-xl shadow-2xl shadow-black/80 transition-all duration-300 translate-y-24 opacity-0 pointer-events-none max-w-[95vw] overflow-x-auto no-scrollbar">
     <!-- Icon swap ngoài cùng bên trái -->
     <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#141720] border border-[#2a2e3d] flex items-center justify-center shrink-0 text-white shadow-inner" title="So sánh phòng">
         <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -2019,9 +2019,9 @@
         Hủy
     </button>
 
-    <!-- Nút So sánh ngay (n) -->
-    <button type="button" onclick="showCompareModal()" id="btn-compare-submit" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 hover:brightness-105 active:scale-95 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 sm:gap-2 transition-all shrink-0">
-        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950 stroke-[2.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Nút So sánh ngay (n) - Nền xám bạc, chữ trắng, icon trắng chuẩn hình ảnh -->
+    <button type="button" onclick="showCompareModal()" id="btn-compare-submit" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[#8c9099] hover:brightness-105 active:scale-95 text-white font-black text-xs shadow-lg flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 border border-white/20">
+        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4-4m-4 4l4 4"/>
         </svg>
         <span class="flex items-center gap-1">
