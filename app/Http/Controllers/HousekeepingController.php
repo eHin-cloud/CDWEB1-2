@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\Ticket;
 use App\Events\RoomStatusUpdated;
 use App\Services\AdminActivityLogger;
 use Illuminate\Http\Request;
@@ -32,11 +33,16 @@ class HousekeepingController extends Controller
         $user = Auth::user();
         $tenantId = $user->tenant_id;
 
-        $rooms = Room::with('building')
+        $rooms = Room::with(['building', 'residents', 'tickets' => function ($q) {
+                $q->where('category', 'housekeeping')->whereIn('status', ['pending', 'processing'])->latest();
+            }])
             ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->where(function ($query) {
                 $query->whereIn('status', ['cleaning'])
-                      ->orWhereIn('cleaning_status', ['dirty', 'cleaning']);
+                      ->orWhereIn('cleaning_status', ['dirty', 'cleaning'])
+                      ->orWhereHas('tickets', function ($t) {
+                          $t->where('category', 'housekeeping')->whereIn('status', ['pending', 'processing']);
+                      });
             })
             ->orderBy('floor')
             ->orderBy('room_number')
@@ -80,6 +86,19 @@ class HousekeepingController extends Controller
             'cleaning_status' => $newCleaningStatus,
             'version' => $room->version + 1,
         ]);
+
+        // Tự động đồng bộ các yêu cầu dọn phòng của cư dân
+        if (in_array($newCleaningStatus, ['clean', 'inspected'], true)) {
+            Ticket::where('room_id', $room->id)
+                ->where('category', 'housekeeping')
+                ->whereIn('status', ['pending', 'processing'])
+                ->update(['status' => 'resolved']);
+        } elseif ($newCleaningStatus === 'cleaning') {
+            Ticket::where('room_id', $room->id)
+                ->where('category', 'housekeeping')
+                ->where('status', 'pending')
+                ->update(['status' => 'processing']);
+        }
 
         // Phát sự kiện Realtime cập nhật tức thì lên Sơ đồ ma trận phòng của Lễ tân
         try {

@@ -91,6 +91,9 @@ class ResidentPortalController extends Controller
             ->latest()
             ->get();
 
+        $maintenanceTickets = $tickets->where('category', '!=', 'housekeeping');
+        $housekeepingTickets = $tickets->where('category', 'housekeeping');
+
         return view('resident.portal', [
             'resident' => $resident,
             'room' => $room,
@@ -103,6 +106,8 @@ class ResidentPortalController extends Controller
             'unpaidTotal' => $bills->where('status', '!=', 'paid')->sum('total_amount'),
             'contract' => $contract,
             'tickets' => $tickets,
+            'maintenanceTickets' => $maintenanceTickets,
+            'housekeepingTickets' => $housekeepingTickets,
             'statusLabels' => $this->ticketStatusLabels(),
         ]);
     }
@@ -172,6 +177,13 @@ class ResidentPortalController extends Controller
             \Illuminate\Support\Facades\Log::warning('TicketCreated broadcast failed: ' . $e->getMessage());
         }
 
+        if ($ticket->category === 'housekeeping' && $resident->room) {
+            $resident->room->update([
+                'cleaning_status' => 'dirty',
+                'version' => $resident->room->version + 1,
+            ]);
+        }
+
         $successMsg = 'Đã gửi yêu cầu sửa chữa sự cố thành công! Kỹ thuật viên sẽ xử lý sớm nhất.';
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -185,6 +197,77 @@ class ResidentPortalController extends Controller
 
         return redirect()
             ->route('smartroom.resident', ['tab' => 'tickets'])
+            ->with('success', $successMsg);
+    }
+
+    public function storeHousekeepingRequest(Request $request)
+    {
+        $resident = $this->currentResident();
+        if (!$resident || !$resident->room) {
+            return back()->with('error', 'Tài khoản chưa được gán phòng.');
+        }
+
+        $validated = $request->validate([
+            'note' => 'required|string|min:5|max:1000',
+            'requested_time' => 'nullable|string|max:100',
+            'urgency' => 'nullable|in:normal,urgent,emergency,Bình thường,Gấp,Khẩn cấp',
+        ], [
+            'note.required' => 'Vui lòng nhập chi tiết yêu cầu dọn dẹp phòng.',
+            'note.min' => 'Chi tiết yêu cầu dọn phòng cần ít nhất 5 ký tự.',
+            'note.max' => 'Chi tiết yêu cầu dọn phòng tối đa 1000 ký tự.',
+        ]);
+
+        $room = $resident->room;
+        $note = strip_tags(trim($validated['note']));
+        $requestedTime = !empty($validated['requested_time']) ? strip_tags(trim($validated['requested_time'])) : null;
+        
+        $urgency = match ($validated['urgency'] ?? 'normal') {
+            'urgent', 'Gấp' => 'urgent',
+            'emergency', 'Khẩn cấp' => 'emergency',
+            default => 'normal',
+        };
+
+        $description = $requestedTime 
+            ? "Thời gian mong muốn: {$requestedTime}\nChi tiết: {$note}" 
+            : $note;
+
+        $ticket = Ticket::create([
+            'tenant_id' => $resident->tenant_id,
+            'room_id' => $resident->room_id,
+            'resident_id' => $resident->id,
+            'title' => "Yêu cầu dọn dẹp phòng (P.{$room->room_number})",
+            'description' => $description,
+            'category' => 'housekeeping',
+            'urgency' => $urgency,
+            'specific_location' => 'Toàn bộ phòng',
+            'status' => 'pending',
+        ]);
+
+        // Cập nhật trạng thái phòng sang 'dirty' để bay ngay qua phân hệ Nhiệm Vụ Buồng Phòng
+        $room->update([
+            'cleaning_status' => 'dirty',
+            'version' => $room->version + 1,
+        ]);
+
+        try {
+            event(new \App\Events\TicketCreated($ticket));
+            event(new \App\Events\RoomStatusUpdated($room, $room->status, 'resident_housekeeping_request'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Housekeeping broadcast failed: ' . $e->getMessage());
+        }
+
+        $successMsg = 'Đã gửi yêu cầu dọn dẹp phòng thành công! Bộ phận buồng phòng đã tiếp nhận và sẽ thực hiện sớm nhất.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'ticket' => $ticket->load(['room', 'resident']),
+            ]);
+        }
+
+        return redirect()
+            ->route('smartroom.resident', ['tab' => 'housekeeping'])
             ->with('success', $successMsg);
     }
 

@@ -81,7 +81,11 @@
         @else
             <div class="space-y-3" id="housekeeping-room-list">
                 @foreach($rooms as $room)
-                <div id="room-card-{{ $room->id }}" class="room-card bg-[#0f1218] border {{ $room->cleaning_status === 'cleaning' ? 'border-orange-500/40 bg-orange-500/5' : 'border-zinc-800' }} rounded-2xl p-4 shadow-sm transition hover:border-zinc-700">
+                @php
+                    $activeCleaningTicket = $room->tickets ? $room->tickets->where('category', 'housekeeping')->whereIn('status', ['pending', 'processing'])->first() : null;
+                    $firstResident = $room->residents ? $room->residents->first() : null;
+                @endphp
+                <div id="room-card-{{ $room->id }}" class="room-card bg-[#0f1218] border {{ $room->cleaning_status === 'cleaning' ? 'border-orange-500/40 bg-orange-500/5' : ($activeCleaningTicket ? 'border-indigo-500/40 bg-indigo-500/5' : 'border-zinc-800') }} rounded-2xl p-4 shadow-sm transition hover:border-zinc-700">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="flex items-center gap-2">
@@ -99,6 +103,10 @@
                                 <span class="px-2.5 py-1 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 animate-pulse">
                                     <span class="w-2 h-2 rounded-full bg-orange-400"></span> Đang dọn dẹp
                                 </span>
+                            @elseif($activeCleaningTicket)
+                                <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span> Khách yêu cầu dọn
+                                </span>
                             @else
                                 <span class="px-2.5 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-xs font-semibold inline-flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full bg-rose-400"></span> Phòng bẩn (Chờ dọn)
@@ -106,6 +114,21 @@
                             @endif
                         </div>
                     </div>
+
+                    @if($activeCleaningTicket)
+                    <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-indigo-500/20 text-xs">
+                        <div class="flex items-center justify-between text-indigo-300 font-bold mb-1">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-bell text-amber-400"></i> Khách yêu cầu dọn phòng: {{ $activeCleaningTicket->resident->name ?? ($firstResident->name ?? 'Cư dân') }}
+                                @if(optional($activeCleaningTicket->resident)->phone)
+                                    <a href="tel:{{ $activeCleaningTicket->resident->phone }}" class="text-slate-400 hover:text-slate-200 font-mono text-[11px]">({{ $activeCleaningTicket->resident->phone }})</a>
+                                @endif
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-normal">{{ $activeCleaningTicket->created_at?->diffForHumans() }}</span>
+                        </div>
+                        <p class="text-slate-300 whitespace-pre-line leading-relaxed">{{ $activeCleaningTicket->description }}</p>
+                    </div>
+                    @endif
 
                     <!-- Action Buttons -->
                     <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-zinc-800/80" id="actions-{{ $room->id }}">

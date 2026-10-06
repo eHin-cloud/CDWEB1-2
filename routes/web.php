@@ -91,6 +91,7 @@ Route::get('/smartroom/resident', [ResidentPortalController::class, 'index'])->n
 Route::post('/smartroom/resident/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
 Route::post('/smartroom/resident/tickets', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store');
 Route::post('/smartroom/resident/tickets/store', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store.alias');
+Route::post('/smartroom/resident/housekeeping', [ResidentPortalController::class, 'storeHousekeepingRequest'])->name('smartroom.resident.housekeeping.store');
 Route::get('/smartroom/resident/bills/{id}/qr', [ResidentPortalController::class, 'billQr'])->name('smartroom.resident.bills.qr');
 Route::post('/smartroom/resident/contract/{id}/request-renewal', [ResidentPortalController::class, 'requestRenewal'])->name('smartroom.resident.contract.request_renewal');
 

@@ -337,11 +337,16 @@ class AdminDashboardController extends Controller
         ];
 
         // 9. Housekeeping (Nhiệm vụ buồng phòng / Dọn dẹp)
-        $housekeepingRooms = Room::with('building')
+        $housekeepingRooms = Room::with(['building', 'residents', 'tickets' => function ($q) {
+                $q->where('category', 'housekeeping')->whereIn('status', ['pending', 'processing'])->latest();
+            }])
             ->where('tenant_id', $tenantId)
             ->where(function ($query) {
                 $query->whereIn('status', ['cleaning'])
-                      ->orWhereIn('cleaning_status', ['dirty', 'cleaning']);
+                      ->orWhereIn('cleaning_status', ['dirty', 'cleaning'])
+                      ->orWhereHas('tickets', function ($t) {
+                          $t->where('category', 'housekeeping')->whereIn('status', ['pending', 'processing']);
+                      });
             })
             ->orderBy('floor')
             ->orderBy('room_number')

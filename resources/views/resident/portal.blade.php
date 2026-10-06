@@ -114,7 +114,7 @@
                             <span>Sự cố đang mở</span>
                             <i class="fa-solid fa-screwdriver-wrench text-cyan-400"></i>
                         </div>
-                        <div class="mt-2 text-xl font-black text-cyan-300">{{ $tickets->where('status', '!=', 'resolved')->count() }}</div>
+                        <div class="mt-2 text-xl font-black text-cyan-300">{{ ($maintenanceTickets ?? $tickets->where('category', '!=', 'housekeeping'))->where('status', '!=', 'resolved')->count() }}</div>
                         <div class="mt-1 text-xs text-slate-400">Bảo trì / sửa chữa</div>
                     </div>
                 </section>
@@ -123,7 +123,12 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <button type="button" onclick="switchResidentTab('bills')" class="resident-tab px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">Hóa đơn</button>
                         <button type="button" onclick="switchResidentTab('contract')" class="resident-tab px-4 py-2 rounded-xl bg-slate-900 text-slate-300 text-xs font-bold border border-slate-800">Hợp đồng</button>
-                        <button type="button" onclick="switchResidentTab('tickets')" class="resident-tab px-4 py-2 rounded-xl bg-slate-900 text-slate-300 text-xs font-bold border border-slate-800">Sự cố / Bảo trì</button>
+                        <button type="button" onclick="switchResidentTab('tickets')" class="resident-tab px-4 py-2 rounded-xl bg-slate-900 text-slate-300 text-xs font-bold border border-slate-800">
+                            <i class="fa-solid fa-screwdriver-wrench mr-1 text-cyan-400"></i> Báo hỏng thiết bị
+                        </button>
+                        <button type="button" onclick="switchResidentTab('housekeeping')" class="resident-tab px-4 py-2 rounded-xl bg-slate-900 text-slate-300 text-xs font-bold border border-slate-800">
+                            <i class="fa-solid fa-broom mr-1 text-emerald-400"></i> Dọn dẹp phòng
+                        </button>
                     </div>
                 </section>
 
@@ -289,16 +294,25 @@
                                 </div>
                             @endif
 
+                            <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-broom text-emerald-400"></i>
+                                    <span>Cần dọn dẹp vệ sinh phòng?</span>
+                                </div>
+                                <button type="button" onclick="switchResidentTab('housekeeping')" class="text-xs font-bold underline hover:text-white">
+                                    Sang mục Dọn phòng
+                                </button>
+                            </div>
+
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Loại sự cố <span class="text-rose-500">*</span></label>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Loại sự cố hư hỏng <span class="text-rose-500">*</span></label>
                                 <select name="category" id="ticket-category" onchange="handleCategoryChange(this.value); clearCategoryError();" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
-                                    <option value="">-- Chọn phân loại sự cố --</option>
+                                    <option value="">-- Chọn phân loại sự cố hư hỏng --</option>
                                     <option value="electric">Điện (Cháy đèn, mất điện, ổ cắm)</option>
                                     <option value="water">Nước (Rò rỉ ống, vòi sen, tắc bồn cầu)</option>
                                     <option value="lock">Khóa cửa (Kẹt khóa, hỏng chìa, bản lề)</option>
                                     <option value="furniture">Nội thất & Trang thiết bị (Tủ, giường, bàn ghế)</option>
                                     <option value="maintenance">Bảo trì phòng định kỳ</option>
-                                    <option value="housekeeping">Dịch vụ dọn phòng (Housekeeping)</option>
                                     <option value="other">Khác</option>
                                 </select>
                                 <p id="ticket-category-error" class="hidden text-xs text-rose-400 mt-1 flex items-center gap-1.5 font-medium">
@@ -374,7 +388,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-900">
-                                    @forelse($tickets as $ticket)
+                                    @forelse($maintenanceTickets ?? $tickets->where('category', '!=', 'housekeeping') as $ticket)
                                         <tr class="hover:bg-slate-900/30">
                                             <td class="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}</td>
                                             <td class="px-4 py-4 whitespace-nowrap">
@@ -426,7 +440,161 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="px-4 py-8 text-center text-xs text-slate-500">Chưa có yêu cầu sửa chữa.</td>
+                                            <td colspan="6" class="px-4 py-8 text-center text-xs text-slate-500">Chưa có sự cố báo hỏng thiết bị nào.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION DỌN DẸP BUỒNG PHÒNG RIÊNG BIỆT (HOUSEKEEPING) -->
+                <section id="resident-tab-housekeeping" class="resident-section panel rounded-2xl p-6 hidden">
+                    <!-- Trạng thái buồng phòng hiện tại của cư dân -->
+                    <div class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-[#0b101c] border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl shrink-0">
+                                <i class="fa-solid fa-broom"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-black text-white flex items-center gap-2">
+                                    Dịch Vụ Dọn Dẹp Phòng (Housekeeping)
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    Phòng P.{{ $room->room_number }} - Tầng {{ $room->floor }} ({{ $room->building->name ?? 'Cơ sở lưu trú' }})
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-400">Trạng thái phòng:</span>
+                            @if($room->cleaning_status === 'cleaning')
+                                <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30 inline-flex items-center gap-1.5 animate-pulse">
+                                    <span class="w-2 h-2 rounded-full bg-orange-400"></span> Nhân viên đang dọn dẹp
+                                </span>
+                            @elseif($room->cleaning_status === 'dirty' || (isset($housekeepingTickets) && $housekeepingTickets->whereIn('status', ['pending', 'processing'])->isNotEmpty()))
+                                <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span> Đã gửi yêu cầu (Chờ nhân viên dọn)
+                                </span>
+                            @else
+                                <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 inline-flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Phòng sạch sẽ
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <!-- Form Gửi Yêu Cầu Dọn Phòng -->
+                        <form method="POST" action="{{ route('smartroom.resident.housekeeping.store') }}" class="xl:col-span-1 rounded-xl bg-slate-950/40 border border-slate-800 p-4 space-y-4" id="resident-housekeeping-form" onsubmit="return handleHousekeepingSubmit(event, this)">
+                            @csrf
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-900">
+                                <h4 class="text-sm font-black text-slate-100 flex items-center gap-2">
+                                    <i class="fa-solid fa-sparkles text-emerald-400"></i> Đặt Yêu Cầu Dọn Dẹp
+                                </h4>
+                                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Buồng phòng</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Thời gian mong muốn dọn phòng</label>
+                                <select name="requested_time" id="hk-requested-time" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors">
+                                    <option value="Hôm nay (Càng sớm càng tốt)">Hôm nay (Càng sớm càng tốt)</option>
+                                    <option value="Sáng nay (8h00 - 11h30)">Sáng nay (8h00 - 11h30)</option>
+                                    <option value="Chiều nay (14h00 - 17h30)">Chiều nay (14h00 - 17h30)</option>
+                                    <option value="Sáng mai (8h00 - 11h30)">Sáng mai (8h00 - 11h30)</option>
+                                    <option value="Chiều mai (14h00 - 17h30)">Chiều mai (14h00 - 17h30)</option>
+                                    <option value="Vào cuối tuần">Vào cuối tuần</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Mức độ ưu tiên</label>
+                                <select name="urgency" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors">
+                                    <option value="normal" selected>Bình thường</option>
+                                    <option value="urgent">Gấp / Cần dọn sớm</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Chi tiết các hạng mục cần dọn <span class="text-rose-500">*</span></label>
+                                    <span id="hk-note-count" class="text-[10px] text-slate-500">0/1000</span>
+                                </div>
+                                <textarea name="note" id="hk-note" maxlength="1000" rows="4" oninput="document.getElementById('hk-note-count').textContent = this.value.length + '/1000'" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 placeholder-slate-500 transition-colors resize-none" placeholder="VD: Nhờ dọn rác, lau sàn nhà, thay vỏ ga gối và cọ rửa nhà vệ sinh..."></textarea>
+                                <p id="hk-note-error" class="hidden text-xs text-rose-400 mt-1 flex items-center gap-1.5 font-medium">
+                                    <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                                    <span>Vui lòng nhập chi tiết yêu cầu dọn phòng (tối thiểu 5 ký tự).</span>
+                                </p>
+                            </div>
+
+                            <!-- Gợi ý nhanh -->
+                            <div class="space-y-1.5">
+                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Gợi ý yêu cầu nhanh:</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <button type="button" onclick="appendHkNote('Dọn rác & lau sạch sàn nhà.')" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 transition">Lau sàn + đổ rác</button>
+                                    <button type="button" onclick="appendHkNote('Thay ga trải giường và vỏ gối mới.')" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 transition">Thay ga gối</button>
+                                    <button type="button" onclick="appendHkNote('Cọ rửa và khử mùi nhà vệ sinh.')" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 transition">Cọ toilet</button>
+                                    <button type="button" onclick="appendHkNote('Tổng vệ sinh toàn bộ phòng.')" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 transition">Tổng vệ sinh</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="submit-btn w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Gửi Yêu Cầu Dọn Phòng
+                            </button>
+                        </form>
+
+                        <!-- Danh Sách Lịch Sử Yêu Cầu Dọn Phòng -->
+                        <div class="xl:col-span-2 overflow-x-auto rounded-xl border border-slate-900">
+                            <div class="p-3 bg-slate-950/70 border-b border-slate-900 flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Lịch Sử Yêu Cầu Dọn Buồng Phòng</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800">
+                                    {{ ($housekeepingTickets ?? collect())->count() }} lượt yêu cầu
+                                </span>
+                            </div>
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-950 text-slate-500 uppercase text-xs">
+                                    <tr>
+                                        <th class="px-4 py-3">Thời gian gửi</th>
+                                        <th class="px-4 py-3">Nội dung yêu cầu</th>
+                                        <th class="px-4 py-3">Mức độ</th>
+                                        <th class="px-4 py-3">Trạng thái xử lý</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-900">
+                                    @forelse($housekeepingTickets ?? $tickets->where('category', 'housekeeping') as $hk)
+                                        <tr class="hover:bg-slate-900/30">
+                                            <td class="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">
+                                                {{ $hk->created_at ? $hk->created_at->format('d/m/Y H:i') : '' }}
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <div class="text-xs text-slate-200 whitespace-pre-line leading-relaxed font-medium">{{ $hk->description }}</div>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                @if(($hk->urgency ?? 'normal') === 'urgent')
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-300 border-amber-500/20">Cần gấp</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-slate-800 text-slate-400 border-slate-700">Bình thường</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                @php
+                                                    $hkStatus = $hk->status ?? 'pending';
+                                                    $hkMeta = match($hkStatus) {
+                                                        'processing' => ['label' => 'Đang dọn dẹp', 'class' => 'bg-orange-500/10 text-orange-300 border-orange-500/20 animate-pulse'],
+                                                        'resolved' => ['label' => 'Đã dọn xong (Sạch)', 'class' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'],
+                                                        default => ['label' => 'Chờ tiếp nhận', 'class' => 'bg-amber-500/10 text-amber-300 border-amber-500/20'],
+                                                    };
+                                                @endphp
+                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $hkMeta['class'] }}">
+                                                    {{ $hkMeta['label'] }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-8 text-center text-xs text-slate-500">
+                                                Chưa có yêu cầu dọn phòng nào được gửi.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -743,11 +911,42 @@
                 .replace(/'/g, '&#039;');
         }
 
+        function appendHkNote(text) {
+            const textarea = document.getElementById('hk-note');
+            if (!textarea) return;
+            if (textarea.value.trim().length > 0) {
+                textarea.value += ' ' + text;
+            } else {
+                textarea.value = text;
+            }
+            const countEl = document.getElementById('hk-note-count');
+            if (countEl) countEl.textContent = textarea.value.length + '/1000';
+            document.getElementById('hk-note-error')?.classList.add('hidden');
+            textarea.classList.remove('border-rose-500');
+            textarea.classList.add('border-slate-800');
+        }
+
+        function handleHousekeepingSubmit(event, form) {
+            const note = document.getElementById('hk-note');
+            const noteError = document.getElementById('hk-note-error');
+            if (!note || note.value.trim().length < 5) {
+                if (event) event.preventDefault();
+                if (note) {
+                    note.classList.remove('border-slate-800');
+                    note.classList.add('border-rose-500');
+                    note.focus();
+                }
+                if (noteError) noteError.classList.remove('hidden');
+                return false;
+            }
+            return disableSubmit(form);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const tab = new URLSearchParams(window.location.search).get('tab');
             if (tab && document.getElementById(`resident-tab-${tab}`)) {
                 const buttons = Array.from(document.querySelectorAll('.resident-tab'));
-                const index = ['bills', 'contract', 'tickets'].indexOf(tab);
+                const index = ['bills', 'contract', 'tickets', 'housekeeping'].indexOf(tab);
                 if (buttons[index]) buttons[index].click();
             }
         });

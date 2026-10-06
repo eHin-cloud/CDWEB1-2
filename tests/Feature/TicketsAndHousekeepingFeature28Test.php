@@ -274,5 +274,56 @@ class TicketsAndHousekeepingFeature28Test extends TestCase
         $response->assertSee('PHÒNG ĐÃ SẠCH');
         $response->assertSee('DANH SÁCH PHÒNG CHỜ VỆ SINH');
         $response->assertSee('P.102');
+        $response->assertDontSee('Chế độ Mobile');
+    }
+
+    /**
+     * Kiểm tra cư dân gửi yêu cầu dọn phòng riêng biệt -> bay qua Nhiệm vụ buồng phòng -> dọn xong tự giải quyết
+     */
+    public function test_resident_housekeeping_request_flows_to_housekeeping_dashboard_and_resolves()
+    {
+        $tenant = $this->createTenant();
+        $room = $this->createRoom($tenant, '305', ['status' => 'occupied', 'cleaning_status' => 'clean']);
+        [$residentUser, $resident] = $this->createResidentUser($tenant, $room);
+        $landlord = $this->createLandlordUser($tenant);
+
+        // 1. Cư dân gửi yêu cầu dọn phòng riêng biệt
+        $response = $this->actingAs($residentUser)->post('/smartroom/resident/housekeeping', [
+            'note' => 'Nhờ dọn rác và lau sàn nhà sạch sẽ.',
+            'requested_time' => 'Sáng mai (8h00 - 11h30)',
+            'urgency' => 'normal',
+        ]);
+        $response->assertSessionHas('success');
+
+        // Phòng phải chuyển sang dirty và tạo ticket housekeeping
+        $room->refresh();
+        $this->assertEquals('dirty', $room->cleaning_status);
+        $this->assertDatabaseHas('tickets', [
+            'room_id' => $room->id,
+            'resident_id' => $resident->id,
+            'category' => 'housekeeping',
+            'status' => 'pending',
+        ]);
+
+        // 2. Tab buồng phòng của Admin thấy phòng này và không còn nút "Chế độ Mobile"
+        $adminResp = $this->actingAs($landlord)->get('/smartroom/admin?tab=housekeeping-section');
+        $adminResp->assertStatus(200);
+        $adminResp->assertSee('P.305');
+        $adminResp->assertSee('Khách yêu cầu dọn');
+        $adminResp->assertDontSee('Chế độ Mobile');
+
+        // 3. Nhân viên / BQL bấm Đã dọn xong (Sạch)
+        $cleanResp = $this->actingAs($landlord)->post("/smartroom/housekeeping/{$room->id}/status", [
+            'cleaning_status' => 'clean',
+        ]);
+        $cleanResp->assertSessionHas('success');
+
+        $room->refresh();
+        $this->assertEquals('clean', $room->cleaning_status);
+        $this->assertDatabaseHas('tickets', [
+            'room_id' => $room->id,
+            'category' => 'housekeeping',
+            'status' => 'resolved',
+        ]);
     }
 }
