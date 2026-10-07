@@ -28,6 +28,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
     
+    <script>
+        try {
+            if (localStorage.getItem('smartroom.sidebar.collapsed') === '1') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        } catch(e) {}
+    </script>
+
     <style>
         body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
         @keyframes shake {
@@ -50,6 +58,36 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(30, 41, 59, 0.8);
         }
+
+        #admin-sidebar {
+            width: 16rem !important;
+            transition: width 0.2s ease-in-out;
+        }
+
+        #admin-shell {
+            margin-left: 16rem !important;
+            width: calc(100% - 16rem) !important;
+            min-width: 0;
+            transition: margin-left 0.2s ease-in-out, width 0.2s ease-in-out;
+        }
+
+        html.sidebar-collapsed #admin-sidebar,
+        body.sidebar-collapsed #admin-sidebar {
+            width: 5rem !important;
+        }
+
+        html.sidebar-collapsed #admin-shell,
+        body.sidebar-collapsed #admin-shell {
+            margin-left: 5rem !important;
+            width: calc(100% - 5rem) !important;
+        }
+
+        @media (max-width: 768px) {
+            #admin-shell {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-teal-500 selection:text-white overflow-hidden">
@@ -65,10 +103,10 @@
     @include('admin.partials.sidebar')
 
     <!-- MAIN APP WRAPPER CÓ THANH SIDEBAR BÊN TRÁI -->
-    <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200 custom-scrollbar">
+    <div id="admin-shell" class="min-w-0 flex flex-col h-screen overflow-hidden relative z-10 transition-[margin-left,width] duration-200">
         
         <!-- TOP NAVBAR ĐIỀU HÀNH -->
-        <header class="h-16 border-b border-slate-900 bg-[#080b11]/85 backdrop-blur-md flex items-center justify-between px-6 sm:px-8 sticky top-0 z-30 shrink-0">
+        <header class="h-16 border-b border-slate-900 bg-[#080b11]/90 backdrop-blur-md flex items-center justify-between px-6 sm:px-8 sticky top-0 z-20 shrink-0">
             <div class="flex items-center gap-3.5 min-w-0">
                 <div class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shadow-sm shrink-0">
                     <i class="fa-solid fa-broom-ball text-base"></i>
@@ -103,8 +141,8 @@
             </div>
         </header>
 
-        <!-- MAIN CONTENT PANEL -->
-        <main class="p-6 sm:p-8 flex-grow overflow-y-auto space-y-6">
+        <!-- MAIN CONTENT PANEL (Cuộn độc lập) -->
+        <main class="p-6 sm:p-8 flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-6">
 
             <!-- Thống Kê Tổng Quan Trạng Thái FSM (KPI Summary Cards) -->
             <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
@@ -1258,5 +1296,6 @@
             }
         }
     </script>
+    <script src="{{ asset('js/admin-sidebar.js') }}"></script>
 </body>
 </html>
