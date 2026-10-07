@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # SmartRoom & Renty - GUI App Launcher
 # ==============================================================================
 
@@ -125,9 +125,19 @@ Add-Type -AssemblyName System.Drawing
                             </StackPanel>
                         </Border>
 
+                        <!-- Hybrid Fast Run Button -->
+                        <Button Name="btnRunHybrid" Content="⚡ KHỞI CHẠY SIÊU TỐC (MƯỢT X10 - KHÔNG TRỄ)" Height="42" FontSize="13" FontWeight="Bold"
+                                Background="#10b981" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,0,8">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="8"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+
                         <!-- Main Run Button -->
-                        <Button Name="btnRunDocker" Content="🚀 KHỞI CHẠY BẰNG DOCKER" Height="42" FontSize="13" FontWeight="Bold"
-                                Background="#2563eb" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,0,10">
+                        <Button Name="btnRunDocker" Content="🐳 Khởi chạy Docker toàn phần (Chậm hơn trên Windows)" Height="32" FontSize="11" FontWeight="SemiBold"
+                                Background="#334155" Foreground="#94a3b8" BorderThickness="0" Cursor="Hand" Margin="0,0,0,10">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="8"/>
@@ -531,7 +541,113 @@ function Start-DockerEngine {
     return $false
 }
 
-# 1. RUN DOCKER
+# 1. HYBRID FAST RUN (PHP Native + MySQL Docker)
+$btnRunHybrid.Add_Click({
+    $btnRunHybrid.IsEnabled = $false
+    $txtStatus.Text = "⏳ Đang kiểm tra cấu hình ban đầu..."
+    Update-UI
+
+    # 1. Kiểm tra và copy .env nếu chưa có
+    $envFile = "$scriptDir\.env"
+    if (-not (Test-Path $envFile)) {
+        if (Test-Path "$scriptDir\.env.example") {
+            Copy-Item "$scriptDir\.env.example" $envFile
+        }
+    }
+
+    # 2. Tìm PHP
+    $phpPath = "php"
+    if (Test-Path "D:\xampp\php\php.exe") { $phpPath = "D:\xampp\php\php.exe" }
+    elseif (Test-Path "C:\xampp\php\php.exe") { $phpPath = "C:\xampp\php\php.exe" }
+
+    # 3. Kiểm tra vendor PHP
+    if (-not (Test-Path "$scriptDir\vendor\autoload.php")) {
+        $txtStatus.Text = "⏳ Chưa có thư viện Backend. Đang tự động cài đặt Composer..."
+        Update-UI
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & composer install --prefer-dist --ignore-platform-reqs" -Wait
+    }
+
+    # 4. Kiểm tra node_modules
+    if (-not (Test-Path "$scriptDir\node_modules")) {
+        $txtStatus.Text = "⏳ Chưa có thư viện Frontend. Đang tự động cài đặt NPM..."
+        Update-UI
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & npm install" -Wait
+    }
+
+    # 5. Kiểm tra APP_KEY
+    if (Test-Path $envFile) {
+        $content = Get-Content $envFile -Raw
+        if ($content -notmatch "APP_KEY=base64:") {
+            Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan key:generate" -Wait
+        }
+    }
+
+    # 6. Kiểm tra storage link
+    if (-not (Test-Path "$scriptDir\public\storage")) {
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan storage:link" -Wait -WindowStyle Hidden
+    }
+
+    $txtStatus.Text = "⏳ Đang kiểm tra Docker & khởi động MySQL container..."
+    Update-UI
+
+    if (-not (Start-DockerEngine)) {
+        $txtStatus.Text = "❌ Docker Desktop chưa sẵn sàng."
+        $btnRunHybrid.IsEnabled = $true
+        return
+    }
+
+    # Bật duy nhất container MySQL trong Docker
+    Start-Process -FilePath "docker" -ArgumentList "compose up -d mysql" -WorkingDirectory $scriptDir -Wait -NoNewWindow
+    # Tắt container app trong docker nếu đang chạy để nhường cổng 8088
+    Start-Process -FilePath "docker" -ArgumentList "compose stop app" -WorkingDirectory $scriptDir -Wait -NoNewWindow
+
+    # Chờ MySQL port 3309 sẵn sàng
+    $txtStatus.Text = "⏳ Đang đợi CSDL MySQL Docker (Port 3309) sẵn sàng..."
+    Update-UI
+    for ($i = 0; $i -lt 15; $i++) {
+        $isOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if ($isOpen) { break }
+        Start-Sleep -Seconds 1
+    }
+
+    # Đảm bảo .env trỏ đúng 127.0.0.1:3309
+    if (Test-Path $envFile) {
+        $content = Get-Content $envFile -Raw
+        $content = $content -replace "DB_HOST=.*", "DB_HOST=127.0.0.1"
+        $content = $content -replace "DB_PORT=.*", "DB_PORT=3309"
+        $content = $content -replace "DB_DATABASE=.*", "DB_DATABASE=quan_ly_nha_tro"
+        $content = $content -replace "DB_USERNAME=.*", "DB_USERNAME=smartroom"
+        $content = $content -replace "DB_PASSWORD=.*", "DB_PASSWORD=smartroom"
+        [System.IO.File]::WriteAllText($envFile, $content, [System.Text.Encoding]::UTF8)
+    }
+
+    # 7. Tự động Migrate và Seed nếu CSDL mới chưa có dữ liệu
+    $checkDbCmd = "& `"$phpPath`" -r `"try { `$p = new PDO('mysql:host=127.0.0.1;port=3309;dbname=quan_ly_nha_tro', 'smartroom', 'smartroom'); `$c = `$p->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \'quan_ly_nha_tro\'')->fetchColumn(); exit(`$c == 0 ? 2 : 0); } catch(Throwable `$e) { exit(1); }`""
+    & cmd.exe /c $checkDbCmd
+    if ($LASTEXITCODE -eq 2) {
+        $txtStatus.Text = "⏳ CSDL mới! Đang tự động nạp cấu trúc (Migrate) & dữ liệu mẫu (Seed)..."
+        Update-UI
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan migrate --force & `"$phpPath`" artisan db:seed --force" -Wait
+    }
+
+    # 8. Khởi chạy Server và Vite
+    $isServed = Test-NetConnection -ComputerName 127.0.0.1 -Port 8088 -InformationLevel Quiet -WarningAction SilentlyContinue
+    if (-not $isServed) {
+        $txtStatus.Text = "⏳ Đang khởi chạy Laravel Server (Port 8088) & Reverb WebSocket..."
+        Update-UI
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Native Server (Port 8088) & cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --host=127.0.0.1 --port=8088"
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Reverb WebSocket (Port 8085) & cd /d `"$scriptDir`" & `"$phpPath`" artisan reverb:start --host=127.0.0.1 --port=8085"
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Vite Assets & cd /d `"$scriptDir`" & npm run dev"
+        Start-Sleep -Seconds 2
+    }
+
+    $targetUrl = "http://localhost:8088/renty"
+    Open-AppWindow $targetUrl
+    $txtStatus.Text = "✅ Đã khởi chạy chế độ Siêu Tốc thành công! Tốc độ x10 mượt mà."
+    $btnRunHybrid.IsEnabled = $true
+})
+
+# 2. RUN DOCKER FULL
 $btnRunDocker.Add_Click({
     $btnRunDocker.IsEnabled = $false
     $txtStatus.Text = "⏳ Đang kiểm tra môi trường Docker..."

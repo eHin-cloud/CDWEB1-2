@@ -45,8 +45,12 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => (file_exists('/.dockerenv') && in_array(env('DB_HOST'), ['127.0.0.1', 'localhost', ''])) ? 'mysql' : env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
+            'host' => file_exists('/.dockerenv')
+                ? (in_array(env('DB_HOST'), ['127.0.0.1', 'localhost', '']) ? 'mysql' : env('DB_HOST', 'mysql'))
+                : (env('DB_HOST') === 'mysql' ? '127.0.0.1' : env('DB_HOST', '127.0.0.1')),
+            'port' => (!file_exists('/.dockerenv') && env('DB_HOST') === 'mysql' && (string) env('DB_PORT') === '3306')
+                ? '3309'
+                : env('DB_PORT', '3306'),
             'database' => (file_exists('/.dockerenv') && env('DB_DATABASE') === 'qlphongtro') ? 'quan_ly_nha_tro' : env('DB_DATABASE', 'laravel'),
             'username' => (file_exists('/.dockerenv') && env('DB_USERNAME') === 'root') ? 'smartroom' : env('DB_USERNAME', 'root'),
             'password' => (file_exists('/.dockerenv') && env('DB_USERNAME') === 'root') ? 'smartroom' : env('DB_PASSWORD', ''),
