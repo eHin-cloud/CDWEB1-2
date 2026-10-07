@@ -1451,13 +1451,41 @@ body.theme-light .text-slate-600 {
     color: #64748b !important;
 }
 
-html.theme-light .bg-clip-text.text-transparent:not(.renty-brand-text):not(.app-brand-text),
-body.theme-light .bg-clip-text.text-transparent:not(.renty-brand-text):not(.app-brand-text) {
+html.theme-light .bg-clip-text.text-transparent:not(.renty-brand-text):not(.app-brand-text):not(.hero-title-accent),
+body.theme-light .bg-clip-text.text-transparent:not(.renty-brand-text):not(.app-brand-text):not(.hero-title-accent) {
     background: none !important;
     -webkit-background-clip: initial !important;
     background-clip: initial !important;
     color: #1e293b !important;
     -webkit-text-fill-color: #1e293b;
+}
+
+/* Chữ 'Xem Review Thật' trong Hero Banner: Tương phản nổi bật cả ở Dark và Light mode */
+.hero-title-accent {
+    background: linear-gradient(135deg, #34d399 0%, #2dd4bf 50%, #22d3ee 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    display: inline-block;
+}
+
+html.theme-light .hero-title-accent,
+body.theme-light .hero-title-accent {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 45%, #0284c7 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 1px 1px rgba(5, 150, 105, 0.2)) !important;
+}
+
+[data-duo] .hero-title-accent {
+    background: var(--duo-gradient) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
 }
 
 html.theme-light input,

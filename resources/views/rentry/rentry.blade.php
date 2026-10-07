@@ -128,6 +128,25 @@
             color: #0f172a !important;
         }
 
+        .hero-title-accent {
+            background: linear-gradient(135deg, #34d399 0%, #2dd4bf 50%, #22d3ee 100%) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+            display: inline-block;
+        }
+        .theme-light .hero-title-accent,
+        html.theme-light .hero-title-accent,
+        body.theme-light .hero-title-accent {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 45%, #0284c7 100%) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+            filter: drop-shadow(0 1px 1px rgba(5, 150, 105, 0.2)) !important;
+        }
+
         /* Badge phòng đã xem */
         .viewed-room-strip {
             display: none !important;
@@ -288,7 +307,7 @@
                     </span>
                     
                     <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight text-slate-100">
-                        Tìm Trọ Đúng Nghĩa - <br class="hidden md:inline"><span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Xem Review Thật</span>
+                        Tìm Trọ Đúng Nghĩa - <br class="hidden md:inline"><span class="hero-title-accent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Xem Review Thật</span>
                     </h1>
                     
                     <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-4 leading-relaxed">
