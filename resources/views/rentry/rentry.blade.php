@@ -128,23 +128,31 @@
             color: #0f172a !important;
         }
 
+        @keyframes heroTextGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
         .hero-title-accent {
-            background: linear-gradient(135deg, #34d399 0%, #2dd4bf 50%, #22d3ee 100%) !important;
+            background: linear-gradient(90deg, #10b981 0%, #14b8a6 35%, #06b6d4 70%, #3b82f6 100%) !important;
+            background-size: 250% auto !important;
             -webkit-background-clip: text !important;
             background-clip: text !important;
             -webkit-text-fill-color: transparent !important;
             color: transparent !important;
-            display: inline-block;
+            animation: heroTextGlow 8s ease-in-out infinite alternate !important;
+            transition: background 0.5s ease;
         }
         .theme-light .hero-title-accent,
         html.theme-light .hero-title-accent,
         body.theme-light .hero-title-accent {
-            background: linear-gradient(135deg, #059669 0%, #0d9488 45%, #0284c7 100%) !important;
+            background: linear-gradient(90deg, #059669 0%, #0d9488 35%, #0284c7 70%, #4f46e5 100%) !important;
+            background-size: 250% auto !important;
             -webkit-background-clip: text !important;
             background-clip: text !important;
             -webkit-text-fill-color: transparent !important;
             color: transparent !important;
-            filter: drop-shadow(0 1px 1px rgba(5, 150, 105, 0.2)) !important;
+            animation: heroTextGlow 8s ease-in-out infinite alternate !important;
+            filter: none !important;
         }
 
         /* Badge phòng đã xem */
