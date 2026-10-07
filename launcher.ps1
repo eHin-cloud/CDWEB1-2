@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # SmartRoom & Renty - GUI App Launcher
 # ==============================================================================
 
@@ -354,6 +354,7 @@ $window = [System.Windows.Markup.XamlReader]::Load($nodeReader)
 
 # Get element controls
 $mainTabControl  = $window.FindName("mainTabControl")
+$btnRunHybrid    = $window.FindName("btnRunHybrid")
 $btnRunDocker    = $window.FindName("btnRunDocker")
 $btnDockerLogs   = $window.FindName("btnDockerLogs")
 $btnDockerSeed   = $window.FindName("btnDockerSeed")

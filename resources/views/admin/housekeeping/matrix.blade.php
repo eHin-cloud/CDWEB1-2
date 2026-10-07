@@ -5,11 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sơ Đồ Ma Trận Buồng Phòng & Lễ Tân - SmartRoom (FEAT_18)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome & Sidebar CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
+    
     <style>
         body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
         @keyframes shake {
@@ -23,374 +41,389 @@
             box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4) !important;
         }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0b0e17; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #080b11; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #334155; }
+        
+        .glass-panel {
+            background: rgba(13, 18, 31, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(30, 41, 59, 0.8);
+        }
     </style>
 </head>
-<body class="bg-[#080b11] text-slate-100 min-h-screen font-sans antialiased flex flex-col">
+<body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-teal-500 selection:text-white overflow-hidden">
+
+    <!-- Decorative glows -->
+    <div class="absolute top-[-10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-teal-600/10 blur-[130px] pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full bg-indigo-600/10 blur-[130px] pointer-events-none"></div>
 
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-md w-full pointer-events-none px-4"></div>
 
-    <!-- Header Điều Hành Chuẩn Wireframe Hình 18.1 -->
-    <header class="bg-[#0d121f] border-b border-slate-800/80 sticky top-0 z-40 px-4 sm:px-6 py-3.5 shadow-xl">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 p-0.5 shadow-lg shadow-teal-500/20 flex items-center justify-center">
-                    <div class="w-full h-full bg-[#0d121f] rounded-[14px] flex items-center justify-center">
-                        <i class="fa-solid fa-broom text-teal-400 text-lg"></i>
-                    </div>
+    <!-- SIDEBAR QUẢN TRỊ VIÊN CHUẨN CỦA HỆ THỐNG -->
+    @include('admin.partials.sidebar')
+
+    <!-- MAIN APP WRAPPER CÓ THANH SIDEBAR BÊN TRÁI -->
+    <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200 custom-scrollbar">
+        
+        <!-- TOP NAVBAR ĐIỀU HÀNH -->
+        <header class="h-16 border-b border-slate-900 bg-[#080b11]/85 backdrop-blur-md flex items-center justify-between px-6 sm:px-8 sticky top-0 z-30 shrink-0">
+            <div class="flex items-center gap-3.5 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shadow-sm shrink-0">
+                    <i class="fa-solid fa-broom-ball text-base"></i>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                        <h1 class="text-base sm:text-lg font-black text-white tracking-tight">SƠ ĐỒ BUỒNG PHÒNG & LỄ TÂN</h1>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
+                        <h2 class="text-base font-bold text-white tracking-tight truncate">SƠ ĐỒ BUỒNG PHÒNG &amp; LỄ TÂN</h2>
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30 shrink-0 hidden sm:inline-block">
                             FEAT_18_HOUSEKEEPING_FRONTDESK
                         </span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-                        <span><i class="fa-solid fa-building text-[10px] text-slate-500"></i> {{ Auth::user()->tenant->name ?? 'Cơ sở SmartRoom' }}</span>
-                        <span>•</span>
-                        <span><i class="fa-solid fa-user-shield text-[10px] text-slate-500"></i> {{ Auth::user()->name }} ({{ Auth::user()->roleName() }})</span>
+                    <p class="text-xs text-slate-400 truncate">
+                        {{ Auth::user()->tenant->name ?? 'Cơ sở lưu trú' }} • {{ Auth::user()->name }} ({{ Auth::user()->roleName() }})
                     </p>
                 </div>
             </div>
 
-            <!-- Header Action Buttons -->
-            <div class="flex items-center gap-2">
-                <button type="button" onclick="openAssignModal(null)" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 border border-indigo-500/50 transition flex items-center gap-2">
+            <!-- Top Actions -->
+            <div class="flex items-center gap-3 shrink-0">
+                <button type="button" onclick="openAssignModal(null)" class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/25 transition">
                     <i class="fa-solid fa-user-plus text-xs"></i>
                     <span class="hidden sm:inline">Phân Công Dọn Buồng</span>
                     <span class="sm:hidden">Phân công</span>
                 </button>
-                <a href="{{ route('smartroom.admin') }}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span class="hidden sm:inline">Về Quản Trị</span>
+                @include('admin.partials.accent-picker')
+                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition" aria-label="Chuyển chế độ sáng tối">
+                    <i class="fa-solid fa-moon" data-theme-icon></i>
+                </button>
+                <a href="{{ route('smartroom.admin') }}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition hidden sm:inline-flex items-center gap-1.5" title="Về tổng quan">
+                    <i class="fa-solid fa-arrow-left"></i> Về Quản Trị
                 </a>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <!-- MAIN CONTENT PANEL -->
+        <main class="p-6 sm:p-8 flex-grow overflow-y-auto space-y-6">
 
-        <!-- Thống Kê Tổng Quan Trạng Thái FSM (KPI Summary Cards) -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <!-- Tổng số phòng -->
-            <div class="bg-[#0f1423] border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
-                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tất Cả Phòng</div>
-                <div class="text-2xl sm:text-3xl font-black text-white mt-1">{{ $stats['total'] }}</div>
-                <div class="text-[10px] text-slate-500 mt-1">Tổng phòng lưu trú</div>
-            </div>
-
-            <!-- Cần dọn (Dirty - Đỏ #EF4444) -->
-            <div class="bg-[#181115] border border-red-500/30 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Cần dọn (Dirty)</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black text-red-400 mt-1" id="stat-dirty">{{ $stats['dirty'] }}</div>
-                <div class="text-[10px] text-red-400/70 mt-1">Khách vừa trả / cần vệ sinh</div>
-            </div>
-
-            <!-- Đang dọn (Cleaning - Vàng cam #F59E0B) -->
-            <div class="bg-[#18150f] border border-amber-500/30 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Đang dọn</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-500/50 animate-pulse"></span>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black text-amber-400 mt-1" id="stat-cleaning">{{ $stats['cleaning'] }}</div>
-                <div class="text-[10px] text-amber-400/70 mt-1">Nhân viên đang xử lý</div>
-            </div>
-
-            <!-- Đã dọn xong (Clean - Xanh lục #10B981) -->
-            <div class="bg-[#0f1814] border border-emerald-500/30 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Đã dọn (Clean)</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1" id="stat-clean">{{ $stats['clean'] }}</div>
-                <div class="text-[10px] text-emerald-400/70 mt-1">Chờ Lễ tân nghiệm thu</div>
-            </div>
-
-            <!-- Đã nghiệm thu (Inspected - Xanh ngọc #0D9488) -->
-            <div class="bg-[#0e1718] border border-teal-500/30 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Nghiệm thu đạt</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-teal-400 shadow-sm shadow-teal-500/50"></span>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black text-teal-300 mt-1" id="stat-inspected">{{ $stats['inspected'] }}</div>
-                <div class="text-[10px] text-teal-400/70 mt-1">Sẵn sàng giao chìa khóa</div>
-            </div>
-
-            <!-- Tạm dừng phục vụ (Out of service - Xám #64748B) -->
-            <div class="bg-[#11141c] border border-slate-700/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tạm ngưng</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black text-slate-300 mt-1" id="stat-out-of-service">{{ $stats['out_of_service'] }}</div>
-                <div class="text-[10px] text-slate-500 mt-1">Bảo trì / Sửa chữa</div>
-            </div>
-        </div>
-
-        <!-- Thanh Công Cụ Bộ Lọc (UI Element 1: btnStatusFilter) & Tìm Kiếm -->
-        <div class="bg-[#0d121f] border border-slate-800/80 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            
-            <!-- STT 1: btnStatusFilter - Lọc trạng thái phòng -->
-            <div class="flex flex-wrap items-center gap-1.5" id="status-filter-group">
-                <span class="text-xs font-bold text-slate-400 mr-2 flex items-center gap-1">
-                    <i class="fa-solid fa-filter text-[11px]"></i> Lọc:
-                </span>
-                <button type="button" name="btnStatusFilter" data-status="all" onclick="filterByStatus('all')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'all' ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white' }}">
-                    Tất cả ({{ $stats['total'] }})
-                </button>
-                <button type="button" name="btnStatusFilter" data-status="dirty" onclick="filterByStatus('dirty')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'dirty' ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/30' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20' }}">
-                    <i class="fa-solid fa-circle-exclamation text-[10px] mr-1"></i> Cần dọn ({{ $stats['dirty'] }})
-                </button>
-                <button type="button" name="btnStatusFilter" data-status="cleaning" onclick="filterByStatus('cleaning')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'cleaning' ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20' }}">
-                    <i class="fa-solid fa-spray-can-sparkles text-[10px] mr-1"></i> Đang dọn ({{ $stats['cleaning'] }})
-                </button>
-                <button type="button" name="btnStatusFilter" data-status="clean" onclick="filterByStatus('clean')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'clean' ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20' }}">
-                    <i class="fa-solid fa-check text-[10px] mr-1"></i> Đã xong ({{ $stats['clean'] }})
-                </button>
-                <button type="button" name="btnStatusFilter" data-status="inspected" onclick="filterByStatus('inspected')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'inspected' ? 'bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30' : 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20' }}">
-                    <i class="fa-solid fa-circle-check text-[10px] mr-1"></i> Nghiệm thu ({{ $stats['inspected'] }})
-                </button>
-            </div>
-
-            <!-- Tìm kiếm mã phòng & lọc tòa nhà -->
-            <div class="flex items-center gap-2">
-                @if($buildings->count() > 1)
-                <select id="filter-building" onchange="filterBuilding(this.value)" class="bg-[#080b11] text-slate-200 text-xs rounded-xl border border-slate-700 px-3 py-2 outline-none focus:border-indigo-500">
-                    <option value="">Tất cả tòa nhà</option>
-                    @foreach($buildings as $b)
-                        <option value="{{ $b->id }}" {{ $currentBuildingId == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
-                    @endforeach
-                </select>
-                @endif
-
-                <div class="relative flex-1 sm:w-56">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
-                    <input type="text" id="search-room-input" onkeyup="searchRooms(this.value)" placeholder="Tìm mã phòng (regex: A-Z, 0-9)..." class="w-full bg-[#080b11] text-slate-200 text-xs rounded-xl border border-slate-700 pl-8 pr-3 py-2 outline-none focus:border-teal-500 placeholder-slate-500">
+            <!-- Thống Kê Tổng Quan Trạng Thái FSM (KPI Summary Cards) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+                <!-- Tổng số phòng -->
+                <div class="bg-[#0f1423] border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tất Cả Phòng</div>
+                    <div class="text-2xl sm:text-3xl font-black text-white mt-1.5">{{ $stats['total'] }}</div>
+                    <div class="text-[10px] text-slate-500 mt-1">Tổng phòng trong cơ sở</div>
                 </div>
 
-                <button type="button" onclick="window.location.reload()" title="Tải lại ma trận" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
-                    <i class="fa-solid fa-rotate-right text-xs"></i>
-                </button>
-            </div>
-        </div>
+                <!-- Cần dọn (Dirty - Đỏ #EF4444) -->
+                <div class="bg-[#181115] border border-red-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Cần dọn (Dirty)</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-red-400 mt-1.5" id="stat-dirty">{{ $stats['dirty'] }}</div>
+                    <div class="text-[10px] text-red-400/70 mt-1">Khách vừa trả / cần vệ sinh</div>
+                </div>
 
-        <!-- STT 2: Room Matrix Grid (gridHousekeeping) - Sơ đồ buồng phòng dạng lưới -->
-        <div id="gridHousekeeping" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            @forelse($rooms as $room)
-                @php
-                    $hStatus = $room->housekeeping_status ?: 'dirty';
-                    $priority = $room->priority ?: 'normal';
-                    $staff = $room->assignedStaff;
-                    $inspector = $room->inspector;
-                    $activeBooking = $room->activeHotelBooking;
-                @endphp
-                <div id="room-card-{{ $room->id }}" 
-                     data-room-id="{{ $room->id }}"
-                     data-room-number="{{ $room->room_number }}"
-                     data-housekeeping-status="{{ $hStatus }}"
-                     data-status="{{ $room->status }}"
-                     data-priority="{{ $priority }}"
-                     data-building-id="{{ $room->building_id }}"
-                     class="room-card relative bg-[#0d121f] rounded-2xl border transition-all duration-200 p-4 shadow-md flex flex-col justify-between
-                        {{ $hStatus === 'dirty' ? 'border-red-500/50 bg-red-950/10 hover:border-red-500' : '' }}
-                        {{ $hStatus === 'cleaning' ? 'border-amber-500/50 bg-amber-950/10 hover:border-amber-500' : '' }}
-                        {{ $hStatus === 'clean' ? 'border-emerald-500/50 bg-emerald-950/10 hover:border-emerald-500' : '' }}
-                        {{ $hStatus === 'inspected' ? 'border-teal-500/50 bg-teal-950/10 hover:border-teal-500' : '' }}
-                        {{ $hStatus === 'out_of_service' ? 'border-slate-700 bg-slate-900/30' : '' }}">
-                    
-                    <!-- Dải trạng thái đầu thẻ -->
-                    <div>
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <div class="flex items-center gap-2">
+                <!-- Đang dọn (Cleaning - Vàng cam #F59E0B) -->
+                <div class="bg-[#18150f] border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Đang dọn</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-500/50 animate-pulse"></span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-amber-400 mt-1.5" id="stat-cleaning">{{ $stats['cleaning'] }}</div>
+                    <div class="text-[10px] text-amber-400/70 mt-1">Nhân viên đang làm vệ sinh</div>
+                </div>
+
+                <!-- Đã dọn xong (Clean - Xanh lục #10B981) -->
+                <div class="bg-[#0f1814] border border-emerald-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Đã dọn (Clean)</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1.5" id="stat-clean">{{ $stats['clean'] }}</div>
+                    <div class="text-[10px] text-emerald-400/70 mt-1">Chờ Lễ tân nghiệm thu</div>
+                </div>
+
+                <!-- Đã nghiệm thu (Inspected - Xanh ngọc #0D9488) -->
+                <div class="bg-[#0e1718] border border-teal-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Nghiệm thu đạt</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-400 shadow-sm shadow-teal-500/50"></span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-teal-300 mt-1.5" id="stat-inspected">{{ $stats['inspected'] }}</div>
+                    <div class="text-[10px] text-teal-400/70 mt-1">Sẵn sàng bàn giao khách</div>
+                </div>
+
+                <!-- Tạm dừng phục vụ (Out of service - Xám #64748B) -->
+                <div class="bg-[#11141c] border border-slate-700/50 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tạm dừng</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-slate-300 mt-1.5" id="stat-out-of-service">{{ $stats['out_of_service'] }}</div>
+                    <div class="text-[10px] text-slate-500 mt-1">Đang bảo trì thiết bị</div>
+                </div>
+            </div>
+
+            <!-- Thanh Công Cụ Bộ Lọc (UI Element 1: btnStatusFilter) & Tìm Kiếm -->
+            <div class="bg-[#0f1423] border border-slate-800/80 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                
+                <!-- STT 1: btnStatusFilter - Lọc trạng thái phòng -->
+                <div class="flex flex-wrap items-center gap-1.5" id="status-filter-group">
+                    <span class="text-xs font-bold text-slate-400 mr-2 flex items-center gap-1">
+                        <i class="fa-solid fa-filter text-[11px]"></i> Lọc:
+                    </span>
+                    <button type="button" name="btnStatusFilter" data-status="all" onclick="filterByStatus('all')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'all' ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white' }}">
+                        Tất cả ({{ $stats['total'] }})
+                    </button>
+                    <button type="button" name="btnStatusFilter" data-status="dirty" onclick="filterByStatus('dirty')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'dirty' ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/30' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20' }}">
+                        <i class="fa-solid fa-circle-exclamation text-[10px] mr-1"></i> Cần dọn ({{ $stats['dirty'] }})
+                    </button>
+                    <button type="button" name="btnStatusFilter" data-status="cleaning" onclick="filterByStatus('cleaning')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'cleaning' ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20' }}">
+                        <i class="fa-solid fa-spray-can-sparkles text-[10px] mr-1"></i> Đang dọn ({{ $stats['cleaning'] }})
+                    </button>
+                    <button type="button" name="btnStatusFilter" data-status="clean" onclick="filterByStatus('clean')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'clean' ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20' }}">
+                        <i class="fa-solid fa-check text-[10px] mr-1"></i> Đã xong ({{ $stats['clean'] }})
+                    </button>
+                    <button type="button" name="btnStatusFilter" data-status="inspected" onclick="filterByStatus('inspected')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'inspected' ? 'bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30' : 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20' }}">
+                        <i class="fa-solid fa-circle-check text-[10px] mr-1"></i> Nghiệm thu ({{ $stats['inspected'] }})
+                    </button>
+                </div>
+
+                <!-- Tìm kiếm mã phòng & lọc tòa nhà -->
+                <div class="flex items-center gap-2">
+                    @if($buildings->count() > 1)
+                    <select id="filter-building" onchange="filterBuilding(this.value)" class="bg-[#080b11] text-slate-200 text-xs rounded-xl border border-slate-700 px-3 py-2 outline-none focus:border-indigo-500">
+                        <option value="">Tất cả tòa nhà</option>
+                        @foreach($buildings as $b)
+                            <option value="{{ $b->id }}" {{ $currentBuildingId == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                        @endforeach
+                    </select>
+                    @endif
+
+                    <div class="relative flex-1 sm:w-56">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+                        <input type="text" id="search-room-input" onkeyup="searchRooms(this.value)" placeholder="Tìm mã phòng..." class="w-full bg-[#080b11] text-slate-200 text-xs rounded-xl border border-slate-700 pl-8 pr-3 py-2 outline-none focus:border-teal-500 placeholder-slate-500">
+                    </div>
+
+                    <button type="button" onclick="window.location.reload()" title="Tải lại ma trận" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STT 2: Room Matrix Grid (gridHousekeeping) - Sơ đồ buồng phòng dạng lưới -->
+            <div id="gridHousekeeping" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                @forelse($rooms as $room)
+                    @php
+                        $hStatus = $room->housekeeping_status ?: 'dirty';
+                        $priority = $room->priority ?: 'normal';
+                        $staff = $room->assignedStaff;
+                        $inspector = $room->inspector;
+                        $activeBooking = $room->activeHotelBooking;
+                    @endphp
+                    <div id="room-card-{{ $room->id }}" 
+                         data-room-id="{{ $room->id }}"
+                         data-room-number="{{ $room->room_number }}"
+                         data-housekeeping-status="{{ $hStatus }}"
+                         data-status="{{ $room->status }}"
+                         data-priority="{{ $priority }}"
+                         data-building-id="{{ $room->building_id }}"
+                         class="room-card relative bg-[#0f1423] rounded-2xl border transition-all duration-200 p-4 shadow-md flex flex-col justify-between
+                            {{ $hStatus === 'dirty' ? 'border-red-500/40 bg-red-950/10 hover:border-red-500' : '' }}
+                            {{ $hStatus === 'cleaning' ? 'border-amber-500/40 bg-amber-950/10 hover:border-amber-500' : '' }}
+                            {{ $hStatus === 'clean' ? 'border-emerald-500/40 bg-emerald-950/10 hover:border-emerald-500' : '' }}
+                            {{ $hStatus === 'inspected' ? 'border-teal-500/40 bg-teal-950/10 hover:border-teal-500' : '' }}
+                            {{ $hStatus === 'out_of_service' ? 'border-slate-700 bg-slate-900/30' : '' }}">
+                        
+                        <!-- Dải thông tin đầu thẻ phòng -->
+                        <div>
+                            <!-- Header thẻ phòng: Bên trái số phòng, bên phải huy hiệu FSM (Cố định không bao giờ bị lệch) -->
+                            <div class="flex items-center justify-between gap-2.5 pb-2 border-b border-slate-800/80">
+                                <div class="flex items-center gap-2 min-w-0">
                                     <span class="text-xl font-black font-mono text-white tracking-wide">P.{{ $room->room_number }}</span>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
                                         Tầng {{ $room->floor }}
                                     </span>
                                     @if($priority === 'urgent')
-                                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse shadow-sm shadow-red-500/50" title="Khẩn cấp đón khách mới">
-                                            <i class="fa-solid fa-fire text-[9px]"></i> KHẨN CẤP
+                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-500 text-white shrink-0 animate-pulse" title="Khẩn cấp đón khách mới">
+                                            KHẨN CẤP
                                         </span>
                                     @elseif($priority === 'high')
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40">
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40 shrink-0">
                                             Ưu tiên cao
                                         </span>
                                     @endif
                                 </div>
-                                <p class="text-xs text-slate-400 mt-1 flex items-center gap-1.5 truncate">
-                                    <i class="fa-solid fa-hotel text-[10px] text-slate-500"></i>
-                                    <span>{{ $room->building->name ?? 'Tòa nhà' }}</span>
-                                    <span class="text-slate-600">•</span>
-                                    <span class="capitalize text-slate-400">{{ $room->room_type }}</span>
-                                </p>
+
+                                <!-- Huy hiệu FSM Badge cố định bên phải -->
+                                <div id="badge-wrapper-{{ $room->id }}" class="shrink-0">
+                                    @if($hStatus === 'dirty')
+                                        <span class="px-2.5 py-1 bg-red-500/20 text-red-300 border border-red-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span class="w-2 h-2 rounded-full bg-red-500"></span> Cần dọn
+                                        </span>
+                                    @elseif($hStatus === 'cleaning')
+                                        <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 animate-pulse whitespace-nowrap">
+                                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Đang dọn
+                                        </span>
+                                    @elseif($hStatus === 'clean')
+                                        <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Đã sạch
+                                        </span>
+                                    @elseif($hStatus === 'inspected')
+                                        <span class="px-2.5 py-1 bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span class="w-2 h-2 rounded-full bg-teal-400"></span> Nghiệm thu đạt
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-[11px] font-semibold inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span class="w-2 h-2 rounded-full bg-slate-500"></span> Tạm dừng
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
-                            <!-- Huy hiệu FSM Badge -->
-                            <div id="badge-wrapper-{{ $room->id }}">
-                                @if($hStatus === 'dirty')
-                                    <span class="px-2.5 py-1 bg-red-500/20 text-red-300 border border-red-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-red-500"></span> Cần dọn
+                            <!-- Tên tòa nhà & loại phòng -->
+                            <p class="text-xs text-slate-400 mt-2 flex items-center gap-1.5 truncate">
+                                <i class="fa-solid fa-hotel text-[10px] text-slate-500"></i>
+                                <span class="truncate">{{ $room->building->name ?? 'Tòa nhà' }}</span>
+                                <span class="text-slate-600">•</span>
+                                <span class="capitalize text-slate-400">{{ $room->room_type }}</span>
+                            </p>
+
+                            <!-- Thông tin nhân sự phụ trách dọn & Trạng thái khách -->
+                            <div class="mt-2.5 space-y-1.5 text-xs">
+                                <div class="flex items-center justify-between text-slate-300">
+                                    <span class="text-slate-400 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-gear text-[11px] text-slate-500"></i> Buồng phòng:
                                     </span>
-                                @elseif($hStatus === 'cleaning')
-                                    <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 animate-pulse">
-                                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Đang dọn
+                                    <span class="font-semibold text-slate-200 truncate max-w-[150px]" id="staff-name-{{ $room->id }}">
+                                        {{ $staff ? $staff->name : 'Chưa phân công' }}
                                     </span>
-                                @elseif($hStatus === 'clean')
-                                    <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Đã sạch
+                                </div>
+
+                                @if($hStatus === 'inspected' && $inspector)
+                                <div class="flex items-center justify-between text-teal-300 text-[11px]">
+                                    <span class="text-teal-400/80 flex items-center gap-1">
+                                        <i class="fa-solid fa-stamp text-[10px]"></i> Nghiệm thu bởi:
                                     </span>
-                                @elseif($hStatus === 'inspected')
-                                    <span class="px-2.5 py-1 bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-teal-400"></span> Nghiệm thu đạt
+                                    <span class="font-bold truncate max-w-[140px]">{{ $inspector->name }}</span>
+                                </div>
+                                @endif
+
+                                @if($room->status === 'occupied' && $activeBooking)
+                                <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px] flex items-center justify-between">
+                                    <span class="flex items-center gap-1.5 font-semibold truncate">
+                                        <i class="fa-solid fa-person-shelter text-rose-400"></i> {{ $activeBooking->guest_name }}
                                     </span>
-                                @else
-                                    <span class="px-2.5 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-[11px] font-semibold inline-flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-slate-500"></span> Tạm dừng
-                                    </span>
+                                    <span class="text-[10px] text-rose-400/80 shrink-0">Đang ở</span>
+                                </div>
+                                @elseif($room->status === 'occupied')
+                                <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px]">
+                                    <i class="fa-solid fa-person-shelter mr-1"></i> Có khách đang ở
+                                </div>
+                                @endif
+
+                                @if($room->inspection_notes)
+                                <p class="text-[11px] text-slate-400 italic line-clamp-1 mt-1 bg-slate-900/60 px-2 py-1 rounded-lg border border-slate-800">
+                                    <i class="fa-solid fa-comment-dots mr-1 text-slate-500"></i> {{ $room->inspection_notes }}
+                                </p>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- Thông tin nhân sự phụ trách dọn & Trạng thái khách -->
-                        <div class="mt-3.5 pt-3 border-t border-slate-800/80 space-y-1.5 text-xs">
-                            <div class="flex items-center justify-between text-slate-300">
-                                <span class="text-slate-400 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-user-gear text-[11px] text-slate-500"></i> Buồng phòng:
-                                </span>
-                                <span class="font-semibold text-slate-200" id="staff-name-{{ $room->id }}">
-                                    {{ $staff ? $staff->name : 'Chưa phân công' }}
-                                </span>
-                            </div>
+                        <!-- Khu vực các nút bấm thao tác (Action Buttons FSM) -->
+                        <div class="mt-4 pt-3 border-t border-slate-800/80 space-y-2" id="card-actions-{{ $room->id }}">
+                            
+                            <!-- 1. Cần dọn (Dirty): Bắt đầu dọn (btnStartClean) hoặc Phân công -->
+                            @if($hStatus === 'dirty')
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" 
+                                            name="btnStartClean" 
+                                            onclick="updateRoomStatus({{ $room->id }}, 'cleaning')" 
+                                            class="py-2 px-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
+                                            title="Bắt đầu ca dọn phòng">
+                                        <i class="fa-solid fa-broom text-[11px]"></i>
+                                        <span>Bắt đầu dọn</span>
+                                    </button>
+                                    <button type="button" 
+                                            onclick="openAssignModal({{ $room->id }})" 
+                                            class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-user-clock text-[11px]"></i>
+                                        <span>Phân công</span>
+                                    </button>
+                                </div>
 
-                            @if($hStatus === 'inspected' && $inspector)
-                            <div class="flex items-center justify-between text-teal-300 text-[11px]">
-                                <span class="text-teal-400/80 flex items-center gap-1">
-                                    <i class="fa-solid fa-stamp text-[10px]"></i> Nghiệm thu bởi:
-                                </span>
-                                <span class="font-bold">{{ $inspector->name }}</span>
-                            </div>
+                            <!-- 2. Đang dọn (Cleaning): Báo dọn xong (Clean) -->
+                            @elseif($hStatus === 'cleaning')
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" 
+                                            onclick="updateRoomStatus({{ $room->id }}, 'clean')" 
+                                            class="col-span-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-check-double text-[11px]"></i>
+                                        <span>Báo dọn xong (Clean)</span>
+                                    </button>
+                                </div>
+
+                            <!-- 3. Đã dọn xong (Clean): Nghiệm thu phòng đạt chuẩn (btnInspectPass) -->
+                            @elseif($hStatus === 'clean')
+                                <div class="grid grid-cols-1 gap-2">
+                                    <button type="button" 
+                                            name="btnInspectPass" 
+                                            onclick="openInspectModal({{ $room->id }})" 
+                                            class="py-2.5 px-3 bg-[#0D9488] hover:bg-teal-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-teal-700/25 transition flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-circle-check text-sm"></i>
+                                        <span>Nghiệm thu đạt chuẩn</span>
+                                    </button>
+                                </div>
+
+                            <!-- 4. Đã nghiệm thu (Inspected): Sẵn sàng Check-in đón khách -->
+                            @elseif($hStatus === 'inspected')
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" 
+                                            onclick="openCheckInModal({{ $room->id }})" 
+                                            class="py-2 px-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-key text-[11px]"></i>
+                                        <span>Check-in</span>
+                                    </button>
+                                    <button type="button" 
+                                            onclick="openAssignModal({{ $room->id }})" 
+                                            class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-rotate text-[11px]"></i>
+                                        <span>Dọn lại</span>
+                                    </button>
+                                </div>
+                            @else
+                                <button type="button" 
+                                        onclick="updateRoomStatus({{ $room->id }}, 'clean')" 
+                                        class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
+                                    Mở lại dịch vụ
+                                </button>
                             @endif
 
-                            @if($room->status === 'occupied' && $activeBooking)
-                            <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px] flex items-center justify-between">
-                                <span class="flex items-center gap-1.5 font-semibold">
-                                    <i class="fa-solid fa-person-shelter text-rose-400"></i> {{ $activeBooking->guest_name }}
-                                </span>
-                                <span class="text-[10px] text-rose-400/80">Đang lưu trú</span>
-                            </div>
-                            @elseif($room->status === 'occupied')
-                            <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px]">
-                                <i class="fa-solid fa-person-shelter mr-1"></i> Có khách đang ở
-                            </div>
-                            @endif
-
-                            @if($room->inspection_notes)
-                            <p class="text-[11px] text-slate-400 italic line-clamp-1 mt-1 bg-slate-900/60 px-2 py-1 rounded-lg border border-slate-800">
-                                <i class="fa-solid fa-comment-dots mr-1 text-slate-500"></i> {{ $room->inspection_notes }}
-                            </p>
+                            <!-- Check-out & Đối soát minibar nếu phòng đang có khách ở -->
+                            @if($room->status === 'occupied')
+                            <button type="button" 
+                                    onclick="openCheckOutModal({{ $room->id }})" 
+                                    class="w-full py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5 mt-1">
+                                <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
+                                <span>Check-out & Đối soát Minibar</span>
+                            </button>
                             @endif
                         </div>
                     </div>
-
-                    <!-- Khu vực các nút bấm thao tác (Action Buttons theo quy cách FSM) -->
-                    <div class="mt-4 pt-3 border-t border-slate-800/80 space-y-2" id="card-actions-{{ $room->id }}">
-                        
-                        <!-- 1. Cần dọn (Dirty): Bắt đầu dọn (btnStartClean) hoặc Phân công -->
-                        @if($hStatus === 'dirty')
-                            <div class="grid grid-cols-2 gap-2">
-                                <button type="button" 
-                                        name="btnStartClean" 
-                                        onclick="updateRoomStatus({{ $room->id }}, 'cleaning')" 
-                                        class="py-2 px-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
-                                        title="Bắt đầu ca dọn phòng">
-                                    <i class="fa-solid fa-broom text-[11px]"></i>
-                                    <span>Bắt đầu dọn</span>
-                                </button>
-                                <button type="button" 
-                                        onclick="openAssignModal({{ $room->id }})" 
-                                        class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-user-clock text-[11px]"></i>
-                                    <span>Phân công</span>
-                                </button>
-                            </div>
-
-                        <!-- 2. Đang dọn (Cleaning): Báo dọn xong (Clean) -->
-                        @elseif($hStatus === 'cleaning')
-                            <div class="grid grid-cols-2 gap-2">
-                                <button type="button" 
-                                        onclick="updateRoomStatus({{ $room->id }}, 'clean')" 
-                                        class="col-span-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
-                                    <i class="fa-solid fa-check-double text-[11px]"></i>
-                                    <span>Báo dọn xong (Clean)</span>
-                                </button>
-                            </div>
-
-                        <!-- 3. Đã dọn xong (Clean): Nghiệm thu phòng đạt chuẩn (btnInspectPass) -->
-                        @elseif($hStatus === 'clean')
-                            <div class="grid grid-cols-1 gap-2">
-                                <button type="button" 
-                                        name="btnInspectPass" 
-                                        onclick="openInspectModal({{ $room->id }})" 
-                                        class="py-2.5 px-3 bg-[#0D9488] hover:bg-teal-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-teal-700/25 transition flex items-center justify-center gap-1.5">
-                                    <i class="fa-solid fa-circle-check text-sm"></i>
-                                    <span>Nghiệm thu đạt chuẩn</span>
-                                </button>
-                            </div>
-
-                        <!-- 4. Đã nghiệm thu (Inspected): Sẵn sàng Check-in đón khách -->
-                        @elseif($hStatus === 'inspected')
-                            <div class="grid grid-cols-2 gap-2">
-                                <button type="button" 
-                                        onclick="openCheckInModal({{ $room->id }})" 
-                                        class="py-2 px-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-key text-[11px]"></i>
-                                    <span>Check-in</span>
-                                </button>
-                                <button type="button" 
-                                        onclick="openAssignModal({{ $room->id }})" 
-                                        class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-rotate text-[11px]"></i>
-                                    <span>Dọn lại</span>
-                                </button>
-                            </div>
-                        @else
-                            <button type="button" 
-                                    onclick="updateRoomStatus({{ $room->id }}, 'clean')" 
-                                    class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
-                                Mở lại dịch vụ
-                            </button>
-                        @endif
-
-                        <!-- Check-out & Đối soát minibar nếu phòng đang có khách ở -->
-                        @if($room->status === 'occupied')
-                        <button type="button" 
-                                onclick="openCheckOutModal({{ $room->id }})" 
-                                class="w-full py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5 mt-1">
-                            <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
-                            <span>Check-out & Đối soát Minibar</span>
-                        </button>
-                        @endif
+                @empty
+                    <div class="col-span-full bg-[#0f1423] border border-slate-800 rounded-3xl p-12 text-center">
+                        <div class="w-16 h-16 rounded-full bg-slate-800/80 mx-auto flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Không tìm thấy phòng nào phù hợp</h3>
+                        <p class="text-xs text-slate-400 mt-1">Vui lòng thử bỏ lọc hoặc thay đổi tiêu chí tìm kiếm.</p>
                     </div>
-                </div>
-            @empty
-                <div class="col-span-full bg-[#0d121f] border border-slate-800 rounded-3xl p-12 text-center">
-                    <div class="w-16 h-16 rounded-full bg-slate-800/80 mx-auto flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xl"></i>
-                    </div>
-                    <h3 class="text-base font-bold text-white">Không tìm thấy phòng nào phù hợp</h3>
-                    <p class="text-xs text-slate-400 mt-1">Vui lòng thử bỏ lọc hoặc thay đổi tiêu chí tìm kiếm.</p>
-                </div>
-            @endforelse
-        </div>
-    </main>
+                @endforelse
+            </div>
+        </main>
+    </div>
 
     <!-- ==================== MODAL 1: PHÂN CÔNG BUỒNG PHÒNG ==================== -->
     <div id="modal-assign" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
@@ -755,7 +788,8 @@
         </div>
     </div>
 
-    <!-- ==================== JAVASCRIPT XỬ LÝ TOÀN DIỆN ==================== -->
+    <!-- Scripts điều khiển sidebar & các hành động tương tác -->
+    <script src="{{ asset('js/admin-sidebar.js') }}"></script>
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -1134,7 +1168,7 @@
             // Validate ERR_18_05
             if (isNaN(qty) || qty < 0 || !Number.isInteger(qty)) {
                 input.classList.add('border-red-500');
-                errEl.textContent = "Số lượng vật tư tiêu hao minibar phải là số nguyên dương lớn hơn hoặc bằng 0.";
+                errEl.textContent = "Số lượng vật tư tiêuahoa minibar phải là số nguyên dương lớn hơn hoặc bằng 0.";
                 errEl.classList.remove('hidden');
             } else {
                 input.classList.remove('border-red-500');

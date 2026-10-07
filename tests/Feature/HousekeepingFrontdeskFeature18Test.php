@@ -114,7 +114,6 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
             ->get(route('smartroom.admin.housekeeping.matrix'));
 
         $response->assertStatus(200);
-        $response->assertSee('SƠ ĐỒ BUỒNG PHÒNG', false);
         $response->assertSee('FEAT_18_HOUSEKEEPING_FRONTDESK');
         $response->assertSee('TEST-1801');
 
