@@ -28,7 +28,7 @@
             <div class="relative w-full renty-search-shell">
                 <div class="relative flex items-center w-full">
                     <i class="fa-solid fa-location-dot absolute left-3.5 text-slate-500 pointer-events-none text-xs z-10 renty-search-icon"></i>
-                    <input type="text" id="search-input" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-9 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
+                    <input type="text" id="search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-9 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
                     <button type="button" onclick="triggerRentySearch()" class="absolute right-2.5 text-slate-400 hover:text-emerald-400 transition-colors w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-800/40 z-10" title="Tìm kiếm" aria-label="Tìm kiếm">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </button>

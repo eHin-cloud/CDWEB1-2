@@ -308,7 +308,7 @@
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
                         <div class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
                             <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
-                            <input type="text" id="hero-search-input" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
+                            <input type="text" id="hero-search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
                         </div>
 
                         <!-- AI / Smart Search Spell Correction (Did You Mean) Banner -->
@@ -710,6 +710,14 @@
                 <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
                 <span id="smart-search-empty-code-text">Lỗi: Không tìm thấy kết quả phù hợp (ERR_21_04)</span>
             </p>
+            <!-- Gợi ý từ gõ sai ngay trong khung báo lỗi Empty State -->
+            <div id="smart-search-empty-did-you-mean" class="hidden mb-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 inline-flex items-center justify-center gap-2 max-w-md mx-auto animate-fade-in">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400 shrink-0"></i>
+                <span>Có phải bạn muốn tìm: <strong id="smart-search-empty-did-you-mean-text" onclick="applyDidYouMeanSearch()" class="cursor-pointer underline underline-offset-2 font-bold text-white hover:text-emerald-300"></strong>?</span>
+                <button type="button" onclick="applyDidYouMeanSearch()" class="ml-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold shadow-md transition-all shrink-0">
+                    <i class="fa-solid fa-magnifying-glass text-[9px] mr-1"></i>Tìm ngay
+                </button>
+            </div>
             <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
             <button type="button" onclick="resetAllFilters()" id="btnResetFilterEmpty" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
                 <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
