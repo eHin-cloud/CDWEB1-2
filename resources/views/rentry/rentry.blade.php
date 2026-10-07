@@ -639,7 +639,10 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
             <h3 class="text-base font-bold text-slate-200 mb-1" id="smart-search-empty-title">Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.</h3>
-            <p class="text-[11px] text-rose-400 font-bold mb-2 tracking-wide" id="smart-search-empty-code">[ERR_21_04]</p>
+            <p class="text-[11px] text-rose-400 font-bold mb-2 tracking-wide flex items-center justify-center gap-1.5" id="smart-search-empty-code">
+                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                <span id="smart-search-empty-code-text">Lỗi: Không tìm thấy kết quả phù hợp (ERR_21_04)</span>
+            </p>
             <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
             <button type="button" onclick="resetAllFilters()" id="btnResetFilterEmpty" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
                 <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc

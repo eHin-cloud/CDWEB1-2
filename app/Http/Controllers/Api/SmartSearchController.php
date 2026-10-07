@@ -83,6 +83,7 @@ class SmartSearchController extends Controller
             'has_more' => $result['has_more'] ?? false,
             'rooms' => $result['rooms'],
             'suggestions' => $result['suggestions'],
+            'hybrid_search' => $result['hybrid_search'] ?? null,
         ]);
     }
 

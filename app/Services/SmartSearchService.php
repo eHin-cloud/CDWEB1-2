@@ -11,6 +11,16 @@ use Illuminate\Support\Facades\Storage;
 
 class SmartSearchService
 {
+    protected VietnameseTokenizerService $tokenizer;
+    protected HybridSearchService $hybridSearch;
+
+    public function __construct(
+        ?VietnameseTokenizerService $tokenizer = null,
+        ?HybridSearchService $hybridSearch = null
+    ) {
+        $this->tokenizer = $tokenizer ?: app(VietnameseTokenizerService::class);
+        $this->hybridSearch = $hybridSearch ?: app(HybridSearchService::class);
+    }
     /**
      * Từ điển khu vực, trường học, tiện ích và loại phòng cho hệ thống bất động sản
      */
@@ -210,12 +220,25 @@ class SmartSearchService
             }
         }
 
+        // Bổ sung các cụm từ ghép có nghĩa từ từ điển Viet74K vào recognized_terms
+        try {
+            $compounds = $this->tokenizer->extractCompoundWords($raw);
+            foreach ($compounds as $cmp) {
+                if (!in_array($cmp, $matchedTerms, true)) {
+                    $matchedTerms[] = $cmp;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Không làm gián đoạn nếu tokenizer gặp lỗi
+        }
+
         return [
             'original' => $raw,
             'normalized' => $normalized,
             'corrected' => $correctedStr,
             'did_you_mean' => $didYouMean,
-            'recognized_terms' => array_unique($matchedTerms),
+            'recognized_terms' => array_values(array_unique($matchedTerms)),
+            'vietnamese_tokens' => $this->tokenizer->tokenize($raw),
             'filters' => $filters,
         ];
     }
@@ -246,7 +269,7 @@ class SmartSearchService
             'thú cưng' => ['thu cung', 'pet', 'pets'],
             'gác lửng' => ['gac lung', 'gac xep', 'gac'],
             'ban công' => ['ban cong'],
-            'khép kín' => ['khep kin', 'wc rieng', 'wc khep kin'],
+            'khép kín' => ['khep kin', 'wc rieng', 'wc khep kin', 'khep kn', 'khep kni'],
             'điều hòa' => ['dieu hoa', 'may lanh'],
             'nóng lạnh' => ['nong lanh'],
         ];
@@ -427,18 +450,26 @@ class SmartSearchService
             return $room;
         });
 
-        // Nếu có nhập từ khóa, lọc các phòng có điểm khớp > 0
+        // Nếu có nhập từ khóa, áp dụng Hybrid Search (Sparse BM25 + Dense Semantic + RRF Fusion)
         if ($analysis['normalized'] !== '') {
-            $scoredRooms = $scoredRooms->filter(fn ($item) => $item['relevance_score'] > 0);
+            try {
+                $scoredRooms = $this->hybridSearch->search($query, $scoredRooms, $options);
+            } catch (\Throwable $e) {
+                // Giữ nguyên baseline scoring nếu hybrid search có exception
+            }
+            $scoredRooms = $scoredRooms->filter(fn ($item) => ($item['relevance_score'] ?? 0) > 0 || ($item['rrf_score'] ?? 0) > 0);
         }
 
-        // Sắp xếp kết quả
+        // Sắp xếp kết quả (Ưu tiên điểm RRF và relevance score)
         $sortedRooms = match ($sortBy) {
             'price_asc' => $scoredRooms->sortBy('price')->values(),
             'price_desc' => $scoredRooms->sortByDesc('price')->values(),
             'rating_desc' => $scoredRooms->sortByDesc('rating')->values(),
             'latest' => $scoredRooms->sortByDesc('id')->values(),
-            default => $scoredRooms->sortByDesc(fn ($item) => (int) ($item['relevance_score'] ?? 0) + (int) ($item['boost_score'] ?? 0))->values(),
+            default => $scoredRooms->sortByDesc(function ($item) {
+                $rrfBonus = isset($item['rrf_score']) ? ((float) $item['rrf_score'] * 1000) : 0;
+                return $rrfBonus + (int) ($item['relevance_score'] ?? 0) + (int) ($item['boost_score'] ?? 0);
+            })->values(),
         };
 
         $totalCount = $sortedRooms->count();
@@ -446,6 +477,14 @@ class SmartSearchService
 
         return [
             'analysis' => $analysis,
+            'hybrid_search' => [
+                'enabled' => $analysis['normalized'] !== '',
+                'retrieval_architecture' => 'dual_sparse_dense',
+                'fusion_algorithm' => 'reciprocal_rank_fusion_rrf',
+                'rrf_k' => 60,
+                'vietnamese_tokens' => $this->tokenizer->tokenize($query),
+                'vietnamese_compounds' => $this->tokenizer->extractCompoundWords($query),
+            ],
             'count' => $pagedRooms->count(),
             'total' => $totalCount,
             'page' => $page,
