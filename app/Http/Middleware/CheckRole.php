@@ -28,8 +28,19 @@ class CheckRole
             return redirect()->route('login')->with('error', 'Ban can dang nhap de tiep tuc.');
         }
 
-        if (in_array($user->roleSlug(), $roles, true)) {
+        if (in_array($user->roleSlug(), $roles, true) || ($user->isSuperAdmin() && in_array('admin', $roles, true))) {
             return $next($request);
+        }
+
+        if (in_array('superadmin', $roles, true)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Truy cập bị từ chối. Chỉ Superadmin mới có quyền truy cập.',
+                ], 403);
+            }
+
+            abort(403, 'Truy cập bị từ chối. Chỉ Superadmin mới có quyền truy cập.');
         }
 
         if ($request->expectsJson()) {
@@ -46,6 +57,10 @@ class CheckRole
 
     private function homeRouteFor($user): string
     {
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return 'admin.superadmin.dashboard';
+        }
+
         if ($user->isAdmin()) {
             return 'user.list';
         }

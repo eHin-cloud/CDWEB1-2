@@ -31,6 +31,7 @@ class CrudUserController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
             $targetRoute = match (true) {
+                $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
@@ -79,6 +80,7 @@ class CrudUserController extends Controller
             Auth::login($user, $request->filled('remember'));
             
             $defaultRoute = match (true) {
+                $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),

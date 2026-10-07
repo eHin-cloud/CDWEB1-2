@@ -28,4 +28,14 @@ class AuditLog extends Model
         'sensitive_fields' => 'array',
         'metadata' => 'array',
     ];
+
+    public function actor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_user_id');
+    }
+
+    public function tenant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
 }

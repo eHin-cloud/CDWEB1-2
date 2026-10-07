@@ -18,6 +18,7 @@ use App\Http\Controllers\RoomMatrixRealtimeController;
 use App\Http\Controllers\HotelReceptionController;
 use App\Http\Controllers\HousekeepingController;
 use App\Http\Controllers\HousekeepingFrontdeskController;
+use App\Http\Controllers\SuperadminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +31,16 @@ use App\Http\Controllers\HousekeepingFrontdeskController;
 |
 */
 
-Route::get('dashboard', [CrudUserController::class, 'dashboard']);
+// FEAT_20_SUPERADMIN: BẢNG ĐIỀU KHIỂN QUẢN TRỊ NỀN TẢNG HỆ THỐNG (SUPERADMIN CONSOLE)
+Route::middleware(['auth', 'role:superadmin'])->group(function () {
+    Route::get('dashboard', [SuperadminController::class, 'dashboard'])->name('superadmin.dashboard.alias');
+    Route::get('admin/dashboard', [SuperadminController::class, 'dashboard'])->name('admin.superadmin.dashboard');
+    Route::get('admin/audit-logs', [SuperadminController::class, 'auditLogs'])->name('admin.audit-logs');
+    Route::post('admin/system/config', [SuperadminController::class, 'updateSystemConfig'])->name('admin.superadmin.config.update');
+    Route::post('admin/users/{user}/role', [SuperadminController::class, 'updateUserRole'])->name('admin.superadmin.users.role');
+    Route::post('admin/users/{user}/status', [SuperadminController::class, 'toggleUserStatus'])->name('admin.superadmin.users.status');
+    Route::post('admin/users/{user}/password', [SuperadminController::class, 'resetUserPassword'])->name('admin.superadmin.users.password');
+});
 
 Route::get('login', [CrudUserController::class, 'login'])->name('login');
 Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:30,1')->name('user.authUser');
@@ -64,7 +74,7 @@ Route::middleware('role:admin')->group(function () {
     Route::post('admin/verification-documents/{document}/unlock', [VerificationDocumentController::class, 'unlock'])->name('admin.verification-documents.unlock');
     
     // Bổ sung các tính năng giám sát & cấu hình bảo mật
-    Route::get('admin/audit-logs', [AdminVerificationController::class, 'auditLogs'])->name('admin.audit-logs');
+    Route::get('admin/verification-audit-logs', [AdminVerificationController::class, 'auditLogs'])->name('admin.verification-audit-logs');
     Route::get('admin/analytics', [AdminVerificationController::class, 'analytics'])->name('admin.analytics');
 });
 

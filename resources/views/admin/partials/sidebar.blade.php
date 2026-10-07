@@ -42,7 +42,9 @@
     
     if (Auth::check()) {
         $userName = $user->name;
-        if ($isLandlord) {
+        if ($user->isSuperAdmin()) {
+            $userRoleLabel = 'Quản trị viên tối cao (Superadmin)';
+        } elseif ($isLandlord) {
             $userRoleLabel = 'Chủ chung cư mini';
         } elseif ($isAdmin) {
             $userRoleLabel = 'Quản trị viên';
@@ -247,11 +249,25 @@
             </div>
             <div class="sidebar-group-divider hidden my-2 border-t border-slate-800/60"></div>
             <div class="space-y-0.5">
+                @if(Auth::user()?->isSuperAdmin())
+                    <a href="{{ route('admin.superadmin.dashboard') }}" 
+                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.superadmin.dashboard') ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                        <i class="fa-solid fa-crown w-5 text-center text-[15px] text-amber-400"></i>
+                        <span class="truncate">Superadmin Console</span>
+                    </a>
+
+                    <a href="{{ route('admin.audit-logs') }}" 
+                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.audit-logs') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                        <i class="fa-solid fa-shield-halved w-5 text-center text-[15px] text-indigo-400"></i>
+                        <span class="truncate">Nhật Ký Kiểm Toán</span>
+                    </a>
+                @endif
+
                 @if(Auth::user()?->isAdmin())
                     <a href="{{ route('admin.verifications.index') }}" 
-                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ (request()->routeIs('admin.verifications.*') || request()->routeIs('admin.audit-logs') || request()->routeIs('admin.settings') || request()->routeIs('admin.analytics')) ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
-                        <i class="fa-solid fa-shield-halved w-5 text-center text-[15px]"></i>
-                        <span class="truncate">Giám Sát & Bảo Mật</span>
+                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ (request()->routeIs('admin.verifications.*') || request()->routeIs('admin.verification-audit-logs') || request()->routeIs('admin.settings') || request()->routeIs('admin.analytics')) ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                        <i class="fa-solid fa-user-check w-5 text-center text-[15px]"></i>
+                        <span class="truncate">Duyệt KYC Chủ Trọ</span>
                     </a>
                 @endif
 
