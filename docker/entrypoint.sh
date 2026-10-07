@@ -45,12 +45,19 @@ if [ -f artisan ] && [ "$is_server_cmd" -eq 1 ]; then
         done
         if [ "$retries" -lt 15 ]; then
             php artisan migrate --force || true
+            if ! php artisan tinker --execute="echo App\Models\User::count();" 2>/dev/null | grep -q '^[1-9]'; then
+                echo "[!] CSDL chua co nguoi dung, tu dong nap Seeder khoi tao..."
+                php artisan db:seed --force || true
+            fi
         fi
     else
         php artisan migrate --force || true
+        if ! php artisan tinker --execute="echo App\Models\User::count();" 2>/dev/null | grep -q '^[1-9]'; then
+            php artisan db:seed --force || true
+        fi
     fi
 
-    php artisan config:cache || true
+    php artisan config:clear || true
 
     # Khoi dong Reverb WebSocket Server chay nen
     php artisan reverb:start --host=0.0.0.0 --port=8085 &
