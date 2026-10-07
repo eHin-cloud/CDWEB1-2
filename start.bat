@@ -83,35 +83,106 @@ echo    ========================================================================
 echo.
 echo      >> VUI LONG CHON PHUONG THUC BAN MUON KHOI CHAY DU AN:
 echo.
-echo         [1] CHAY BANG DOCKER    ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)
-echo         [2] CHAY BANG XAMPP     ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)
-echo         [3] CHAY BANG WAMPP     ---^> Khoi chay bang PHP ^& MySQL cua WampServer
+echo         [1] CHAY SIEU TOC (NATIVE + DOCKER MYSQL) [KHUYEN DUNG - KHONG DELAY 2-3S]
+echo         [2] CHAY DOCKER TOAN PHAN ---^> Khoi chay bang Docker (Web Container + MySQL 8.4 Docker)
+echo         [3] CHAY BANG XAMPP       ---^> Khoi chay bang PHP ^& MySQL cua XAMPP (Port 8000 / 3306)
+echo         [4] CHAY BANG WAMPP       ---^> Khoi chay bang PHP ^& MySQL cua WampServer
 echo.
 echo      ----------------------------------------------------------------------------------------------
-echo         [4] MENU NANG CAO       ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan
+echo         [5] MENU NANG CAO         ---^> Mo toan bo 10+ cong cu quan tri, Migrate, Reset DB, Chuan doan
 echo         [0] THOAT CHUONG TRINH
 echo.
 echo    ====================================================================================================
 echo.
-set /p tab_choice="   >> Nhap lua chon cua ban (1-4 hoac 0 de thoat): "
+set /p tab_choice="   >> Nhap lua chon cua ban (1-5 hoac 0 de thoat): "
 
-if "%tab_choice%"=="1" goto RUN_VIA_DOCKER
-if "%tab_choice%"=="2" goto RUN_VIA_XAMPP
-if "%tab_choice%"=="3" goto RUN_VIA_WAMPP
-if "%tab_choice%"=="4" goto ADVANCED_MENU
+if "%tab_choice%"=="1" goto RUN_VIA_HYBRID
+if "%tab_choice%"=="2" goto RUN_VIA_DOCKER
+if "%tab_choice%"=="3" goto RUN_VIA_XAMPP
+if "%tab_choice%"=="4" goto RUN_VIA_WAMPP
+if "%tab_choice%"=="5" goto ADVANCED_MENU
 if "%tab_choice%"=="0" goto EXIT_CLEAN
 goto TAB_MENU
 
 :: ======================================================================
-:: RUN HANDLERS: DOCKER / XAMPP / WAMPP
+:: RUN HANDLERS: HYBRID / DOCKER / XAMPP / WAMPP
 :: ======================================================================
+
+:RUN_VIA_HYBRID
+cls
+color 0a
+echo.
+echo    ====================================================================
+echo    [ CHAY SIEU TOC ] KHOI CHAY NATIVE WINDOWS + DOCKER MYSQL (PORT 3309)
+echo    ====================================================================
+echo.
+
+:: 1. Kiem tra va tao file .env neu chua co
+if not exist .env (
+    echo    [+] Chua co tep .env. Dang copy tu .env.example...
+    copy .env.example .env > nul
+)
+
+:: 2. Kiem tra thu vien PHP Composer
+if not exist vendor (
+    echo    [!] Phat hien chua cai thu vien Backend. Dang chay 'composer install'...
+    call !COMPOSER_CMD! install --prefer-dist --ignore-platform-reqs
+)
+
+:: 3. Kiem tra thu vien Frontend Node
+if not exist node_modules (
+    echo    [!] Phat hien chua cai thu vien Frontend. Dang chay 'npm install'...
+    call npm install
+)
+
+:: 4. Kiem tra APP_KEY
+findstr /C:"APP_KEY=base64:" .env > nul
+if %errorlevel% neq 0 (
+    echo    [+] Dang sinh APP_KEY moi...
+    call !PHP_CMD! artisan key:generate
+)
+
+:: 5. Kiem tra storage link
+if not exist public\storage (
+    call !PHP_CMD! artisan storage:link > nul 2>&1
+)
+
+:: 6. Khoi dong CSDL MySQL trong Docker (Port 3309)
+echo.
+echo    [1/3] Dang khoi dong CSDL MySQL trong Docker (Port 3309)...
+docker compose up -d mysql > nul 2>&1
+docker compose stop app > nul 2>&1
+
+echo    [2/3] Dang kiem tra ket noi CSDL MySQL...
+powershell -Command "for ($i=0; $i -lt 15; $i++) { if (Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 }; Start-Sleep -Seconds 1 }; exit 1" > nul 2>&1
+
+:: 7. Tu dong migrate va seed neu CSDL moi chua co bang
+call !PHP_CMD! -r "try { $p = new PDO('mysql:host=127.0.0.1;port=3309;dbname=quan_ly_nha_tro', 'smartroom', 'smartroom'); $count = $p->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \'quan_ly_nha_tro\'')->fetchColumn(); if ($count == 0) exit(2); } catch (Throwable $e) { exit(1); }"
+if %errorlevel% equ 2 (
+    echo    [+] CSDL moi tinh! Dang tu dong Migration va Seed du lieu khoi tao...
+    call !PHP_CMD! artisan migrate --force
+    call !PHP_CMD! artisan db:seed --force
+)
+
+:: 8. Khoi dong Web Server Native va Reverb
+echo    [3/3] Dang khoi chay Web Server Native tren cong 8088 ^& Reverb WebSocket 8085...
+start "SmartRoom Native Web Server" cmd /c "!PHP_CMD! artisan serve --host=127.0.0.1 --port=8088"
+start "SmartRoom Reverb WS" cmd /c "!PHP_CMD! artisan reverb:start --host=127.0.0.1 --port=8085"
+start "SmartRoom Vite Hot-Reload" cmd /c "npm run dev"
+timeout /t 2 > nul
+
+start "" "http://localhost:8088/renty"
+echo.
+echo    [ OK ] Da khoi chay che do Sieu Toc thanh cong! Toc do phan hoi ~0.1 giay.
+pause
+goto TAB_MENU
 
 :RUN_VIA_DOCKER
 cls
 color 0a
 echo.
 echo    ====================================================================
-echo    [ TAB 1: DOCKER ] DANG KHOI DONG MOI TRUONG DOCKER COMPOSE...
+echo    [ TAB 2: DOCKER ] DANG KHOI DONG MOI TRUONG DOCKER COMPOSE...
 echo    ====================================================================
 echo.
 goto DOCKER_AUTO_RUN

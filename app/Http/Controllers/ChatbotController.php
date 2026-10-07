@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Room;
+use App\Models\ChatbotHistory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -21,15 +22,40 @@ class ChatbotController extends Controller
      */
     public function chat(Request $request)
     {
-        $request->validate([
-            'prompt' => 'required|string|max:300',
-        ]);
+        $rawInput = $request->input('message', $request->input('prompt', null));
 
-        $prompt = trim($request->input('prompt', ''));
-        if (empty($prompt)) {
+        // Kiểm tra tin nhắn rỗng hoặc chỉ toàn khoảng trắng (DoD 1 - ERR_22_01)
+        if ($rawInput === null || trim((string) $rawInput) === '') {
             return response()->json([
                 'success' => false,
-                'message' => 'Nội dung tin nhắn không được để trống.',
+                'error_code' => 'ERR_22_01',
+                'message' => 'Vui lòng nhập nội dung câu hỏi trước khi gửi.',
+            ], 422);
+        }
+
+        $prompt = trim((string) $rawInput);
+
+        // Kiểm tra độ dài tối đa 500 ký tự theo Input Specification
+        if (mb_strlen($prompt) > 500) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_22_01',
+                'message' => 'Nội dung câu hỏi không được vượt quá 500 ký tự.',
+            ], 422);
+        }
+
+        // Kiểm tra câu hỏi có lạc đề, không liên quan đến thuê phòng hay không (ERR_22_03)
+        if ($this->isIrrelevantTopic($prompt)) {
+            $irrelevantMsg = 'Trợ lý ảo Renty chỉ hỗ trợ tư vấn thông tin thuê phòng và tiện ích lưu trú.';
+            $this->saveHistory($request, $prompt, $irrelevantMsg, [], 'ERR_22_03', false);
+
+            return response()->json([
+                'success' => true,
+                'error_code' => 'ERR_22_03',
+                'message' => $irrelevantMsg,
+                'response' => $irrelevantMsg,
+                'rooms' => [],
+                'used_ai' => false,
             ]);
         }
 
@@ -41,9 +67,12 @@ class ChatbotController extends Controller
             // Lấy API Key từ config. Nếu chưa có key, vẫn tư vấn bằng dữ liệu thật trong hệ thống.
             $apiKey = config('services.ai.api_key');
             if (!$apiKey) {
+                $fallbackReply = $this->buildFallbackResponse($prompt, $resultRooms);
+                $this->saveHistory($request, $prompt, $fallbackReply, $resultRooms, null, false);
+
                 return response()->json([
                     'success' => true,
-                    'response' => $this->buildFallbackResponse($prompt, $resultRooms),
+                    'response' => $fallbackReply,
                     'rooms' => $resultRooms,
                     'used_ai' => false,
                     'fallback_reason' => 'ai_not_configured',
@@ -96,7 +125,8 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
             $responseResult = $this->callGeminiApi($apiKey, $systemPrompt);
 
             if ($responseResult['success']) {
-                // Chỉ trả về tối đa 5 phòng tốt nhất khớp để render card ở Frontend
+                $this->saveHistory($request, $prompt, $responseResult['text'], $resultRooms, null, true);
+
                 return response()->json([
                     'success' => true,
                     'response' => $responseResult['text'],
@@ -106,9 +136,12 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
             }
 
             // Dự phòng nếu API lỗi thì chạy offline fallback
+            $fallbackReply = $this->buildFallbackResponse($prompt, $resultRooms, true);
+            $this->saveHistory($request, $prompt, $fallbackReply, $resultRooms, null, false);
+
             return response()->json([
                 'success' => true,
-                'response' => $this->buildFallbackResponse($prompt, $resultRooms, true),
+                'response' => $fallbackReply,
                 'rooms' => $resultRooms,
                 'used_ai' => false,
                 'fallback_reason' => 'ai_error',
@@ -119,11 +152,104 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
                 'prompt_length' => mb_strlen($prompt),
             ]);
 
+            $errorMsg = 'Không thể kết nối với máy chủ AI lúc này, vui lòng thử lại sau.';
             return response()->json([
                 'success' => false,
-                'message' => 'Renty AI đang gặp sự cố tạm thời. Bạn vui lòng thử lại sau ít phút hoặc dùng bộ lọc phòng ở phía trên nhé.',
+                'error_code' => 'ERR_22_02',
+                'message' => $errorMsg,
+                'response' => $errorMsg,
             ], 500);
         }
+    }
+
+    /**
+     * Xem lại lịch sử hội thoại tư vấn tìm phòng (GET /renty/chatbot/history)
+     */
+    public function history(Request $request)
+    {
+        $userId = auth('api')->id() ?? auth('web')->id() ?? auth()->id();
+        
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $histories = ChatbotHistory::where('user_id', $userId)
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $histories,
+        ]);
+    }
+
+    /**
+     * Lưu vết hội thoại vào bảng chatbot_histories
+     */
+    private function saveHistory(Request $request, string $message, string $response, array $rooms, ?string $errorCode = null, bool $usedAi = false): void
+    {
+        try {
+            $userId = auth('api')->id() ?? auth('web')->id() ?? auth()->id();
+            $tenantId = auth()->user()?->tenant_id;
+            $sessionId = $request->hasSession() ? $request->session()->getId() : $request->header('X-Session-ID');
+
+            ChatbotHistory::create([
+                'user_id' => $userId,
+                'tenant_id' => $tenantId,
+                'session_id' => $sessionId,
+                'message' => $message,
+                'response' => $response,
+                'matched_room_ids' => !empty($rooms) ? array_values(array_filter(array_column($rooms, 'id'))) : null,
+                'error_code' => $errorCode,
+                'used_ai' => $usedAi,
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('Could not save chatbot history: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Nhận diện câu hỏi có lạc đề, không liên quan đến thuê phòng và tiện ích lưu trú (ERR_22_03)
+     */
+    private function isIrrelevantTopic(string $text): bool
+    {
+        $norm = $this->normalizeText($text);
+
+        // Các mẫu câu lạc đề điển hình
+        $irrelevantPatterns = [
+            '/\b(?:1\s*[\+\-\*\/]\s*1|2\s*[\+\-\*\/]\s*2|\d+\s*[\+\-\*\/]\s*\d+)\b/', // Toán học
+            '/\b(?:giai toan|tinh toan|phuong trinh|dao ham|tich phan)\b/',
+            '/\b(?:thoi tiet|du bao thoi tiet|nhiet do hom nay|troi mua khong)\b/',
+            '/\b(?:viet code|code python|viet chuong trinh|lap trinh|javascript|viet code giup)\b/',
+            '/\b(?:bong da|world cup|ngoai hang anh|champions league|ti so|ket qua bong da)\b/',
+            '/\b(?:chung khoan|gia vang|bitcoin|crypto|co phieu|tien ao)\b/',
+            '/\b(?:ke chuyen cuoi|lam tho|hat mot bai|nguoi yeu cua ban)\b/',
+            '/\b(?:chinh tri|bau cu|tong thong|thu tuong)\b/',
+            '/\b(?:thuoc tri|kham benh|chua benh|uong thuoc gi)\b/',
+        ];
+
+        foreach ($irrelevantPatterns as $pattern) {
+            if (preg_match($pattern, $norm) === 1) {
+                // Nếu người dùng không nhắc đến bất kỳ từ khóa liên quan đến nơi ở/phòng trọ
+                $rentalKeywords = ['phong', 'tro', 'thue', 'nha', 'can ho', 'chung cu', 'studio', 'o ghep', 'tien ich', 'gia phong'];
+                $hasRentalContext = false;
+                foreach ($rentalKeywords as $kw) {
+                    if (str_contains($norm, $kw)) {
+                        $hasRentalContext = true;
+                        break;
+                    }
+                }
+                if (!$hasRentalContext) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function buildFallbackResponse(string $prompt, array $rooms, bool $aiError = false): string
@@ -207,7 +333,7 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
         $origWords = preg_split('/\s+/', $originalQuery);
         $normWords = preg_split('/\s+/', $norm);
         
-        $searchPairs = []; // Mỗi phần tử: ['orig' => 'đống', 'norm' => 'dong']
+        $searchPairs = []; // Mỗi phần tử: ['orig' => 'thủ', 'norm' => 'thu']
         $count = min(count($origWords), count($normWords));
         for ($i = 0; $i < $count; $i++) {
             $origW = trim(preg_replace('/[^\p{L}\p{N}]/u', '', $origWords[$i]));
@@ -222,7 +348,7 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
 
         $queryBuilder = Room::with(['building', 'reviews']);
 
-        // Phân tích giá tối đa
+        // Phân tích giá tối đa (ví dụ: 'dưới 3 triệu', 'dưới 3tr', '<= 3000000')
         $hasPriceFilter = preg_match('/(?:duoi|nho hon|toi da|<=?|tam|khoang)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr|m|000000)?/ui', $query, $priceMatch) === 1;
         if ($hasPriceFilter) {
             $amount = floatval(str_replace(',', '.', $priceMatch[1]));
@@ -287,7 +413,7 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
 
         $rooms = $queryBuilder->get();
 
-        // Thực hiện lọc nâng cao
+        // Thực hiện lọc nâng cao theo tiện ích
         $filtered = $rooms->filter(function($room) use ($hasPets, $hasLoft, $hasBalcony, $hasWc) {
             $amenities = collect($room->amenities ?? [])->map(fn ($item) => mb_strtolower($item));
             
@@ -350,33 +476,23 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
                 'has_balcony' => $balcony ? 1 : 0,
                 'has_loft' => $loft ? 1 : 0,
                 'allow_pets' => $pets ? 1 : 0,
-                'wc' => $wc ? 'true' : 'false',
-                'balcony' => $balcony ? 'true' : 'false',
-                'loft' => $loft ? 'true' : 'false',
-                'pets' => $pets ? 'true' : 'false',
-                'wc_txt' => $wc ? 'Có' : 'Không',
                 'balcony_txt' => $balcony ? 'Có' : 'Không',
-                'loft_txt' => $loft ? 'Có' : 'Không',
+                'wc_txt' => $wc ? 'Có' : 'Chung',
                 'pets_txt' => $pets ? 'Có' : 'Không',
-                'rating' => round($rating, 1),
-                'location_description' => ($building?->description ?: "Nằm tại khu vực tiện lợi, thuận tiện di chuyển và sinh hoạt hằng ngày.") . " Địa chỉ: {$buildingAddress}.",
-                'space_description' => "Phòng rộng khoảng " . ($room->area ?? (22 + ($num % 9))) . "m², bố trí dạng " . ($loft ? 'có gác lửng để tách khu ngủ và sinh hoạt' : 'một mặt bằng dễ sắp xếp đồ') . ", phù hợp 1-2 người ở với không gian sinh hoạt gọn gàng.",
-                'scenery_description' => $balcony
-                    ? "Không gian quanh phòng thoáng hơn nhờ ban công, có ánh sáng tự nhiên, phù hợp người thích phòng sáng và có chỗ phơi đồ."
-                    : "Yên tĩnh, phù hợp học tập và nghỉ ngơi; lối đi trong nhà gọn, có camera và khóa an ninh.",
-                'cover_image' => $imageUrls[0] ?? null,
-                'image_urls' => $imageUrls,
-                'imageUrls' => $imageUrls
+                'loft_txt' => $loft ? 'Có' : 'Không',
+                'rating' => number_format((float) $rating, 1, '.', ''),
+                'cover_image' => $imageUrls[0] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+                'location_description' => $building?->description ?? 'Gần trục đường chính, thuận tiện đi lại',
+                'space_description' => 'Không gian phòng sáng sủa, sạch sẽ, tối ưu diện tích',
+                'scenery_description' => 'Xung quanh đầy đủ quán ăn, cửa hàng tiện lợi, dân trí cao'
             ];
         });
 
-        // Sắp xếp: Ưu tiên trạng thái trống lên hàng đầu
+        // Sắp xếp: Ưu tiên phòng còn trống (empty) lên đầu, tiếp đến Rating cao, rồi đến Giá thấp
         $sorted = $mapped->sort(function($a, $b) {
-            $aEmpty = $a['status'] === 'empty' ? 1 : 0;
-            $bEmpty = $b['status'] === 'empty' ? 1 : 0;
-            if ($aEmpty !== $bEmpty) {
-                return $bEmpty - $aEmpty;
-            }
+            if ($a['status'] === 'empty' && $b['status'] !== 'empty') return -1;
+            if ($a['status'] !== 'empty' && $b['status'] === 'empty') return 1;
+            
             $ratingDiff = floatval($b['rating']) - floatval($a['rating']);
             if ($ratingDiff != 0) return $ratingDiff > 0 ? 1 : -1;
             return $a['price'] - $b['price'];
@@ -440,8 +556,8 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
     {
         $knownLocations = [
             'Cầu Giấy', 'Thanh Xuân', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Tây Hồ',
-            'Hoàng Mai', 'Hà Đông', 'Nam Từ Liêm', 'Bắc Từ Liêm', 'Quận 10',
-            'Thủ Đức', 'TP. Hồ Chí Minh', 'Hồ Chí Minh', 'Sài Gòn', 'Đà Nẵng', 'Hải Phòng',
+            'Hoàng Mai', 'Hà Đông', 'Nam Từ Liêm', 'Bắc Từ Liêm', 'Quận 10', 'Quận 9',
+            'Thủ Đức', 'TP. Thủ Đức', 'TP. Hồ Chí Minh', 'Hồ Chí Minh', 'Sài Gòn', 'Đà Nẵng', 'Hải Phòng',
         ];
         $norm = $this->normalizeText($prompt);
 
@@ -456,7 +572,7 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
 
     private function inferAreaName(string $address): string
     {
-        foreach (['Thanh Xuân', 'Cầu Giấy', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Tây Hồ', 'Hà Đông', 'Quận 10'] as $area) {
+        foreach (['Thanh Xuân', 'Cầu Giấy', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Tây Hồ', 'Hà Đông', 'Thủ Đức', 'Quận 9', 'Quận 10'] as $area) {
             if (str_contains($address, $area)) {
                 return $area;
             }

@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
             'webauthn/*',
+            'renty/chatbot/*',
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,

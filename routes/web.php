@@ -564,7 +564,10 @@ Route::post('/renty/room/{id}/report', function (Illuminate\Http\Request $reques
 
 Route::post('/renty/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat'])
     ->name('renty.chatbot.chat')
-    ->middleware('throttle:60,1');
+    ->middleware('throttle:20,1');
+
+Route::get('/renty/chatbot/history', [\App\Http\Controllers\ChatbotController::class, 'history'])
+    ->name('renty.chatbot.history');
 
 Route::get('/renty/notifications', function () {
     if (!auth()->check()) {
