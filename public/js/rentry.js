@@ -196,9 +196,14 @@ function toggleFilterDrawer() {
 }
 
 function applyThemeMode(mode) {
-    const isLight = mode === 'light';
+    const isLight = (mode === 'light');
     document.documentElement.classList.toggle('theme-light', isLight);
-    document.body.classList.toggle('theme-light', isLight);
+    document.body?.classList.toggle('theme-light', isLight);
+    
+    // Xóa bỏ các class cũ để tránh xung đột
+    document.documentElement.classList.remove('theme-fire', 'theme-ice', 'theme-mint', 'theme-violet');
+    document.body?.classList.remove('theme-fire', 'theme-ice', 'theme-mint', 'theme-violet');
+
     document.querySelectorAll('[data-theme-icon], #theme-toggle-icon').forEach(icon => {
         if (!icon.classList.contains('theme-switch-icon')) {
             icon.classList.toggle('fa-sun', isLight);
@@ -208,15 +213,25 @@ function applyThemeMode(mode) {
     document.querySelectorAll('[data-theme-switch]').forEach(button => {
         button.classList.toggle('is-light', isLight);
         button.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+        button.setAttribute('title', isLight ? 'Chế độ Sáng ☀️ (Click để đổi sang Tối 🌙)' : 'Chế độ Tối 🌙 (Click để đổi sang Sáng ☀️)');
+    });
+
+    document.querySelectorAll('.renty-logo-badge i, .renty-logo-icon').forEach(icon => {
+        icon.classList.remove('fa-fire', 'fa-snowflake');
+        icon.classList.add('fa-magnifying-glass-location');
     });
 }
 
 function toggleThemeMode() {
-    const nextMode = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+    const isCurrentlyLight = document.body?.classList.contains('theme-light') || document.documentElement.classList.contains('theme-light');
+    const nextMode = isCurrentlyLight ? 'dark' : 'light';
     localStorage.setItem('renty_theme_mode', nextMode);
-    document.body.classList.remove('theme-flipping');
-    void document.body.offsetWidth;
-    document.body.classList.add('theme-flipping');
+    localStorage.setItem('smartroom_theme', nextMode);
+    document.body?.classList.remove('theme-flipping');
+    if (document.body) {
+        void document.body.offsetWidth;
+        document.body.classList.add('theme-flipping');
+    }
     document.querySelectorAll('[data-theme-switch]').forEach(button => {
         button.classList.remove('is-animating');
         void button.offsetWidth;
@@ -224,9 +239,27 @@ function toggleThemeMode() {
     });
     applyThemeMode(nextMode);
 }
+window.applyThemeMode = applyThemeMode;
+window.toggleThemeMode = toggleThemeMode;
 
-// Read localStorage theme on run
-applyThemeMode(localStorage.getItem('renty_theme_mode') || 'dark');
+function applyDuoTheme(duoKey) {
+    const validDuo = ['violet-mint', 'ice-fire', 'pink-cyan', 'amber-blue'];
+    const activeDuo = validDuo.includes(duoKey) ? duoKey : 'violet-mint';
+    document.documentElement.setAttribute('data-duo', activeDuo);
+    document.body?.setAttribute('data-duo', activeDuo);
+}
+window.applyDuoTheme = applyDuoTheme;
+
+// Read localStorage theme on run (mặc định là dark nếu chưa chọn hoặc nếu dính fire/ice cũ)
+let initialSavedTheme = localStorage.getItem('renty_theme_mode') || localStorage.getItem('smartroom_theme') || 'dark';
+if (initialSavedTheme === 'fire' || initialSavedTheme === 'ice') {
+    initialSavedTheme = 'dark';
+    localStorage.setItem('renty_theme_mode', 'dark');
+}
+applyThemeMode(initialSavedTheme);
+
+let initialSavedDuo = localStorage.getItem('smartroom_accent_duo') || 'violet-mint';
+applyDuoTheme(initialSavedDuo);
 
 function initThemeAnimations() {
     document.getElementById('theme-flip-wash')?.addEventListener('animationend', () => {
@@ -821,9 +854,21 @@ let rentyMap = null;
 let rentyMarkers = {};
 
 function initRentyMap() {
-    if (window.rentyGoogleMap && rentyMap) return;
+    if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+        window.rentyGoogleMap.map.invalidateSize();
+        if (Object.keys(window.rentyGoogleMap.markers || {}).length === 0 && window.rentyRoomsData && Object.keys(window.rentyRoomsData).length > 0) {
+            window.rentyGoogleMap.renderRoomMarkers(window.rentyRoomsData);
+        }
+        if (window.rentyGoogleMap.initialCenter) {
+            window.rentyGoogleMap.map.setView(window.rentyGoogleMap.initialCenter, window.rentyGoogleMap.map.getZoom() || 14, { animate: false });
+        }
+        return;
+    }
 
     if (typeof GoogleMapsRenty !== 'undefined') {
+        const container = document.getElementById('renty-interactive-map');
+        if (!container) return;
+
         window.rentyGoogleMap = new GoogleMapsRenty('renty-interactive-map', {
             onSelectRoom: (room) => {
                 const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
@@ -838,6 +883,8 @@ function initRentyMap() {
         });
         rentyMap = window.rentyGoogleMap.map;
         rentyMarkers = window.rentyGoogleMap.markers;
+        window.rentyMap = rentyMap;
+        window.rentyMarkers = rentyMarkers;
         return;
     }
 
@@ -1103,28 +1150,42 @@ function initRentyMap() {
 
 // Helper to control marker visibility during filtering
 function showMarker(id) {
-    if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[id]) {
-        const marker = window.rentyGoogleMap.markers[id];
-        if (window.rentyGoogleMap.map && !window.rentyGoogleMap.map.hasLayer(marker)) {
-            window.rentyGoogleMap.map.addLayer(marker);
+    try {
+        if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[id]) {
+            const marker = window.rentyGoogleMap.markers[id];
+            if (marker && window.rentyGoogleMap.map && typeof window.rentyGoogleMap.map.hasLayer === 'function') {
+                if (!window.rentyGoogleMap.map.hasLayer(marker)) {
+                    window.rentyGoogleMap.map.addLayer(marker);
+                }
+            }
+        } else if (rentyMarkers && rentyMarkers[id] && rentyMap && typeof rentyMap.hasLayer === 'function') {
+            const marker = rentyMarkers[id];
+            if (marker && !rentyMap.hasLayer(marker)) {
+                rentyMap.addLayer(marker);
+            }
         }
-    } else if (rentyMarkers[id] && rentyMap) {
-        if (!rentyMap.hasLayer(rentyMarkers[id])) {
-            rentyMap.addLayer(rentyMarkers[id]);
-        }
+    } catch (e) {
+        console.warn('showMarker safe catch:', e);
     }
 }
 
 function hideMarker(id) {
-    if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[id]) {
-        const marker = window.rentyGoogleMap.markers[id];
-        if (window.rentyGoogleMap.map && window.rentyGoogleMap.map.hasLayer(marker)) {
-            window.rentyGoogleMap.map.removeLayer(marker);
+    try {
+        if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[id]) {
+            const marker = window.rentyGoogleMap.markers[id];
+            if (marker && window.rentyGoogleMap.map && typeof window.rentyGoogleMap.map.hasLayer === 'function') {
+                if (window.rentyGoogleMap.map.hasLayer(marker)) {
+                    window.rentyGoogleMap.map.removeLayer(marker);
+                }
+            }
+        } else if (rentyMarkers && rentyMarkers[id] && rentyMap && typeof rentyMap.hasLayer === 'function') {
+            const marker = rentyMarkers[id];
+            if (marker && rentyMap.hasLayer(marker)) {
+                rentyMap.removeLayer(marker);
+            }
         }
-    } else if (rentyMarkers[id] && rentyMap) {
-        if (rentyMap.hasLayer(rentyMarkers[id])) {
-            rentyMap.removeLayer(rentyMarkers[id]);
-        }
+    } catch (e) {
+        console.warn('hideMarker safe catch:', e);
     }
 }
 
@@ -1138,13 +1199,17 @@ function setViewMode(mode) {
         if (gridBtn) gridBtn.classList.remove('active');
         localStorage.setItem('rentry_view_mode', 'map');
 
-        // Initialize map if not already done
-        setTimeout(() => {
-            initRentyMap();
-            if (rentyMap) {
-                rentyMap.invalidateSize();
-            }
-        }, 450);
+        // Multi-stage size invalidation during and after transition
+        initRentyMap();
+        [80, 200, 450, 750].forEach(delay => {
+            setTimeout(() => {
+                initRentyMap();
+                const m = (window.rentyGoogleMap && window.rentyGoogleMap.map) || rentyMap;
+                if (m && typeof m.invalidateSize === 'function') {
+                    m.invalidateSize();
+                }
+            }, delay);
+        });
     } else {
         document.body.classList.remove('renty-map-mode');
         if (mapBtn) mapBtn.classList.remove('active');
@@ -1152,6 +1217,7 @@ function setViewMode(mode) {
         localStorage.setItem('rentry_view_mode', 'grid');
     }
 }
+window.setViewMode = setViewMode;
 
 function initModalListeners() {
     document.getElementById('image-zoom-modal')?.addEventListener('click', (event) => {
@@ -1991,17 +2057,27 @@ function filterItems(options = {}) {
         renderPaginationControls(totalPages);
     }
 
-    // Fit map bounds to visible markers
-    if (rentyMap && typeof L !== 'undefined') {
-        const visibleLatLngs = [];
-        Object.values(rentyMarkers).forEach(marker => {
-            if (rentyMap.hasLayer(marker)) {
-                visibleLatLngs.push(marker.getLatLng());
+    // Fit map bounds to visible markers ONLY when map mode is active and container has dimensions
+    if (document.body.classList.contains('renty-map-mode') && typeof L !== 'undefined') {
+        const m = (window.rentyGoogleMap && window.rentyGoogleMap.map) || rentyMap;
+        if (m && typeof m.hasLayer === 'function') {
+            try {
+                const markersObj = (window.rentyGoogleMap && window.rentyGoogleMap.markers) || rentyMarkers || {};
+                const visibleLatLngs = [];
+                Object.values(markersObj).forEach(marker => {
+                    if (marker && m.hasLayer(marker) && typeof marker.getLatLng === 'function') {
+                        visibleLatLngs.push(marker.getLatLng());
+                    }
+                });
+                if (visibleLatLngs.length > 0) {
+                    const bounds = L.latLngBounds(visibleLatLngs);
+                    if (bounds.isValid()) {
+                        m.fitBounds(bounds, { maxZoom: 14, padding: [30, 30] });
+                    }
+                }
+            } catch (err) {
+                console.warn('Leaflet fitBounds safe catch:', err);
             }
-        });
-        if (visibleLatLngs.length > 0) {
-            const bounds = L.latLngBounds(visibleLatLngs);
-            rentyMap.fitBounds(bounds, { maxZoom: 14, padding: [30, 30] });
         }
     }
 }
@@ -2530,37 +2606,58 @@ function subscribeEmptyNotification(event, roomId, roomTitle) {
         event.stopPropagation();
     }
 
-    document.getElementById('notify-room-id').value = roomId;
-    document.getElementById('notify-room-title-display').textContent = roomTitle;
-    document.getElementById('notify-contact-input').value = '';
+    const roomIdInput = document.getElementById('notify-room-id');
+    if (roomIdInput) roomIdInput.value = roomId || '';
+    const titleDisplay = document.getElementById('notify-room-title-display');
+    if (titleDisplay) titleDisplay.textContent = roomTitle || '';
+    const contactInputEl = document.getElementById('notify-contact-input');
+    if (contactInputEl) contactInputEl.value = '';
 
     const modal = document.getElementById('notify-subscribe-modal');
-    modal.classList.remove('hidden');
+    if (modal) modal.classList.remove('hidden');
 }
 
 function closeNotifySubscribeModal() {
-    document.getElementById('notify-subscribe-modal').classList.add('hidden');
+    const modal = document.getElementById('notify-subscribe-modal');
+    if (modal) modal.classList.add('hidden');
 }
 
 function handleNotifySubscribeSubmit(event) {
-    event.preventDefault();
-    const roomTitle = document.getElementById('notify-room-title-display').textContent;
-    const contactInput = document.getElementById('notify-contact-input').value.trim();
+    if (event) event.preventDefault();
+    const titleDisplay = document.getElementById('notify-room-title-display');
+    const roomTitle = titleDisplay ? titleDisplay.textContent : 'Phòng trọ';
+    const contactEl = document.getElementById('notify-contact-input');
+    const contactInput = contactEl ? contactEl.value.trim() : '';
 
     if (!contactInput) return;
 
     closeNotifySubscribeModal();
-    showCustomAlert('Đăng ký thành công!', `Đã kích hoạt chuông báo trống phòng thành công cho phòng "${roomTitle}". Chúng tôi sẽ gửi thông báo tới "${contactInput}" ngay khi phòng Sẵn sàng.`);
+    showCustomAlert('Đăng ký thành công!', `Đã kích hoạt chuông báo trống phòng thành công cho phòng "${roomTitle}". Chúng tôi sẽ gửi thông báo tới "${contactInput}" ngay khi phòng Sẵn sàng.`, 'success');
 }
 
-function showCustomAlert(title, message) {
-    document.getElementById('custom-alert-title').textContent = title;
-    document.getElementById('custom-alert-message').textContent = message;
-    document.getElementById('custom-alert-modal').classList.remove('hidden');
+function showCustomAlert(title, message, type = 'info') {
+    if (typeof message === 'undefined' || (typeof type === 'undefined' && ['info', 'warning', 'success', 'error'].includes(message))) {
+        type = message || 'info';
+        message = title;
+        title = type === 'success' ? 'Thành công!' : (type === 'warning' ? 'Cảnh báo' : (type === 'error' ? 'Lỗi' : 'Thông báo'));
+    }
+    const modal = document.getElementById('custom-alert-modal');
+    const titleEl = document.getElementById('custom-alert-title');
+    const messageEl = document.getElementById('custom-alert-message');
+    if (modal && titleEl && messageEl) {
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        modal.classList.remove('hidden');
+    } else if (typeof window.showRentyToast === 'function') {
+        window.showRentyToast(message, type, title);
+    } else {
+        alert(title + ': ' + message);
+    }
 }
 
 function closeCustomAlert() {
-    document.getElementById('custom-alert-modal').classList.add('hidden');
+    const modal = document.getElementById('custom-alert-modal');
+    if (modal) modal.classList.add('hidden');
 }
 
 function toggleVisualFilter(key) {
@@ -2590,12 +2687,13 @@ function initRentyDashboard() {
 
     renderViewedRooms();
 
-    // Set initial view mode, default to 'grid'
-    const savedMode = localStorage.getItem('rentry_view_mode') || 'grid';
+    // Set initial view mode, checking URL param first
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewQuery = urlParams.get('view');
+    const savedMode = (viewQuery === 'map' || viewQuery === 'grid') ? viewQuery : (localStorage.getItem('rentry_view_mode') || 'grid');
     setViewMode(savedMode);
 
     // Read search param from URL
-    const urlParams = new URLSearchParams(window.location.search);
     const searchQuery = urlParams.get('search');
     if (searchQuery) {
         const searchInput = document.getElementById('search-input');
@@ -2606,6 +2704,10 @@ function initRentyDashboard() {
 
     filterItems(); // Run initial filter to apply checked state of pets & balcony
 }
+
+window.setViewMode = setViewMode;
+window.initRentyMap = initRentyMap;
+
 if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', initRentyDashboard);
 } else {
@@ -3116,6 +3218,10 @@ function subscribeNewsletter() {
     if (!email) {
         if (typeof showCustomAlert === 'function') {
             showCustomAlert('Vui lòng nhập địa chỉ email của bạn.', 'warning');
+        } else if (typeof window.showRentyToast === 'function') {
+            window.showRentyToast('Vui lòng nhập địa chỉ email của bạn.', 'warning', 'Cảnh báo');
+        } else {
+            alert('Vui lòng nhập địa chỉ email của bạn.');
         }
         emailInput.focus();
         return;
@@ -3125,6 +3231,10 @@ function subscribeNewsletter() {
     if (!emailRegex.test(email)) {
         if (typeof showCustomAlert === 'function') {
             showCustomAlert('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.', 'warning');
+        } else if (typeof window.showRentyToast === 'function') {
+            window.showRentyToast('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.', 'warning', 'Cảnh báo');
+        } else {
+            alert('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.');
         }
         emailInput.focus();
         return;
@@ -3132,6 +3242,10 @@ function subscribeNewsletter() {
 
     if (typeof showCustomAlert === 'function') {
         showCustomAlert('Đăng ký nhận tin tức phòng trọ mới thành công!', 'success');
+    } else if (typeof window.showRentyToast === 'function') {
+        window.showRentyToast('Đăng ký nhận tin tức phòng trọ mới thành công!', 'success', 'Thành công!');
+    } else {
+        alert('Đăng ký nhận tin tức phòng trọ mới thành công!');
     }
     emailInput.value = '';
 }
@@ -3186,6 +3300,54 @@ window.subscribeNewsletter = subscribeNewsletter;
 window.openQaCommentsModal = openQaCommentsModal;
 window.closeQaCommentsModal = closeQaCommentsModal;
 window.submitQaReply = submitQaReply;
+
+function toggleMoreArticles() {
+    const extraArticles = document.querySelectorAll('.article-extra');
+    const btnText = document.getElementById('toggle-more-articles-btn-text');
+    const btnIcon = document.getElementById('toggle-more-articles-btn-icon');
+    if (!btnText || !btnIcon || extraArticles.length === 0) return;
+
+    const isHidden = extraArticles[0].classList.contains('hidden');
+
+    if (isHidden) {
+        extraArticles.forEach(art => {
+            art.classList.remove('hidden');
+            art.style.animation = 'fadeSlideDown 0.4s ease-out forwards';
+        });
+        btnText.textContent = 'Thu gọn bài viết';
+        btnIcon.className = 'fa-solid fa-chevron-up text-[10px]';
+    } else {
+        extraArticles.forEach(art => {
+            art.classList.add('hidden');
+        });
+        btnText.textContent = 'Xem thêm bài viết';
+        btnIcon.className = 'fa-solid fa-chevron-down text-[10px]';
+
+        const sectionHeader = document.querySelector('.fa-newspaper')?.closest('h2');
+        if (sectionHeader) {
+            sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}
+
+function toggleArticleDetail(id) {
+    const detail = document.getElementById('article-detail-' + id);
+    const toggleBtn = document.getElementById('article-toggle-' + id);
+    if (!detail || !toggleBtn) return;
+
+    const isHidden = detail.classList.contains('hidden');
+    detail.classList.toggle('hidden', !isHidden);
+
+    if (isHidden) {
+        toggleBtn.innerHTML = 'Thu gọn <i class="fa-solid fa-angle-up text-[9px] transition-transform"></i>';
+        detail.style.animation = 'fadeSlideDown 0.3s ease-out forwards';
+    } else {
+        toggleBtn.innerHTML = 'Đọc tiếp <i class="fa-solid fa-angle-right text-[9px] transition-transform"></i>';
+    }
+}
+
+window.toggleMoreArticles = toggleMoreArticles;
+window.toggleArticleDetail = toggleArticleDetail;
 
 function updateDistanceSlider(val) {
     const slider = document.getElementById('distance-slider');
@@ -3336,7 +3498,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.size = Math.random() * 2 + 1;
                 this.speedX = Math.random() * 0.4 - 0.2;
                 this.speedY = -(Math.random() * 0.6 + 0.2);
-                this.color = Math.random() > 0.5 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.12)';
+                const isFireTheme = document.body.classList.contains('theme-fire');
+                if (isFireTheme) {
+                    this.color = Math.random() > 0.5 ? 'rgba(251, 146, 60, 0.45)' : 'rgba(239, 68, 68, 0.35)';
+                } else {
+                    this.color = Math.random() > 0.5 ? 'rgba(186, 230, 254, 0.45)' : 'rgba(56, 189, 248, 0.35)';
+                }
                 this.baseX = this.x;
                 this.baseY = this.y;
                 this.density = (Math.random() * 20) + 5;
@@ -4625,19 +4792,20 @@ function renderCompareRadarChart(rooms) {
         return;
     }
 
-    const isLight = document.body.classList.contains('theme-light') || 
-                    document.documentElement.classList.contains('theme-light') || 
-                    localStorage.getItem('renty_theme_mode') === 'light';
+    const isFire = document.body.classList.contains('theme-fire');
+    const textColor = isFire ? '#fff7ed' : '#f0f9ff';
+    const subTextColor = isFire ? '#fb923c' : '#7dd3fc';
+    const gridColor = isFire ? 'rgba(249, 115, 22, 0.22)' : 'rgba(56, 189, 248, 0.22)';
+    const axisColor = isFire ? 'rgba(249, 115, 22, 0.35)' : 'rgba(56, 189, 248, 0.35)';
 
-    const textColor = isLight ? '#1e293b' : '#e2e8f0';
-    const subTextColor = isLight ? '#64748b' : '#94a3b8';
-    const gridColor = isLight ? 'rgba(100, 116, 139, 0.22)' : 'rgba(148, 163, 184, 0.18)';
-    const axisColor = isLight ? 'rgba(100, 116, 139, 0.35)' : 'rgba(148, 163, 184, 0.3)';
-
-    const palette = [
-        { stroke: '#10b981', fill: 'rgba(16, 185, 129, 0.22)', point: '#059669', badgeBg: 'bg-emerald-500/15', text: 'text-emerald-500' },
-        { stroke: '#6366f1', fill: 'rgba(99, 102, 241, 0.22)', point: '#4f46e5', badgeBg: 'bg-indigo-500/15', text: 'text-indigo-400' },
-        { stroke: '#f59e0b', fill: 'rgba(245, 158, 11, 0.22)', point: '#d97706', badgeBg: 'bg-amber-500/15', text: 'text-amber-400' }
+    const palette = isFire ? [
+        { stroke: '#f97316', fill: 'rgba(249, 115, 22, 0.25)', point: '#ea580c', badgeBg: 'bg-orange-500/15', text: 'text-orange-400' },
+        { stroke: '#ef4444', fill: 'rgba(239, 68, 68, 0.25)', point: '#dc2626', badgeBg: 'bg-red-500/15', text: 'text-red-400' },
+        { stroke: '#facc15', fill: 'rgba(250, 204, 21, 0.25)', point: '#eab308', badgeBg: 'bg-amber-500/15', text: 'text-amber-400' }
+    ] : [
+        { stroke: '#38bdf8', fill: 'rgba(56, 189, 248, 0.25)', point: '#0284c7', badgeBg: 'bg-sky-500/15', text: 'text-sky-400' },
+        { stroke: '#06b6d4', fill: 'rgba(6, 182, 212, 0.25)', point: '#0891b2', badgeBg: 'bg-cyan-500/15', text: 'text-cyan-400' },
+        { stroke: '#60a5fa', fill: 'rgba(96, 165, 250, 0.25)', point: '#2563eb', badgeBg: 'bg-blue-500/15', text: 'text-blue-400' }
     ];
 
     const labels = [
@@ -5049,6 +5217,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Khôi phục bộ lọc từ URL nếu người dùng truy cập link chia sẻ hoặc reload
     restoreFiltersFromUrl();
     const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view') === 'map') {
+        setViewMode('map');
+    }
     const hasSearchFilterParams = ['q', 'search', 'min_price', 'max_price', 'status', 'rating', 'pets', 'loft', 'balcony', 'wc', 'page'].some(k => urlParams.has(k));
     if (hasSearchFilterParams) {
         filterItems({ resetPage: false });

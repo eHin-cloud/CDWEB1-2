@@ -5422,5 +5422,100 @@ body.theme-light .renty-chatbot-mascot {
     color: #e2e8f0;
 }
 
+:root, [data-duo="violet-mint"] {
+    --duo-1: #8b5cf6;
+    --duo-2: #10b981;
+    --duo-gradient: linear-gradient(135deg, #8b5cf6 0%, #10b981 100%);
+    --duo-glow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    --duo-border: rgba(139, 92, 246, 0.35);
+    --duo-soft: rgba(139, 92, 246, 0.12);
+}
 
+[data-duo="ice-fire"] {
+    --duo-1: #0284c7;
+    --duo-2: #f97316;
+    --duo-gradient: linear-gradient(135deg, #0284c7 0%, #f97316 100%);
+    --duo-glow: 0 4px 20px rgba(249, 115, 22, 0.4);
+    --duo-border: rgba(2, 132, 199, 0.35);
+    --duo-soft: rgba(2, 132, 199, 0.12);
+}
 
+[data-duo="pink-cyan"] {
+    --duo-1: #f43f5e;
+    --duo-2: #06b6d4;
+    --duo-gradient: linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%);
+    --duo-glow: 0 4px 20px rgba(244, 63, 94, 0.4);
+    --duo-border: rgba(244, 63, 94, 0.35);
+    --duo-soft: rgba(244, 63, 94, 0.12);
+}
+
+[data-duo="amber-blue"] {
+    --duo-1: #f59e0b;
+    --duo-2: #3b82f6;
+    --duo-gradient: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
+    --duo-glow: 0 4px 20px rgba(245, 158, 11, 0.4);
+    --duo-border: rgba(245, 158, 11, 0.35);
+    --duo-soft: rgba(245, 158, 11, 0.12);
+}
+
+[data-duo] #admin-sidebar .sidebar-brand div {
+    background: var(--duo-gradient) !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] {
+    background: linear-gradient(90deg, var(--duo-soft), transparent) !important;
+    color: var(--duo-1) !important;
+    border-color: var(--duo-border) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] i {
+    color: var(--duo-2) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-user > div:first-child {
+    background: var(--duo-gradient) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] .bg-indigo-600 {
+    background: var(--duo-gradient) !important;
+    border: none !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] .text-indigo-400 {
+    color: var(--duo-1) !important;
+}
+[data-duo] .text-indigo-500 {
+    color: var(--duo-2) !important;
+}
+
+[data-duo] .border-indigo-500 {
+    border-color: var(--duo-1) !important;
+}
+[data-duo] .focus\:border-indigo-500:focus {
+    border-color: var(--duo-2) !important;
+}
+[data-duo] .focus\:ring-indigo-500\/40:focus {
+    --tw-ring-color: var(--duo-border) !important;
+}
+
+/* Logo Renty: Màu bên ngoài thay đổi linh hoạt theo theme Duo Accent, icon kính lúp + vị trí bản đồ bên trong giữ màu xanh */
+.renty-logo-badge {
+    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+    box-shadow: var(--duo-glow, 0 4px 18px rgba(16, 185, 129, 0.4)) !important;
+}
+
+.theme-light .renty-logo-badge {
+    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+    box-shadow: var(--duo-glow, 0 4px 12px rgba(5, 150, 105, 0.3)) !important;
+}
+
+.renty-logo-badge i,
+.renty-logo-icon {
+    color: #10b981 !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 6px rgba(16, 185, 129, 0.8)) !important;
+}

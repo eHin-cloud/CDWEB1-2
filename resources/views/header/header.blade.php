@@ -6,19 +6,19 @@
     <div class="container mx-auto px-4 md:px-6 flex justify-between items-center gap-2 md:gap-4">
         <!-- Left: Logo and Nav Links -->
         <div class="flex items-center gap-3 md:gap-6 shrink-0">
-            <a href="{{ route('renty.user') }}" class="flex items-center gap-2 md:gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                    <i class="fa-solid fa-magnifying-glass-location text-white text-lg"></i>
+            <a href="{{ route('renty.user') }}" class="flex items-center gap-2 md:gap-3 group">
+                <div class="renty-logo-badge w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-lg">
+                    <i class="renty-logo-icon fa-solid fa-magnifying-glass-location text-emerald-400 text-lg transition-transform duration-300 group-hover:rotate-12"></i>
                 </div>
                 <span class="renty-brand-text text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Renty</span>
             </a>
 
             <nav class="flex items-center gap-3 md:gap-5 text-xs font-semibold text-slate-400">
-                <a href="{{ route('renty.user') }}" onclick="handleExploreClick(event)" class="hover:text-emerald-400 transition-colors">Khám phá</a>
-                <a href="javascript:void(0)" onclick="openHotAreasModal()" class="hover:text-emerald-400 transition-colors">Khu vực</a>
-                <a href="javascript:void(0)" onclick="setViewMode('map')" class="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                <a href="{{ route('renty.user') }}" onclick="handleExploreClick(event)" class="renty-nav-link hover:text-white transition-colors">Khám phá</a>
+                <a href="javascript:void(0)" onclick="openHotAreasModal()" class="renty-nav-link hover:text-white transition-colors">Khu vực</a>
+                <a href="javascript:void(0)" onclick="if(typeof setViewMode === 'function' && document.getElementById('renty-interactive-map')){setViewMode('map');}else{window.location.href='{{ route('renty.user') }}?view=map';}" class="renty-nav-link hover:text-white transition-colors flex items-center gap-1.5">
                     Bản đồ
-                    <span class="px-1.5 py-0.5 text-[8px] font-black bg-emerald-500 text-white rounded-md uppercase tracking-wider animate-pulse">🆕</span>
+                    <span class="renty-new-badge px-1.5 py-0.5 text-[8px] font-black rounded-md uppercase tracking-wider animate-pulse">🆕</span>
                 </a>
             </nav>
         </div>
@@ -158,11 +158,11 @@
                     </a>
                 @endauth
                 
-                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button renty-theme-switch" aria-label="Chuyển chế độ sáng tối" data-theme-switch>
+                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button renty-theme-switch" aria-label="Chuyển chế độ Sáng / Tối" data-theme-switch title="Chuyển chế độ Sáng / Tối">
                     <span class="theme-switch-track">
                         <span class="theme-switch-knob">
-                            <i class="fa-solid fa-moon theme-switch-icon theme-switch-moon"></i>
-                            <i class="fa-solid fa-sun theme-switch-icon theme-switch-sun"></i>
+                            <i class="fa-solid fa-sun theme-switch-icon theme-switch-sun" title="Chế độ Sáng ☀️"></i>
+                            <i class="fa-solid fa-moon theme-switch-icon theme-switch-moon" title="Chế độ Tối 🌙"></i>
                         </span>
                     </span>
                 </button>

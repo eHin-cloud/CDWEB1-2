@@ -1050,29 +1050,56 @@ body.theme-flipping header::after {
 .theme-switch-sun {
     color: #f59e0b;
     opacity: 0;
-    transform: rotate(110deg) scale(0.45);
+    transform: rotate(-110deg) scale(0.45);
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.85));
 }
 
 .theme-switch-moon {
-    color: #334155;
+    color: #38bdf8;
     opacity: 1;
     transform: rotate(0) scale(1);
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));
+}
+
+.renty-theme-switch .theme-switch-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #090e17, #131c2e);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 16px rgba(0, 0, 0, 0.4);
+    transition: background 0.42s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.42s ease;
+}
+
+.renty-theme-switch .theme-switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 35% 28%, #f8fafc, #94a3b8 70%);
+    color: #0f172a;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+    transition:
+        transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+        background 0.42s ease,
+        color 0.42s ease,
+        box-shadow 0.42s ease;
 }
 
 .renty-theme-switch.is-light .theme-switch-track {
-    background: linear-gradient(135deg, #bae6fd, #fef3c7 58%, #ffffff);
-    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.28), 0 0 24px rgba(251, 191, 36, 0.18);
-}
-
-.renty-theme-switch.is-light .theme-switch-track::before {
-    opacity: 0;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.25);
 }
 
 .renty-theme-switch.is-light .theme-switch-knob {
     transform: translateX(24px);
-    background: radial-gradient(circle at 35% 32%, #fff7ed, #fbbf24 72%);
-    color: #92400e;
-    box-shadow: 0 8px 22px rgba(245, 158, 11, 0.28);
+    background: radial-gradient(circle at 35% 32%, #ffffff, #f59e0b 72%);
+    color: #78350f;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.8);
 }
 
 .renty-theme-switch.is-light .theme-switch-sun {
@@ -1082,7 +1109,7 @@ body.theme-flipping header::after {
 
 .renty-theme-switch.is-light .theme-switch-moon {
     opacity: 0;
-    transform: rotate(-110deg) scale(0.45);
+    transform: rotate(110deg) scale(0.45);
 }
 
 .renty-theme-switch.is-animating .theme-switch-knob {
@@ -2847,6 +2874,29 @@ body.renty-map-mode .renty-split-right {
     /* Make list column 50% width */
     height: 100%;
     overflow-y: auto;
+}
+
+#renty-interactive-map {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#renty-interactive-map .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    background: #090d16 !important;
+}
+
+.renty-new-badge {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    color: #ffffff;
+}
+html.theme-fire .renty-new-badge,
+body.theme-fire .renty-new-badge {
+    background: linear-gradient(135deg, #dc2626, #f97316);
 }
 
 /* Staggered card fade-in keyframes for premium transitions */
@@ -5358,9 +5408,111 @@ body.theme-light .renty-chatbot-mascot {
     cursor: pointer;
 }
 
-.auth-checkbox-label:hover {
-    color: #e2e8f0;
+/* ==========================================================================
+   SMARTROOM DUAL-TONE (DOUBLE MÀU) ACCENT SYSTEM
+   Nền tảng chính là Light & Dark chuẩn.
+   Điểm nhấn là 4 cặp màu kép thời thượng:
+   1. violet-mint: Tím Thạch Anh & Xanh Bạc Hà (Cyberpunk Neon)
+   2. ice-fire: Hàn Băng Tuyết & Hỏa Diễm Rực Lửa (Băng & Hỏa)
+   3. pink-cyan: Hồng Neon & Xanh Lam Điện Tử (Synthwave Wave)
+   4. amber-blue: Cam Hổ Phách & Xanh Biển Sâu (Sunset Horizon)
+   ========================================================================== */
+
+:root, [data-duo="violet-mint"] {
+    --duo-1: #8b5cf6;
+    --duo-2: #10b981;
+    --duo-gradient: linear-gradient(135deg, #8b5cf6 0%, #10b981 100%);
+    --duo-glow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    --duo-border: rgba(139, 92, 246, 0.35);
+    --duo-soft: rgba(139, 92, 246, 0.12);
 }
 
+[data-duo="ice-fire"] {
+    --duo-1: #0284c7;
+    --duo-2: #f97316;
+    --duo-gradient: linear-gradient(135deg, #0284c7 0%, #f97316 100%);
+    --duo-glow: 0 4px 20px rgba(249, 115, 22, 0.4);
+    --duo-border: rgba(2, 132, 199, 0.35);
+    --duo-soft: rgba(2, 132, 199, 0.12);
+}
 
+[data-duo="pink-cyan"] {
+    --duo-1: #f43f5e;
+    --duo-2: #06b6d4;
+    --duo-gradient: linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%);
+    --duo-glow: 0 4px 20px rgba(244, 63, 94, 0.4);
+    --duo-border: rgba(244, 63, 94, 0.35);
+    --duo-soft: rgba(244, 63, 94, 0.12);
+}
 
+[data-duo="amber-blue"] {
+    --duo-1: #f59e0b;
+    --duo-2: #3b82f6;
+    --duo-gradient: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
+    --duo-glow: 0 4px 20px rgba(245, 158, 11, 0.4);
+    --duo-border: rgba(245, 158, 11, 0.35);
+    --duo-soft: rgba(245, 158, 11, 0.12);
+}
+
+/* Áp dụng double màu vào các thành phần chính của Admin */
+[data-duo] #admin-sidebar .sidebar-brand div {
+    background: var(--duo-gradient) !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] {
+    background: linear-gradient(90deg, var(--duo-soft), transparent) !important;
+    color: var(--duo-1) !important;
+    border-color: var(--duo-border) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] i {
+    color: var(--duo-2) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-user > div:first-child {
+    background: var(--duo-gradient) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] .bg-indigo-600 {
+    background: var(--duo-gradient) !important;
+    border: none !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] .text-indigo-400 {
+    color: var(--duo-1) !important;
+}
+[data-duo] .text-indigo-500 {
+    color: var(--duo-2) !important;
+}
+
+[data-duo] .border-indigo-500 {
+    border-color: var(--duo-1) !important;
+}
+[data-duo] .focus\:border-indigo-500:focus {
+    border-color: var(--duo-2) !important;
+}
+[data-duo] .focus\:ring-indigo-500\/40:focus {
+    --tw-ring-color: var(--duo-border) !important;
+}
+
+/* Logo Renty: Màu bên ngoài thay đổi linh hoạt theo theme Duo Accent, icon kính lúp + vị trí bản đồ bên trong giữ màu xanh */
+.renty-logo-badge {
+    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+    box-shadow: var(--duo-glow, 0 4px 18px rgba(16, 185, 129, 0.4)) !important;
+}
+
+.theme-light .renty-logo-badge {
+    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+    box-shadow: var(--duo-glow, 0 4px 12px rgba(5, 150, 105, 0.3)) !important;
+}
+
+.renty-logo-badge i,
+.renty-logo-icon {
+    color: #10b981 !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 6px rgba(16, 185, 129, 0.8)) !important;
+}

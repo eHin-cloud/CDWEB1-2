@@ -63,27 +63,27 @@ class GoogleMapsRenty {
             return;
         }
 
-        // 1. Google Maps Tile Layers
-        this.tileLayers.roadmap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+        // 1. Google Maps Tile Layers with subdomain rotation
+        this.tileLayers.roadmap = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
             maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            subdomains: ['0', '1', '2', '3'],
             attribution: 'Dữ liệu bản đồ &copy; Google Maps'
         });
 
-        this.tileLayers.satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=vi', {
+        this.tileLayers.satellite = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=vi', {
             maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            subdomains: ['0', '1', '2', '3'],
             attribution: 'Hình ảnh vệ tinh &copy; Google Maps'
         });
 
-        this.tileLayers.terrain = L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&hl=vi', {
+        this.tileLayers.terrain = L.tileLayer('https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&hl=vi', {
             maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            subdomains: ['0', '1', '2', '3'],
             attribution: 'Địa hình &copy; Google Maps'
         });
 
         // 2. Detect center from rooms
-        const rooms = window.rentyRoomsData || {};
+        const rooms = (window.rentyRoomsData && Object.keys(window.rentyRoomsData).length > 0) ? window.rentyRoomsData : {};
         const firstRoom = Object.values(rooms)[0];
         let center = this.options.defaultCenter;
         if (firstRoom) {
@@ -95,12 +95,39 @@ class GoogleMapsRenty {
         this.initialCenter = center;
 
         // 3. Instantiate Leaflet Map with Google Maps
-        this.map = L.map(this.containerId, {
-            center: center,
-            zoom: this.options.defaultZoom,
-            zoomControl: false,
-            attributionControl: false
-        });
+        if (this.container) {
+            if (this.container._leaflet_id) {
+                this.container._leaflet_id = null;
+            }
+            // Clear any old child nodes to guarantee clean canvas
+            this.container.innerHTML = '';
+        }
+
+        try {
+            this.map = L.map(this.containerId, {
+                center: center,
+                zoom: this.options.defaultZoom,
+                zoomControl: false,
+                attributionControl: false
+            });
+        } catch (err) {
+            console.warn('Leaflet map re-initialization catch:', err);
+            if (this.container) {
+                this.container._leaflet_id = null;
+                this.container.innerHTML = '';
+                this.map = L.map(this.containerId, {
+                    center: center,
+                    zoom: this.options.defaultZoom,
+                    zoomControl: false,
+                    attributionControl: false
+                });
+            }
+        }
+
+        if (!this.map) {
+            console.error('Failed to create Leaflet map instance.');
+            return;
+        }
 
         // Add default Google Roadmap layer
         this.tileLayers.roadmap.addTo(this.map);
@@ -111,10 +138,17 @@ class GoogleMapsRenty {
         // 4. Render markers
         this.renderRoomMarkers(rooms);
 
-        // 5. Invalidate size after layout
-        setTimeout(() => {
-            if (this.map) this.map.invalidateSize();
-        }, 300);
+        // 5. Invalidate size after layout transition and re-center
+        [80, 200, 450, 750].forEach(delay => {
+            setTimeout(() => {
+                if (this.map && typeof this.map.invalidateSize === 'function') {
+                    this.map.invalidateSize();
+                    if (this.initialCenter) {
+                        this.map.setView(this.initialCenter, this.map.getZoom() || 14, { animate: false });
+                    }
+                }
+            }, delay);
+        });
     }
 
     /* =========================================================================
@@ -143,76 +177,89 @@ class GoogleMapsRenty {
        ROOM PRICE MARKERS (Google Maps Style Badges)
        ========================================================================= */
     renderRoomMarkers(rooms) {
-        Object.values(this.markers).forEach(m => this.map.removeLayer(m));
+        const roomsToRender = (rooms && Object.keys(rooms).length > 0)
+            ? rooms
+            : (window.rentyRoomsData || {});
+
+        if (this.markers) {
+            Object.values(this.markers).forEach(m => {
+                try { this.map.removeLayer(m); } catch (e) {}
+            });
+        }
         this.markers = {};
 
-        Object.values(rooms).forEach(room => {
-            const coords = this.computeRoomCoordinates(room);
-            if (!coords) return;
+        const roomList = Array.isArray(roomsToRender) ? roomsToRender : Object.values(roomsToRender);
+        roomList.forEach(room => {
+            try {
+                const coords = this.computeRoomCoordinates(room);
+                if (!coords || isNaN(coords.lat) || isNaN(coords.lng)) return;
 
-            const priceMillion = (room.price / 1000000).toFixed(1).replace('.0', '');
-            const priceBadgeText = `${priceMillion}Tr`;
+                const priceMillion = (room.price / 1000000).toFixed(1).replace('.0', '');
+                const priceBadgeText = `${priceMillion}Tr`;
 
-            const isVerified = (room.verification_status === 'verified' || room.listing_badge === 'verified' || room.listing_badge === 'premium_verified');
-            const badgeBg = isVerified 
-                ? 'background: linear-gradient(135deg, #059669, #0d9488);' 
-                : 'background: linear-gradient(135deg, #1e40af, #2563eb);';
+                const isVerified = (room.verification_status === 'verified' || room.listing_badge === 'verified' || room.listing_badge === 'premium_verified');
+                const badgeBg = isVerified 
+                    ? 'background: linear-gradient(135deg, #059669, #0d9488);' 
+                    : 'background: linear-gradient(135deg, #1e40af, #2563eb);';
 
-            const customHtml = `
-                <div class="gm-price-marker" id="marker-room-${room.id}" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 4px;
-                    padding: 4px 9px;
-                    border-radius: 9999px;
-                    color: #ffffff;
-                    font-size: 11px;
-                    font-weight: 800;
-                    font-family: 'Plus Jakarta Sans', sans-serif;
-                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
-                    cursor: pointer;
-                    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    white-space: nowrap;
-                    ${badgeBg}
-                ">
-                    <i class="fa-solid fa-house text-[9px] opacity-80"></i>
-                    <span>${priceBadgeText}</span>
-                    ${isVerified ? '<i class="fa-solid fa-circle-check text-[9px] text-emerald-200"></i>' : ''}
-                </div>
-            `;
+                const customHtml = `
+                    <div class="gm-price-marker" id="marker-room-${room.id}" style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        padding: 4px 9px;
+                        border-radius: 9999px;
+                        color: #ffffff;
+                        font-size: 11px;
+                        font-weight: 800;
+                        font-family: 'Plus Jakarta Sans', sans-serif;
+                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+                        cursor: pointer;
+                        transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        white-space: nowrap;
+                        ${badgeBg}
+                    ">
+                        <i class="fa-solid fa-house text-[9px] opacity-80"></i>
+                        <span>${priceBadgeText}</span>
+                        ${isVerified ? '<i class="fa-solid fa-circle-check text-[9px] text-emerald-200"></i>' : ''}
+                    </div>
+                `;
 
-            const icon = L.divIcon({
-                html: customHtml,
-                className: 'gm-marker-container',
-                iconSize: [60, 26],
-                iconAnchor: [30, 13]
-            });
+                const icon = L.divIcon({
+                    html: customHtml,
+                    className: 'gm-marker-container',
+                    iconSize: [60, 26],
+                    iconAnchor: [30, 13]
+                });
 
-            const marker = L.marker([coords.lat, coords.lng], { icon: icon });
+                const marker = L.marker([coords.lat, coords.lng], { icon: icon });
 
-            // Popup HTML (Google Maps Rich InfoWindow)
-            const popupHtml = this.buildInfoWindowHtml(room, coords);
-            marker.bindPopup(popupHtml, {
-                maxWidth: 320,
-                minWidth: 280,
-                className: 'gm-infowindow-popup',
-                offset: [0, -10]
-            });
+                // Popup HTML (Google Maps Rich InfoWindow)
+                const popupHtml = this.buildInfoWindowHtml(room, coords);
+                marker.bindPopup(popupHtml, {
+                    maxWidth: 320,
+                    minWidth: 280,
+                    className: 'gm-infowindow-popup',
+                    offset: [0, -10]
+                });
 
-            // Marker click
-            marker.on('click', () => {
-                this.activeRoomId = room.id;
-                this.highlightMarker(room.id);
-                if (this.selectedUniversity) {
-                    this.drawCommuteRoute(coords, this.selectedUniversity);
-                }
-                if (typeof this.options.onSelectRoom === 'function') {
-                    this.options.onSelectRoom(room);
-                }
-            });
+                // Marker click
+                marker.on('click', () => {
+                    this.activeRoomId = room.id;
+                    this.highlightMarker(room.id);
+                    if (this.selectedUniversity) {
+                        this.drawCommuteRoute(coords, this.selectedUniversity);
+                    }
+                    if (typeof this.options.onSelectRoom === 'function') {
+                        this.options.onSelectRoom(room);
+                    }
+                });
 
-            marker.addTo(this.map);
-            this.markers[room.id] = marker;
+                marker.addTo(this.map);
+                this.markers[room.id] = marker;
+            } catch (err) {
+                console.warn('Skipping marker for room:', room, err);
+            }
         });
     }
 
@@ -514,11 +561,40 @@ class GoogleMapsRenty {
        COORDINATE COMPUTATION
        ========================================================================= */
     computeRoomCoordinates(room) {
+        if (!room) return null;
+
+        // Check if database provides latitude and longitude
+        if (room.latitude && room.longitude && !isNaN(parseFloat(room.latitude)) && !isNaN(parseFloat(room.longitude))) {
+            return {
+                lat: parseFloat(room.latitude),
+                lng: parseFloat(room.longitude)
+            };
+        }
+        if (room.lat && room.lng && !isNaN(parseFloat(room.lat)) && !isNaN(parseFloat(room.lng))) {
+            return {
+                lat: parseFloat(room.lat),
+                lng: parseFloat(room.lng)
+            };
+        }
+
         const addr = ((room.address || '') + ' ' + (room.area_name || '')).toLowerCase();
         let baseLat = 21.036;
         let baseLng = 105.790;
 
-        const num = parseInt(room.room_number || room.id || 1, 10);
+        let num = 1;
+        if (room.room_number) {
+            const parsed = parseInt(String(room.room_number).replace(/\D/g, ''), 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                num = parsed;
+            }
+        }
+        if (num === 1 && room.id) {
+            const parsedId = parseInt(room.id, 10);
+            if (!isNaN(parsedId) && parsedId > 0) {
+                num = parsedId;
+            }
+        }
+
         const offsetLat = ((num * 17) % 30 - 15) * 0.001;
         const offsetLng = ((num * 29) % 30 - 15) * 0.001;
 
@@ -551,9 +627,16 @@ class GoogleMapsRenty {
             }
         }
 
+        const finalLat = baseLat + offsetLat;
+        const finalLng = baseLng + offsetLng;
+
+        if (isNaN(finalLat) || isNaN(finalLng)) {
+            return { lat: 21.036, lng: 105.790 };
+        }
+
         return {
-            lat: baseLat + offsetLat,
-            lng: baseLng + offsetLng
+            lat: finalLat,
+            lng: finalLng
         };
     }
 }
@@ -621,4 +704,95 @@ window.toggleGnHudDetails = function() {
         if (icon) icon.style.transform = 'rotate(180deg)';
     }
 };
+
+window.initRentyMap = function() {
+    const container = document.getElementById('renty-interactive-map');
+    if (!container) return;
+
+    if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+        const m = window.rentyGoogleMap;
+        try {
+            m.map.invalidateSize();
+            if (Object.keys(m.markers || {}).length === 0 && window.rentyRoomsData && Object.keys(window.rentyRoomsData).length > 0) {
+                m.renderRoomMarkers(window.rentyRoomsData);
+            }
+            if (m.initialCenter) {
+                m.map.setView(m.initialCenter, m.map.getZoom() || 14, { animate: false });
+            }
+        } catch (e) {
+            console.warn('Error invalidating existing map size:', e);
+        }
+        return;
+    }
+
+    if (typeof L === 'undefined') {
+        console.warn('Leaflet mapping library not ready yet.');
+        return;
+    }
+
+    try {
+        window.rentyGoogleMap = new GoogleMapsRenty('renty-interactive-map', {
+            onSelectRoom: (room) => {
+                const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
+                if (roomCard) {
+                    roomCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    roomCard.classList.add('ring-2', 'ring-emerald-500');
+                    setTimeout(() => {
+                        roomCard.classList.remove('ring-2', 'ring-emerald-500');
+                    }, 2000);
+                }
+            }
+        });
+        window.rentyMap = window.rentyGoogleMap.map;
+        window.rentyMarkers = window.rentyGoogleMap.markers;
+    } catch (err) {
+        console.error('Failed to instantiate GoogleMapsRenty:', err);
+    }
+};
+
+window.setViewMode = function(mode) {
+    const mapBtn = document.getElementById('view-mode-map-btn');
+    const gridBtn = document.getElementById('view-mode-grid-btn');
+    if (mode === 'map') {
+        document.body.classList.add('renty-map-mode');
+        if (mapBtn) mapBtn.classList.add('active');
+        if (gridBtn) gridBtn.classList.remove('active');
+        localStorage.setItem('rentry_view_mode', 'map');
+
+        window.initRentyMap();
+
+        [60, 180, 350, 500, 800].forEach(delay => {
+            setTimeout(() => {
+                if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+                    window.rentyGoogleMap.map.invalidateSize();
+                    if (Object.keys(window.rentyGoogleMap.markers || {}).length === 0 && window.rentyRoomsData) {
+                        window.rentyGoogleMap.renderRoomMarkers(window.rentyRoomsData);
+                    }
+                    if (delay >= 500 && window.rentyGoogleMap.initialCenter) {
+                        window.rentyGoogleMap.map.setView(window.rentyGoogleMap.initialCenter, window.rentyGoogleMap.map.getZoom() || 14, { animate: false });
+                    }
+                }
+            }, delay);
+        });
+    } else {
+        document.body.classList.remove('renty-map-mode');
+        if (mapBtn) mapBtn.classList.remove('active');
+        if (gridBtn) gridBtn.classList.add('active');
+        localStorage.setItem('rentry_view_mode', 'grid');
+    }
+};
+
+// Auto-observe map container resize to ensure tile grid never breaks
+document.addEventListener('DOMContentLoaded', () => {
+    const mapEl = document.getElementById('renty-interactive-map');
+    if (mapEl && window.ResizeObserver) {
+        const resizeObserver = new ResizeObserver(() => {
+            if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+                window.rentyGoogleMap.map.invalidateSize();
+            }
+        });
+        resizeObserver.observe(mapEl);
+    }
+});
+
 

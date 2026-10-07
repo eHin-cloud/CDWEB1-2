@@ -570,6 +570,8 @@
 
         function applyThemeMode(mode) {
             const isLight = mode === 'light';
+            document.documentElement.classList.remove('theme-fire', 'theme-ice');
+            document.body?.classList.remove('theme-fire', 'theme-ice');
             document.documentElement.classList.toggle('theme-light', isLight);
             document.body.classList.toggle('theme-light', isLight);
             document.querySelectorAll('#theme-toggle-icon').forEach(icon => {
@@ -581,10 +583,13 @@
         function toggleThemeMode() {
             const nextMode = document.body.classList.contains('theme-light') ? 'dark' : 'light';
             localStorage.setItem('renty_theme_mode', nextMode);
+            localStorage.setItem('smartroom_theme', nextMode);
             applyThemeMode(nextMode);
         }
 
-        applyThemeMode(localStorage.getItem('renty_theme_mode') || 'dark');
+        let savedTheme = localStorage.getItem('renty_theme_mode') || localStorage.getItem('smartroom_theme') || 'dark';
+        if (savedTheme === 'fire' || savedTheme === 'ice') savedTheme = 'dark';
+        applyThemeMode(savedTheme);
 
         function selectImage(index) {
             activeImageIndex = Math.max(0, Math.min(roomImages.length - 1, index));

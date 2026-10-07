@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="Hệ thống quản lý SmartRoom - Trang quản trị nhà trọ.">
     <title>SmartRoom - Quản Trị Nhà Trọ Cao Cấp</title>
+    @include('admin.partials.theme-head-script')
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,9 +58,13 @@
                 <h2 id="section-title" class="text-lg font-bold text-slate-100">Tổng Quan Hệ Thống</h2>
             </div>
             
-            <div class="flex items-center gap-6">
-                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
-                    <i class="fa-solid fa-moon" data-theme-icon></i>
+            <div class="flex items-center gap-4">
+                <!-- Bộ chọn Double Màu (Cặp Màu Kép) giao diện Admin -->
+                @include('admin.partials.accent-picker')
+
+                <!-- Nút chuyển Light / Dark -->
+                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-sm focus:outline-none" aria-label="Chuyển chế độ sáng tối" title="Chuyển chế độ Sáng ☀️ / Tối 🌙">
+                    <i class="fa-solid fa-moon text-sm" data-theme-icon></i>
                 </button>
                 <!-- Notifications Cho Chủ Trọ -->
                 <div class="relative" id="admin-notification-container">

@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Thêm Cơ sở Lưu trú mới - SmartRoom.">
     <title>Thêm Cơ Sở Lưu Trú Mới - SmartRoom</title>
-    
-    <!-- Google Fonts -->
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -64,9 +63,12 @@
                 </div>
             </div>
             
-            <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition" aria-label="Chuyển chế độ sáng tối">
-                <i class="fa-solid fa-moon" data-theme-icon></i>
-            </button>
+            <div class="flex items-center gap-3">
+                @include('admin.partials.accent-picker')
+                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition" aria-label="Chuyển chế độ sáng tối">
+                    <i class="fa-solid fa-moon" data-theme-icon></i>
+                </button>
+            </div>
         </header>
 
         <!-- CONTENT PANEL -->

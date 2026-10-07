@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch Sử Vận Hành - SmartRoom</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,6 +31,7 @@
                 <p class="text-xs text-slate-500 mt-0.5">Tra cứu các sự kiện đã xảy ra với phòng, cư dân, hóa đơn, hợp đồng và thiết bị.</p>
             </div>
             <div class="flex items-center gap-3">
+                @include('admin.partials.accent-picker')
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>

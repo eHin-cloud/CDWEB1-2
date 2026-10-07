@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Quản lý danh sách phòng trọ - SmartRoom.">
     <title>Quản Lý Phòng Trọ - SmartRoom</title>
-    
-    <!-- Google Fonts -->
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -75,7 +74,8 @@
                 <h2 class="text-lg font-bold text-slate-100">Quản Lý Danh Sách Phòng Trọ</h2>
             </div>
             
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
+                @include('admin.partials.accent-picker')
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>
