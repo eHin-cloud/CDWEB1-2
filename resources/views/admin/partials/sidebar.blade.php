@@ -105,16 +105,22 @@
                     <span class="truncate">Sơ Đồ Phòng</span>
                 </a>
 
+                <a href="{{ route('smartroom.admin.housekeeping.matrix') }}" 
+                   class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('smartroom.admin.housekeeping.*') ? 'text-teal-400 bg-teal-500/10 border-teal-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                    <i class="fa-solid fa-broom-ball w-5 text-center text-[15px] text-teal-400"></i>
+                    <span class="truncate">Sơ Đồ Buồng Phòng & Lễ Tân</span>
+                    @if($sidebarDirtyRoomsCount > 0)
+                        <span id="sidebar-housekeeping-badge" class="sidebar-badge ml-auto bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30">
+                            {{ $sidebarDirtyRoomsCount }}
+                        </span>
+                    @endif
+                </a>
+
                 <a href="{{ route('smartroom.admin') }}?tab=housekeeping-section" 
                    data-section="housekeeping-section" 
                    class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'housekeeping-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                     <i class="fa-solid fa-paintbrush w-5 text-center text-[15px]"></i>
-                    <span class="truncate">Nhiệm Vụ Buồng Phòng</span>
-                    @if($sidebarDirtyRoomsCount > 0)
-                        <span id="sidebar-housekeeping-badge" class="sidebar-badge ml-auto bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm shadow-amber-500/30">
-                            {{ $sidebarDirtyRoomsCount }}
-                        </span>
-                    @endif
+                    <span class="truncate">Nhiệm Vụ Dọn Phòng</span>
                 </a>
                 
                 @if($isLandlord)

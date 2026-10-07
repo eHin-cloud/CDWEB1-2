@@ -17,6 +17,7 @@ use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\RoomMatrixRealtimeController;
 use App\Http\Controllers\HotelReceptionController;
 use App\Http\Controllers\HousekeepingController;
+use App\Http\Controllers\HousekeepingFrontdeskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -247,8 +248,23 @@ Route::middleware('admin')->group(function () {
         Route::post('/check-in', [HotelReceptionController::class, 'checkIn'])->name('checkin');
         Route::post('/folio/{bookingId}/items', [HotelReceptionController::class, 'addFolioItem'])->name('folio.add_item');
         Route::post('/check-out/{bookingId}', [HotelReceptionController::class, 'checkOut'])->name('checkout');
-        Route::get('/folio/{bookingId}', [HotelReceptionController::class, 'printFolio'])->name('folio');
     });
+});
+
+// TÍNH NĂNG 18: PHÂN HỆ LỄ TÂN & BUỒNG PHÒNG (FEAT_18_HOUSEKEEPING_FRONTDESK)
+Route::middleware(['auth', 'tenant.scope'])->prefix('smartroom/admin')->name('smartroom.admin.')->group(function () {
+    // 1. Sơ đồ buồng phòng thời gian thực, hiển thị trực quan mã màu FSM dọn phòng
+    Route::get('/housekeeping/matrix', [HousekeepingFrontdeskController::class, 'matrix'])->name('housekeeping.matrix');
+    // 2. Phân công nhân viên buồng phòng dọn dẹp theo ca
+    Route::post('/housekeeping/assign', [HousekeepingFrontdeskController::class, 'assign'])->name('housekeeping.assign');
+    // 3. Cập nhật tiến độ dọn phòng (Bắt đầu dọn -> Dọn sạch sẽ)
+    Route::post('/housekeeping/status', [HousekeepingFrontdeskController::class, 'updateStatus'])->name('housekeeping.status');
+    // 4. Lễ tân nghiệm thu buồng phòng đạt chuẩn sẵn sàng đón khách
+    Route::post('/housekeeping/inspect', [HousekeepingFrontdeskController::class, 'inspect'])->name('housekeeping.inspect');
+    // 5. Check-in khách lưu trú (Guard Check chặn tuyệt đối phòng Dirty)
+    Route::post('/frontdesk/checkin', [HousekeepingFrontdeskController::class, 'checkIn'])->name('frontdesk.checkin');
+    // 6. Check-out trả phòng, tự động chuyển phòng sang Dirty và đối soát minibar
+    Route::post('/frontdesk/checkout', [HousekeepingFrontdeskController::class, 'checkOut'])->name('frontdesk.checkout');
 });
 
 // Phân hệ Buồng phòng (Housekeeping) - Tối ưu di động

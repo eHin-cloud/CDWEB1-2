@@ -11,6 +11,8 @@ class Room extends Model
     public const MAX_OCCUPANTS = 5;
     public const ROOM_TYPES = ['standard', 'deluxe', 'vip', 'studio'];
     public const RENTAL_TYPES = ['month', 'day', 'hour'];
+    public const HOUSEKEEPING_STATUSES = ['dirty', 'cleaning', 'clean', 'inspected', 'out_of_service'];
+    public const HOUSEKEEPING_PRIORITIES = ['urgent', 'high', 'normal', 'low'];
 
     protected $fillable = [
         'building_id',
@@ -26,6 +28,12 @@ class Room extends Model
         'price_per_hour',
         'price_extra_hour',
         'cleaning_status',
+        'housekeeping_status',
+        'assigned_staff_id',
+        'priority',
+        'inspection_notes',
+        'inspected_by',
+        'inspected_at',
         'area',
         'electric_meter_serial',
         'water_meter_serial',
@@ -42,6 +50,7 @@ class Room extends Model
         'images' => 'array',
         'deposit' => 'integer',
         'price' => 'integer',
+        'inspected_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -262,6 +271,76 @@ class Room extends Model
                 $query->where('meter_type', 'water');
             }
         );
+    }
+
+    public function assignedStaff(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_staff_id');
+    }
+
+    public function inspector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'inspected_by');
+    }
+
+    public function housekeepingLogs(): HasMany
+    {
+        return $this->hasMany(HousekeepingLog::class)->latest('id');
+    }
+
+    public function isHousekeepingDirty(): bool
+    {
+        return in_array($this->housekeeping_status, ['dirty'], true) || in_array($this->cleaning_status, ['dirty'], true);
+    }
+
+    public function canCheckIn(): bool
+    {
+        if ($this->status === 'occupied') {
+            return false;
+        }
+
+        // Tuyệt đối không cho phép Check-in nếu phòng đang ở trạng thái Dirty hoặc chưa hoàn tất nghiệm thu
+        if ($this->isHousekeepingDirty()) {
+            return false;
+        }
+
+        // Phòng phải ở trạng thái Clean hoặc Inspected
+        return in_array($this->housekeeping_status, ['clean', 'inspected'], true);
+    }
+
+    public function getHousekeepingStatusLabelAttribute(): string
+    {
+        return match ($this->housekeeping_status) {
+            'dirty' => 'Cần dọn (Dirty)',
+            'cleaning' => 'Đang dọn (Cleaning)',
+            'clean' => 'Đã dọn xong (Clean)',
+            'inspected' => 'Đã kiểm tra (Inspected)',
+            'out_of_service' => 'Tạm dừng (Out of service)',
+            default => 'Cần dọn (Dirty)',
+        };
+    }
+
+    public function getHousekeepingColorHexAttribute(): string
+    {
+        return match ($this->housekeeping_status) {
+            'dirty' => '#EF4444',        // Đỏ
+            'cleaning' => '#F59E0B',     // Vàng cam
+            'clean' => '#10B981',        // Xanh lục
+            'inspected' => '#0D9488',    // Xanh ngọc
+            'out_of_service' => '#64748B', // Xám
+            default => '#EF4444',
+        };
+    }
+
+    public function getPriorityLabelAttribute(): string
+    {
+        return match ($this->priority) {
+            'urgent' => 'Khẩn cấp đón khách',
+            'high' => 'Ưu tiên cao',
+            'normal' => 'Bình thường',
+            'low' => 'Ưu tiên thấp',
+            default => 'Bình thường',
+        };
     }
 }
 
