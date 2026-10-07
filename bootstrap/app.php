@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'adminMiddleware' => \App\Http\Middleware\SystemAdminMiddleware::class,
+            'tenant.scope' => \App\Http\Middleware\TenantScopeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

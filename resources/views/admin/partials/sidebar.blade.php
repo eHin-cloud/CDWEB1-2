@@ -1,10 +1,14 @@
 @php
     $currentTab = request()->query('tab', 'dashboard-section');
     $isDashboardRoute = request()->routeIs('smartroom.admin');
-    $isLandlord = Auth::user()?->isLandlord();
     $user = Auth::user();
+    $isLandlord = $user?->isLandlord();
+    $isAdmin = $user?->isAdmin();
+    $isReceptionist = $user?->isReceptionist();
+    $isHousekeeper = $user?->isHousekeeper();
+    $isManager = $user?->isManager();
     $tenantId = $user?->tenant_id;
-    if (!$tenantId && $user && !$user->isAdmin()) {
+    if (!$tenantId && $user && !$isAdmin) {
         $tenantId = \App\Models\Tenant::where('email', 'contact@smartroom-caugiay.vn')->value('id')
             ?? \App\Models\Tenant::query()->orderBy('id')->value('id');
     }
@@ -37,8 +41,20 @@
     $userRoleLabel = 'Quản trị viên';
     
     if (Auth::check()) {
-        $userName = Auth::user()->name;
-        $userRoleLabel = $isLandlord ? 'Chủ chung cư mini' : 'Nhân viên vận hành';
+        $userName = $user->name;
+        if ($isLandlord) {
+            $userRoleLabel = 'Chủ chung cư mini';
+        } elseif ($isAdmin) {
+            $userRoleLabel = 'Quản trị viên';
+        } elseif ($isReceptionist) {
+            $userRoleLabel = 'Nhân viên lễ tân';
+        } elseif ($isHousekeeper) {
+            $userRoleLabel = 'Nhân viên buồng phòng';
+        } elseif ($isManager) {
+            $userRoleLabel = 'Quản lý vận hành';
+        } else {
+            $userRoleLabel = 'Nhân viên vận hành';
+        }
         $words = explode(' ', trim($userName));
         if (count($words) >= 2) {
             $userInitials = mb_substr($words[count($words) - 2], 0, 1) . mb_substr($words[count($words) - 1], 0, 1);
@@ -105,16 +121,22 @@
                     <span class="truncate">Sơ Đồ Phòng</span>
                 </a>
 
+                <a href="{{ route('smartroom.admin.housekeeping.matrix') }}" 
+                   class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('smartroom.admin.housekeeping.*') ? 'text-teal-400 bg-teal-500/10 border-teal-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                    <i class="fa-solid fa-broom-ball w-5 text-center text-[15px] text-teal-400"></i>
+                    <span class="truncate">Sơ Đồ Buồng Phòng & Lễ Tân</span>
+                    @if($sidebarDirtyRoomsCount > 0)
+                        <span id="sidebar-housekeeping-badge" class="sidebar-badge ml-auto bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30">
+                            {{ $sidebarDirtyRoomsCount }}
+                        </span>
+                    @endif
+                </a>
+
                 <a href="{{ route('smartroom.admin') }}?tab=housekeeping-section" 
                    data-section="housekeeping-section" 
                    class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'housekeeping-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                     <i class="fa-solid fa-paintbrush w-5 text-center text-[15px]"></i>
-                    <span class="truncate">Nhiệm Vụ Buồng Phòng</span>
-                    @if($sidebarDirtyRoomsCount > 0)
-                        <span id="sidebar-housekeeping-badge" class="sidebar-badge ml-auto bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm shadow-amber-500/30">
-                            {{ $sidebarDirtyRoomsCount }}
-                        </span>
-                    @endif
+                    <span class="truncate">Nhiệm Vụ Dọn Phòng</span>
                 </a>
                 
                 @if($isLandlord)
@@ -125,17 +147,19 @@
                     </a>
                 @endif
 
-                <a href="{{ route('admin.rooms.index') }}" 
-                   class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.rooms.*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
-                    <i class="fa-solid fa-door-open w-5 text-center text-[15px]"></i>
-                    <span class="truncate">Cấu Hình Phòng</span>
-                </a>
-                
-                <a href="{{ route('admin.equipment.index') }}" 
-                   class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.equipment.*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
-                    <i class="fa-solid fa-screwdriver-wrench w-5 text-center text-[15px]"></i>
-                    <span class="truncate">Thiết Bị</span>
-                </a>
+                @if(!$isReceptionist && !$isHousekeeper)
+                    <a href="{{ route('admin.rooms.index') }}" 
+                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.rooms.*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                        <i class="fa-solid fa-door-open w-5 text-center text-[15px]"></i>
+                        <span class="truncate">Cấu Hình Phòng</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.equipment.index') }}" 
+                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.equipment.*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                        <i class="fa-solid fa-screwdriver-wrench w-5 text-center text-[15px]"></i>
+                        <span class="truncate">Thiết Bị</span>
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -181,12 +205,14 @@
             </div>
             <div class="sidebar-group-divider hidden my-2 border-t border-slate-800/60"></div>
             <div class="space-y-0.5">
-                <a href="{{ route('smartroom.admin') }}?tab=utility-section" 
-                   data-section="utility-section" 
-                   class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'utility-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
-                    <i class="fa-solid fa-bolt w-5 text-center text-[15px]"></i>
-                    <span class="truncate">Chốt Điện Nước</span>
-                </a>
+                @if(!$isReceptionist && !$isHousekeeper)
+                    <a href="{{ route('smartroom.admin') }}?tab=utility-section" 
+                       data-section="utility-section" 
+                       class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'utility-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                        <i class="fa-solid fa-bolt w-5 text-center text-[15px]"></i>
+                        <span class="truncate">Chốt Điện Nước</span>
+                    </a>
+                @endif
 
                 <a href="{{ route('smartroom.admin') }}?tab=ticket-section" 
                    data-section="ticket-section" 
