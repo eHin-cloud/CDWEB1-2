@@ -26,7 +26,7 @@ class SmartSearchService
      */
     protected array $dictionary = [
         // Khu vực Hà Nội
-        'Cầu Giấy' => ['cau giay', 'cg', 'cau giya', 'cau giau'],
+        'Cầu Giấy' => ['cau giay', 'cg', 'cau giya', 'cau giau', 'cau gaiy'],
         'Thanh Xuân' => ['thanh xuan', 'tx', 'thah xuan', 'thanh xuanh'],
         'Đống Đa' => ['dong da', 'dd', 'dong daa'],
         'Hai Bà Trưng' => ['hai ba trung', 'hbt', 'haibatrung'],
@@ -43,6 +43,7 @@ class SmartSearchService
         'Quận 3' => ['quan 3', 'q3', 'quan3'],
         'Quận 4' => ['quan 4', 'q4', 'quan4'],
         'Quận 7' => ['quan 7', 'q7', 'quan7'],
+        'Quận 9' => ['quan 9', 'q9', 'quan9'],
         'Quận 10' => ['quan 10', 'q10', 'quan10'],
         'Bình Thạnh' => ['binh thanh', 'bt', 'binh thnah', 'binh than'],
         'Tân Bình' => ['tan binh', 'tb', 'tan bih'],

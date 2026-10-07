@@ -1605,12 +1605,12 @@ function syncFilterStateToUrl(params) {
 }
 
 function applyDidYouMeanSearch() {
-    const textEl = document.getElementById('smart-search-did-you-mean-text');
-    if (!textEl || !textEl.textContent) return;
-    const input = document.getElementById('search-input');
-    if (input) {
-        input.value = textEl.textContent.trim();
-        filterItems();
+    const textEl = document.getElementById('smart-search-did-you-mean-text') 
+        || document.getElementById('smart-search-empty-did-you-mean-text')
+        || document.getElementById('renty-did-you-mean-btn');
+    const word = (textEl && textEl.textContent) ? textEl.textContent.trim() : currentSmartSearchCorrection;
+    if (word && typeof applySearchCorrection === 'function') {
+        applySearchCorrection(word);
     }
 }
 window.applyDidYouMeanSearch = applyDidYouMeanSearch;
@@ -2029,10 +2029,31 @@ function filterItems(options = {}) {
                 if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
             }
         }
+
+        // Hiển thị gợi ý từ đã gõ sai ngay trên phần bộ lọc và trong empty state
+        const didYouMeanBanner = document.getElementById('smart-search-did-you-mean-banner');
+        const didYouMeanText = document.getElementById('smart-search-did-you-mean-text');
+        const emptyDidYouMean = document.getElementById('smart-search-empty-did-you-mean');
+        const emptyDidYouMeanText = document.getElementById('smart-search-empty-did-you-mean-text');
+
+        if (currentSmartSearchCorrection && currentSmartSearchCorrection.toLowerCase() !== q.toLowerCase()) {
+            if (didYouMeanBanner && didYouMeanText) {
+                didYouMeanText.textContent = currentSmartSearchCorrection;
+                didYouMeanBanner.classList.remove('hidden');
+            }
+            if (emptyDidYouMean && emptyDidYouMeanText) {
+                emptyDidYouMeanText.textContent = currentSmartSearchCorrection;
+                emptyDidYouMean.classList.remove('hidden');
+            }
+        }
         renderPaginationControls(0);
     } else {
         if (emptyState) emptyState.classList.add('hidden');
         if (roomsGrid) roomsGrid.classList.remove('hidden');
+        if (!currentSmartSearchCorrection) {
+            document.getElementById('smart-search-did-you-mean-banner')?.classList.add('hidden');
+            document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
+        }
 
         // Phân trang 9 phòng/trang
         const totalPages = Math.ceil(matchesCount / rentyItemsPerPage);
@@ -2099,6 +2120,20 @@ function fetchLiveSmartSearch(query) {
 
     const trimmed = (query || '').trim();
 
+    if (trimmed.length === 0) {
+        currentSmartSearchCorrection = null;
+        if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+        if (liveResultsSection) liveResultsSection.classList.add('hidden');
+        if (loadingEl) loadingEl.classList.add('hidden');
+        document.getElementById('renty-search-suggestions')?.classList.add('hidden');
+        document.getElementById('renty-search-panel')?.classList.remove('is-search-active');
+        document.getElementById('renty-search-backdrop')?.classList.remove('is-active');
+        document.getElementById('smart-search-did-you-mean-banner')?.classList.add('hidden');
+        document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
+        document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+        return;
+    }
+
     if (trimmed.length < 2) {
         currentSmartSearchCorrection = null;
         if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
@@ -2113,14 +2148,14 @@ function fetchLiveSmartSearch(query) {
     rentySmartSearchDebounce = setTimeout(async () => {
         try {
             const startTime = performance.now();
-            // Gọi song song API autocomplete (Search Engine) và Smart Search (Correction)
-            const [resAuto, resSmart] = await Promise.all([
-                fetch(`/api/renty/rooms/autocomplete?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null),
-                fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null)
+            // Gọi song song API Smart Search (Correction) và Autocomplete
+            const [resSmart, resAuto] = await Promise.all([
+                fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null),
+                fetch(`/api/renty/rooms/suggest?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null)
             ]);
 
-            const autoData = resAuto ? await resAuto.json() : null;
-            const data = resSmart ? await resSmart.json() : null;
+            const data = (resSmart && resSmart.ok) ? await resSmart.json().catch(() => null) : null;
+            const autoData = (resAuto && resAuto.ok) ? await resAuto.json().catch(() => null) : null;
             const latency = Math.round(performance.now() - startTime);
 
             if (loadingEl) loadingEl.classList.add('hidden');
@@ -2130,12 +2165,33 @@ function fetchLiveSmartSearch(query) {
             if (heroLatencyEl) heroLatencyEl.textContent = `${latency}ms (${autoData?.source || 'engine'})`;
 
             // 1. Xử lý hiển thị "Có phải bạn muốn tìm..." khi phát hiện gõ nhầm / sai chính tả
+            const didYouMeanBanner = document.getElementById('smart-search-did-you-mean-banner');
+            const didYouMeanText = document.getElementById('smart-search-did-you-mean-text');
+            const emptyDidYouMean = document.getElementById('smart-search-empty-did-you-mean');
+            const emptyDidYouMeanText = document.getElementById('smart-search-empty-did-you-mean-text');
+
             if (data && data.has_correction && data.did_you_mean && data.did_you_mean.toLowerCase() !== trimmed.toLowerCase()) {
                 currentSmartSearchCorrection = data.did_you_mean;
+                
+                // 1.1 Hộp gợi ý trong search suggestions dropdown
                 if (didYouMeanBox && didYouMeanBtn) {
                     didYouMeanBtn.textContent = data.did_you_mean;
                     didYouMeanBox.classList.remove('hidden');
                 }
+                
+                // 1.2 Banner phía trên bộ lọc
+                if (didYouMeanBanner && didYouMeanText) {
+                    didYouMeanText.textContent = data.did_you_mean;
+                    didYouMeanBanner.classList.remove('hidden');
+                }
+
+                // 1.3 Gợi ý trong khung Empty state
+                if (emptyDidYouMean && emptyDidYouMeanText) {
+                    emptyDidYouMeanText.textContent = data.did_you_mean;
+                    emptyDidYouMean.classList.remove('hidden');
+                }
+
+                // 1.4 Hero banner nếu có
                 const heroSugBox = document.getElementById('smart-search-suggestion');
                 const heroSugBtn = document.getElementById('did-you-mean-btn');
                 if (heroSugBox && heroSugBtn) {
@@ -2145,6 +2201,8 @@ function fetchLiveSmartSearch(query) {
             } else {
                 currentSmartSearchCorrection = null;
                 if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+                if (didYouMeanBanner) didYouMeanBanner.classList.add('hidden');
+                if (emptyDidYouMean) emptyDidYouMean.classList.add('hidden');
                 document.getElementById('smart-search-suggestion')?.classList.add('hidden');
             }
 
@@ -2237,6 +2295,7 @@ function fetchLiveSmartSearch(query) {
 let heroLiveSearchTimer = null;
 function handleHeroLiveSearch(e) {
     const val = e.target.value;
+    const trimmed = (val || '').trim();
     const heroDropdown = document.getElementById('hero-live-search-dropdown');
 
     if (e.key === 'Escape') {
@@ -2256,6 +2315,25 @@ function handleHeroLiveSearch(e) {
         navInput.value = val;
     }
 
+    // Nếu không gõ chữ hoặc xóa hết chữ: không hiện gợi ý và khôi phục dữ liệu database
+    if (!trimmed) {
+        if (heroDropdown) heroDropdown.classList.add('hidden');
+        document.getElementById('renty-search-suggestions')?.classList.add('hidden');
+        document.getElementById('renty-search-panel')?.classList.remove('is-search-active');
+        document.getElementById('renty-search-backdrop')?.classList.remove('is-active');
+
+        currentSmartSearchCorrection = null;
+        document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+        document.getElementById('smart-search-did-you-mean-banner')?.classList.add('hidden');
+        document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
+        document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+
+        if (document.getElementById('rooms-grid')) {
+            filterItems({ resetPage: true });
+        }
+        return;
+    }
+
     // Áp dụng Debounce 300ms
     fetchLiveSmartSearch(val);
 }
@@ -2271,35 +2349,59 @@ document.addEventListener('click', (e) => {
 });
 
 // Áp dụng từ gợi ý sửa lỗi (Did you mean)
-function applySearchCorrection() {
-    if (!currentSmartSearchCorrection) return;
+function applySearchCorrection(suggestedWord) {
+    const word = (suggestedWord && typeof suggestedWord === 'string' && suggestedWord.trim())
+        ? suggestedWord.trim()
+        : (currentSmartSearchCorrection 
+            || document.getElementById('smart-search-did-you-mean-text')?.textContent.trim()
+            || document.getElementById('renty-did-you-mean-btn')?.textContent.trim()
+            || '');
+
+    if (!word) return;
 
     const navInput = document.getElementById('search-input');
     const heroInput = document.getElementById('hero-search-input');
 
-    if (navInput) navInput.value = currentSmartSearchCorrection;
-    if (heroInput) heroInput.value = currentSmartSearchCorrection;
+    if (navInput) navInput.value = word;
+    if (heroInput) heroInput.value = word;
 
-    // Ẩn hộp gợi ý sau khi đã click sửa
+    currentSmartSearchCorrection = null;
+
+    // Ẩn tất cả hộp và banner gợi ý sau khi đã click sửa
     document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+    document.getElementById('smart-search-did-you-mean-banner')?.classList.add('hidden');
+    document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
+    document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+
+    blurRentySearch();
 
     if (!document.getElementById('rooms-grid')) {
-        window.location.href = '/renty?search=' + encodeURIComponent(currentSmartSearchCorrection);
+        window.location.href = '/renty?search=' + encodeURIComponent(word);
     } else {
         filterItems();
-        fetchLiveSmartSearch(currentSmartSearchCorrection);
+        fetchLiveSmartSearch(word);
     }
 }
 window.applySearchCorrection = applySearchCorrection;
 
 function openRentySearchSuggestions() {
+    const input = document.getElementById('search-input');
+    const val = input ? input.value.trim() : '';
+
+    // CHỈ KHI CÓ GÕ CHỮ THÌ MỚI HIỆN GỢI Ý. KHÔNG GÕ CHỮ THÌ KHÔNG HIỆN GỢI Ý!
+    if (!val) {
+        document.getElementById('renty-search-suggestions')?.classList.add('hidden');
+        document.getElementById('renty-search-panel')?.classList.remove('is-search-active');
+        document.getElementById('renty-search-backdrop')?.classList.remove('is-active');
+        return;
+    }
+
     document.getElementById('renty-search-suggestions')?.classList.remove('hidden');
     document.getElementById('renty-search-panel')?.classList.add('is-search-active');
     document.getElementById('renty-search-backdrop')?.classList.add('is-active');
 
-    const input = document.getElementById('search-input');
-    if (input && input.value.trim().length >= 2) {
-        fetchLiveSmartSearch(input.value);
+    if (val.length >= 2) {
+        fetchLiveSmartSearch(val);
     }
 }
 
@@ -2358,14 +2460,46 @@ function triggerRentySearch() {
 window.triggerRentySearch = triggerRentySearch;
 
 function handleSearchInput(e) {
-    const query = e.target.value;
+    const input = e.target;
+    const query = input ? input.value : '';
+    const trimmed = query.trim();
+
+    // Đồng bộ sang hero input nếu có
+    const heroInput = document.getElementById('hero-search-input');
+    if (heroInput && heroInput !== input) {
+        heroInput.value = query;
+    }
+
+    // 1. Khi KHÔNG gõ chữ hoặc đã xóa hết chữ:
+    if (!trimmed) {
+        // Tắt toàn bộ popup gợi ý
+        document.getElementById('renty-search-suggestions')?.classList.add('hidden');
+        document.getElementById('renty-search-panel')?.classList.remove('is-search-active');
+        document.getElementById('renty-search-backdrop')?.classList.remove('is-active');
+
+        // Xóa sạch các gợi ý sửa lỗi gõ sai
+        currentSmartSearchCorrection = null;
+        document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
+        document.getElementById('smart-search-did-you-mean-banner')?.classList.add('hidden');
+        document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
+        document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+
+        // Hiện lại toàn bộ danh sách phòng từ database
+        if (document.getElementById('rooms-grid')) {
+            filterItems({ resetPage: true });
+        }
+        return;
+    }
+
+    // 2. Khi CÓ gõ chữ: mới hiển thị dropdown gợi ý
+    openRentySearchSuggestions();
 
     // Kích hoạt tìm kiếm thông minh live với backend API
-    fetchLiveSmartSearch(query);
+    fetchLiveSmartSearch(trimmed);
 
     if (!document.getElementById('rooms-grid')) {
         if (e.key === 'Enter') {
-            window.location.href = '/renty?search=' + encodeURIComponent(query);
+            window.location.href = '/renty?search=' + encodeURIComponent(trimmed);
         }
     } else {
         filterItems();
