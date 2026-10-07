@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Báo cáo thống kê thiết bị, tồn kho và công nợ phòng trọ - SmartRoom.">
     <title>Báo Cáo - Thống Kê - SmartRoom</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,18 +35,21 @@
                 <h1 class="text-lg font-bold text-slate-100">Báo Cáo - Thống Kê</h1>
                 <p class="text-xs text-slate-500 mt-0.5">Tổng hợp thiết bị, phân bổ và phòng còn nợ tiền điện nước, dịch vụ.</p>
             </div>
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
+                @include('admin.partials.accent-picker')
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>
-                <input type="month" name="billing_month" value="{{ $billingMonth }}" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-filter"></i> Lọc
-                </button>
-                @if($billingMonth)
-                    <a href="{{ route('admin.reports.index') }}" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold">Tất cả</a>
-                @endif
-            </form>
+                <form method="GET" action="{{ route('admin.reports.index') }}" class="flex items-center gap-2">
+                    <input type="month" name="billing_month" value="{{ $billingMonth }}" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-filter"></i> Lọc
+                    </button>
+                    @if($billingMonth)
+                        <a href="{{ route('admin.reports.index') }}" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold">Tất cả</a>
+                    @endif
+                </form>
+            </div>
         </header>
 
         <main class="p-8 flex-grow overflow-y-auto space-y-6">

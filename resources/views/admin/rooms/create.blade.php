@@ -6,8 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="Thêm phòng trọ mới - SmartRoom.">
     <title>Thêm Phòng Trọ Mới - SmartRoom</title>
-    
-    <!-- Google Fonts -->
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -55,9 +54,12 @@
             <div class="flex items-center gap-2">
                 <h2 class="text-lg font-bold text-slate-100">Thêm Phòng Trọ Mới</h2>
             </div>
-            <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
-                <i class="fa-solid fa-moon" data-theme-icon></i>
-            </button>
+            <div class="flex items-center gap-3">
+                @include('admin.partials.accent-picker')
+                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
+                    <i class="fa-solid fa-moon" data-theme-icon></i>
+                </button>
+            </div>
         </header>
 
         <main class="p-8 flex-grow overflow-y-auto">

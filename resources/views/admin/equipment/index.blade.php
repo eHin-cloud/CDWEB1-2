@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Quản lý thiết bị, tồn kho và phân bổ theo phòng - SmartRoom.">
     <title>Quản Lý Thiết Bị - SmartRoom</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    @include('admin.partials.theme-head-script')
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -42,6 +41,7 @@
         <header class="h-16 border-b border-slate-900 bg-[#080b11]/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-20">
             <h2 class="text-lg font-bold text-slate-100">Quản Lý Thông Tin Thiết Bị</h2>
             <div class="flex items-center gap-3">
+                @include('admin.partials.accent-picker')
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>

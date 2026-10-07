@@ -7,9 +7,17 @@
     <meta name="description" content="Renty Review - Nền tảng tìm kiếm và đánh giá phòng trọ chân thực.">
     <title>Renty Review - Tìm Phòng Trọ & Đánh Giá Không Gian Sống</title>
     <script>
-        if (localStorage.getItem('renty_theme_mode') === 'light') {
-            document.documentElement.classList.add('theme-light');
-        }
+        (function() {
+            try {
+                var initialSavedTheme = localStorage.getItem('renty_theme_mode') || localStorage.getItem('smartroom_theme') || 'dark';
+                var isLight = (initialSavedTheme === 'light');
+                document.documentElement.classList.remove('theme-fire', 'theme-ice');
+                document.documentElement.classList.toggle('theme-light', isLight);
+                
+                var savedDuo = localStorage.getItem('smartroom_accent_duo') || 'violet-mint';
+                document.documentElement.setAttribute('data-duo', savedDuo);
+            } catch (e) {}
+        })();
     </script>
     
     <!-- Google Fonts -->
@@ -37,19 +45,70 @@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Leaflet Map Assets -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="{{ asset('js/google-maps-renty.js') }}"></script>
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    <!-- Pass Laravel variables to Global JS context -->
+    <!-- Pass Laravel variables to Global JS context (Must precede google-maps-renty.js) -->
     <script>
         window.rentyRoomsData = {!! json_encode($rooms->keyBy('id')) !!};
         window.rentyIsAuthenticated = @json(auth()->check());
         window.rentySessionSuccess = {!! json_encode(session('success')) !!};
         window.rentySessionError = {!! json_encode(session('error')) !!};
+    </script>
+
+    <!-- Leaflet Map Assets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ asset('js/google-maps-renty.js') }}?v={{ time() }}"></script>
+
+    <!-- Custom CSS -->
+    @vite(['resources/css/app.css', 'resources/css/style.css'])
+
+    <script>
+        window.toggleThemeMode = window.toggleThemeMode || function() {
+            const isLight = document.body.classList.contains('theme-light') || document.documentElement.classList.contains('theme-light');
+            const nextMode = isLight ? 'dark' : 'light';
+            localStorage.setItem('renty_theme_mode', nextMode);
+            localStorage.setItem('smartroom_theme', nextMode);
+            document.documentElement.classList.toggle('theme-light', !isLight);
+            document.body.classList.toggle('theme-light', !isLight);
+            document.querySelectorAll('[data-theme-switch]').forEach(btn => {
+                btn.classList.toggle('is-light', !isLight);
+                btn.setAttribute('aria-pressed', !isLight ? 'true' : 'false');
+            });
+        };
+
+        window.setViewMode = window.setViewMode || function(mode) {
+            const mapBtn = document.getElementById('view-mode-map-btn');
+            const gridBtn = document.getElementById('view-mode-grid-btn');
+            if (mode === 'map') {
+                document.body.classList.add('renty-map-mode');
+                if (mapBtn) mapBtn.classList.add('active');
+                if (gridBtn) gridBtn.classList.remove('active');
+                localStorage.setItem('rentry_view_mode', 'map');
+                if (typeof window.initRentyMap === 'function') window.initRentyMap();
+                [50, 150, 300, 500, 800].forEach(delay => {
+                    setTimeout(() => {
+                        if (typeof window.initRentyMap === 'function') window.initRentyMap();
+                        const m = (window.rentyGoogleMap && window.rentyGoogleMap.map) || (typeof rentyMap !== 'undefined' ? rentyMap : null);
+                        if (m && typeof m.invalidateSize === 'function') {
+                            m.invalidateSize();
+                        }
+                    }, delay);
+                });
+            } else {
+                document.body.classList.remove('renty-map-mode');
+                if (mapBtn) mapBtn.classList.remove('active');
+                if (gridBtn) gridBtn.classList.add('active');
+                localStorage.setItem('rentry_view_mode', 'grid');
+            }
+        };
+
+        // Auto activate map if view=map is in URL
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const requestedView = params.get('view') || localStorage.getItem('rentry_view_mode');
+            if (requestedView === 'map' && typeof window.setViewMode === 'function') {
+                window.setViewMode('map');
+            }
+        });
     </script>
 
     <style>
@@ -196,6 +255,14 @@
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('renty_theme_mode') || 'ice';
+                document.body.classList.add(theme === 'fire' ? 'theme-fire' : 'theme-ice');
+            } catch (e) {}
+        })();
+    </script>
     <div id="theme-flip-wash" class="theme-flip-wash" aria-hidden="true"></div>
 
     <!-- Decorative glows -->
@@ -613,8 +680,8 @@
                 </div>
 
                 <div class="flex items-center gap-3 bg-slate-950/45 px-4 py-2 rounded-2xl border border-slate-900/60 backdrop-blur-sm">
-                    <span class="text-xs text-slate-400 font-bold select-none">Ẩn phòng đã thuê</span>
-                    <label class="ios-switch">
+                    <label for="hide-rented-toggle" class="text-xs text-slate-400 font-bold select-none cursor-pointer hover:text-slate-200 transition-colors">Ẩn phòng đã thuê</label>
+                    <label class="ios-switch cursor-pointer">
                         <input type="checkbox" id="hide-rented-toggle" onchange="filterItems()">
                         <span class="ios-slider"></span>
                     </label>
@@ -1047,7 +1114,7 @@
                     btnIcon.className = 'fa-solid fa-chevron-down text-[10px]';
                     
                     // Smoothly scroll back to the top of featured articles section
-                    const sectionHeader = document.querySelector('.fa-newspaper').closest('h2');
+                    const sectionHeader = document.querySelector('.fa-newspaper')?.closest('h2');
                     if (sectionHeader) {
                         sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
@@ -1057,7 +1124,6 @@
             function toggleArticleDetail(id) {
                 const detail = document.getElementById('article-detail-' + id);
                 const toggleBtn = document.getElementById('article-toggle-' + id);
-                const icon = document.getElementById('article-icon-' + id);
                 if (!detail || !toggleBtn) return;
 
                 const isHidden = detail.classList.contains('hidden');
@@ -1070,6 +1136,9 @@
                     toggleBtn.innerHTML = 'Đọc tiếp <i class="fa-solid fa-angle-right text-[9px] transition-transform"></i>';
                 }
             }
+
+            window.toggleMoreArticles = toggleMoreArticles;
+            window.toggleArticleDetail = toggleArticleDetail;
             </script>
         </section>
 
