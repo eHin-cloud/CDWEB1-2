@@ -44,6 +44,15 @@ class Room extends Model
         'price' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function ($room) {
+            if ($room->isDirty('status') && $room->status === 'empty') {
+                \App\Services\RoomAlertService::notifySubscribersForRoom($room);
+            }
+        });
+    }
+
     protected $appends = [
         'status_label',
         'badge_class',
