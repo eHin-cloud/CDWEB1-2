@@ -1428,6 +1428,12 @@ function renderRoomCardsHtml(rooms) {
             <i class="fa-solid ${trustBadge.icon}"></i> ${escapeHtml(trustBadge.label)}
         </span>`;
 
+        const hybridBadgeHtml = (room.retrieval_method === 'hybrid_rrf' && room.rrf_score > 0)
+            ? `<span class="px-2.5 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-lg text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-1.5" title="Hybrid Search (Dual Retrieval + RRF Score: ${room.rrf_score})">
+                <i class="fa-solid fa-bolt-lightning text-amber-400"></i> Hybrid RRF
+            </span>`
+            : '';
+
         const isCheckedInCompare = compareList.includes(String(room.id));
 
         return `
@@ -1455,6 +1461,7 @@ function renderRoomCardsHtml(rooms) {
                     <div class="absolute top-14 right-4 z-10 flex flex-col items-end gap-1.5">
                         ${priceWarningHtml}
                         ${trustBadgeHtml}
+                        ${hybridBadgeHtml}
                     </div>
                     <button type="button" onclick="openQuickRoomPreview(event, '${room.id}')" class="absolute top-4 right-4 px-3 py-1.5 rounded-xl bg-slate-950/82 border border-white/10 text-[10px] font-extrabold text-slate-100 backdrop-blur z-20 flex items-center gap-1.5 hover:border-emerald-400/60 hover:text-emerald-200 quick-eye-button" title="Xem nhanh thông tin phòng">
                         <i class="fa-solid fa-eye text-slate-300"></i> <span class="quick-eye-text">Xem nhanh</span>
@@ -1695,6 +1702,18 @@ async function executeSmartSearchApi(params) {
         if (total === 0 || !data.rooms || data.rooms.length === 0) {
             if (roomsGrid) roomsGrid.classList.add('hidden');
             if (emptyState) emptyState.classList.remove('hidden');
+            const emptyTitleEl = document.getElementById('smart-search-empty-title');
+            const emptyCodeTextEl = document.getElementById('smart-search-empty-code-text') || document.getElementById('smart-search-empty-code');
+            const q = (params.query || '').trim();
+            if (emptyCodeTextEl) {
+                if (q) {
+                    emptyCodeTextEl.textContent = `Lỗi: Không tìm thấy kết quả phù hợp cho "${q}" (Mã: ERR_21_04)`;
+                    if (emptyTitleEl) emptyTitleEl.textContent = `Không tìm thấy phòng nào khớp với "${q}".`;
+                } else {
+                    emptyCodeTextEl.textContent = 'Lỗi: Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn (Mã: ERR_21_04)';
+                    if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
+                }
+            }
             renderPaginationControls(0);
         } else {
             if (emptyState) emptyState.classList.add('hidden');
@@ -1932,6 +1951,18 @@ function filterItems(options = {}) {
     if (matchesCount === 0) {
         if (emptyState) emptyState.classList.remove('hidden');
         if (roomsGrid) roomsGrid.classList.add('hidden');
+        const emptyTitleEl = document.getElementById('smart-search-empty-title');
+        const emptyCodeTextEl = document.getElementById('smart-search-empty-code-text') || document.getElementById('smart-search-empty-code');
+        const q = (query || '').trim();
+        if (emptyCodeTextEl) {
+            if (q) {
+                emptyCodeTextEl.textContent = `Lỗi: Không tìm thấy kết quả phù hợp cho "${q}" (Mã: ERR_21_04)`;
+                if (emptyTitleEl) emptyTitleEl.textContent = `Không tìm thấy phòng nào khớp với "${q}".`;
+            } else {
+                emptyCodeTextEl.textContent = 'Lỗi: Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn (Mã: ERR_21_04)';
+                if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
+            }
+        }
         renderPaginationControls(0);
     } else {
         if (emptyState) emptyState.classList.add('hidden');
