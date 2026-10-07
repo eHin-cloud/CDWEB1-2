@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(FullDemoSeeder::class);
+        $this->call(ThuDucChatbotRoomsSeeder::class);
 
         $defaultTenantId = Tenant::where('email', 'contact@smartroom-caugiay.vn')->value('id')
             ?? Tenant::query()->orderBy('id')->value('id');

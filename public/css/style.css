@@ -4138,6 +4138,66 @@ body.theme-light .room-status-empty {
 }
 .renty-chatbot-send-btn:active { transform: scale(0.94); }
 
+/* ── UI Error & Validation (FEAT_22) ─────────────────────────────────── */
+.renty-chatbot-input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+.renty-chat-error-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ef4444;
+    padding: 6px 16px 2px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: cbMsgIn 0.25s ease-out;
+}
+.renty-chat-error-text.hidden {
+    display: none !important;
+}
+
+@keyframes rentyInputShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+.renty-input-shake {
+    animation: rentyInputShake 0.4s ease-in-out !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}
+
+.renty-cb-msg-error .renty-cb-msg-icon {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+.renty-cb-msg-error .renty-cb-bubble {
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #fca5a5 !important;
+}
+.renty-cb-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.2);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.renty-cb-retry-btn:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
     .renty-chatbot-panel {

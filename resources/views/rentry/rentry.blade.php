@@ -1953,17 +1953,17 @@
     <span class="renty-chatbot-badge" id="renty-chatbot-badge">1</span>
 </div>
 
-<div id="renty-chatbot-panel" class="renty-chatbot-panel">
-    <!-- Header -->
-    <div class="renty-chatbot-header">
+<div id="renty-chatbot-panel" class="renty-chatbot-panel" role="region" aria-label="Khung chat Trợ lý ảo AI Renty Chatbot">
+    <!-- Header (STT 1: chat_head) -->
+    <div id="chat_head" class="renty-chatbot-header" data-field="chat_head">
         <div class="renty-chatbot-header-left">
             <div class="renty-chatbot-avatar">
                 <i class="fa-solid fa-robot"></i>
                 <span class="renty-chatbot-status-dot"></span>
             </div>
             <div>
-                <h4>Renty AI</h4>
-                <span class="renty-chatbot-status-text">Đang hoạt động</span>
+                <h4>Renty AI Companion</h4>
+                <span class="renty-chatbot-status-text">Online - Trả lời tức thì</span>
             </div>
         </div>
         <div class="renty-chatbot-header-actions">
@@ -1976,27 +1976,35 @@
         </div>
     </div>
 
-    <!-- Messages -->
-    <div class="renty-chatbot-messages" id="renty-chatbot-messages">
+    <!-- Message Body (STT 2: chat_messages) -->
+    <div class="renty-chatbot-messages" id="chat_messages" data-field="chat_messages" aria-label="Lịch sử tin nhắn">
         <!-- Messages will be injected here by JS -->
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Quick Actions (Thẻ gợi ý câu hỏi nhanh: Dưới 3 triệu, Có ban công, Cầu Giấy, Thú cưng) -->
     <div class="renty-chatbot-quick" id="renty-chatbot-quick">
-        <button type="button" onclick="sendRentyChatbotMessage('Phòng dưới 3 triệu')">💰 Dưới 3 triệu</button>
+        <button type="button" onclick="sendRentyChatbotMessage('Tìm phòng dưới 3 triệu')">💰 Dưới 3 triệu</button>
         <button type="button" onclick="sendRentyChatbotMessage('Phòng có ban công')">🌿 Có ban công</button>
-        <button type="button" onclick="sendRentyChatbotMessage('Khu vực Cầu Giấy')">📍 Cầu Giấy</button>
+        <button type="button" onclick="sendRentyChatbotMessage('Tìm phòng Cầu Giấy')">📍 Cầu Giấy</button>
         <button type="button" onclick="sendRentyChatbotMessage('Phòng cho nuôi thú cưng')">🐾 Thú cưng</button>
-        <button type="button" onclick="sendRentyChatbotMessage('Tips thuê trọ an toàn')">🛡️ Mẹo an toàn</button>
+        <button type="button" onclick="sendRentyChatbotMessage('Tìm phòng Thủ Đức dưới 3 triệu')">🏙️ Thủ Đức</button>
     </div>
 
-    <!-- Input -->
-    <div class="renty-chatbot-input-area">
-        <input type="text" id="renty-chatbot-input" placeholder="Hỏi về phòng trọ, khu vực, giá cả..." maxlength="300"
-            onkeydown="if(event.key==='Enter'){sendRentyChatbotMessage();event.preventDefault();}" autocomplete="off">
-        <button type="button" onclick="sendRentyChatbotMessage()" aria-label="Gửi tin nhắn" class="renty-chatbot-send-btn">
-            <i class="fa-solid fa-paper-plane"></i>
-        </button>
+    <!-- Input Field (STT 3: chat_input) & Send Button (STT 4: btnSendChat) -->
+    <div class="renty-chatbot-input-wrapper">
+        <div id="chat_input_error" class="renty-chat-error-text hidden" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i> Vui lòng nhập nội dung câu hỏi trước khi gửi.
+        </div>
+        <div class="renty-chatbot-input-area">
+            <input type="text" id="chat_input" name="chat_input" data-field="chat_input"
+                placeholder="Tìm phòng gần trường ĐH..." maxlength="500"
+                aria-label="Nhập câu hỏi..."
+                onkeydown="if(event.key==='Enter'){sendRentyChatbotMessage();event.preventDefault();}" autocomplete="off">
+            <button type="button" id="btnSendChat" name="btnSendChat" data-field="btnSendChat"
+                onclick="sendRentyChatbotMessage()" aria-label="Gửi" class="renty-chatbot-send-btn" title="Gửi">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
 </div>
 

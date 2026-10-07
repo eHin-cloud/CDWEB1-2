@@ -42,6 +42,10 @@ Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'revi
 Route::post('/renty/rooms/compare', [VisitorController::class, 'compare'])->middleware('throttle:30,1');
 Route::post('/renty/rooms/compare-ai', [VisitorController::class, 'compareAi'])->middleware('throttle:30,1');
 
+// FEAT_22_AI_CHATBOT: Trợ lý ảo AI Renty Chatbot tư vấn tìm phòng
+Route::post('/renty/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat'])->middleware('throttle:20,1')->name('api.renty.chatbot.chat');
+Route::get('/renty/chatbot/history', [\App\Http\Controllers\ChatbotController::class, 'history'])->middleware('auth:api')->name('api.renty.chatbot.history');
+
 // FEAT_24_ROOM_ALERT: Chuông báo phòng trống thông minh
 Route::post('/renty/room-alerts', [RoomAlertController::class, 'store'])->middleware('throttle:10,1')->name('api.renty.room_alerts.store');
 Route::get('/renty/room-alerts/my', [RoomAlertController::class, 'myAlerts'])->middleware('auth:api')->name('api.renty.room_alerts.my');
