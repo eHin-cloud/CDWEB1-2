@@ -3580,8 +3580,68 @@ function clearRentyChatbot() {
 }
 window.clearRentyChatbot = clearRentyChatbot;
 
+function getChatMessagesContainer() {
+    return document.getElementById('chat_messages') || document.getElementById('renty-chatbot-messages');
+}
+
+function triggerEmptyChatError(inputEl) {
+    const input = inputEl || document.getElementById('chat_input') || document.getElementById('renty-chatbot-input');
+    const errorTextEl = document.getElementById('chat_input_error');
+
+    if (input) {
+        input.classList.remove('renty-input-shake');
+        void input.offsetWidth;
+        input.classList.add('renty-input-shake');
+
+        const originalPlaceholder = input.getAttribute('data-original-placeholder') || input.placeholder;
+        if (!input.getAttribute('data-original-placeholder')) {
+            input.setAttribute('data-original-placeholder', originalPlaceholder);
+        }
+        input.placeholder = 'Vui lòng nhập nội dung câu hỏi trước khi gửi.';
+        input.focus();
+
+        if (errorTextEl) {
+            errorTextEl.classList.remove('hidden');
+        }
+
+        setTimeout(() => {
+            if (input) {
+                input.classList.remove('renty-input-shake');
+                input.placeholder = originalPlaceholder;
+            }
+            if (errorTextEl) {
+                errorTextEl.classList.add('hidden');
+            }
+        }, 2500);
+    }
+}
+window.triggerEmptyChatError = triggerEmptyChatError;
+
+function addBotErrorMessage(errorText, retryText) {
+    const container = getChatMessagesContainer();
+    if (!container) return;
+
+    const retryBtnHtml = retryText
+        ? `<br><button type="button" class="renty-cb-retry-btn" onclick="sendRentyChatbotMessage('${escapeHtml(retryText)}');"><i class="fa-solid fa-rotate-right"></i> Gửi lại</button>`
+        : '';
+
+    const msgEl = document.createElement('div');
+    msgEl.className = 'renty-cb-msg renty-cb-msg-bot renty-cb-msg-error';
+    msgEl.innerHTML = `
+        <div class="renty-cb-msg-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="renty-cb-bubble">
+            <strong>Mất kết nối máy chủ AI Chatbot</strong><br>
+            ${errorText}
+            ${retryBtnHtml}
+        </div>
+    `;
+    container.appendChild(msgEl);
+    container.scrollTop = container.scrollHeight;
+}
+window.addBotErrorMessage = addBotErrorMessage;
+
 function addBotMessage(html, roomCards) {
-    const container = document.getElementById('renty-chatbot-messages');
+    const container = getChatMessagesContainer();
     if (!container) return;
 
     let cardsHtml = '';
@@ -3623,7 +3683,7 @@ function addBotMessage(html, roomCards) {
 }
 
 function addUserMessage(text) {
-    const container = document.getElementById('renty-chatbot-messages');
+    const container = getChatMessagesContainer();
     if (!container) return;
 
     const msgEl = document.createElement('div');
@@ -3639,7 +3699,7 @@ function addUserMessage(text) {
 }
 
 function showTypingIndicator() {
-    const container = document.getElementById('renty-chatbot-messages');
+    const container = getChatMessagesContainer();
     if (!container) return;
 
     const typingEl = document.createElement('div');
@@ -4182,15 +4242,20 @@ function getRemainingChatbotQuota() {
 function sendRentyChatbotMessage(presetMsg) {
     if (rentyChatbotSending) return;
 
-    const input = document.getElementById('renty-chatbot-input');
-    const text = presetMsg || (input ? input.value.trim() : '');
-    if (!text) return;
+    const input = document.getElementById('chat_input') || document.getElementById('renty-chatbot-input');
+    const text = presetMsg ? presetMsg.trim() : (input ? input.value.trim() : '');
 
-    if (text.length > RENTY_CHATBOT_MAX_LENGTH) {
+    // DoD 1 & ERR_22_01: Kiểm tra rỗng -> rung viền đỏ ô input
+    if (!text) {
+        triggerEmptyChatError(input);
+        return;
+    }
+
+    if (text.length > 500) {
         addBotMessage(
             `⚠️ <strong>Tin nhắn quá dài</strong><br><br>` +
-            `Bạn vui lòng rút gọn câu hỏi còn tối đa <strong>${RENTY_CHATBOT_MAX_LENGTH} ký tự</strong>. ` +
-            `Ví dụ: <strong>"Cầu Giấy dưới 4 triệu có ban công"</strong>.`
+            `Bạn vui lòng rút gọn câu hỏi còn tối đa <strong>500 ký tự</strong>. ` +
+            `Ví dụ: <strong>"Tìm phòng Thủ Đức dưới 3 triệu"</strong>.`
         );
         return;
     }
@@ -4263,13 +4328,14 @@ function sendRentyChatbotMessage(presetMsg) {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
         },
-        body: JSON.stringify({ prompt: text })
+        body: JSON.stringify({ message: text, prompt: text })
     })
-    .then(res => res.json().then(data => ({ ok: res.ok, data })).catch(() => ({
+    .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })).catch(() => ({
         ok: false,
+        status: res.status,
         data: {}
     })))
-    .then(({ ok, data }) => {
+    .then(({ ok, status, data }) => {
         removeTypingIndicator();
         setRentyChatbotBusy(false);
         
@@ -4278,13 +4344,33 @@ function sendRentyChatbotMessage(presetMsg) {
             quotaNote = `<br><br><em style="font-size:10px;color:#f59e0b;">⚠️ Còn ${newRemaining} lượt hỏi hôm nay${isGuest ? ' — <a href="/login" style="color:#10b981;font-weight:600;">đăng nhập</a> để có 50 lượt' : ''}.</em>`;
         }
 
+        // Bắt lỗi rỗng từ server (ERR_22_01)
+        if (status === 422 || data.error_code === 'ERR_22_01') {
+            triggerEmptyChatError(input);
+            return;
+        }
+
+        // Bắt lỗi câu hỏi không liên quan đến thuê phòng (ERR_22_03)
+        if (data.error_code === 'ERR_22_03') {
+            addBotMessage((data.response || data.message || 'Trợ lý ảo Renty chỉ hỗ trợ tư vấn thông tin thuê phòng và tiện ích lưu trú.') + quotaNote, []);
+            return;
+        }
+
+        // Bắt lỗi mất kết nối máy chủ AI Chatbot (ERR_22_02)
+        if (data.error_code === 'ERR_22_02' || (!ok && status >= 500)) {
+            addBotErrorMessage(
+                data.message || 'Không thể kết nối với máy chủ AI lúc này, vui lòng thử lại sau.',
+                text
+            );
+            return;
+        }
+
         if (ok && data.success) {
             addBotMessage((data.response || '') + quotaNote, data.rooms || []);
         } else {
-            addBotMessage(
-                `⚠️ <strong>Renty AI gặp sự cố</strong><br><br>` +
-                `Mình chưa thể xử lý câu hỏi này ngay lúc này. Bạn vui lòng thử lại sau ít phút hoặc dùng bộ lọc phòng ở phía trên nhé.` +
-                quotaNote
+            addBotErrorMessage(
+                data.message || 'Không thể kết nối với máy chủ AI lúc này, vui lòng thử lại sau.',
+                text
             );
         }
     })
@@ -4292,12 +4378,10 @@ function sendRentyChatbotMessage(presetMsg) {
         console.error('Chatbot API error:', err);
         removeTypingIndicator();
         setRentyChatbotBusy(false);
-        
-        let quotaNote = '';
-        if (newRemaining <= 3 && newRemaining > 0) {
-            quotaNote = `<br><br><em style="font-size:10px;color:#f59e0b;">⚠️ Còn ${newRemaining} lượt hỏi hôm nay${isGuest ? ' — <a href="/login" style="color:#10b981;font-weight:600;">đăng nhập</a> để có 50 lượt' : ''}.</em>`;
-        }
-        addBotMessage(`⚠️ <strong>Lỗi kết nối</strong><br><br>Không thể gửi tin nhắn đi. Vui lòng kiểm tra lại kết nối mạng!` + quotaNote);
+        addBotErrorMessage(
+            'Không thể kết nối với máy chủ AI lúc này, vui lòng thử lại sau.',
+            text
+        );
     });
 }
 window.sendRentyChatbotMessage = sendRentyChatbotMessage;
