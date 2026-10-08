@@ -290,11 +290,40 @@ class SuperadminConsoleFeature20Test extends TestCase
 
         // Kiểm tra phân trang xuất hiện (có link trang 2)
         $response->assertSee('page=2');
+        $response->assertSee('smartroom-pagination-nav');
 
         // Khi sang trang 2, kiểm tra thấy superadmin
         $page2Response = $this->actingAs($this->superadmin)->get('/list?page=2');
         $page2Response->assertStatus(200);
         $page2Response->assertSee($this->superadmin->username);
+    }
+
+    /**
+     * Kiểm tra phân trang thông minh hiển thị dạng 1 2 3 ... TrangCuoi và hỗ trợ jump box
+     */
+    public function test_pagination_renders_smart_jump_dots_when_many_pages(): void
+    {
+        // Tạo thêm 90 user để có tổng cộng 10 trang
+        for ($i = 1; $i <= 90; $i++) {
+            User::create([
+                'username' => 'many_user_' . $i,
+                'name' => 'Người Dùng Trang Lớn ' . $i,
+                'email' => "many_user_{$i}@test.com",
+                'phone' => '098600' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'password' => bcrypt('123456'),
+                'role' => 'user',
+                'status' => 'active',
+            ]);
+        }
+
+        $response = $this->actingAs($this->superadmin)
+            ->get('/list');
+
+        $response->assertStatus(200);
+        // Kiểm tra thấy cấu trúc jump-box và jump-input
+        $response->assertSee('jump-box');
+        $response->assertSee('jump-input');
+        $response->assertSee('dots-after');
     }
 
     /**
