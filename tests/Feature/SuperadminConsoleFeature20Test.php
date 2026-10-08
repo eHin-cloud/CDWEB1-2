@@ -253,4 +253,84 @@ class SuperadminConsoleFeature20Test extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Nhật Ký Kiểm Toán An Ninh');
     }
+
+    /**
+     * Màn hình danh sách người dùng GET /list: Hiển thị đầy đủ thông tin và thống kê
+     */
+    public function test_user_list_displays_full_information_and_stats(): void
+    {
+        $response = $this->actingAs($this->superadmin)
+            ->get('/list');
+
+        $response->assertStatus(200);
+        $response->assertSee('Quản Trị Hệ Thống');
+        $response->assertSee('Tổng thành viên');
+        $response->assertSee('Quản trị viên');
+        $response->assertSee('Chủ nhà trọ');
+        $response->assertSee('Cư dân thuê trọ');
+        
+        // Kiểm tra thấy tên tài khoản và username
+        $response->assertSee($this->superadmin->name);
+        $response->assertSee($this->superadmin->username);
+        $response->assertSee($this->normalUser->name);
+        $response->assertSee($this->normalUser->username);
+
+        // Kiểm tra thấy thông tin ngày tạo, vai trò, tình trạng
+        $response->assertSee('Hoạt động');
+    }
+
+    /**
+     * Chi tiết người dùng GET /read?id=... hiển thị đầy đủ thông tin
+     */
+    public function test_user_read_displays_full_details(): void
+    {
+        $response = $this->actingAs($this->superadmin)
+            ->get('/read?id=' . $this->normalUser->id);
+
+        $response->assertStatus(200);
+        $response->assertSee($this->normalUser->name);
+        $response->assertSee($this->normalUser->username);
+        $response->assertSee($this->normalUser->phone);
+        $response->assertSee($this->normalUser->email);
+        $response->assertSee('Đang hoạt động');
+        $response->assertSee('Ngày đăng ký');
+    }
+
+    /**
+     * Cập nhật thông tin người dùng POST /update hỗ trợ status và chống tự khóa tài khoản
+     */
+    public function test_user_update_handles_status_and_prevents_self_lock(): void
+    {
+        // 1. Cập nhật thông tin normalUser thành công
+        $updateResponse = $this->actingAs($this->superadmin)
+            ->post('/update', [
+                'id' => $this->normalUser->id,
+                'name' => 'Lê Người Dùng Đã Sửa',
+                'username' => 'user_phone_edited',
+                'phone' => '0901234567',
+                'email' => 'user_edited@smartroom.test',
+                'status' => 'locked',
+            ]);
+
+        $updateResponse->assertRedirect(route('user.list'));
+        $this->normalUser->refresh();
+        $this->assertEquals('Lê Người Dùng Đã Sửa', $this->normalUser->name);
+        $this->assertEquals('locked', $this->normalUser->status);
+
+        // 2. Chống tự khóa chính mình
+        $selfLockResponse = $this->actingAs($this->superadmin)
+            ->post('/update', [
+                'id' => $this->superadmin->id,
+                'name' => $this->superadmin->name,
+                'username' => $this->superadmin->username,
+                'phone' => $this->superadmin->phone,
+                'email' => $this->superadmin->email,
+                'status' => 'locked',
+            ]);
+
+        $selfLockResponse->assertSessionHas('error', 'Không thể tự khóa tài khoản của chính mình!');
+        $this->superadmin->refresh();
+        $this->assertEquals('active', $this->superadmin->status);
+    }
 }
+

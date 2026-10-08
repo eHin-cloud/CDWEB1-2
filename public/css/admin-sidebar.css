@@ -10,57 +10,75 @@
 
 html.sidebar-collapsed #admin-sidebar,
 body.sidebar-collapsed #admin-sidebar {
-    width: 5rem;
+    width: 5rem !important;
 }
 
 html.sidebar-collapsed #admin-shell,
 body.sidebar-collapsed #admin-shell {
-    margin-left: 5rem;
+    margin-left: 5rem !important;
 }
 
+html.sidebar-collapsed #admin-sidebar nav a,
 body.sidebar-collapsed #admin-sidebar nav a,
+html.sidebar-collapsed #admin-sidebar nav button,
 body.sidebar-collapsed #admin-sidebar nav button,
+html.sidebar-collapsed #admin-sidebar .sidebar-user,
 body.sidebar-collapsed #admin-sidebar .sidebar-user,
+html.sidebar-collapsed #admin-sidebar .sidebar-logout,
 body.sidebar-collapsed #admin-sidebar .sidebar-logout {
-    justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
+html.sidebar-collapsed #admin-sidebar > div:first-child,
 body.sidebar-collapsed #admin-sidebar > div:first-child {
-    justify-content: center;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    justify-content: center !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
+html.sidebar-collapsed #admin-sidebar .sidebar-brand,
 body.sidebar-collapsed #admin-sidebar .sidebar-brand {
-    display: none;
+    display: none !important;
 }
 
+html.sidebar-collapsed #admin-sidebar nav a span,
+body.sidebar-collapsed #admin-sidebar nav a span,
+html.sidebar-collapsed #admin-sidebar nav span,
 body.sidebar-collapsed #admin-sidebar nav span,
+html.sidebar-collapsed #admin-sidebar .sidebar-brand span,
 body.sidebar-collapsed #admin-sidebar .sidebar-brand span,
+html.sidebar-collapsed #admin-sidebar .sidebar-logout span,
 body.sidebar-collapsed #admin-sidebar .sidebar-logout span,
+html.sidebar-collapsed #admin-sidebar .sidebar-text,
 body.sidebar-collapsed #admin-sidebar .sidebar-text,
+html.sidebar-collapsed #admin-sidebar .sidebar-profile,
 body.sidebar-collapsed #admin-sidebar .sidebar-profile,
+html.sidebar-collapsed #admin-sidebar .sidebar-badge,
 body.sidebar-collapsed #admin-sidebar .sidebar-badge {
-    display: none;
+    display: none !important;
 }
 
+html.sidebar-collapsed #admin-sidebar .sidebar-group-title,
 body.sidebar-collapsed #admin-sidebar .sidebar-group-title {
-    display: none;
+    display: none !important;
 }
 
+html.sidebar-collapsed #admin-sidebar .sidebar-group-divider,
 body.sidebar-collapsed #admin-sidebar .sidebar-group-divider {
-    display: block;
+    display: block !important;
 }
 
+html.sidebar-collapsed #admin-sidebar .sidebar-footer,
 body.sidebar-collapsed #admin-sidebar .sidebar-footer {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
+html.sidebar-collapsed #sidebar-toggle i,
 body.sidebar-collapsed #sidebar-toggle i {
-    transform: rotate(180deg);
+    transform: rotate(180deg) !important;
 }
 
 /* Custom scrollbar mỏng tinh tế cho Navigation */

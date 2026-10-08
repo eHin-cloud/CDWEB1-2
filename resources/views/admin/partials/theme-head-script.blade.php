@@ -8,6 +8,10 @@
             
             var savedDuo = localStorage.getItem('smartroom_accent_duo') || 'violet-mint';
             document.documentElement.setAttribute('data-duo', savedDuo);
+
+            if (localStorage.getItem('smartroom.sidebar.collapsed') === '1') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
         } catch (e) {}
     })();
 </script>
