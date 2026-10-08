@@ -529,48 +529,135 @@
                 </div>
 
                 <!-- CỘT PHẢI: BẢNG TRA CỨU PHÂN QUYỀN RBAC (RBAC Matrix) -->
-                <div class="lg:col-span-5 panel rounded-2xl p-6 space-y-4">
-                    <div class="border-b border-slate-800/80 pb-3">
-                        <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
-                            <i class="fa-solid fa-shield-halved text-indigo-400"></i>
-                            Ma Trận Danh Mục Phân Quyền (RBAC)
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Đặc quyền và phạm vi thao tác của từng vai trò trên nền tảng.</p>
-                    </div>
-
-                    <div class="space-y-2.5 text-xs">
-                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>
+                <div class="lg:col-span-5 panel rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="border-b border-slate-800/80 pb-3 flex items-center justify-between">
                             <div>
-                                <strong class="text-amber-300">Superadmin:</strong> Quản trị viên tối cao, toàn quyền nền tảng, quản lý cấu hình sàn, nâng/hạ quyền admin, kiểm toán bất biến.
+                                <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                                    <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                                    Ma Trận Danh Mục Phân Quyền (RBAC)
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Đặc quyền và phạm vi thao tác của từng vai trò trên nền tảng.</p>
                             </div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">9 Vai Trò Chuẩn</span>
                         </div>
 
-                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
-                            <span class="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0"></span>
-                            <div>
-                                <strong class="text-purple-300">Admin:</strong> Kiểm duyệt tin đăng, duyệt KYC hồ sơ chủ trọ, xem báo cáo toàn hệ thống.
+                        <div class="mt-3.5 space-y-2 text-xs max-h-[500px] overflow-y-auto pr-1.5 custom-scrollbar">
+                            <!-- 1. Superadmin -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-amber-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-amber-300">
+                                        <i class="fa-solid fa-crown text-[11px] text-amber-400"></i> Superadmin
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Toàn Nền Tảng</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Quản trị viên tối cao: Toàn quyền kiểm soát hệ thống; cấu hình tỷ lệ hoa hồng, phí sàn &amp; hạn ngạch; nâng/hạ quyền Admin; giám sát chuỗi nhật ký kiểm toán SHA-256 bất biến; chống tự khóa tài khoản.
+                                </p>
                             </div>
-                        </div>
 
-                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
-                            <span class="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>
-                            <div>
-                                <strong class="text-blue-300">Chủ trọ (Landlord):</strong> Quản lý cơ sở lưu trú, tòa nhà, sơ đồ phòng, cư dân, hợp đồng và dòng tiền thu chi.
+                            <!-- 2. Admin -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-rose-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-rose-300">
+                                        <i class="fa-solid fa-user-shield text-[11px] text-rose-400"></i> Admin Hệ Thống
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">Hệ Thống Sàn</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Quản trị viên vận hành: Thẩm định hồ sơ pháp lý &amp; duyệt KYC chủ trọ; kiểm duyệt tin đăng phòng trọ Renty; giám sát an toàn thông tin và xem báo cáo tổng hợp toàn sàn.
+                                </p>
                             </div>
-                        </div>
 
-                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
-                            <span class="w-2 h-2 rounded-full bg-teal-400 mt-1.5 shrink-0"></span>
-                            <div>
-                                <strong class="text-teal-300">Nhân viên / Quản lý:</strong> Bắt buộc gán cơ sở lưu trú cụ thể, thực hiện lễ tân, dọn buồng phòng, hỗ trợ sự cố cư dân.
+                            <!-- 3. Landlord (Chủ trọ đã duyệt KYC) -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-blue-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-blue-300">
+                                        <i class="fa-solid fa-hotel text-[11px] text-blue-400"></i> Chủ Trọ (Landlord - Đã KYC)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Phạm Vi Cơ Sở</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Chủ cơ sở lưu trú: Sở hữu tích xanh; quản lý tòa nhà, sơ đồ phòng, hợp đồng thuê điện tử &amp; cư dân; cấu hình số tài khoản ngân hàng nhận tiền VietQR; bổ nhiệm nhân sự vận hành (Quản lý, Lễ tân, Buồng phòng).
+                                </p>
                             </div>
-                        </div>
 
-                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>
-                            <div>
-                                <strong class="text-emerald-300">Khách thuê / Cư dân:</strong> Tìm kiếm phòng, ký hợp đồng điện tử, thanh toán VietQR và gửi báo hỏng online.
+                            <!-- 4. Unverified Landlord -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-orange-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-orange-300">
+                                        <i class="fa-solid fa-clock-rotate-left text-[11px] text-orange-400"></i> Chủ Trọ Chưa Duyệt (Unverified)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">Chờ Thẩm Định</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Chủ trọ mới đăng ký: Được thiết lập thông tin cơ sở ban đầu nhưng bị giới hạn đăng tin và chưa có tích xanh; chờ Admin/Superadmin thẩm định CCCD/giấy phép kinh doanh để mở khóa đầy đủ quyền.
+                                </p>
+                            </div>
+
+                            <!-- 5. Manager (Quản lý cơ sở) -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-teal-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-teal-300">
+                                        <i class="fa-solid fa-id-badge text-[11px] text-teal-400"></i> Quản Lý Tòa Nhà (Manager)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20">Gán Cơ Sở Cụ Thể</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Nhân sự do chủ trọ ủy quyền: Bắt buộc gắn cơ sở lưu trú; hỗ trợ chủ trọ lập hóa đơn điện nước, tạo hợp đồng khách thuê, quản lý danh sách cư dân và phân công giám sát Lễ tân &amp; Buồng phòng.
+                                </p>
+                            </div>
+
+                            <!-- 6. Receptionist (Lễ tân) -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-cyan-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-cyan-300">
+                                        <i class="fa-solid fa-bell-concierge text-[11px] text-cyan-400"></i> Lễ Tân (Receptionist - Frontdesk)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Bàn Lễ Tân</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Tiếp đón &amp; vận hành phòng theo thời gian thực (Room Grid): Thực hiện thủ tục Check-in, Check-out, gia hạn lưu trú; in hóa đơn tạm tính; quản lý chìa khóa và tiếp nhận yêu cầu hỗ trợ từ khách.
+                                </p>
+                            </div>
+
+                            <!-- 7. Housekeeper (Buồng phòng) -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-emerald-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-emerald-300">
+                                        <i class="fa-solid fa-broom text-[11px] text-emerald-400"></i> Buồng Phòng (Housekeeper)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Vệ Sinh Phòng</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Vận hành buồng phòng: Xem lịch dọn phòng được giao; cập nhật trạng thái phòng (Bẩn &rarr; Đang dọn &rarr; Đã sạch &rarr; Bảo trì); ghi nhận và báo cáo sự cố hư hỏng vật tư, thiết bị trong phòng.
+                                </p>
+                            </div>
+
+                            <!-- 8. Resident (Cư dân thuê trọ) -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-green-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-green-300">
+                                        <i class="fa-solid fa-key text-[11px] text-green-400"></i> Cư Dân Thuê Trọ (Resident)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Cổng Cư Dân</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Người thuê phòng đang cư trú: Truy cập Cổng cư dân để xem hợp đồng thuê, tra cứu hóa đơn hàng tháng; quét mã VietQR tự động thanh toán; tạo yêu cầu báo hỏng thiết bị và đánh giá phòng.
+                                </p>
+                            </div>
+
+                            <!-- 9. Guest (Khách tìm phòng) -->
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-slate-500/30 transition-all">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="inline-flex items-center gap-1.5 font-bold text-slate-300">
+                                        <i class="fa-solid fa-magnifying-glass text-[11px] text-indigo-400"></i> Khách Tìm Phòng (Guest / Renty)
+                                    </span>
+                                    <span class="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-700/30 text-slate-400 border border-slate-700">Người Dùng Sàn</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-relaxed">
+                                    Người dùng vãng lai / tìm trọ: Tìm kiếm &amp; lọc phòng theo khu vực, giá cả, tiện ích; xem mô hình 3D; gửi yêu cầu liên hệ tư vấn, đặt lịch xem phòng; đăng ký tài khoản xác thực qua mã OTP (SĐT / Email).
+                                </p>
                             </div>
                         </div>
                     </div>
