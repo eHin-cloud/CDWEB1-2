@@ -77,3 +77,109 @@ body.sidebar-collapsed #sidebar-toggle i {
 #admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
     background: #334155;
 }
+
+/* ========================================================================= */
+/* LIGHT MODE ENHANCEMENTS CHO SIDEBAR VÀ GIAO DIỆN QUẢN TRỊ ADMIN            */
+/* Đảm bảo độ tương phản cao, chữ rõ nét tuyệt đối (WCAG AA)                */
+/* ========================================================================= */
+html.theme-light #admin-sidebar,
+body.theme-light #admin-sidebar {
+    background-color: #ffffff !important;
+    border-right-color: #e2e8f0 !important;
+    box-shadow: 2px 0 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.theme-light #admin-sidebar > div:first-child,
+body.theme-light #admin-sidebar > div:first-child {
+    border-bottom-color: #e2e8f0 !important;
+}
+
+html.theme-light #admin-sidebar .sidebar-footer,
+body.theme-light #admin-sidebar .sidebar-footer {
+    border-top-color: #e2e8f0 !important;
+}
+
+html.theme-light #sidebar-toggle,
+body.theme-light #sidebar-toggle {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+html.theme-light #sidebar-toggle:hover,
+body.theme-light #sidebar-toggle:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Tiêu đề nhóm Sidebar */
+html.theme-light .sidebar-group-title,
+body.theme-light .sidebar-group-title {
+    color: #475569 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Các liên kết bình thường */
+html.theme-light #admin-sidebar nav a.text-slate-400,
+body.theme-light #admin-sidebar nav a.text-slate-400 {
+    color: #334155 !important; /* Đậm nét, không bị xám mờ */
+}
+html.theme-light #admin-sidebar nav a.text-slate-400:hover,
+body.theme-light #admin-sidebar nav a.text-slate-400:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Mục Active Superadmin (Amber) */
+html.theme-light #admin-sidebar a.text-amber-400,
+body.theme-light #admin-sidebar a.text-amber-400 {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #92400e !important; /* amber-800: Rất đậm và dễ đọc */
+    font-weight: 700 !important;
+}
+html.theme-light #admin-sidebar a.text-amber-400 i,
+body.theme-light #admin-sidebar a.text-amber-400 i {
+    color: #d97706 !important;
+}
+
+/* Mục Active Quản Trị Viên (Indigo) */
+html.theme-light #admin-sidebar a.text-indigo-400,
+body.theme-light #admin-sidebar a.text-indigo-400 {
+    background-color: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    color: #3730a3 !important; /* indigo-800: Rất rõ ràng */
+    font-weight: 700 !important;
+}
+
+/* Thẻ thông tin tài khoản ở đáy sidebar */
+html.theme-light #admin-sidebar .sidebar-user,
+body.theme-light #admin-sidebar .sidebar-user {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+html.theme-light #admin-sidebar .sidebar-user .text-slate-100,
+body.theme-light #admin-sidebar .sidebar-user .text-slate-100 {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+html.theme-light #admin-sidebar .sidebar-user .text-slate-400,
+body.theme-light #admin-sidebar .sidebar-user .text-slate-400 {
+    color: #475569 !important;
+    font-weight: 600 !important;
+}
+
+/* Nút Đăng Xuất ở đáy sidebar */
+html.theme-light #admin-sidebar .sidebar-logout,
+body.theme-light #admin-sidebar .sidebar-logout {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    color: #be123c !important;
+    font-weight: 600 !important;
+}
+html.theme-light #admin-sidebar .sidebar-logout:hover,
+body.theme-light #admin-sidebar .sidebar-logout:hover {
+    background-color: #ffe4e6 !important;
+    color: #9f1239 !important;
+}
+

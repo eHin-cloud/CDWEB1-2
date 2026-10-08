@@ -30,6 +30,13 @@
         ::-webkit-scrollbar-track { background: #080b11; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
         .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 1px #ef4444 !important; }
+
+        /* Light Mode High Contrast Enhancements */
+        html.theme-light body, body.theme-light { background: #f3f7fb !important; color: #0f172a !important; }
+        html.theme-light .panel, body.theme-light .panel { background: #ffffff !important; border-color: #e2e8f0 !important; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
+        html.theme-light .glass-header, body.theme-light .glass-header { background: rgba(255, 255, 255, 0.95) !important; border-color: #e2e8f0 !important; }
+        html.theme-light table thead, body.theme-light table thead { background-color: #f1f5f9 !important; border-bottom: 1px solid #cbd5e1 !important; }
+        html.theme-light table thead th, body.theme-light table thead th { color: #1e293b !important; font-weight: 700 !important; }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-amber-500 selection:text-slate-900 overflow-hidden font-sans">
