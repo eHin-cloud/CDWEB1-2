@@ -1,5 +1,6 @@
 @php
     $page = $page ?? 'login';
+    $isAdminPage = Auth::check() && (in_array($page, ['list', 'read', 'update']) || ($page === 'create' && Auth::user()->isAdmin()));
     $titles = [
         'login' => 'Đăng Nhập - SmartRoom & Renty',
         'create' => 'Đăng Ký - SmartRoom & Renty',
@@ -24,6 +25,9 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @if($isAdminPage)
+        <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
+    @endif
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
@@ -47,7 +51,11 @@
         .email-hint-visible{opacity:1;max-height:48px;margin-top:.375rem!important;transform:translateY(0);pointer-events:auto}
     </style>
 </head>
-<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen {{ $isAdminPage ? 'overflow-hidden font-sans' : 'flex flex-col justify-between overflow-x-hidden' }} selection:bg-indigo-500 selection:text-white">
+    @if($isAdminPage)
+        @include('admin.partials.sidebar')
+        <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200">
+    @endif
     <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none"></div>
     <div id="toast-container" class="toast-container"></div>
@@ -1466,5 +1474,8 @@
             showToast(@json($errors->first()), "error");
         @endif
     </script>
+    @if($isAdminPage)
+        </div>
+    @endif
 </body>
 </html>
