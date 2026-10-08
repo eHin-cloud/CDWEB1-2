@@ -1,7 +1,24 @@
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center justify-between w-full">
+    <nav role="navigation" aria-label="Pagination Navigation" class="smartroom-pagination-nav flex items-center justify-between w-full">
+        <style>
+            .smartroom-pagination-nav .pagination-desktop {
+                display: flex !important;
+            }
+            .smartroom-pagination-nav .pagination-mobile {
+                display: none !important;
+            }
+            @media (max-width: 639px) {
+                .smartroom-pagination-nav .pagination-desktop {
+                    display: none !important;
+                }
+                .smartroom-pagination-nav .pagination-mobile {
+                    display: flex !important;
+                }
+            }
+        </style>
+
         <!-- Mobile Simple View -->
-        <div class="flex justify-between flex-1 sm:hidden gap-3">
+        <div class="pagination-mobile justify-between flex-1 gap-3">
             @if ($paginator->onFirstPage())
                 <span class="relative inline-flex items-center px-4 py-2.5 text-xs font-bold text-slate-500 bg-slate-900/20 border border-slate-800/80 rounded-xl cursor-default select-none">
                     Trước
@@ -24,16 +41,16 @@
         </div>
 
         <!-- Desktop Advanced View -->
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between gap-4">
+        <div class="pagination-desktop flex-1 items-center justify-between gap-4">
             <div>
-                <p class="text-xs text-slate-450">
+                <p class="text-xs text-slate-400">
                     Hiển thị từ
                     <span class="font-extrabold text-slate-200">{{ $paginator->firstItem() }}</span>
                     đến
                     <span class="font-extrabold text-slate-200">{{ $paginator->lastItem() }}</span>
                     trong tổng số
-                    <span class="font-extrabold text-slate-200">{{ $paginator->total() }}</span>
-                    kết quả
+                    <span class="font-extrabold text-indigo-400">{{ $paginator->total() }}</span>
+                    thành viên
                 </p>
             </div>
 
@@ -57,7 +74,7 @@
                         {{-- "Three Dots" Separator --}}
                         @if (is_string($element))
                             <span aria-disabled="true">
-                                <span class="relative inline-flex items-center px-3.5 py-2.5 text-xs font-bold text-slate-650 select-none">...</span>
+                                <span class="relative inline-flex items-center px-3.5 py-2.5 text-xs font-bold text-slate-600 select-none">...</span>
                             </span>
                         @endif
 

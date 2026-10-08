@@ -259,6 +259,19 @@ class SuperadminConsoleFeature20Test extends TestCase
      */
     public function test_user_list_displays_full_information_and_stats(): void
     {
+        // Tạo thêm 15 user để có tổng cộng > 10 user (chắc chắn có phân trang)
+        for ($i = 1; $i <= 15; $i++) {
+            User::create([
+                'username' => 'test_page_user_' . $i,
+                'name' => 'Người Dùng Phân Trang ' . $i,
+                'email' => "page_user_{$i}@test.com",
+                'phone' => '09870000' . str_pad($i, 2, '0', STR_PAD_LEFT),
+                'password' => bcrypt('123456'),
+                'role' => 'user',
+                'status' => 'active',
+            ]);
+        }
+
         $response = $this->actingAs($this->superadmin)
             ->get('/list');
 
@@ -269,14 +282,19 @@ class SuperadminConsoleFeature20Test extends TestCase
         $response->assertSee('Chủ nhà trọ');
         $response->assertSee('Cư dân thuê trọ');
         
-        // Kiểm tra thấy tên tài khoản và username
-        $response->assertSee($this->superadmin->name);
-        $response->assertSee($this->superadmin->username);
-        $response->assertSee($this->normalUser->name);
-        $response->assertSee($this->normalUser->username);
+        // Kiểm tra thấy user ở trang 1
+        $response->assertSee('test_page_user_15');
 
         // Kiểm tra thấy thông tin ngày tạo, vai trò, tình trạng
         $response->assertSee('Hoạt động');
+
+        // Kiểm tra phân trang xuất hiện (có link trang 2)
+        $response->assertSee('page=2');
+
+        // Khi sang trang 2, kiểm tra thấy superadmin
+        $page2Response = $this->actingAs($this->superadmin)->get('/list?page=2');
+        $page2Response->assertStatus(200);
+        $page2Response->assertSee($this->superadmin->username);
     }
 
     /**

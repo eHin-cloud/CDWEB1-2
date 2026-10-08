@@ -351,16 +351,15 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="p-4 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-                        <div>
-                            Hiển thị <strong class="text-slate-200">{{ $users->firstItem() ?? 0 }}</strong> - <strong class="text-slate-200">{{ $users->lastItem() ?? 0 }}</strong> trên tổng số <strong class="text-indigo-400">{{ $users->total() }}</strong> thành viên
+                    @if($users->hasPages())
+                        <div class="p-4 border-t border-slate-800/60">
+                            {{ $users->links() }}
                         </div>
-                        @if($users->hasPages())
-                            <div class="flex justify-center">
-                                {{ $users->links() }}
-                            </div>
-                        @endif
-                    </div>
+                    @else
+                        <div class="p-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+                            <span>Hiển thị <strong class="text-slate-200">{{ $users->total() }}</strong> thành viên</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
