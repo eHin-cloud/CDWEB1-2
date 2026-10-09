@@ -626,8 +626,12 @@
                                             </button>
                                         </div>
                                         @if(session('error'))
-                                            <p class="text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
-                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i> Tài khoản hoặc mật khẩu không chính xác
+                                            <p class="text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5" id="login-error-message">
+                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                                @if(session('error_code'))
+                                                    <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono text-[10px]">{{ session('error_code') }}</span>
+                                                @endif
+                                                <span>{{ session('error') }}</span>
                                             </p>
                                         @endif
                                     </div>

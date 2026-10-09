@@ -7,6 +7,7 @@ use App\Models\Resident;
 use App\Models\Ticket;
 use App\Models\UtilityRecord;
 use App\Services\AiManagementService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,6 +37,10 @@ class ResidentPortalController extends Controller
         });
     }
 
+    /**
+     * Cổng dịch vụ cá nhân hóa dành cho cư dân đang thuê phòng (FEAT_27_PORTAL)
+     * GET /smartroom/resident/portal
+     */
     public function index()
     {
         $resident = $this->currentResident();
@@ -45,15 +50,19 @@ class ResidentPortalController extends Controller
                 'resident' => $resident,
                 'room' => null,
                 'bills' => collect(),
+                'latestBill' => null,
                 'unpaidTotal' => 0,
                 'contract' => null,
+                'contractLocked' => true,
+                'errorCode' => 'ERR_27_02',
+                'errorMessage' => 'Hợp đồng thuê của phòng này đã kết thúc hoặc chưa được kích hoạt.',
                 'tickets' => collect(),
                 'statusLabels' => $this->ticketStatusLabels(),
                 'tenant' => null,
                 'landlord' => null,
                 'landlordName' => 'Ban quản lý',
-                'landlordPhone' => 'Chưa cập nhật',
-                'landlordEmail' => 'Chưa cập nhật',
+                'landlordPhone' => '0987654321',
+                'landlordEmail' => 'hotline@smartroom.local',
             ]);
         }
 
@@ -70,20 +79,28 @@ class ResidentPortalController extends Controller
         $landlordPhone = $landlordProfile?->phone 
             ?? $landlord?->phone 
             ?? $tenant?->phone 
-            ?? 'Chưa cập nhật';
-        $landlordEmail = $landlord?->email ?? $tenant?->email ?? 'Chưa cập nhật';
+            ?? '0987654321';
+        $landlordEmail = $landlord?->email ?? $tenant?->email ?? 'hotline@smartroom.local';
 
+        // Lấy hợp đồng thuê phòng của cư dân
+        $contract = Contract::where('resident_id', $resident->id)
+            ->where('room_id', $room->id)
+            ->orderByRaw("case when status = 'active' then 0 when status = 'pending' then 1 else 2 end")
+            ->orderByDesc('end_date')
+            ->first();
+
+        // Điều kiện tiên quyết: Hợp đồng thuê phòng phải còn hiệu lực (active hoặc pending)
+        $hasActiveContract = $contract && in_array($contract->status, ['active', 'pending']);
+        $contractLocked = !$hasActiveContract;
+
+        // Lấy danh sách hóa đơn tiện ích của chính căn phòng cư dân đang thuê (Bảo mật Multi-tenancy)
         $bills = UtilityRecord::with('room')
             ->where('room_id', $room->id)
             ->orderByDesc('billing_month')
             ->get()
             ->map(fn (UtilityRecord $record) => $this->decorateBill($record));
 
-        $contract = Contract::where('resident_id', $resident->id)
-            ->where('room_id', $room->id)
-            ->orderByRaw("case when status = 'active' then 0 when status = 'pending' then 1 else 2 end")
-            ->orderByDesc('end_date')
-            ->first();
+        $latestBill = $bills->first();
 
         $tickets = Ticket::with('room')
             ->where('resident_id', $resident->id)
@@ -103,12 +120,147 @@ class ResidentPortalController extends Controller
             'landlordPhone' => $landlordPhone,
             'landlordEmail' => $landlordEmail,
             'bills' => $bills,
+            'latestBill' => $latestBill,
             'unpaidTotal' => $bills->where('status', '!=', 'paid')->sum('total_amount'),
             'contract' => $contract,
+            'contractLocked' => $contractLocked,
+            'errorCode' => $contractLocked ? 'ERR_27_02' : null,
+            'errorMessage' => $contractLocked ? 'Hợp đồng thuê của phòng này đã kết thúc hoặc chưa được kích hoạt.' : null,
             'tickets' => $tickets,
             'maintenanceTickets' => $maintenanceTickets,
             'housekeepingTickets' => $housekeepingTickets,
             'statusLabels' => $this->ticketStatusLabels(),
+        ]);
+    }
+
+    /**
+     * Xem danh sách hóa đơn, lịch sử thanh toán và quét mã VietQR cá nhân (FEAT_27_PORTAL)
+     * GET /smartroom/resident/invoices
+     */
+    public function invoices(Request $request)
+    {
+        $resident = $this->currentResident();
+
+        if (!$resident || !$resident->room) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'ERR_27_02',
+                    'message' => 'Hợp đồng thuê của phòng này đã kết thúc hoặc chưa được kích hoạt.',
+                ], 403);
+            }
+
+            return redirect()->route('smartroom.resident.portal');
+        }
+
+        $room = $resident->room;
+        $tenant = $room->tenant;
+        $landlord = $tenant?->users()
+            ->whereIn('role', ['landlord', 'unverified_landlord'])
+            ->first();
+        $landlordProfile = \App\Models\LandlordProfile::where('tenant_id', $tenant?->id)->first();
+        $landlordName = $landlordProfile?->full_name ?? $landlord?->name ?? 'Ban quản lý';
+        $landlordPhone = $landlordProfile?->phone ?? $landlord?->phone ?? '0987654321';
+
+        // Lấy hóa đơn bảo mật: chỉ lấy hóa đơn của chính căn phòng cư dân đang thuê
+        $bills = UtilityRecord::with('room')
+            ->where('room_id', $room->id)
+            ->orderByDesc('billing_month')
+            ->get()
+            ->map(fn (UtilityRecord $record) => $this->decorateBill($record));
+
+        $unpaidTotal = $bills->where('status', '!=', 'paid')->sum('total_amount');
+        $latestBill = $bills->first();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'room_number' => $room->room_number,
+                'building_name' => $room->building->name ?? null,
+                'unpaid_total' => $unpaidTotal,
+                'invoices' => $bills,
+            ]);
+        }
+
+        return view('resident.invoices', [
+            'resident' => $resident,
+            'room' => $room,
+            'tenant' => $tenant,
+            'bills' => $bills,
+            'latestBill' => $latestBill,
+            'unpaidTotal' => $unpaidTotal,
+            'landlordName' => $landlordName,
+            'landlordPhone' => $landlordPhone,
+        ]);
+    }
+
+    /**
+     * Tải hợp đồng thuê phòng dạng PDF đã ký số (FEAT_27_PORTAL DoD)
+     * GET /smartroom/resident/contract/{id}/pdf hoặc GET /smartroom/resident/contract/pdf
+     */
+    public function downloadContractPdf($id = null)
+    {
+        $resident = $this->currentResident();
+        if (!$resident) {
+            abort(403, 'Tài khoản chưa được kích hoạt hồ sơ cư dân.');
+        }
+
+        $query = Contract::where('resident_id', $resident->id)
+            ->with(['tenant', 'room.building', 'resident']);
+
+        if ($id) {
+            $contract = $query->where('id', $id)->firstOrFail();
+        } else {
+            $contract = $query->orderByRaw("case when status = 'active' then 0 when status = 'pending' then 1 else 2 end")
+                ->orderByDesc('end_date')
+                ->firstOrFail();
+        }
+
+        $pdf = Pdf::loadView('admin.pdf_contract', compact('contract'))->setPaper('a4');
+
+        return $pdf->download('hop_dong_' . $contract->contract_code . '.pdf');
+    }
+
+    /**
+     * Trả về dữ liệu VietQR Napas 247 cho Modal popup (FEAT_27_PORTAL ERR_27_03)
+     * GET /smartroom/resident/bills/{id}/qr-data
+     */
+    public function billQrData($id)
+    {
+        $resident = $this->currentResident();
+        if (!$resident || !$resident->room) {
+            return response()->json([
+                'success' => false,
+                'code' => 'ERR_27_02',
+                'message' => 'Hợp đồng thuê của phòng này đã kết thúc hoặc chưa được kích hoạt.',
+            ], 403);
+        }
+
+        $record = UtilityRecord::where('room_id', $resident->room_id)->find($id);
+        if (!$record) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hóa đơn không tồn tại hoặc không thuộc phòng của bạn.',
+            ], 404);
+        }
+        $bill = $this->decorateBill($record);
+
+        $bankAccountNo = $resident->tenant?->bank_account_no ?: '1051572297';
+        $bankName = $resident->tenant?->bank_name ?: 'Vietcombank (VCB)';
+        $accountName = $resident->tenant?->bank_account_name ?: 'BAN QUAN LY SMARTROOM';
+        $transferContent = 'Thanh toan phong ' . $resident->room->room_number . ' thang ' . $bill->billing_month;
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ERR_27_03',
+            'message' => 'Hiển thị mã VietQR thanh toán tiền nhà chuẩn Napas 247.',
+            'bill' => $bill,
+            'qr_url' => $this->vietQrUrl($resident->room->room_number, $bill->billing_month, $bill->total_amount),
+            'bank_name' => $bankName,
+            'bank_account_no' => $bankAccountNo,
+            'bank_account_name' => $accountName,
+            'amount' => $bill->total_amount,
+            'transfer_content' => $transferContent,
         ]);
     }
 
@@ -243,7 +395,6 @@ class ResidentPortalController extends Controller
             'status' => 'pending',
         ]);
 
-        // Cập nhật trạng thái phòng sang 'dirty' để bay ngay qua phân hệ Nhiệm Vụ Buồng Phòng
         $room->update([
             'cleaning_status' => 'dirty',
             'version' => $room->version + 1,
@@ -305,7 +456,7 @@ class ResidentPortalController extends Controller
 
         if (!in_array(($resident->tenant?->verification_status ?? 'unverified'), ['kyc_verified', 'premium_pending', 'premium_verified'], true)) {
             return redirect()
-                ->route('smartroom.resident')
+                ->route('smartroom.resident.portal')
                 ->with('error', 'Chủ trọ đang hoàn tất xác minh nhận tiền. Vui lòng liên hệ ban quản lý để nhận hướng dẫn thanh toán.');
         }
 
@@ -323,6 +474,9 @@ class ResidentPortalController extends Controller
     private function currentResident(): ?Resident
     {
         $user = Auth::user();
+        if (!$user) {
+            return null;
+        }
 
         return Resident::with(['room.building', 'tenant'])
             ->where('status', 'active')
@@ -343,10 +497,18 @@ class ResidentPortalController extends Controller
     private function decorateBill(UtilityRecord $record): object
     {
         $electricityUsage = max(0, (int) $record->new_electricity - (int) $record->old_electricity);
+        if ($electricityUsage === 0 && !empty($record->electricity_usage)) {
+            $electricityUsage = (int) $record->electricity_usage;
+        }
         $waterUsage = max(0, (int) $record->new_water - (int) $record->old_water);
+        if ($waterUsage === 0 && !empty($record->water_usage)) {
+            $waterUsage = (int) $record->water_usage;
+        }
         $roomAmount = (int) optional($record->room)->price;
-        $electricityAmount = $electricityUsage * (int) $record->electricity_price;
-        $waterAmount = $waterUsage * (int) $record->water_price;
+        $electricityPrice = (int) ($record->electricity_price ?: 3500);
+        $waterPrice = (int) ($record->water_price ?: 25000);
+        $electricityAmount = $electricityUsage * $electricityPrice;
+        $waterAmount = $waterUsage * $waterPrice;
         $totalAmount = $roomAmount + $electricityAmount + $waterAmount + self::SERVICE_FEE;
 
         return (object) [
@@ -355,8 +517,14 @@ class ResidentPortalController extends Controller
             'status' => $record->status,
             'status_label' => $this->billStatusLabels()[$record->status] ?? $record->status,
             'room_amount' => $roomAmount,
+            'old_electricity' => (int) $record->old_electricity,
+            'new_electricity' => (int) $record->new_electricity,
+            'electricity_price' => (int) $record->electricity_price,
             'electricity_usage' => $electricityUsage,
             'electricity_amount' => $electricityAmount,
+            'old_water' => (int) $record->old_water,
+            'new_water' => (int) $record->new_water,
+            'water_price' => (int) $record->water_price,
             'water_usage' => $waterUsage,
             'water_amount' => $waterAmount,
             'service_amount' => self::SERVICE_FEE,

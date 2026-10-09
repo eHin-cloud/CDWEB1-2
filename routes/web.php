@@ -95,16 +95,38 @@ Route::get('/home', function () {
 })->name('home');
 
 Route::get('/portal', function () {
-    return view('index');
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->isResident()) {
+            return redirect()->route('smartroom.resident.portal');
+        }
+        if ($user->isAdmin()) {
+            return redirect()->route('user.list');
+        }
+        if ($user->canAccessLandlordDashboard()) {
+            return redirect()->route('smartroom.admin');
+        }
+    }
+    return redirect()->route('login');
 })->name('smartroom.portal');
 
-Route::get('/smartroom/resident', [ResidentPortalController::class, 'index'])->name('smartroom.resident');
-Route::post('/smartroom/resident/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
-Route::post('/smartroom/resident/tickets', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store');
-Route::post('/smartroom/resident/tickets/store', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store.alias');
-Route::post('/smartroom/resident/housekeeping', [ResidentPortalController::class, 'storeHousekeepingRequest'])->name('smartroom.resident.housekeeping.store');
-Route::get('/smartroom/resident/bills/{id}/qr', [ResidentPortalController::class, 'billQr'])->name('smartroom.resident.bills.qr');
-Route::post('/smartroom/resident/contract/{id}/request-renewal', [ResidentPortalController::class, 'requestRenewal'])->name('smartroom.resident.contract.request_renewal');
+// Cổng dịch vụ Cư dân (FEAT_27_PORTAL)
+Route::prefix('smartroom/resident')->group(function () {
+    Route::get('/portal', [ResidentPortalController::class, 'index'])->name('smartroom.resident.portal');
+    Route::get('/', [ResidentPortalController::class, 'index'])->name('smartroom.resident');
+    Route::get('/invoices', [ResidentPortalController::class, 'invoices'])->name('smartroom.resident.invoices');
+    Route::get('/contract/pdf', [ResidentPortalController::class, 'downloadContractPdf'])->name('smartroom.resident.contract.pdf');
+    Route::get('/contract/pdf-current', [ResidentPortalController::class, 'downloadContractPdf'])->name('smartroom.resident.contract.pdf.current');
+    Route::get('/contract/{id}/pdf', [ResidentPortalController::class, 'downloadContractPdf'])->name('smartroom.resident.contract.pdf_id');
+    Route::get('/bills/{id}/qr', [ResidentPortalController::class, 'billQr'])->name('smartroom.resident.bills.qr');
+    Route::get('/bills/{id}/qr-data', [ResidentPortalController::class, 'billQrData'])->name('smartroom.resident.bills.qr_data');
+    Route::get('/bills/{id}/qr.data', [ResidentPortalController::class, 'billQrData'])->name('smartroom.resident.bills.qr.data');
+    Route::post('/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
+    Route::post('/tickets', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store');
+    Route::post('/tickets/store', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store.alias');
+    Route::post('/housekeeping', [ResidentPortalController::class, 'storeHousekeepingRequest'])->name('smartroom.resident.housekeeping.store');
+    Route::post('/contract/{id}/request-renewal', [ResidentPortalController::class, 'requestRenewal'])->name('smartroom.resident.contract.request_renewal');
+});
 
 
 Route::middleware('admin')->group(function () {
