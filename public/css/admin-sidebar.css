@@ -10,12 +10,12 @@
 
 html.sidebar-collapsed #admin-sidebar,
 body.sidebar-collapsed #admin-sidebar {
-    width: 5rem;
+    width: 5rem !important;
 }
 
 html.sidebar-collapsed #admin-shell,
 body.sidebar-collapsed #admin-shell {
-    margin-left: 5rem;
+    margin-left: 5rem !important;
 }
 
 body.sidebar-collapsed #admin-sidebar nav a,
