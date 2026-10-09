@@ -2586,8 +2586,10 @@
 
                             <!-- Search Input -->
                             <div class="relative flex-1 sm:w-64">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                                <input type="text" id="ticket-search-input" oninput="filterAdminTickets()" placeholder="Tìm phòng, vị trí, cư dân..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i class="fa-solid fa-magnifying-glass text-xs leading-none"></i>
+                                </div>
+                                <input type="text" id="ticket-search-input" oninput="filterAdminTickets()" placeholder="Tìm phòng, vị trí, cư dân..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs leading-normal text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
                             </div>
                         </div>
                     </div>
@@ -2760,6 +2762,32 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Ticket Pagination Bar -->
+                    <div id="ticket-pagination-container" class="px-6 py-4 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-950/40">
+                        <div class="flex items-center gap-3 text-xs text-slate-400">
+                            <span>Hiển thị <span id="ticket-page-start" class="font-bold text-slate-200">1</span> - <span id="ticket-page-end" class="font-bold text-slate-200">10</span> trên tổng số <span id="ticket-page-total" class="font-bold text-indigo-400">{{ count($tickets) }}</span> sự cố</span>
+                            <div class="flex items-center gap-1.5 ml-2">
+                                <span class="text-slate-500 text-[11px]">Mỗi trang:</span>
+                                <select id="ticket-page-size" onchange="changeTicketPageSize(this.value)" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="ticket-prev-page" onclick="changeTicketPage(currentTicketPage - 1)" class="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold flex items-center gap-1 transition">
+                                <i class="fa-solid fa-chevron-left text-[10px]"></i> Trước
+                            </button>
+                            <div id="ticket-pagination-numbers" class="flex items-center gap-1"></div>
+                            <button type="button" id="ticket-next-page" onclick="changeTicketPage(currentTicketPage + 1)" class="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold flex items-center gap-1 transition">
+                                Sau <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -2925,11 +2953,11 @@
                 <div class="pt-1 text-slate-300 font-medium" id="modal-ticket-title">-</div>
             </div>
 
-            <form id="ticket-update-form" method="POST" action="" class="space-y-4">
+            <form id="ticket-update-form" method="POST" action="" onsubmit="return validateTicketUpdateForm()" class="space-y-4">
                 @csrf
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Trạng thái sự cố</label>
-                    <select name="status" id="modal-ticket-status" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                    <select name="status" id="modal-ticket-status" onchange="handleTicketModalStatusChange(this.value)" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
                         <option value="pending">Chờ tiếp nhận (Pending)</option>
                         <option value="processing">Đang xử lý / Đã giao việc (Processing)</option>
                         <option value="resolved">Đã giải quyết xong (Resolved)</option>
@@ -2937,8 +2965,19 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Kỹ thuật viên / Thợ phụ trách</label>
-                    <input type="text" name="assigned_to" id="modal-ticket-assigned-to" placeholder="VD: Thợ điện Tuấn, KTV Nam..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Kỹ thuật viên / Thợ phụ trách <span id="modal-assigned-required-star" class="hidden text-rose-400 font-black">*</span>
+                        </label>
+                        <span id="modal-assigned-hint" class="text-[11px] text-slate-500 italic">Tùy chọn khi chờ tiếp nhận</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" name="assigned_to" id="modal-ticket-assigned-to" maxlength="100" oninput="clearTicketAssignedError()" placeholder="VD: Thợ điện Tuấn, KTV Nam..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <p id="modal-assigned-error" class="hidden text-[11px] text-rose-400 mt-1.5 flex items-center gap-1 font-medium">
+                        <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                        <span id="modal-assigned-error-text"></span>
+                    </p>
                 </div>
 
                 <div class="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
@@ -3824,20 +3863,30 @@
                 const currentTab = params.get('tab') || 'dashboard-section';
                 switchTab(currentTab);
             });
+
+            // Khởi tạo phân trang cho bảng sự cố báo hỏng
+            filterAdminTickets(true);
         });
 
         // ==========================================
         // TICKET MANAGEMENT (SỰ CỐ & BÁO HỎNG)
         // ==========================================
-        function filterAdminTickets() {
+        let currentTicketPage = 1;
+        let ticketPageSize = 10;
+
+        function filterAdminTickets(resetPage = true) {
+            if (resetPage) {
+                currentTicketPage = 1;
+            }
+
             const statusFilter = document.getElementById('ticket-filter-status')?.value || 'all';
             const categoryFilter = document.getElementById('ticket-filter-category')?.value || 'all';
             const searchInput = (document.getElementById('ticket-search-input')?.value || '').toLowerCase().trim();
 
-            const rows = document.querySelectorAll('.ticket-row');
-            let visibleCount = 0;
+            const rows = Array.from(document.querySelectorAll('.ticket-row'));
 
-            rows.forEach(row => {
+            // Lọc các hàng thỏa mãn điều kiện
+            const matchedRows = rows.filter(row => {
                 const status = row.getAttribute('data-ticket-status');
                 const category = row.getAttribute('data-ticket-category');
                 const searchData = (row.getAttribute('data-ticket-search') || '').toLowerCase();
@@ -3846,22 +3895,143 @@
                 const matchCategory = (categoryFilter === 'all' || category === categoryFilter);
                 const matchSearch = (!searchInput || searchData.includes(searchInput));
 
-                if (matchStatus && matchCategory && matchSearch) {
+                return matchStatus && matchCategory && matchSearch;
+            });
+
+            const totalMatched = matchedRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalMatched / ticketPageSize));
+            if (currentTicketPage > totalPages) {
+                currentTicketPage = totalPages;
+            }
+            if (currentTicketPage < 1) {
+                currentTicketPage = 1;
+            }
+
+            // Ẩn tất cả các hàng không khớp bộ lọc
+            rows.forEach(row => {
+                if (!matchedRows.includes(row)) {
+                    row.classList.add('hidden');
+                }
+            });
+
+            // Phân trang các hàng khớp
+            const startIndex = (currentTicketPage - 1) * ticketPageSize;
+            const endIndex = startIndex + ticketPageSize;
+
+            matchedRows.forEach((row, index) => {
+                if (index >= startIndex && index < endIndex) {
                     row.classList.remove('hidden');
-                    visibleCount++;
                 } else {
                     row.classList.add('hidden');
                 }
             });
 
+            // Cập nhật badge số lượng
+            const countBadge = document.getElementById('ticket-count-badge');
+            if (countBadge) {
+                countBadge.textContent = totalMatched + ' sự cố';
+            }
+
+            // Thông báo không có kết quả
             const noMatchRow = document.getElementById('ticket-no-search-match');
             if (noMatchRow) {
-                if (rows.length > 0 && visibleCount === 0) {
+                if (rows.length > 0 && totalMatched === 0) {
                     noMatchRow.classList.remove('hidden');
                 } else {
                     noMatchRow.classList.add('hidden');
                 }
             }
+
+            updateTicketPaginationUI(totalMatched, totalPages, startIndex, endIndex);
+        }
+
+        function updateTicketPaginationUI(total, totalPages, startIndex, endIndex) {
+            const container = document.getElementById('ticket-pagination-container');
+            if (!container) return;
+
+            if (total === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            container.classList.remove('hidden');
+
+            const startEl = document.getElementById('ticket-page-start');
+            const endEl = document.getElementById('ticket-page-end');
+            const totalEl = document.getElementById('ticket-page-total');
+            if (startEl) startEl.textContent = total > 0 ? (startIndex + 1) : 0;
+            if (endEl) endEl.textContent = Math.min(endIndex, total);
+            if (totalEl) totalEl.textContent = total;
+
+            const prevBtn = document.getElementById('ticket-prev-page');
+            const nextBtn = document.getElementById('ticket-next-page');
+            if (prevBtn) prevBtn.disabled = (currentTicketPage <= 1);
+            if (nextBtn) nextBtn.disabled = (currentTicketPage >= totalPages);
+
+            const numbersContainer = document.getElementById('ticket-pagination-numbers');
+            if (numbersContainer) {
+                numbersContainer.innerHTML = '';
+
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentTicketPage - 2);
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                if (endPage - startPage < maxButtons - 1) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                if (startPage > 1) {
+                    numbersContainer.appendChild(createTicketPageBtn(1));
+                    if (startPage > 2) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.className = 'px-1.5 text-xs text-slate-600';
+                        ellipsis.textContent = '...';
+                        numbersContainer.appendChild(ellipsis);
+                    }
+                }
+
+                for (let p = startPage; p <= endPage; p++) {
+                    numbersContainer.appendChild(createTicketPageBtn(p, p === currentTicketPage));
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.className = 'px-1.5 text-xs text-slate-600';
+                        ellipsis.textContent = '...';
+                        numbersContainer.appendChild(ellipsis);
+                    }
+                    numbersContainer.appendChild(createTicketPageBtn(totalPages));
+                }
+            }
+        }
+
+        function createTicketPageBtn(page, isActive = false) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = page;
+            btn.onclick = () => changeTicketPage(page);
+            if (isActive) {
+                btn.className = 'w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-xs shadow-sm flex items-center justify-center';
+            } else {
+                btn.className = 'w-7 h-7 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-medium flex items-center justify-center transition';
+            }
+            return btn;
+        }
+
+        function changeTicketPage(page) {
+            if (page < 1) return;
+            currentTicketPage = page;
+            filterAdminTickets(false);
+
+            const table = document.getElementById('admin-ticket-table-body');
+            if (table) {
+                table.closest('.glass-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function changeTicketPageSize(newSize) {
+            ticketPageSize = parseInt(newSize, 10) || 10;
+            currentTicketPage = 1;
+            filterAdminTickets(true);
         }
 
         function openTicketUpdateModal(data) {
@@ -3874,10 +4044,16 @@
             document.getElementById('modal-ticket-title').textContent = data.title || '';
 
             const statusSelect = document.getElementById('modal-ticket-status');
-            if (statusSelect) statusSelect.value = data.status || 'pending';
+            if (statusSelect) {
+                statusSelect.value = data.status || 'pending';
+                updateModalAssignedValidation(statusSelect.value);
+            }
 
             const assignedInput = document.getElementById('modal-ticket-assigned-to');
-            if (assignedInput) assignedInput.value = data.assigned_to || '';
+            if (assignedInput) {
+                assignedInput.value = data.assigned_to || '';
+                clearTicketAssignedError();
+            }
 
             const form = document.getElementById('ticket-update-form');
             if (form) form.action = `/smartroom/admin/ticket/${data.id}/update`;
@@ -3887,6 +4063,95 @@
             document.body.style.overflow = 'hidden';
         }
 
+        function handleTicketModalStatusChange(newStatus) {
+            updateModalAssignedValidation(newStatus);
+            if (newStatus === 'processing' || newStatus === 'resolved') {
+                const assignedInput = document.getElementById('modal-ticket-assigned-to');
+                if (assignedInput && !assignedInput.value.trim()) {
+                    assignedInput.focus();
+                }
+            }
+        }
+
+        function updateModalAssignedValidation(status) {
+            const star = document.getElementById('modal-assigned-required-star');
+            const hint = document.getElementById('modal-assigned-hint');
+            const input = document.getElementById('modal-ticket-assigned-to');
+            const isRequired = (status === 'processing' || status === 'resolved');
+
+            if (star) {
+                if (isRequired) {
+                    star.classList.remove('hidden');
+                } else {
+                    star.classList.add('hidden');
+                }
+            }
+
+            if (hint) {
+                if (isRequired) {
+                    hint.textContent = 'Bắt buộc nhập tên thợ';
+                    hint.className = 'text-[11px] text-amber-400 font-semibold';
+                } else {
+                    hint.textContent = 'Tùy chọn khi chờ tiếp nhận';
+                    hint.className = 'text-[11px] text-slate-500 italic';
+                }
+            }
+
+            if (input) {
+                input.required = isRequired;
+            }
+
+            clearTicketAssignedError();
+        }
+
+        function clearTicketAssignedError() {
+            const input = document.getElementById('modal-ticket-assigned-to');
+            const errorBox = document.getElementById('modal-assigned-error');
+            if (input) {
+                input.classList.remove('border-rose-500', 'focus:border-rose-500');
+            }
+            if (errorBox) {
+                errorBox.classList.add('hidden');
+            }
+        }
+
+        function validateTicketUpdateForm() {
+            const status = document.getElementById('modal-ticket-status')?.value || 'pending';
+            const input = document.getElementById('modal-ticket-assigned-to');
+            const errorBox = document.getElementById('modal-assigned-error');
+            const errorText = document.getElementById('modal-assigned-error-text');
+            const val = (input?.value || '').trim();
+
+            if (status === 'processing' || status === 'resolved') {
+                if (!val) {
+                    if (input) {
+                        input.classList.add('border-rose-500', 'focus:border-rose-500');
+                        input.focus();
+                    }
+                    if (errorBox && errorText) {
+                        errorText.textContent = 'Vui lòng nhập tên kỹ thuật viên / thợ phụ trách khi sự cố đang xử lý hoặc đã hoàn thành.';
+                        errorBox.classList.remove('hidden');
+                    }
+                    return false;
+                }
+            }
+
+            if (val && val.length < 2) {
+                if (input) {
+                    input.classList.add('border-rose-500', 'focus:border-rose-500');
+                    input.focus();
+                }
+                if (errorBox && errorText) {
+                    errorText.textContent = 'Tên kỹ thuật viên / thợ phụ trách phải có ít nhất 2 ký tự.';
+                    errorBox.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            clearTicketAssignedError();
+            return true;
+        }
+
         function closeTicketUpdateModal() {
             const modal = document.getElementById('ticket-update-modal');
             if (modal) {
@@ -3894,6 +4159,7 @@
                 modal.classList.remove('flex');
                 document.body.style.overflow = '';
             }
+            clearTicketAssignedError();
         }
 
         function viewTicketImage(src) {
