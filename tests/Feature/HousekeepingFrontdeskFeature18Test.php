@@ -503,4 +503,84 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
         $this->room->refresh();
         $this->assertEquals('inspected', $this->room->housekeeping_status);
     }
+
+    /**
+     * Test Optimistic Locking: Chặn ghi đè dữ liệu khi version bị lệch (HTTP 409)
+     */
+    public function test_optimistic_locking_prevents_concurrent_overwrites(): void
+    {
+        $this->room->update([
+            'housekeeping_status' => 'dirty',
+            'version' => 5,
+        ]);
+
+        // Gửi version cũ (4) khi phân công
+        $assignRes = $this->actingAs($this->receptionist)
+            ->postJson(route('smartroom.admin.housekeeping.assign'), [
+                'room_id' => $this->room->id,
+                'assigned_staff_id' => $this->housekeeper->id,
+                'priority' => 'urgent',
+                'version' => 4, // Version cũ
+            ]);
+
+        $assignRes->assertStatus(409)
+            ->assertJsonPath('code', 'ERR_OPTIMISTIC_LOCK')
+            ->assertJsonPath('room.id', $this->room->id)
+            ->assertJsonPath('room.version', 5);
+
+        // Gửi version đúng (5) -> Thành công
+        $validAssignRes = $this->actingAs($this->receptionist)
+            ->postJson(route('smartroom.admin.housekeeping.assign'), [
+                'room_id' => $this->room->id,
+                'assigned_staff_id' => $this->housekeeper->id,
+                'priority' => 'urgent',
+                'version' => 5, // Version đúng
+            ]);
+
+        $validAssignRes->assertStatus(200)->assertJsonPath('success', true);
+        $this->room->refresh();
+        $this->assertEquals(6, $this->room->version);
+
+        // Kiểm tra Optimistic Locking khi update status với version cũ
+        $conflictStatusRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.housekeeping.status'), [
+                'room_id' => $this->room->id,
+                'housekeeping_status' => 'cleaning',
+                'version' => 5, // Phòng hiện tại đã là 6
+            ]);
+
+        $conflictStatusRes->assertStatus(409)->assertJsonPath('code', 'ERR_OPTIMISTIC_LOCK');
+    }
+
+    /**
+     * Test Smart Polling endpoint trả về dữ liệu đồng bộ khi có thay đổi
+     */
+    public function test_smart_polling_endpoint_returns_realtime_updates(): void
+    {
+        $since = time() - 10;
+
+        // Phân công phòng để kích hoạt broadcastAndCacheRoomUpdate
+        $this->actingAs($this->receptionist)
+            ->postJson(route('smartroom.admin.housekeeping.assign'), [
+                'room_id' => $this->room->id,
+                'assigned_staff_id' => $this->housekeeper->id,
+                'priority' => 'high',
+                'version' => $this->room->version,
+            ]);
+
+        // Gọi endpoint poll
+        $pollRes = $this->actingAs($this->housekeeper)
+            ->getJson(route('smartroom.admin.housekeeping.poll', ['since' => $since]));
+
+        $pollRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('has_update', true)
+            ->assertJsonPath('room.id', $this->room->id)
+            ->assertJsonStructure([
+                'success',
+                'has_update',
+                'room' => ['id', 'room_number', 'housekeeping_status', 'assigned_staff_name', 'version'],
+                'stats' => ['total', 'dirty', 'cleaning', 'clean', 'inspected'],
+            ]);
+    }
 }

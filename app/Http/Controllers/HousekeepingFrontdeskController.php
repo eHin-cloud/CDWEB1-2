@@ -13,6 +13,7 @@ use App\Services\AdminActivityLogger;
 use App\Events\RoomStatusUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class HousekeepingFrontdeskController extends Controller
@@ -162,6 +163,16 @@ class HousekeepingFrontdeskController extends Controller
             ], 422);
         }
 
+        // Optimistic Locking: Kiểm tra phiên bản dữ liệu phòng
+        if ($request->filled('version') && (int) $request->input('version') !== (int) $room->version) {
+            return response()->json([
+                'success' => false,
+                'code' => 'ERR_OPTIMISTIC_LOCK',
+                'message' => "Phòng {$room->room_number} vừa được cập nhật bởi người dùng khác. Trạng thái đã được đồng bộ mới nhất!",
+                'room' => $this->formatRoomPayload($room->fresh(['building', 'assignedStaff', 'inspector'])),
+            ], 409);
+        }
+
         // Kiểm tra chọn nhân viên buồng phòng phụ trách (ERR_18_03)
         if (empty($staffId)) {
             return response()->json([
@@ -223,10 +234,12 @@ class HousekeepingFrontdeskController extends Controller
             ['assigned_staff_id' => $staff->id, 'priority' => $priority]
         );
 
+        $payload = $this->broadcastAndCacheRoomUpdate($room->fresh(['building', 'assignedStaff']), 'assign');
+
         return response()->json([
             'success' => true,
             'message' => "Đã phân công nhân viên {$staff->name} phụ trách phòng {$room->room_number} thành công!",
-            'room' => $room->fresh(['building', 'assignedStaff']),
+            'room' => $payload,
         ]);
     }
 
@@ -251,6 +264,16 @@ class HousekeepingFrontdeskController extends Controller
         $tenantId = $request->attributes->get('scoped_tenant_id') ?? $user->tenant_id;
 
         $room = Room::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))->findOrFail($roomId);
+
+        // Optimistic Locking: Kiểm tra phiên bản dữ liệu phòng
+        if ($request->filled('version') && (int) $request->input('version') !== (int) $room->version) {
+            return response()->json([
+                'success' => false,
+                'code' => 'ERR_OPTIMISTIC_LOCK',
+                'message' => "Phòng {$room->room_number} vừa được cập nhật bởi người dùng khác. Trạng thái đã được đồng bộ mới nhất!",
+                'room' => $this->formatRoomPayload($room->fresh(['building', 'assignedStaff', 'inspector'])),
+            ], 409);
+        }
 
         // Kiểm tra trạng thái thuộc enum [dirty, cleaning, clean, inspected, out_of_service]
         if (!in_array($newStatus, Room::HOUSEKEEPING_STATUSES, true)) {
@@ -317,9 +340,7 @@ class HousekeepingFrontdeskController extends Controller
             'notes' => "Cập nhật tiến độ: {$currentStatus} -> {$newStatus}",
         ]);
 
-        try {
-            event(new RoomStatusUpdated($room, $roomStatus, 'housekeeping_status_change'));
-        } catch (\Throwable $e) {}
+        $payload = $this->broadcastAndCacheRoomUpdate($room->fresh(['building', 'assignedStaff', 'inspector']), 'status_change');
 
         $statusLabels = [
             'cleaning' => 'đang được dọn dẹp vệ sinh',
@@ -332,7 +353,7 @@ class HousekeepingFrontdeskController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Phòng {$room->room_number} " . ($statusLabels[$newStatus] ?? 'đã cập nhật trạng thái') . ".",
-            'room' => $room->fresh(['building', 'assignedStaff', 'inspector']),
+            'room' => $payload,
         ]);
     }
 
@@ -357,6 +378,16 @@ class HousekeepingFrontdeskController extends Controller
         $tenantId = $request->attributes->get('scoped_tenant_id') ?? $user->tenant_id;
 
         $room = Room::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))->findOrFail($roomId);
+
+        // Optimistic Locking: Kiểm tra phiên bản dữ liệu phòng
+        if ($request->filled('version') && (int) $request->input('version') !== (int) $room->version) {
+            return response()->json([
+                'success' => false,
+                'code' => 'ERR_OPTIMISTIC_LOCK',
+                'message' => "Phòng {$room->room_number} vừa được cập nhật bởi người dùng khác. Trạng thái đã được đồng bộ mới nhất!",
+                'room' => $this->formatRoomPayload($room->fresh(['building', 'assignedStaff', 'inspector'])),
+            ], 409);
+        }
 
         // Guard Check FSM: Phòng bắt buộc phải qua bước Sạch (Clean) trước khi Nghiệm thu (Inspected)
         if ($room->housekeeping_status !== 'clean') {
@@ -407,16 +438,14 @@ class HousekeepingFrontdeskController extends Controller
             ['inspection_notes' => $room->inspection_notes]
         );
 
-        try {
-            event(new RoomStatusUpdated($room, $room->status, 'inspect_passed'));
-        } catch (\Throwable $e) {}
+        $payload = $this->broadcastAndCacheRoomUpdate($room->fresh(['building', 'assignedStaff', 'inspector']), 'inspect');
 
         // ERR_18_06: Đã nghiệm thu buồng phòng thành công! Phòng đã sẵn sàng đón khách lưu trú mới.
         return response()->json([
             'success' => true,
             'code' => 'ERR_18_06',
             'message' => 'Đã nghiệm thu buồng phòng thành công! Phòng đã sẵn sàng đón khách lưu trú mới.',
-            'room' => $room->fresh(['building', 'assignedStaff', 'inspector']),
+            'room' => $payload,
         ]);
     }
 
@@ -524,6 +553,8 @@ class HousekeepingFrontdeskController extends Controller
             $booking,
             ['booking_code' => $booking->booking_code]
         );
+
+        $this->broadcastAndCacheRoomUpdate($room->fresh(['building', 'assignedStaff']), 'checkin');
 
         if ($request->expectsJson() || $request->wantsJson()) {
             return response()->json([
@@ -658,20 +689,114 @@ class HousekeepingFrontdeskController extends Controller
             ['total_amount' => $calc['total_amount']]
         );
 
-        try {
-            event(new RoomStatusUpdated($room, 'cleaning', 'checkout_dirty'));
-        } catch (\Throwable $e) {}
+        $payload = $this->broadcastAndCacheRoomUpdate($room->fresh(['building', 'assignedStaff']), 'checkout_dirty');
 
         if ($request->expectsJson() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "Trả phòng thành công! Phòng {$room->room_number} đã tự động chuyển sang trạng thái Cần dọn (Dirty).",
                 'calculation' => $calc,
-                'room' => $room->fresh(),
+                'room' => $payload,
             ]);
         }
 
         return redirect()->route('admin.hotel.folio', $booking->id)
             ->with('success', "Trả phòng thành công! Phòng {$room->room_number} đã chuyển sang trạng thái Cần dọn (Dirty).");
+    }
+
+    /**
+     * Chuẩn hóa payload thông tin phòng phục vụ Realtime & Optimistic Locking
+     */
+    public function formatRoomPayload(Room $room, string $action = 'update'): array
+    {
+        $room->loadMissing(['building', 'assignedStaff', 'inspector']);
+        $staff = $room->assignedStaff;
+        $inspector = $room->inspector;
+
+        return [
+            'id' => $room->id,
+            'room_number' => $room->room_number,
+            'floor' => $room->floor,
+            'building_id' => $room->building_id,
+            'building_name' => $room->building?->name ?? 'Tòa nhà',
+            'room_type' => $room->room_type,
+            'status' => $room->status,
+            'status_label' => $room->status_label,
+            'badge_class' => $room->badge_class,
+            'status_class' => $room->status_class,
+            'housekeeping_status' => $room->housekeeping_status ?: 'dirty',
+            'cleaning_status' => $room->cleaning_status ?: 'dirty',
+            'priority' => $room->priority ?: 'normal',
+            'version' => (int) $room->version,
+            'assigned_staff_id' => $room->assigned_staff_id,
+            'assigned_staff_name' => $staff?->name ?? 'Chưa phân công',
+            'inspected_by' => $room->inspected_by,
+            'inspector_name' => $inspector?->name,
+            'inspection_notes' => $room->inspection_notes,
+            'tenant_id' => $room->tenant_id,
+            'action' => $action,
+            'updated_at' => now()->timestamp,
+        ];
+    }
+
+    /**
+     * Phát sự kiện Broadcast WebSocket và lưu Cache cho Smart Polling fallback
+     */
+    public function broadcastAndCacheRoomUpdate(Room $room, string $action = 'update'): array
+    {
+        $payload = $this->formatRoomPayload($room, $action);
+        $tenantId = $room->tenant_id;
+
+        // 1. Cập nhật Cache để Polling đọc tức thì 0ms
+        Cache::put("housekeeping_latest_event_{$tenantId}", $payload, 180);
+        Cache::put("room_matrix_latest_event_{$tenantId}", $payload, 180);
+        Cache::put("room_matrix_latest_event_global", $payload, 180);
+
+        // 2. Kích hoạt Broadcast WebSocket (Reverb / Echo)
+        try {
+            event(new RoomStatusUpdated($room));
+        } catch (\Throwable $e) {
+            \Log::warning('Housekeeping broadcast notice: ' . $e->getMessage());
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Endpoint Smart Polling cho giao diện Sơ đồ Buồng phòng
+     * GET /smartroom/admin/housekeeping/poll?since={timestamp}
+     */
+    public function poll(Request $request)
+    {
+        $user = Auth::user();
+        $tenantId = $request->attributes->get('scoped_tenant_id') ?? $user->tenant_id;
+        $since = (int) $request->query('since', 0);
+
+        $cacheKey = "housekeeping_latest_event_{$tenantId}";
+        $latestEvent = Cache::get($cacheKey) ?? Cache::get("room_matrix_latest_event_{$tenantId}");
+
+        if ($latestEvent && isset($latestEvent['updated_at']) && $latestEvent['updated_at'] > $since) {
+            $allRoomsBase = Room::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId));
+            $stats = [
+                'total' => (clone $allRoomsBase)->count(),
+                'dirty' => (clone $allRoomsBase)->where('housekeeping_status', 'dirty')->count(),
+                'cleaning' => (clone $allRoomsBase)->where('housekeeping_status', 'cleaning')->count(),
+                'clean' => (clone $allRoomsBase)->where('housekeeping_status', 'clean')->count(),
+                'inspected' => (clone $allRoomsBase)->where('housekeeping_status', 'inspected')->count(),
+                'out_of_service' => (clone $allRoomsBase)->where('housekeeping_status', 'out_of_service')->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'has_update' => true,
+                'room' => $latestEvent,
+                'stats' => $stats,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'has_update' => false,
+        ]);
     }
 }

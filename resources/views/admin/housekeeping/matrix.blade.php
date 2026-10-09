@@ -27,6 +27,7 @@
     <!-- FontAwesome & Sidebar CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
+    @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     
     <script>
         try {
@@ -272,6 +273,7 @@
                          data-room-number="{{ $room->room_number }}"
                          data-housekeeping-status="{{ $hStatus }}"
                          data-status="{{ $room->status }}"
+                         data-version="{{ (int) $room->version }}"
                          data-priority="{{ $priority }}"
                          data-building-id="{{ $room->building_id }}"
                          data-assigned-staff-id="{{ $room->assigned_staff_id }}"
@@ -856,10 +858,18 @@
     <!-- Scripts điều khiển tương tác -->
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const isHousekeeperUser = {{ $isHousekeeper ? 'true' : 'false' }};
+        const currentAuthUserId = {{ Auth::id() ?? 0 }};
+        const currentTenantId = {{ (int) ($scopedTenantId ?? Auth::user()->tenant_id ?? 0) }};
+
+        let currentFilterStatus = '{{ $statusFilter ?? 'all' }}';
+        let lastHousekeepingSyncTimestamp = Math.floor(Date.now() / 1000);
+        let lastHandledEventKey = '';
 
         // Hiển thị Toast thông báo
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
+            if (!container) return;
             const toast = document.createElement('div');
             
             const isSuccess = type === 'success';
@@ -908,6 +918,7 @@
 
         // ==================== BỘ LỌC MA TRẬN ====================
         function filterByStatus(status) {
+            currentFilterStatus = status;
             document.querySelectorAll('.status-filter-btn').forEach(btn => {
                 btn.classList.remove('bg-indigo-600', 'bg-red-600', 'bg-amber-600', 'bg-emerald-600', 'bg-teal-600', 'text-white');
                 if (btn.getAttribute('data-status') === status) {
@@ -916,18 +927,12 @@
             });
 
             document.querySelectorAll('.room-card').forEach(card => {
-                const roomStatus = card.getAttribute('data-housekeeping-status');
-                if (status === 'all' || roomStatus === status) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+                applyCurrentFilterToCard(card);
             });
         }
 
-        const currentAuthUserId = {{ Auth::id() ?? 0 }};
-
         function filterMyAssigned() {
+            currentFilterStatus = 'my_assigned';
             document.querySelectorAll('.status-filter-btn').forEach(btn => {
                 btn.classList.remove('bg-indigo-600', 'bg-red-600', 'bg-amber-600', 'bg-emerald-600', 'bg-teal-600', 'text-white');
                 if (btn.getAttribute('data-status') === 'my_assigned') {
@@ -936,13 +941,21 @@
             });
 
             document.querySelectorAll('.room-card').forEach(card => {
-                const assignedId = parseInt(card.getAttribute('data-assigned-staff-id') || '0');
-                if (assignedId === currentAuthUserId) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+                applyCurrentFilterToCard(card);
             });
+        }
+
+        function applyCurrentFilterToCard(card) {
+            if (!card) return;
+            if (currentFilterStatus === 'all') {
+                card.style.display = 'flex';
+            } else if (currentFilterStatus === 'my_assigned') {
+                const assignedId = parseInt(card.getAttribute('data-assigned-staff-id') || '0');
+                card.style.display = (assignedId === currentAuthUserId) ? 'flex' : 'none';
+            } else {
+                const roomStatus = card.getAttribute('data-housekeeping-status');
+                card.style.display = (roomStatus === currentFilterStatus) ? 'flex' : 'none';
+            }
         }
 
         function filterBuilding(bId) {
@@ -966,6 +979,251 @@
                     card.style.display = 'none';
                 }
             });
+        }
+
+        // ==================== CẬP NHẬT SỐ LIỆU KPI ĐẾM BỘ LỌC ====================
+        function updateHousekeepingFilterCounts(stats = null) {
+            let dirty = 0, cleaning = 0, clean = 0, inspected = 0, outOfService = 0, total = 0;
+            
+            if (stats) {
+                dirty = stats.dirty ?? 0;
+                cleaning = stats.cleaning ?? 0;
+                clean = stats.clean ?? 0;
+                inspected = stats.inspected ?? 0;
+                outOfService = stats.out_of_service ?? 0;
+                total = stats.total ?? 0;
+            } else {
+                const cards = document.querySelectorAll('.room-card');
+                total = cards.length;
+                cards.forEach(c => {
+                    const s = c.getAttribute('data-housekeeping-status');
+                    if (s === 'dirty') dirty++;
+                    else if (s === 'cleaning') cleaning++;
+                    else if (s === 'clean') clean++;
+                    else if (s === 'inspected') inspected++;
+                    else if (s === 'out_of_service') outOfService++;
+                });
+            }
+
+            const elDirty = document.getElementById('stat-dirty');
+            if (elDirty) elDirty.textContent = dirty;
+            const elCleaning = document.getElementById('stat-cleaning');
+            if (elCleaning) elCleaning.textContent = cleaning;
+            const elClean = document.getElementById('stat-clean');
+            if (elClean) elClean.textContent = clean;
+            const elInspected = document.getElementById('stat-inspected');
+            if (elInspected) elInspected.textContent = inspected;
+            const elOut = document.getElementById('stat-out-of-service');
+            if (elOut) elOut.textContent = outOfService;
+
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                const status = btn.getAttribute('data-status');
+                if (status === 'all') {
+                    btn.innerHTML = `Tất cả (${total})`;
+                } else if (status === 'dirty') {
+                    btn.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px] mr-1"></i> Cần dọn (${dirty})`;
+                } else if (status === 'cleaning') {
+                    btn.innerHTML = `<i class="fa-solid fa-spray-can-sparkles text-[10px] mr-1"></i> Đang dọn (${cleaning})`;
+                } else if (status === 'clean') {
+                    btn.innerHTML = `<i class="fa-solid fa-check text-[10px] mr-1"></i> Đã xong (${clean})`;
+                } else if (status === 'inspected') {
+                    btn.innerHTML = `<i class="fa-solid fa-circle-check text-[10px] mr-1"></i> Nghiệm thu (${inspected})`;
+                }
+            });
+        }
+
+        // ==================== CẬP NHẬT REALTIME THẺ PHÒNG KHÔNG RELOAD TRANG ====================
+        function applyHousekeepingCardUpdate(roomData, stats = null) {
+            if (!roomData || !roomData.id) return;
+            const card = document.getElementById('room-card-' + roomData.id);
+            if (!card) return;
+
+            const hStatus = roomData.housekeeping_status || 'dirty';
+            const version = roomData.version || 1;
+            const assignedStaffId = roomData.assigned_staff_id || 0;
+            const assignedStaffName = roomData.assigned_staff_name || 'Chưa phân công';
+
+            // 1. Cập nhật data attributes
+            card.setAttribute('data-housekeeping-status', hStatus);
+            if (roomData.status) card.setAttribute('data-status', roomData.status);
+            card.setAttribute('data-version', version);
+            if (roomData.priority) card.setAttribute('data-priority', roomData.priority);
+            card.setAttribute('data-assigned-staff-id', assignedStaffId);
+
+            // 2. Cập nhật class Border & Background theo FSM
+            card.classList.remove(
+                'border-red-500/40', 'bg-red-950/10', 'hover:border-red-500',
+                'border-amber-500/40', 'bg-amber-950/10', 'hover:border-amber-500',
+                'border-emerald-500/40', 'bg-emerald-950/10', 'hover:border-emerald-500',
+                'border-teal-500/40', 'bg-teal-950/10', 'hover:border-teal-500',
+                'border-slate-700', 'bg-slate-900/30'
+            );
+
+            if (hStatus === 'dirty') {
+                card.classList.add('border-red-500/40', 'bg-red-950/10', 'hover:border-red-500');
+            } else if (hStatus === 'cleaning') {
+                card.classList.add('border-amber-500/40', 'bg-amber-950/10', 'hover:border-amber-500');
+            } else if (hStatus === 'clean') {
+                card.classList.add('border-emerald-500/40', 'bg-emerald-950/10', 'hover:border-emerald-500');
+            } else if (hStatus === 'inspected') {
+                card.classList.add('border-teal-500/40', 'bg-teal-950/10', 'hover:border-teal-500');
+            } else {
+                card.classList.add('border-slate-700', 'bg-slate-900/30');
+            }
+
+            // 3. Cập nhật Badge FSM
+            const badgeWrapper = document.getElementById('badge-wrapper-' + roomData.id);
+            if (badgeWrapper) {
+                if (hStatus === 'dirty') {
+                    badgeWrapper.innerHTML = `
+                        <span class="px-2.5 py-1 bg-red-500/20 text-red-300 border border-red-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-red-500"></span> Cần dọn
+                        </span>`;
+                } else if (hStatus === 'cleaning') {
+                    badgeWrapper.innerHTML = `
+                        <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 animate-pulse whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Đang dọn
+                        </span>`;
+                } else if (hStatus === 'clean') {
+                    badgeWrapper.innerHTML = `
+                        <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Đã sạch
+                        </span>`;
+                } else if (hStatus === 'inspected') {
+                    badgeWrapper.innerHTML = `
+                        <span class="px-2.5 py-1 bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-teal-400"></span> Nghiệm thu đạt
+                        </span>`;
+                } else {
+                    badgeWrapper.innerHTML = `
+                        <span class="px-2.5 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded-full text-[11px] font-semibold inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-slate-500"></span> Tạm dừng
+                        </span>`;
+                }
+            }
+
+            // 4. Cập nhật tên nhân viên phụ trách
+            const staffNameEl = document.getElementById('staff-name-' + roomData.id);
+            if (staffNameEl) {
+                staffNameEl.textContent = assignedStaffName;
+            }
+
+            // 5. Cập nhật các nút bấm thao tác (Action Buttons) theo vai trò
+            const actionsWrapper = document.getElementById('card-actions-' + roomData.id);
+            if (actionsWrapper) {
+                if (isHousekeeperUser) {
+                    // Quyền buồng phòng:
+                    if (hStatus === 'dirty') {
+                        actionsWrapper.innerHTML = `
+                            <button type="button" 
+                                    name="btnStartClean" 
+                                    onclick="updateRoomStatus(${roomData.id}, 'cleaning')" 
+                                    class="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
+                                    title="Bấm chọn phòng này để bắt đầu dọn">
+                                <i class="fa-solid fa-broom text-xs"></i>
+                                <span>Chọn phòng này để dọn</span>
+                            </button>`;
+                    } else if (hStatus === 'cleaning') {
+                        actionsWrapper.innerHTML = `
+                            <div class="grid grid-cols-1 gap-2">
+                                <button type="button" 
+                                        onclick="updateRoomStatus(${roomData.id}, 'clean')" 
+                                        class="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-check-double text-xs"></i>
+                                    <span>Xác nhận đã dọn xong (Clean)</span>
+                                </button>
+                            </div>`;
+                    } else if (hStatus === 'clean') {
+                        actionsWrapper.innerHTML = `
+                            <div class="grid grid-cols-1 gap-2">
+                                <button type="button" 
+                                        name="btnInspectPass" 
+                                        onclick="openInspectModal(${roomData.id})" 
+                                        class="py-2.5 px-3 bg-[#0D9488] hover:bg-teal-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-teal-700/25 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-sm"></i>
+                                    <span>Nghiệm thu đạt chuẩn</span>
+                                </button>
+                            </div>`;
+                    } else if (hStatus === 'inspected') {
+                        actionsWrapper.innerHTML = `
+                            <div class="py-2 px-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-300 text-xs font-bold flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-teal-400"></i>
+                                <span>Phòng sạch đã nghiệm thu đạt chuẩn</span>
+                            </div>`;
+                    } else {
+                        actionsWrapper.innerHTML = `<div class="py-2 text-center text-xs text-slate-500 italic">Đang tạm dừng</div>`;
+                    }
+                } else {
+                    // Quyền Lễ tân / Quản lý:
+                    if (hStatus === 'dirty') {
+                        actionsWrapper.innerHTML = `
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" 
+                                        name="btnStartClean" 
+                                        onclick="updateRoomStatus(${roomData.id}, 'cleaning')" 
+                                        class="py-2 px-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
+                                        title="Bắt đầu ca dọn phòng">
+                                    <i class="fa-solid fa-broom text-[11px]"></i>
+                                    <span>Bắt đầu dọn</span>
+                                </button>
+                                <button type="button" 
+                                        onclick="openAssignModal(${roomData.id})" 
+                                        class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-user-clock text-[11px]"></i>
+                                    <span>Phân công</span>
+                                </button>
+                            </div>`;
+                    } else if (hStatus === 'cleaning') {
+                        actionsWrapper.innerHTML = `
+                            <div class="grid grid-cols-1 gap-2">
+                                <button type="button" 
+                                        onclick="updateRoomStatus(${roomData.id}, 'clean')" 
+                                        class="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-check-double text-xs"></i>
+                                    <span>Báo dọn xong (Clean)</span>
+                                </button>
+                            </div>`;
+                    } else if (hStatus === 'clean') {
+                        actionsWrapper.innerHTML = `
+                            <div class="grid grid-cols-1 gap-2">
+                                <button type="button" 
+                                        name="btnInspectPass" 
+                                        onclick="openInspectModal(${roomData.id})" 
+                                        class="py-2.5 px-3 bg-[#0D9488] hover:bg-teal-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-teal-700/25 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-sm"></i>
+                                    <span>Nghiệm thu đạt chuẩn</span>
+                                </button>
+                            </div>`;
+                    } else if (hStatus === 'inspected') {
+                        actionsWrapper.innerHTML = `
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" 
+                                        onclick="openCheckInModal(${roomData.id})" 
+                                        class="py-2 px-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-key text-[11px]"></i>
+                                    <span>Check-in</span>
+                                </button>
+                                <button type="button" 
+                                        onclick="updateRoomStatus(${roomData.id}, 'dirty')" 
+                                        class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
+                                        title="Chuyển phòng về trạng thái cần dọn dẹp lại">
+                                    <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                                    <span>Dọn lại</span>
+                                </button>
+                            </div>`;
+                    } else {
+                        actionsWrapper.innerHTML = `<div class="py-2 text-center text-xs text-slate-500 italic">Đang tạm dừng</div>`;
+                    }
+                }
+            }
+
+            // 6. Hiệu ứng viền phát sáng nhẹ để người dùng nhận biết ngay
+            card.classList.add('ring-2', 'ring-teal-400');
+            setTimeout(() => card.classList.remove('ring-2', 'ring-teal-400'), 1500);
+
+            // 7. Đồng bộ hiển thị theo bộ lọc hiện tại và đếm lại số liệu KPI
+            applyCurrentFilterToCard(card);
+            updateHousekeepingFilterCounts(stats);
         }
 
         // ==================== PHÂN CÔNG BUỒNG PHÒNG (ASSIGN) ====================
@@ -1014,7 +1272,6 @@
                 errRoom.classList.remove('hidden');
                 roomSelect.classList.add('border-red-500');
 
-                // Hiệu ứng bôi đỏ viền thẻ phòng trên ma trận + rung nhẹ
                 document.querySelectorAll('.room-card').forEach(card => {
                     card.classList.add('shake-error');
                     setTimeout(() => card.classList.remove('shake-error'), 500);
@@ -1031,6 +1288,10 @@
                 return;
             }
 
+            // Lấy version hiện tại từ DOM để Optimistic Locking
+            const targetCard = document.getElementById('room-card-' + roomId);
+            const currentVersion = targetCard ? parseInt(targetCard.getAttribute('data-version') || '1') : null;
+
             try {
                 const res = await fetch("{{ route('smartroom.admin.housekeeping.assign') }}", {
                     method: 'POST',
@@ -1043,15 +1304,28 @@
                         room_id: parseInt(roomId),
                         assigned_staff_id: parseInt(staffId),
                         priority: priority,
-                        inspection_notes: notes
+                        inspection_notes: notes,
+                        version: currentVersion
                     })
                 });
 
                 const data = await res.json();
+
+                // Optimistic Locking: Xung đột phiên bản dữ liệu (HTTP 409)
+                if (res.status === 409 || data.code === 'ERR_OPTIMISTIC_LOCK') {
+                    showToast(data.message, 'error');
+                    if (data.room) applyHousekeepingCardUpdate(data.room);
+                    closeModal('modal-assign');
+                    return;
+                }
+
                 if (data.success) {
                     showToast(data.message, 'success');
                     closeModal('modal-assign');
-                    setTimeout(() => window.location.reload(), 800);
+                    // CẬP NHẬT TỨC THÌ GIAO DIỆN KHÔNG CẦN F5 HOẶC RELOAD LẠI TRANG
+                    if (data.room) {
+                        applyHousekeepingCardUpdate(data.room);
+                    }
                 } else {
                     if (data.code === 'ERR_18_03') {
                         errStaff.textContent = data.message;
@@ -1073,6 +1347,9 @@
 
         // ==================== CẬP NHẬT TIẾN ĐỘ DỌN PHÒNG (STATUS) ====================
         async function updateRoomStatus(roomId, newStatus) {
+            const targetCard = document.getElementById('room-card-' + roomId);
+            const currentVersion = targetCard ? parseInt(targetCard.getAttribute('data-version') || '1') : null;
+
             try {
                 const res = await fetch("{{ route('smartroom.admin.housekeeping.status') }}", {
                     method: 'POST',
@@ -1083,14 +1360,26 @@
                     },
                     body: JSON.stringify({
                         room_id: roomId,
-                        housekeeping_status: newStatus
+                        housekeeping_status: newStatus,
+                        version: currentVersion
                     })
                 });
 
                 const data = await res.json();
+
+                // Optimistic Locking: Xung đột phiên bản dữ liệu (HTTP 409)
+                if (res.status === 409 || data.code === 'ERR_OPTIMISTIC_LOCK') {
+                    showToast(data.message, 'error');
+                    if (data.room) applyHousekeepingCardUpdate(data.room);
+                    return;
+                }
+
                 if (data.success) {
                     showToast(data.message, 'success');
-                    setTimeout(() => window.location.reload(), 800);
+                    // CẬP NHẬT TỨC THÌ GIAO DIỆN KHÔNG CẦN RELOAD TRANG
+                    if (data.room) {
+                        applyHousekeepingCardUpdate(data.room);
+                    }
                 } else {
                     // ERR_18_04: Toast cảnh báo màu đỏ góc màn hình
                     showToast(data.message, 'error');
@@ -1117,6 +1406,9 @@
             const roomId = form.room_id.value;
             const notes = form.inspection_notes.value;
 
+            const targetCard = document.getElementById('room-card-' + roomId);
+            const currentVersion = targetCard ? parseInt(targetCard.getAttribute('data-version') || '1') : null;
+
             try {
                 const res = await fetch("{{ route('smartroom.admin.housekeeping.inspect') }}", {
                     method: 'POST',
@@ -1127,16 +1419,29 @@
                     },
                     body: JSON.stringify({
                         room_id: parseInt(roomId),
-                        inspection_notes: notes
+                        inspection_notes: notes,
+                        version: currentVersion
                     })
                 });
 
                 const data = await res.json();
+
+                // Optimistic Locking: Xung đột phiên bản dữ liệu (HTTP 409)
+                if (res.status === 409 || data.code === 'ERR_OPTIMISTIC_LOCK') {
+                    showToast(data.message, 'error');
+                    if (data.room) applyHousekeepingCardUpdate(data.room);
+                    closeModal('modal-inspect');
+                    return;
+                }
+
                 if (data.success) {
                     // ERR_18_06: Đã nghiệm thu buồng phòng thành công! Phòng đã sẵn sàng đón khách lưu trú mới.
                     showToast(data.message, 'success');
                     closeModal('modal-inspect');
-                    setTimeout(() => window.location.reload(), 900);
+                    // CẬP NHẬT TỨC THÌ GIAO DIỆN KHÔNG CẦN RELOAD TRANG
+                    if (data.room) {
+                        applyHousekeepingCardUpdate(data.room);
+                    }
                 } else {
                     // ERR_18_04: Chuyển đổi trạng thái FSM không hợp lệ
                     showToast(data.message, 'error');
@@ -1203,7 +1508,9 @@
                 if (data.success) {
                     showToast(data.message, 'success');
                     closeModal('modal-checkin');
-                    setTimeout(() => window.location.reload(), 900);
+                    if (data.room) {
+                        applyHousekeepingCardUpdate(data.room);
+                    }
                 } else {
                     if (data.code === 'ERR_18_02') {
                         closeModal('modal-checkin');
@@ -1252,7 +1559,7 @@
             // Validate ERR_18_05
             if (isNaN(qty) || qty < 0 || !Number.isInteger(qty)) {
                 input.classList.add('border-red-500');
-                errEl.textContent = "Số lượng vật tư tiêuahoa minibar phải là số nguyên dương lớn hơn hoặc bằng 0.";
+                errEl.textContent = "Số lượng vật tư tiêu hao minibar phải là số nguyên dương lớn hơn hoặc bằng 0.";
                 errEl.classList.remove('hidden');
             } else {
                 input.classList.remove('border-red-500');
@@ -1326,7 +1633,9 @@
                 if (data.success) {
                     showToast(data.message, 'success');
                     closeModal('modal-checkout');
-                    setTimeout(() => window.location.reload(), 1000);
+                    if (data.room) {
+                        applyHousekeepingCardUpdate(data.room);
+                    }
                 } else {
                     if (data.code === 'ERR_18_05') {
                         const errEl = document.getElementById('err-minibar-qty');
@@ -1341,6 +1650,63 @@
                 showToast("Lỗi kết nối máy chủ.", "error");
             }
         }
+
+        // ==================== REALTIME WEBSOCKET REVERB + SMART POLLING ====================
+        function handleIncomingHousekeepingUpdate(eventData) {
+            if (!eventData) return;
+            const room = eventData.roomData || eventData.room || eventData;
+            if (!room || !room.id) return;
+
+            const eventKey = `${room.id}_${room.housekeeping_status || room.status}_${room.version || ''}_${room.assigned_staff_id || ''}`;
+            if (eventKey === lastHandledEventKey) return;
+            lastHandledEventKey = eventKey;
+            lastHousekeepingSyncTimestamp = Math.floor(Date.now() / 1000);
+
+            applyHousekeepingCardUpdate(room, eventData.stats || null);
+        }
+
+        function initHousekeepingRealtime() {
+            // 1. WebSocket Reverb qua Laravel Echo
+            if (window.Echo) {
+                try {
+                    if (currentTenantId) {
+                        window.Echo.channel(`tenant.${currentTenantId}.room-matrix`)
+                            .listen('.room.status.updated', handleIncomingHousekeepingUpdate);
+                    }
+                    window.Echo.channel('room-matrix')
+                        .listen('.room.status.updated', handleIncomingHousekeepingUpdate);
+                } catch (err) {
+                    console.warn('Housekeeping Echo subscription notice:', err);
+                }
+            }
+
+            // 2. Smart Polling Fallback (chạy mỗi 2.5s) đảm bảo tự động cập nhật ngay cả khi Reverb chưa bật local
+            let isPolling = false;
+            setInterval(async () => {
+                if (document.hidden || isPolling) return;
+                isPolling = true;
+                try {
+                    const res = await fetch("{{ route('smartroom.admin.housekeeping.poll') }}?since=" + lastHousekeepingSyncTimestamp, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.has_update && data.room) {
+                            lastHousekeepingSyncTimestamp = data.room.updated_at || Math.floor(Date.now() / 1000);
+                            handleIncomingHousekeepingUpdate(data);
+                        }
+                    }
+                } catch (e) {
+                    // Im lặng bỏ qua lỗi mạng
+                } finally {
+                    isPolling = false;
+                }
+            }, 2500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initHousekeepingRealtime, 250);
+        });
     </script>
 </body>
 </html>
