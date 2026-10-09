@@ -73,15 +73,7 @@ class HousekeepingFrontdeskController extends Controller
             }
         }
 
-        // Phân quyền cho nhân viên buồng phòng:
-        // Chỉ tiếp nhận phân công (phòng được gán) hoặc nhìn thấy các phòng được đánh dấu cần dọn (dirty, cleaning, clean)
         $isHousekeeper = $user->isHousekeeper();
-        if ($isHousekeeper && !$request->has('view_all')) {
-            $query->where(function ($q) use ($user) {
-                $q->where('assigned_staff_id', $user->id)
-                  ->orWhereIn('housekeeping_status', ['dirty', 'cleaning', 'clean']);
-            });
-        }
 
         $rooms = $query->orderBy('floor')->orderBy('room_number')->get();
 
@@ -377,7 +369,7 @@ class HousekeepingFrontdeskController extends Controller
 
         $fromStatus = $room->housekeeping_status;
 
-        $room->update([
+        $updateData = [
             'status' => $room->status === 'cleaning' ? 'empty' : $room->status,
             'housekeeping_status' => 'inspected',
             'cleaning_status' => 'inspected',
@@ -385,7 +377,15 @@ class HousekeepingFrontdeskController extends Controller
             'inspected_at' => now(),
             'inspection_notes' => $notes ? Str::limit($notes, 255) : 'Đạt tiêu chuẩn bàn giao đón khách',
             'version' => $room->version + 1,
-        ]);
+        ];
+
+        // Nếu phòng seeder cũ chưa có nhân viên phụ trách mà buồng phòng nghiệm thu, tự động ghi nhận nhân viên đó
+        if (empty($room->assigned_staff_id) && $user->isHousekeeper()) {
+            $updateData['assigned_staff_id'] = $user->id;
+            $room->assigned_staff_id = $user->id;
+        }
+
+        $room->update($updateData);
 
         HousekeepingLog::create([
             'tenant_id' => $tenantId,
