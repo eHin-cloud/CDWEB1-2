@@ -94,7 +94,8 @@ class CrudUserController extends Controller
 
         return redirect("login")
             ->withInput($request->only('login'))
-            ->with('error', 'Tài khoản hoặc mật khẩu không chính xác! Vui lòng kiểm tra lại tên đăng nhập, số điện thoại hoặc email.');
+            ->with('error_code', 'ERR_27_01')
+            ->with('error', 'Thông tin phòng hoặc số điện thoại không chính xác trong hệ thống.');
     }
 
     /**

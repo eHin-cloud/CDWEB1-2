@@ -66,58 +66,274 @@
                 </div>
             @endif
 
-            @if(!$room)
-                <section class="panel rounded-2xl p-8 text-center">
-                    <i class="fa-solid fa-user-lock text-4xl text-amber-300 mb-4"></i>
-                    <h1 class="text-xl font-black">Tài khoản chưa được gán phòng</h1>
-                    <p class="text-sm text-slate-400 mt-2">Vui lòng liên hệ ban quản lý để kích hoạt hồ sơ cư dân.</p>
+            @if($contractLocked)
+                <!-- MÀN HÌNH KHÓA TẠM THỜI: ERR_27_02 (Spec Section 4) -->
+                <section class="panel rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto border-rose-500/30 bg-rose-950/20 shadow-2xl relative overflow-hidden" id="contract-locked-screen">
+                    <div class="w-20 h-20 rounded-3xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 font-mono text-xs font-bold uppercase tracking-wider mb-3">
+                        <i class="fa-solid fa-triangle-exclamation"></i> ERR_27_02
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black text-white">Cổng Cư Dân Tạm Thời Khóa</h1>
+                    <p class="text-sm sm:text-base text-rose-200/90 font-medium mt-3 max-w-lg mx-auto leading-relaxed" id="contract-locked-message">
+                        {{ $errorMessage ?? 'Hợp đồng thuê của phòng này đã kết thúc hoặc chưa được kích hoạt.' }}
+                    </p>
+                    <div class="mt-8 p-6 rounded-2xl bg-slate-900/80 border border-slate-800 text-left max-w-md mx-auto space-y-3">
+                        <div class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Hotline Ban Quản Lý / Chủ Trọ</div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-slate-200">{{ $landlordName ?? 'Ban Quản Lý SmartRoom' }}</span>
+                            <a href="tel:{{ $landlordPhone ?? '0987654321' }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition-all">
+                                <i class="fa-solid fa-phone"></i> {{ $landlordPhone ?? '0987654321' }}
+                            </a>
+                        </div>
+                        <div class="text-[11px] text-slate-400 leading-relaxed">
+                            Vui lòng liên hệ ban quản lý theo số hotline trên để ký hoặc kích hoạt hợp đồng thuê phòng của bạn.
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-center gap-3">
+                        <a href="{{ route('signout') }}" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all">
+                            <i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Đăng xuất
+                        </a>
+                    </div>
                 </section>
             @else
-                <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
-                            <span>Cư dân</span>
-                            <i class="fa-solid fa-user text-slate-400"></i>
+                <!-- STATUS BANNER: room_status (Spec Section 6 STT 1) -->
+                <section data-field="room_status" class="panel rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-indigo-950/60 via-slate-900/80 to-slate-900 border border-indigo-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                            <i class="fa-solid fa-door-open"></i>
                         </div>
-                        <div class="mt-2 text-xl font-black truncate" title="{{ $resident->name }}">{{ $resident->name }}</div>
-                        <div class="mt-1 text-xs text-slate-400">{{ $resident->phone }}</div>
-                    </div>
-                    <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
-                            <span>Phòng</span>
-                            <i class="fa-solid fa-door-open text-indigo-400"></i>
-                        </div>
-                        <div class="mt-2 text-xl font-black text-indigo-300">P. {{ $room->room_number }}</div>
-                        <div class="mt-1 text-xs text-slate-400 truncate" title="{{ $room->building->name ?? 'Chưa có tòa nhà' }}">{{ $room->building->name ?? 'Chưa có tòa nhà' }}</div>
-                    </div>
-                    <div class="panel rounded-2xl p-5 border-l-4 border-l-emerald-500">
-                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
-                            <span>Chủ trọ / QL</span>
-                            <i class="fa-solid fa-user-tie text-emerald-400"></i>
-                        </div>
-                        <div class="mt-2 text-xl font-black text-emerald-300 truncate" title="{{ $landlordName }}">{{ $landlordName }}</div>
-                        <div class="mt-1 text-xs text-slate-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-phone text-[10px] text-emerald-400"></i>
-                            <a href="tel:{{ $landlordPhone }}" class="hover:underline text-slate-200 font-semibold">{{ $landlordPhone }}</a>
+                        <div>
+                            <div class="text-xs uppercase font-extrabold text-indigo-400 tracking-wider flex items-center gap-2">
+                                <span>Thông tin phòng thuê</span>
+                                <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-bold border border-emerald-500/20">Hợp đồng hiệu lực</span>
+                            </div>
+                            <h1 class="text-xl sm:text-2xl font-black text-white mt-1" id="resident-room-banner">
+                                Phòng {{ $room->room_number }} - {{ $room->building->name ?? 'Tòa nhà Renty House' }}
+                            </h1>
+                            <p class="text-xs text-slate-400 mt-0.5">
+                                Cư dân: <strong class="text-slate-200">{{ $resident->name }}</strong> ({{ $resident->phone }}) &bull; Mã HĐ: <strong class="text-indigo-300">{{ $contract?->contract_code ?? 'HD-' . $room->room_number }}</strong>
+                            </p>
                         </div>
                     </div>
-                    <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
-                            <span>Nợ cần thanh toán</span>
-                            <i class="fa-solid fa-receipt text-amber-400"></i>
-                        </div>
-                        <div class="mt-2 text-xl font-black text-amber-300">{{ number_format($unpaidTotal) }} VND</div>
-                        <div class="mt-1 text-xs text-slate-400">{{ $bills->where('status', '!=', 'paid')->count() }} hóa đơn</div>
-                    </div>
-                    <div class="panel rounded-2xl p-5">
-                        <div class="text-xs font-bold uppercase text-slate-500 flex items-center justify-between">
-                            <span>Sự cố đang mở</span>
-                            <i class="fa-solid fa-screwdriver-wrench text-cyan-400"></i>
-                        </div>
-                        <div class="mt-2 text-xl font-black text-cyan-300">{{ ($maintenanceTickets ?? $tickets->where('category', '!=', 'housekeeping'))->where('status', '!=', 'resolved')->count() }}</div>
-                        <div class="mt-1 text-xs text-slate-400">Bảo trì / sửa chữa</div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a href="{{ route('smartroom.resident.contract.pdf') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-bold transition-all shadow-md">
+                            <i class="fa-solid fa-file-pdf text-rose-400"></i> Tải hợp đồng PDF
+                        </a>
+                        <a href="{{ route('smartroom.resident.invoices') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/30">
+                            <i class="fa-solid fa-receipt"></i> Xem chi tiết hóa đơn
+                        </a>
                     </div>
                 </section>
+
+                <!-- BILL CARD & QUICK ACTIONS (Spec Section 6 STT 2 & 3) -->
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Bill Card: bill_card -->
+                    <div data-field="bill_card" class="panel rounded-2xl p-6 bg-slate-900/90 border border-slate-800 flex flex-col justify-between relative overflow-hidden shadow-xl lg:col-span-1">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-extrabold uppercase text-slate-400 tracking-wider">Hóa đơn kỳ này</span>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider {{ ($latestBill && $latestBill->status === 'paid') ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20' }}">
+                                    {{ $latestBill ? ($latestBill->status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán') : 'Chưa thanh toán' }}
+                                </span>
+                            </div>
+                            <div class="text-3xl font-black text-white tracking-tight" id="bill-card-amount">
+                                {{ number_format($latestBill?->total_amount ?? $unpaidTotal ?? 4250000) }} đ
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">
+                                Kỳ thanh toán: <strong class="text-slate-200">{{ $latestBill?->billing_month ?? date('Y-m') }}</strong> &bull; Hạn đóng: <span class="text-amber-400 font-bold">Ngày 05 hàng tháng</span>
+                            </p>
+
+                            <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs">
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Tiền phòng:</span>
+                                    <span class="font-bold text-slate-200">{{ number_format($latestBill?->room_amount ?? $room->price ?? 3500000) }} đ</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Tiền điện ({{ $latestBill?->electricity_usage ?? 0 }} kWh):</span>
+                                    <span class="font-bold text-slate-200">{{ number_format($latestBill?->electricity_amount ?? 0) }} đ</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Tiền nước ({{ $latestBill?->water_usage ?? 0 }} m³):</span>
+                                    <span class="font-bold text-slate-200">{{ number_format($latestBill?->water_amount ?? 0) }} đ</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center gap-3">
+                            @if($latestBill)
+                                <button type="button" onclick="openVietQrModal({{ $latestBill->id }})" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all">
+                                    <i class="fa-solid fa-qrcode text-sm"></i> Quét mã VietQR
+                                </button>
+                            @else
+                                <a href="{{ route('smartroom.resident.invoices') }}" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-receipt text-sm"></i> Xem hóa đơn
+                                </a>
+                            @endif
+                            <a href="{{ route('smartroom.resident.invoices') }}" class="py-3 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition-all" title="Lịch sử hóa đơn">
+                                <i class="fa-solid fa-list-check"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions: actions_grid (Spec Section 6 STT 3) -->
+                    <div data-field="actions_grid" class="panel rounded-2xl p-6 bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-xl lg:col-span-2">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-sm font-extrabold uppercase text-slate-400 tracking-wider">Phím tắt nhanh</h2>
+                                <span class="text-xs text-indigo-400 font-semibold">Tiện ích cư dân 24/7</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <button type="button" onclick="switchResidentTab('tickets')" class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/50 transition-all flex flex-col items-center text-center group">
+                                    <div class="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-200">Gửi báo hỏng</span>
+                                    <span class="text-[10px] text-slate-500 mt-0.5">Sửa điện, nước</span>
+                                </button>
+
+                                <button type="button" onclick="switchResidentTab('contract')" class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/50 transition-all flex flex-col items-center text-center group">
+                                    <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-file-contract"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-200">Xem hợp đồng</span>
+                                    <span class="text-[10px] text-slate-500 mt-0.5">Thời hạn & cọc</span>
+                                </button>
+
+                                <a href="{{ route('smartroom.resident.contract.pdf') }}" class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-rose-500/50 hover:bg-slate-800/50 transition-all flex flex-col items-center text-center group">
+                                    <div class="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-200">Tải hợp đồng PDF</span>
+                                    <span class="text-[10px] text-slate-500 mt-0.5">Ký số điện tử</span>
+                                </a>
+
+                                <a href="tel:{{ $landlordPhone }}" class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/50 transition-all flex flex-col items-center text-center group">
+                                    <div class="w-11 h-11 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-phone-volume"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-200">Nhắn chủ trọ</span>
+                                    <span class="text-[10px] text-slate-500 mt-0.5">{{ $landlordPhone }}</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Thông báo từ chủ trọ & Quy định nhà trọ (Hình 27.1 & 27.2) -->
+                        <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/60">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-bullhorn text-amber-400"></i>
+                                <span class="text-slate-300">Nội quy: Khóa cổng tự động sau 23:00 &bull; Tiết kiệm điện nước &bull; Giữ gìn vệ sinh chung.</span>
+                            </div>
+                            <span class="text-[11px] text-indigo-400 font-bold shrink-0">BQL SmartRoom</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- THÔNG SỐ ĐIỆN NƯỚC TIÊU THỤ TRONG THÁNG (Hình 27.2) -->
+                @if($latestBill)
+                    <section class="panel rounded-2xl p-6 bg-slate-900/90 border border-slate-800 shadow-xl">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                            <div>
+                                <h2 class="text-sm font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-simple text-indigo-400"></i> Tóm tắt thông số điện nước tiêu thụ trong tháng
+                                </h2>
+                                <p class="text-xs text-slate-500 mt-0.5">Kỳ ghi nhận: {{ $latestBill->billing_month }} &bull; Cập nhật từ hệ thống công tơ</p>
+                            </div>
+                            <span class="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                                <i class="fa-solid fa-calendar-check mr-1"></i> Ngày đóng tiền: Trước ngày 05
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Điện -->
+                            <div class="p-4 rounded-xl bg-slate-950/60 border border-amber-500/20">
+                                <div class="flex items-center justify-between text-xs text-amber-400 font-bold mb-2">
+                                    <span>ĐIỆN NĂNG TIÊU THỤ</span>
+                                    <i class="fa-solid fa-bolt"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">{{ $latestBill->electricity_usage }} <span class="text-xs text-slate-400 font-normal">kWh</span></div>
+                                <div class="mt-2 text-xs text-slate-400 space-y-1">
+                                    <div class="flex justify-between">
+                                        <span>Chỉ số:</span>
+                                        <span class="text-slate-200 font-mono">{{ $latestBill->old_electricity ?? 0 }} &rarr; {{ $latestBill->new_electricity ?? $latestBill->electricity_usage }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Đơn giá:</span>
+                                        <span class="text-slate-200">{{ number_format($latestBill->electricity_rate ?? 3500) }} đ/kWh</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold text-amber-300 pt-1 border-t border-slate-800">
+                                        <span>Thành tiền:</span>
+                                        <span>{{ number_format($latestBill->electricity_amount) }} đ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nước -->
+                            <div class="p-4 rounded-xl bg-slate-950/60 border border-sky-500/20">
+                                <div class="flex items-center justify-between text-xs text-sky-400 font-bold mb-2">
+                                    <span>NƯỚC SINH HOẠT</span>
+                                    <i class="fa-solid fa-faucet-drip"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">{{ $latestBill->water_usage }} <span class="text-xs text-slate-400 font-normal">m³</span></div>
+                                <div class="mt-2 text-xs text-slate-400 space-y-1">
+                                    <div class="flex justify-between">
+                                        <span>Chỉ số:</span>
+                                        <span class="text-slate-200 font-mono">{{ $latestBill->old_water ?? 0 }} &rarr; {{ $latestBill->new_water ?? $latestBill->water_usage }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Đơn giá:</span>
+                                        <span class="text-slate-200">{{ number_format($latestBill->water_rate ?? 25000) }} đ/m³</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold text-sky-300 pt-1 border-t border-slate-800">
+                                        <span>Thành tiền:</span>
+                                        <span>{{ number_format($latestBill->water_amount) }} đ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tiền phòng & Dịch vụ -->
+                            <div class="p-4 rounded-xl bg-slate-950/60 border border-indigo-500/20">
+                                <div class="flex items-center justify-between text-xs text-indigo-400 font-bold mb-2">
+                                    <span>TIỀN PHÒNG & DỊCH VỤ</span>
+                                    <i class="fa-solid fa-house"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">{{ number_format(($latestBill->room_amount ?? 0) + ($latestBill->service_amount ?? 0)) }} <span class="text-xs text-slate-400 font-normal">đ</span></div>
+                                <div class="mt-2 text-xs text-slate-400 space-y-1">
+                                    <div class="flex justify-between">
+                                        <span>Giá thuê:</span>
+                                        <span class="text-slate-200">{{ number_format($latestBill->room_amount ?? 0) }} đ</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Phí dịch vụ:</span>
+                                        <span class="text-slate-200">{{ number_format($latestBill->service_amount ?? 0) }} đ</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold text-indigo-300 pt-1 border-t border-slate-800">
+                                        <span>Tổng cố định:</span>
+                                        <span>{{ number_format(($latestBill->room_amount ?? 0) + ($latestBill->service_amount ?? 0)) }} đ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tổng hóa đơn -->
+                            <div class="p-4 rounded-xl bg-slate-950/60 border border-emerald-500/20 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between text-xs text-emerald-400 font-bold mb-2">
+                                        <span>TỔNG CỘNG THÁNG NÀY</span>
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </div>
+                                    <div class="text-2xl font-black text-emerald-300">{{ number_format($latestBill->total_amount) }} đ</div>
+                                    <p class="text-[11px] text-slate-400 mt-2">
+                                        Đã bao gồm tiền phòng, điện, nước và toàn bộ phí dịch vụ.
+                                    </p>
+                                </div>
+                                <button type="button" onclick="openVietQrModal({{ $latestBill->id }})" class="mt-3 w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-qrcode"></i> Quét VietQR Napas 247
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                @endif
 
                 <section class="panel rounded-2xl p-6">
                     <div class="flex flex-wrap items-center gap-2">
@@ -167,9 +383,9 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-4 text-right">
-                                            <a href="{{ route('smartroom.resident.bills.qr', $bill->id) }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+                                            <button type="button" onclick="openVietQrModal({{ $bill->id }})" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
                                                 <i class="fa-solid fa-qrcode"></i> QR
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                 @empty
@@ -259,6 +475,10 @@
                         <div class="mt-4 flex flex-wrap gap-3">
                             <a href="{{ route('smartroom.contract.sign_view', $contract->id) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all">
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem / ký hợp đồng
+                            </a>
+
+                            <a href="{{ route('smartroom.resident.contract.pdf') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold transition-all shadow-sm">
+                                <i class="fa-solid fa-file-pdf"></i> Tải hợp đồng PDF
                             </a>
 
                             @if(!$contract->renewal_status || $contract->renewal_status === 'declined' || $contract->renewal_status === 'approved')
@@ -641,10 +861,89 @@
                 </div>
             </div>
             @endif
+
+            <!-- VIETQR MODAL: ERR_27_03 (Spec Section 4 & 6) -->
+            <div id="vietqr-modal" class="fixed inset-0 z-50 bg-[#04060b]/85 backdrop-blur-md hidden items-center justify-center transition-opacity duration-300 p-4">
+                <div class="w-full max-w-sm bg-[#0a0f1d] border border-slate-800 p-6 rounded-3xl shadow-2xl relative animate-fade-in">
+                    <button type="button" onclick="closeVietQrModal()" class="absolute top-5 right-5 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <div class="text-center mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            ERR_27_03 &bull; Napas 247
+                        </span>
+                        <h3 class="text-base font-extrabold text-white mt-1.5">Mã VietQR Thanh Toán Tiền Nhà</h3>
+                        <p id="qr-modal-desc" class="text-xs text-slate-400 mt-0.5">Hiển thị mã VietQR thanh toán tiền nhà chuẩn Napas 247.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-2xl shadow-inner flex items-center justify-center">
+                        <img id="qr-modal-image" src="" alt="VietQR Napas 247" class="w-60 h-60 object-contain mx-auto" onerror="this.src='https://img.vietqr.io/image/VCB-1051572297-compact.png';">
+                    </div>
+
+                    <div class="mt-4 p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Ngân hàng:</span>
+                            <strong id="qr-modal-bank" class="text-emerald-400">Vietcombank</strong>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Số tài khoản:</span>
+                            <strong id="qr-modal-account" class="font-mono text-slate-200">1051572297</strong>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Số tiền:</span>
+                            <strong id="qr-modal-amount" class="text-amber-300 font-bold text-sm">0 đ</strong>
+                        </div>
+                        <div class="flex justify-between items-start gap-2 pt-1 border-t border-slate-900">
+                            <span class="text-slate-400 shrink-0">Nội dung CK:</span>
+                            <span id="qr-modal-content" class="text-slate-200 font-mono text-[11px] text-right break-all">Thanh toan tien phong</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex gap-3">
+                        <a id="qr-modal-download-btn" href="#" download="VietQR_ThanhToan.png" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold text-center transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> Tải ảnh QR
+                        </a>
+                        <button type="button" onclick="closeVietQrModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
     <script>
+        function openVietQrModal(billId) {
+            fetch(`/smartroom/resident/bills/${billId}/qr-data`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('qr-modal-image').src = data.qr_url;
+                        document.getElementById('qr-modal-bank').textContent = data.bank_name;
+                        document.getElementById('qr-modal-account').textContent = data.bank_account_no;
+                        document.getElementById('qr-modal-amount').textContent = new Intl.NumberFormat('vi-VN').format(data.amount) + ' đ';
+                        document.getElementById('qr-modal-content').textContent = data.transfer_content;
+                        document.getElementById('qr-modal-download-btn').href = data.qr_url;
+
+                        const modal = document.getElementById('vietqr-modal');
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    } else {
+                        alert(data.message || 'Không thể lấy dữ liệu VietQR.');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Lỗi kết nối khi lấy dữ liệu VietQR.');
+                });
+        }
+
+        function closeVietQrModal() {
+            const modal = document.getElementById('vietqr-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
         function toggleRenewalModal(show) {
             const modal = document.getElementById('renewal-modal');
             if (!modal) return;
