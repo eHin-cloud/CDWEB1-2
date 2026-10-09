@@ -104,7 +104,9 @@
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                        <h2 class="text-base font-bold text-white tracking-tight truncate">SƠ ĐỒ BUỒNG PHÒNG &amp; LỄ TÂN</h2>
+                        <h2 class="text-base font-bold text-white tracking-tight truncate">
+                            {{ $isHousekeeper ? 'SƠ ĐỒ BUỒNG PHÒNG' : 'SƠ ĐỒ BUỒNG PHÒNG & LỄ TÂN' }}
+                        </h2>
                         <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30 shrink-0 hidden sm:inline-block">
                             FEAT_18_HOUSEKEEPING_FRONTDESK
                         </span>
@@ -117,11 +119,13 @@
 
             <!-- Top Actions -->
             <div class="flex items-center gap-3 shrink-0">
+                @unless($isHousekeeper)
                 <button type="button" onclick="openAssignModal(null)" class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/25 transition">
                     <i class="fa-solid fa-user-plus text-xs"></i>
                     <span class="hidden sm:inline">Phân Công Dọn Buồng</span>
                     <span class="sm:hidden">Phân công</span>
                 </button>
+                @endunless
                 @include('admin.partials.accent-picker')
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
@@ -224,6 +228,11 @@
                     <button type="button" name="btnStatusFilter" data-status="inspected" onclick="filterByStatus('inspected')" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border {{ $statusFilter === 'inspected' ? 'bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30' : 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20' }}">
                         <i class="fa-solid fa-circle-check text-[10px] mr-1"></i> Nghiệm thu ({{ $stats['inspected'] }})
                     </button>
+                    @if($isHousekeeper)
+                    <button type="button" name="btnStatusFilter" data-status="my_assigned" onclick="filterMyAssigned()" class="status-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-indigo-500/10 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/20">
+                        <i class="fa-solid fa-user-check text-[10px] mr-1"></i> Phân công cho tôi
+                    </button>
+                    @endif
                 </div>
 
                 <!-- Tìm kiếm mã phòng & lọc tòa nhà -->
@@ -265,6 +274,7 @@
                          data-status="{{ $room->status }}"
                          data-priority="{{ $priority }}"
                          data-building-id="{{ $room->building_id }}"
+                         data-assigned-staff-id="{{ $room->assigned_staff_id }}"
                          class="room-card relative bg-[#0f1423] rounded-2xl border transition-all duration-200 p-4 shadow-md flex flex-col justify-between
                             {{ $hStatus === 'dirty' ? 'border-red-500/40 bg-red-950/10 hover:border-red-500' : '' }}
                             {{ $hStatus === 'cleaning' ? 'border-amber-500/40 bg-amber-950/10 hover:border-amber-500' : '' }}
@@ -370,33 +380,44 @@
                         <!-- Khu vực các nút bấm thao tác (Action Buttons FSM) -->
                         <div class="mt-4 pt-3 border-t border-slate-800/80 space-y-2" id="card-actions-{{ $room->id }}">
                             
-                            <!-- 1. Cần dọn (Dirty): Bắt đầu dọn (btnStartClean) hoặc Phân công -->
+                            <!-- 1. Cần dọn (Dirty): Bắt đầu dọn (btnStartClean) -->
                             @if($hStatus === 'dirty')
-                                <div class="grid grid-cols-2 gap-2">
+                                @if($isHousekeeper)
                                     <button type="button" 
                                             name="btnStartClean" 
                                             onclick="updateRoomStatus({{ $room->id }}, 'cleaning')" 
-                                            class="py-2 px-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
-                                            title="Bắt đầu ca dọn phòng">
-                                        <i class="fa-solid fa-broom text-[11px]"></i>
-                                        <span>Bắt đầu dọn</span>
+                                            class="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
+                                            title="Bấm chọn phòng này để bắt đầu dọn">
+                                        <i class="fa-solid fa-broom text-xs"></i>
+                                        <span>Chọn phòng này để dọn</span>
                                     </button>
-                                    <button type="button" 
-                                            onclick="openAssignModal({{ $room->id }})" 
-                                            class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
-                                        <i class="fa-solid fa-user-clock text-[11px]"></i>
-                                        <span>Phân công</span>
-                                    </button>
-                                </div>
+                                @else
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" 
+                                                name="btnStartClean" 
+                                                onclick="updateRoomStatus({{ $room->id }}, 'cleaning')" 
+                                                class="py-2 px-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-600/20 transition flex items-center justify-center gap-1.5"
+                                                title="Bắt đầu ca dọn phòng">
+                                            <i class="fa-solid fa-broom text-[11px]"></i>
+                                            <span>Bắt đầu dọn</span>
+                                        </button>
+                                        <button type="button" 
+                                                onclick="openAssignModal({{ $room->id }})" 
+                                                class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
+                                            <i class="fa-solid fa-user-clock text-[11px]"></i>
+                                            <span>Phân công</span>
+                                        </button>
+                                    </div>
+                                @endif
 
                             <!-- 2. Đang dọn (Cleaning): Báo dọn xong (Clean) -->
                             @elseif($hStatus === 'cleaning')
-                                <div class="grid grid-cols-2 gap-2">
+                                <div class="grid grid-cols-1 gap-2">
                                     <button type="button" 
                                             onclick="updateRoomStatus({{ $room->id }}, 'clean')" 
-                                            class="col-span-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
-                                        <i class="fa-solid fa-check-double text-[11px]"></i>
-                                        <span>Báo dọn xong (Clean)</span>
+                                            class="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-check-double text-xs"></i>
+                                        <span>Xác nhận đã dọn xong (Clean)</span>
                                     </button>
                                 </div>
 
@@ -414,30 +435,39 @@
 
                             <!-- 4. Đã nghiệm thu (Inspected): Sẵn sàng Check-in đón khách -->
                             @elseif($hStatus === 'inspected')
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button type="button" 
-                                            onclick="openCheckInModal({{ $room->id }})" 
-                                            class="py-2 px-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1">
-                                        <i class="fa-solid fa-key text-[11px]"></i>
-                                        <span>Check-in</span>
-                                    </button>
-                                    <button type="button" 
-                                            onclick="openAssignModal({{ $room->id }})" 
-                                            class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
-                                        <i class="fa-solid fa-rotate text-[11px]"></i>
-                                        <span>Dọn lại</span>
-                                    </button>
-                                </div>
+                                @if($isHousekeeper)
+                                    <div class="py-2 px-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-300 text-xs font-bold flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-circle-check text-teal-400"></i>
+                                        <span>Phòng sạch đã nghiệm thu đạt chuẩn</span>
+                                    </div>
+                                @else
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" 
+                                                onclick="openCheckInModal({{ $room->id }})" 
+                                                class="py-2 px-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1">
+                                            <i class="fa-solid fa-key text-[11px]"></i>
+                                            <span>Check-in</span>
+                                        </button>
+                                        <button type="button" 
+                                                onclick="openAssignModal({{ $room->id }})" 
+                                                class="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center gap-1">
+                                            <i class="fa-solid fa-rotate text-[11px]"></i>
+                                            <span>Dọn lại</span>
+                                        </button>
+                                    </div>
+                                @endif
                             @else
+                                @unless($isHousekeeper)
                                 <button type="button" 
                                         onclick="updateRoomStatus({{ $room->id }}, 'clean')" 
                                         class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
                                     Mở lại dịch vụ
                                 </button>
+                                @endunless
                             @endif
 
-                            <!-- Check-out & Đối soát minibar nếu phòng đang có khách ở -->
-                            @if($room->status === 'occupied')
+                            <!-- Check-out & Đối soát minibar (chỉ Lễ tân/Quản lý) -->
+                            @if($room->status === 'occupied' && !$isHousekeeper)
                             <button type="button" 
                                     onclick="openCheckOutModal({{ $room->id }})" 
                                     class="w-full py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5 mt-1">
@@ -888,6 +918,26 @@
             document.querySelectorAll('.room-card').forEach(card => {
                 const roomStatus = card.getAttribute('data-housekeeping-status');
                 if (status === 'all' || roomStatus === status) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        const currentAuthUserId = {{ Auth::id() ?? 0 }};
+
+        function filterMyAssigned() {
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'bg-red-600', 'bg-amber-600', 'bg-emerald-600', 'bg-teal-600', 'text-white');
+                if (btn.getAttribute('data-status') === 'my_assigned') {
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                }
+            });
+
+            document.querySelectorAll('.room-card').forEach(card => {
+                const assignedId = parseInt(card.getAttribute('data-assigned-staff-id') || '0');
+                if (assignedId === currentAuthUserId) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';
