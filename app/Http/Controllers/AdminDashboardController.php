@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Bill;
 use App\Models\Building;
 use App\Models\Contract;
@@ -1805,7 +1806,19 @@ class AdminDashboardController extends Controller
 
         $validated = $request->validate([
             'status' => 'required|in:pending,processing,resolved',
-            'assigned_to' => 'nullable|string|max:255',
+            'assigned_to' => [
+                Rule::requiredIf(fn () => in_array($request->status, ['processing', 'resolved'])),
+                'nullable',
+                'string',
+                'min:2',
+                'max:100',
+            ],
+        ], [
+            'status.required' => 'Vui lòng chọn trạng thái sự cố.',
+            'status.in' => 'Trạng thái sự cố không hợp lệ.',
+            'assigned_to.required' => 'Vui lòng nhập tên kỹ thuật viên / thợ phụ trách khi sự cố đang xử lý hoặc đã giải quyết xong.',
+            'assigned_to.min' => 'Tên kỹ thuật viên / thợ phụ trách phải có ít nhất 2 ký tự.',
+            'assigned_to.max' => 'Tên kỹ thuật viên / thợ phụ trách không được vượt quá 100 ký tự.',
         ]);
 
         $oldStatus = $ticket->status;
