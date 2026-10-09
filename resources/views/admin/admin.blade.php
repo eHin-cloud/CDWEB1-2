@@ -4390,39 +4390,66 @@
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
                     || '{{ csrf_token() }}';
 
-                const response = await fetch(`/smartroom/admin/rooms/${currentActiveRoomId}/quick-status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
+                let response;
+                try {
+                    response = await fetch(`/smartroom/admin/rooms/${currentActiveRoomId}/quick-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                } catch (networkErr) {
+                    console.error('Lỗi kết nối mạng: ', networkErr);
+                    alert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại tiến trình server hoặc nhấn F5!');
+                    return;
+                }
 
-                const data = await response.json();
+                if (response.status === 419) {
+                    alert('Phiên làm việc đã hết hạn. Vui lòng nhấn F5 tải lại trang để tiếp tục!');
+                    return;
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseErr) {
+                    alert('Máy chủ phản hồi không đúng định dạng hoặc đang khởi động lại. Vui lòng nhấn F5 tải lại trang!');
+                    return;
+                }
 
                 if (!response.ok || !data.success) {
                     alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
                     return;
                 }
 
-                // Cập nhật trực tiếp trên thẻ phòng trên Ma Trận
-                applyRoomCardUpdate(data.room);
+                // Cập nhật giao diện an toàn sau khi máy chủ đã xác nhận lưu thành công
+                try {
+                    if (typeof applyRoomCardUpdate === 'function') {
+                        applyRoomCardUpdate(data.room);
+                    }
 
-                // Cập nhật lại trạng thái hiển thị trong Drawer
-                currentActiveRoomStatus = newStatus;
-                const badge = document.getElementById('modal-room-status-badge');
-                if (badge) {
-                    badge.textContent = data.room.status_label;
-                    badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + data.room.badge_class;
+                    // Cập nhật lại trạng thái hiển thị trong Drawer
+                    currentActiveRoomStatus = newStatus;
+                    const badge = document.getElementById('modal-room-status-badge');
+                    if (badge) {
+                        badge.textContent = data.room.status_label;
+                        badge.className = "text-xs px-2.5 py-1 rounded-md font-bold uppercase border " + (data.room.badge_class || '');
+                    }
+                    if (typeof updateQuickStatusButtons === 'function') {
+                        updateQuickStatusButtons(newStatus);
+                    }
+
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast(`Đã cập nhật P.${data.room.room_number}: ${data.room.status_label}`, 'Dữ liệu đã được lưu thành công!', 'room');
+                    }
+                } catch (uiErr) {
+                    console.warn('Lỗi cập nhật UI cục bộ sau khi lưu thành công: ', uiErr);
                 }
-                updateQuickStatusButtons(newStatus);
-
-                showRealtimeToast(`Đã cập nhật P.${data.room.room_number}: ${data.room.status_label}`, 'success');
             } catch (err) {
                 console.error('Lỗi setQuickRoomStatus: ', err);
-                alert('Không thể kết nối đến máy chủ.');
             } finally {
                 if (loadingSpinner) loadingSpinner.classList.add('hidden');
             }
@@ -7965,18 +7992,6 @@
                 'room'
             );
         }
-
-        function initRoomMatrixRealtime() {
-            // 1. Kết nối chính thức qua Laravel Echo + Reverb (WebSocket)
-            if (window.Echo) {
-                try {
-                    // Lắng nghe trên kênh tenant cụ thể
-                    window.Echo.channel(`tenant.${tenantId}.room-matrix`)
-                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
-
-                    // Lắng nghe trên kênh toàn cục để các tab Admin luôn nhận được tức thì
-                    window.Echo.channel('room-matrix')
-                        .listen('.room.status.updated', (data) => handleIncomingRoomUpdate(data));
 
         let adminMaxTicketId = {{ (int) ($tickets->max('id') ?? 0) }};
 
