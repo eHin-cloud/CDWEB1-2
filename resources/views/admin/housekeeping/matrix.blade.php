@@ -763,25 +763,31 @@
             <form id="form-checkout" onsubmit="handleCheckOutSubmit(event)" class="space-y-4">
                 <input type="hidden" id="checkout-room-id" name="room_id">
 
-                <!-- Bảng Đối Soát Vật Tư Tiêu Hao Minibar -->
+                <!-- Bảng Đối Soát Vật Tư Tiêu Hao & Dịch Vụ Phát Sinh (Mua hộ, đồ ăn ngoài...) -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-wine-bottle text-amber-400"></i> Bảng kiểm kê Minibar tiêu hao
+                            <i class="fa-solid fa-cart-flatbed-suitcase text-amber-400"></i> Bảng kiểm kê Minibar &amp; Mặt hàng phát sinh
                         </label>
-                        <span class="text-[11px] text-slate-400">Nhập số lượng sử dụng</span>
+                        <button type="button" 
+                                onclick="addCustomServiceRow()" 
+                                class="px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Thêm mặt hàng / mua hộ
+                        </button>
                     </div>
 
                     <div class="border border-slate-800 rounded-xl overflow-hidden bg-[#080b11]">
                         <table class="w-full text-xs text-left">
                             <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] font-bold border-b border-slate-800">
                                 <tr>
-                                    <th class="p-2.5">Mặt hàng</th>
-                                    <th class="p-2.5 text-right">Đơn giá</th>
-                                    <th class="p-2.5 text-center w-28">Số lượng</th>
+                                    <th class="p-2.5">Mặt hàng / Dịch vụ</th>
+                                    <th class="p-2.5 text-right w-28">Đơn giá</th>
+                                    <th class="p-2.5 text-center w-24">Số lượng</th>
                                     <th class="p-2.5 text-right w-28">Thành tiền</th>
+                                    <th class="p-2.5 text-center w-10"></th>
                                 </tr>
                             </thead>
+                            <!-- 1. Danh sách Minibar catalog mặc định -->
                             <tbody class="divide-y divide-slate-800/60" id="minibar-table-body">
                                 @foreach($minibarCatalogs as $index => $item)
                                 <tr class="hover:bg-slate-800/30">
@@ -789,6 +795,7 @@
                                         {{ $item['item_name'] }}
                                         <input type="hidden" name="minibar_items[{{ $index }}][item_name]" value="{{ $item['item_name'] }}">
                                         <input type="hidden" name="minibar_items[{{ $index }}][unit_price]" value="{{ $item['unit_price'] }}">
+                                        <input type="hidden" name="minibar_items[{{ $index }}][item_type]" value="minibar">
                                     </td>
                                     <td class="p-2.5 text-right font-mono text-slate-400">
                                         {{ number_format($item['unit_price']) }}đ
@@ -806,18 +813,35 @@
                                     <td class="p-2.5 text-right font-mono font-bold text-amber-400" id="subtotal-item-{{ $index }}">
                                         0đ
                                     </td>
+                                    <td class="p-2.5 text-center">
+                                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 font-bold" title="Minibar có sẵn trong phòng">MB</span>
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
+
+                            <!-- 2. Danh sách mặt hàng / dịch vụ phát sinh mua hộ thêm -->
+                            <tbody class="divide-y divide-slate-800/60 border-t border-slate-800" id="custom-services-table-body">
+                                <!-- Dòng động được chèn vào đây bởi addCustomServiceRow() -->
+                            </tbody>
+
                             <tfoot class="bg-slate-900/80 border-t border-slate-800 font-bold">
                                 <tr>
-                                    <td colspan="3" class="p-2.5 text-right text-slate-400">Tổng phụ thu Minibar:</td>
+                                    <td colspan="3" class="p-2.5 text-right text-slate-400">Tổng phụ thu Minibar &amp; Dịch vụ thêm:</td>
                                     <td class="p-2.5 text-right text-amber-400 font-mono text-sm" id="minibar-grand-total">0đ</td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
-                    <p id="err-minibar-qty" class="text-red-400 text-[11px] mt-1.5 hidden"></p>
+                    <div class="flex items-center justify-between mt-1.5">
+                        <p id="err-minibar-qty" class="text-red-400 text-[11px] hidden"></p>
+                        <button type="button" 
+                                onclick="addCustomServiceRow()" 
+                                class="text-xs text-amber-400 hover:text-amber-300 font-semibold inline-flex items-center gap-1 transition">
+                            <i class="fa-solid fa-circle-plus text-[11px]"></i> Thêm mặt hàng khách mua hộ / phát sinh khác
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Phương thức thanh toán -->
@@ -1530,7 +1554,7 @@
             }
         }
 
-        // ==================== CHECK-OUT & ĐỐI SOÁT MINIBAR ====================
+        // ==================== CHECK-OUT & ĐỐI SOÁT MINIBAR & DỊCH VỤ PHÁT SINH ====================
         function openCheckOutModal(roomId) {
             const card = document.getElementById(`room-card-${roomId}`);
             const roomNum = card?.getAttribute('data-room-number') || roomId;
@@ -1538,16 +1562,49 @@
             document.getElementById('checkout-room-id').value = roomId;
             document.getElementById('checkout-modal-room-label').textContent = `Phòng P.${roomNum} - Đối soát trả phòng`;
 
-            // Reset inputs
+            // Reset inputs Minibar catalog
             document.querySelectorAll('.minibar-qty-input').forEach(input => {
                 input.value = 0;
                 input.classList.remove('border-red-500');
             });
             document.querySelectorAll('[id^="subtotal-item-"]').forEach(el => el.textContent = '0đ');
+            
+            // Dọn sạch danh sách mặt hàng phát sinh cũ
+            const customTbody = document.getElementById('custom-services-table-body');
+            if (customTbody) customTbody.innerHTML = '';
+
             document.getElementById('minibar-grand-total').textContent = '0đ';
             document.getElementById('err-minibar-qty').classList.add('hidden');
 
             openModal('modal-checkout');
+        }
+
+        // Tính lại tổng tiền chung (Minibar catalog + Mặt hàng/dịch vụ mua hộ phát sinh)
+        function recalculateGrandTotal() {
+            let grandTotal = 0;
+
+            // 1. Minibar catalog mặc định
+            document.querySelectorAll('.minibar-qty-input').forEach(inp => {
+                const q = parseInt(inp.value) || 0;
+                const p = parseFloat(inp.getAttribute('data-unit-price') || 0);
+                if (q > 0) grandTotal += (q * p);
+            });
+
+            // 2. Custom services / mặt hàng phát sinh mua hộ
+            document.querySelectorAll('.custom-service-row').forEach(row => {
+                const qtyInp = row.querySelector('.custom-item-qty');
+                const priceInp = row.querySelector('.custom-item-price');
+                const q = parseInt(qtyInp?.value) || 0;
+                const p = parseFloat(priceInp?.value) || 0;
+                if (q > 0 && p > 0) {
+                    grandTotal += (q * p);
+                }
+            });
+
+            const grandTotalEl = document.getElementById('minibar-grand-total');
+            if (grandTotalEl) {
+                grandTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(grandTotal) + 'đ';
+            }
         }
 
         function calcMinibarRow(input) {
@@ -1569,14 +1626,93 @@
             const rowSubtotal = Math.max(0, (Number.isInteger(qty) && qty >= 0 ? qty : 0) * unitPrice);
             document.getElementById(`subtotal-item-${index}`).textContent = new Intl.NumberFormat('vi-VN').format(rowSubtotal) + 'đ';
 
-            // Tính tổng tiền
-            let grandTotal = 0;
-            document.querySelectorAll('.minibar-qty-input').forEach(inp => {
-                const q = parseInt(inp.value) || 0;
-                const p = parseFloat(inp.getAttribute('data-unit-price') || 0);
-                if (q > 0) grandTotal += (q * p);
-            });
-            document.getElementById('minibar-grand-total').textContent = new Intl.NumberFormat('vi-VN').format(grandTotal) + 'đ';
+            recalculateGrandTotal();
+        }
+
+        // Thêm dòng mặt hàng / dịch vụ phát sinh mua hộ
+        function addCustomServiceRow(defaultName = '', defaultPrice = '', defaultQty = 1) {
+            const tbody = document.getElementById('custom-services-table-body');
+            if (!tbody) return;
+
+            const tr = document.createElement('tr');
+            tr.className = "custom-service-row bg-amber-950/15 hover:bg-amber-950/25 border-b border-slate-800 transition-colors";
+            tr.innerHTML = `
+                <td class="p-2">
+                    <input type="text" 
+                           value="${defaultName}"
+                           placeholder="VD: Mua hộ 1 thùng nước, Giặt ủi..." 
+                           class="custom-item-name w-full bg-[#080b11] text-amber-200 text-xs rounded-lg border border-amber-500/40 focus:border-amber-400 px-2.5 py-1.5 outline-none placeholder-slate-500 font-semibold"
+                           required>
+                </td>
+                <td class="p-2 text-right">
+                    <input type="number" 
+                           min="0" 
+                           step="1000" 
+                           value="${defaultPrice}"
+                           placeholder="Đơn giá (đ)" 
+                           oninput="calcCustomServiceRow(this)"
+                           class="custom-item-price w-24 bg-[#080b11] text-right font-mono text-white text-xs rounded-lg border border-slate-700 focus:border-amber-400 px-2 py-1.5 outline-none font-bold"
+                           required>
+                </td>
+                <td class="p-2 text-center">
+                    <input type="number" 
+                           min="1" 
+                           value="${defaultQty}" 
+                           oninput="calcCustomServiceRow(this)"
+                           class="custom-item-qty w-16 bg-[#080b11] text-center font-bold text-white text-xs rounded-lg border border-slate-700 focus:border-amber-400 py-1.5 px-1 outline-none"
+                           required>
+                </td>
+                <td class="p-2 text-right font-mono font-bold text-amber-400 custom-item-subtotal">
+                    0đ
+                </td>
+                <td class="p-2 text-center">
+                    <button type="button" 
+                            onclick="removeCustomServiceRow(this)" 
+                            class="text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 w-7 h-7 rounded-lg transition inline-flex items-center justify-center" 
+                            title="Xóa dòng mặt hàng này">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            const nameInput = tr.querySelector('.custom-item-name');
+            if (nameInput && !defaultName) {
+                nameInput.focus();
+            }
+
+            if (defaultPrice) {
+                calcCustomServiceRow(nameInput);
+            }
+        }
+
+        // Tính thành tiền cho dòng mặt hàng phát sinh
+        function calcCustomServiceRow(input) {
+            const row = input.closest('.custom-service-row');
+            if (!row) return;
+
+            const qtyInp = row.querySelector('.custom-item-qty');
+            const priceInp = row.querySelector('.custom-item-price');
+            const subtotalEl = row.querySelector('.custom-item-subtotal');
+
+            const qty = parseInt(qtyInp?.value) || 0;
+            const price = parseFloat(priceInp?.value) || 0;
+
+            const subtotal = Math.max(0, qty * price);
+            if (subtotalEl) {
+                subtotalEl.textContent = new Intl.NumberFormat('vi-VN').format(subtotal) + 'đ';
+            }
+
+            recalculateGrandTotal();
+        }
+
+        // Xóa dòng mặt hàng phát sinh
+        function removeCustomServiceRow(btn) {
+            const row = btn.closest('.custom-service-row');
+            if (row) {
+                row.remove();
+                recalculateGrandTotal();
+            }
         }
 
         async function handleCheckOutSubmit(e) {
@@ -1587,7 +1723,10 @@
 
             // Kiểm tra validate ERR_18_05
             let hasError = false;
+            let errorMsg = "Số lượng vật tư tiêu hao minibar hoặc dịch vụ thêm phải là số nguyên dương lớn hơn hoặc bằng 0.";
             const items = [];
+
+            // 1. Thu thập Minibar catalog mặc định
             document.querySelectorAll('.minibar-qty-input').forEach(input => {
                 const val = input.value;
                 const qty = parseInt(val);
@@ -1602,14 +1741,56 @@
                     items.push({
                         item_name: name,
                         quantity: qty,
-                        unit_price: unitPrice
+                        unit_price: unitPrice,
+                        item_type: 'minibar'
+                    });
+                }
+            });
+
+            // 2. Thu thập các mặt hàng / dịch vụ phát sinh thêm
+            document.querySelectorAll('.custom-service-row').forEach(row => {
+                const nameInp = row.querySelector('.custom-item-name');
+                const priceInp = row.querySelector('.custom-item-price');
+                const qtyInp = row.querySelector('.custom-item-qty');
+
+                const name = (nameInp?.value || '').trim();
+                const price = parseFloat(priceInp?.value);
+                const qty = parseInt(qtyInp?.value);
+
+                // Nếu dòng hoàn toàn trống -> bỏ qua
+                if (!name && (isNaN(price) || price === 0)) {
+                    return;
+                }
+
+                if (!name) {
+                    nameInp.classList.add('border-red-500');
+                    hasError = true;
+                    errorMsg = "Vui lòng nhập tên mặt hàng hoặc dịch vụ mua hộ phát sinh.";
+                } else if (isNaN(price) || price < 0) {
+                    priceInp.classList.add('border-red-500');
+                    hasError = true;
+                    errorMsg = "Đơn giá của mặt hàng phát sinh phải là số lớn hơn hoặc bằng 0.";
+                } else if (isNaN(qty) || qty <= 0) {
+                    qtyInp.classList.add('border-red-500');
+                    hasError = true;
+                    errorMsg = "Số lượng mặt hàng phát sinh phải là số nguyên lớn hơn 0.";
+                } else {
+                    nameInp.classList.remove('border-red-500');
+                    priceInp.classList.remove('border-red-500');
+                    qtyInp.classList.remove('border-red-500');
+
+                    items.push({
+                        item_name: name,
+                        quantity: qty,
+                        unit_price: price,
+                        item_type: 'service'
                     });
                 }
             });
 
             if (hasError) {
                 const errEl = document.getElementById('err-minibar-qty');
-                errEl.textContent = "Số lượng vật tư tiêu hao minibar phải là số nguyên dương lớn hơn hoặc bằng 0.";
+                errEl.textContent = errorMsg;
                 errEl.classList.remove('hidden');
                 return;
             }
