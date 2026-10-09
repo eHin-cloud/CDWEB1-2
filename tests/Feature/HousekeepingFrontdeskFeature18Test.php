@@ -406,4 +406,29 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
         // Phải bị từ chối
         $this->assertTrue(in_array($response->status(), [403, 404, 422], true));
     }
+
+    /**
+     * Test 8: Đăng nhập tài khoản Buồng phòng tự động chuyển hướng tới trang Sơ đồ Buồng phòng
+     */
+    public function test_housekeeper_login_redirects_to_housekeeping_matrix(): void
+    {
+        $response = $this->post(route('user.authUser'), [
+            'login' => $this->housekeeper->username,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('smartroom.admin.housekeeping.matrix'));
+    }
+
+    /**
+     * Test 9: Tài khoản Buồng phòng có nút điều hướng "Buồng phòng" trên Header trang chủ
+     */
+    public function test_housekeeper_sees_housekeeping_button_in_header(): void
+    {
+        $response = $this->actingAs($this->housekeeper)->get(route('renty.user'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('smartroom.admin.housekeeping.matrix'), false);
+        $response->assertSee('Buồng phòng');
+    }
 }

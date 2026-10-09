@@ -33,6 +33,7 @@ class CrudUserController extends Controller
             $targetRoute = match (true) {
                 $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
+                $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),
@@ -82,6 +83,7 @@ class CrudUserController extends Controller
             $defaultRoute = match (true) {
                 $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
+                $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),

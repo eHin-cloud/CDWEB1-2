@@ -135,9 +135,15 @@
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button p-2.5 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>
-                <a href="{{ route('smartroom.admin') }}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition hidden sm:inline-flex items-center gap-1.5" title="Về tổng quan">
-                    <i class="fa-solid fa-arrow-left"></i> Về Quản Trị
-                </a>
+                @if(Auth::user()?->canAccessLandlordDashboard())
+                    <a href="{{ route('smartroom.admin') }}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition hidden sm:inline-flex items-center gap-1.5" title="Về tổng quan quản trị">
+                        <i class="fa-solid fa-arrow-left"></i> Về Quản Trị
+                    </a>
+                @else
+                    <a href="{{ route('renty.user') }}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition hidden sm:inline-flex items-center gap-1.5" title="Về trang chủ Renty">
+                        <i class="fa-solid fa-house text-xs"></i> Trang Chủ
+                    </a>
+                @endif
             </div>
         </header>
 

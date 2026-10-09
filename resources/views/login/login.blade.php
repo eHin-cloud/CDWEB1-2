@@ -1028,12 +1028,14 @@
                         $currentUser = Auth::user();
                         $targetRoute = match (true) {
                             $currentUser->isAdmin() => route('user.list'),
+                            $currentUser->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
                             $currentUser->canAccessLandlordDashboard() => route('smartroom.admin'),
                             $currentUser->isResident() => route('smartroom.resident'),
                             default => route('renty.user'),
                         };
                         $targetLabel = match (true) {
                             $currentUser->isAdmin() => 'Danh Sách Quản Trị Viên',
+                            $currentUser->isHousekeeper() => 'Sơ Đồ Buồng Phòng',
                             $currentUser->canAccessLandlordDashboard() => 'Bảng Quản Trị Chủ Trọ',
                             $currentUser->isResident() => 'Cổng Cư Dân',
                             default => 'Trang Chủ Renty',
