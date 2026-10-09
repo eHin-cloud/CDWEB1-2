@@ -583,4 +583,70 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
                 'stats' => ['total', 'dirty', 'cleaning', 'clean', 'inspected'],
             ]);
     }
+
+    /**
+     * Test Checkout hỗ trợ thêm mặt hàng phát sinh/mua hộ (VD: mua hộ 1 thùng nước, giặt ủi...)
+     */
+    public function test_checkout_with_custom_requested_items(): void
+    {
+        $this->room->update([
+            'status' => 'occupied',
+            'housekeeping_status' => 'inspected',
+        ]);
+
+        $booking = HotelBooking::create([
+            'tenant_id' => $this->tenant->id,
+            'room_id' => $this->room->id,
+            'booking_code' => 'HB-CUSTOM-TEST',
+            'guest_name' => 'Nguyễn Khách VIP',
+            'rental_type' => 'day',
+            'unit_rate' => 350000,
+            'check_in_at' => now()->subDay(),
+            'status' => 'checked_in',
+            'payment_status' => 'unpaid',
+        ]);
+
+        $res = $this->actingAs($this->receptionist)
+            ->postJson(route('smartroom.admin.frontdesk.checkout'), [
+                'room_id' => $this->room->id,
+                'minibar_items' => [
+                    // Minibar catalog có sẵn
+                    ['item_name' => 'Nước khoáng Lavie 500ml', 'quantity' => 2, 'unit_price' => 10000, 'item_type' => 'minibar'],
+                    // Mặt hàng phát sinh / khách yêu cầu mua hộ
+                    ['item_name' => 'Mua hộ 1 thùng nước suối Lavie', 'quantity' => 1, 'unit_price' => 120000, 'item_type' => 'service'],
+                    ['item_name' => 'Dịch vụ giặt ủi đồ cao cấp', 'quantity' => 3, 'unit_price' => 30000, 'item_type' => 'service'],
+                ],
+                'payment_method' => 'vietqr',
+            ]);
+
+        $res->assertStatus(200)->assertJsonPath('success', true);
+
+        // Kiểm tra Folio items được lưu đúng
+        $this->assertDatabaseHas('hotel_folio_items', [
+            'booking_id' => $booking->id,
+            'item_name' => 'Mua hộ 1 thùng nước suối Lavie',
+            'item_type' => 'service',
+            'quantity' => 1,
+            'unit_price' => 120000,
+            'subtotal' => 120000,
+        ]);
+
+        $this->assertDatabaseHas('hotel_folio_items', [
+            'booking_id' => $booking->id,
+            'item_name' => 'Dịch vụ giặt ủi đồ cao cấp',
+            'item_type' => 'service',
+            'quantity' => 3,
+            'unit_price' => 30000,
+            'subtotal' => 90000,
+        ]);
+
+        // Tổng tiền service_amount: 2*10000 (20k minibar) + 120k (mua hộ) + 90k (giặt ủi) = 230,000đ
+        $booking->refresh();
+        $this->assertEquals(230000, $booking->service_amount);
+        $this->assertEquals('checked_out', $booking->status);
+
+        // Phòng tự động chuyển sang Cần dọn (Dirty)
+        $this->room->refresh();
+        $this->assertEquals('dirty', $this->room->housekeeping_status);
+    }
 }

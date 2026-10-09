@@ -630,10 +630,14 @@ class HousekeepingFrontdeskController extends Controller
                     $subtotal = $qty * $unitPrice;
                     $totalMinibarAmount += $subtotal;
 
+                    $itemType = in_array($item['item_type'] ?? '', ['minibar', 'service', 'surcharge'], true) 
+                        ? $item['item_type'] 
+                        : 'minibar';
+
                     HotelFolioItem::create([
                         'booking_id' => $booking->id,
-                        'item_name' => $item['item_name'] ?? 'Vật tư tiêu hao',
-                        'item_type' => 'minibar',
+                        'item_name' => Str::limit($item['item_name'] ?? 'Vật tư tiêu hao', 190),
+                        'item_type' => $itemType,
                         'quantity' => $qty,
                         'unit_price' => $unitPrice,
                         'subtotal' => $subtotal,
