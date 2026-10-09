@@ -2398,7 +2398,6 @@ function openRentySearchSuggestions() {
 
     document.getElementById('renty-search-suggestions')?.classList.remove('hidden');
     document.getElementById('renty-search-panel')?.classList.add('is-search-active');
-    document.getElementById('renty-search-backdrop')?.classList.add('is-active');
 
     if (val.length >= 2) {
         fetchLiveSmartSearch(val);
