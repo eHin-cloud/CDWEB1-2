@@ -22,6 +22,9 @@ class RoomStatusUpdated implements ShouldBroadcastNow
     public function __construct(Room $room)
     {
         $this->room = $room;
+        $staff = $room->assignedStaff;
+        $inspector = $room->inspector;
+
         $this->roomData = [
             'id' => $room->id,
             'room_number' => $room->room_number,
@@ -30,6 +33,15 @@ class RoomStatusUpdated implements ShouldBroadcastNow
             'status_label' => $room->status_label,
             'badge_class' => $room->badge_class,
             'status_class' => $room->status_class,
+            'housekeeping_status' => $room->housekeeping_status ?: 'dirty',
+            'cleaning_status' => $room->cleaning_status ?: 'dirty',
+            'priority' => $room->priority ?: 'normal',
+            'version' => (int) $room->version,
+            'assigned_staff_id' => $room->assigned_staff_id,
+            'assigned_staff_name' => $staff?->name ?? 'Chưa phân công',
+            'inspected_by' => $room->inspected_by,
+            'inspector_name' => $inspector?->name,
+            'inspection_notes' => $room->inspection_notes,
             'tenant_id' => $room->tenant_id,
             'updated_at' => now()->toIso8601String(),
         ];

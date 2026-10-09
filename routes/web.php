@@ -275,6 +275,8 @@ Route::middleware(['auth', 'tenant.scope'])->prefix('smartroom/admin')->name('sm
     Route::post('/frontdesk/checkin', [HousekeepingFrontdeskController::class, 'checkIn'])->name('frontdesk.checkin');
     // 6. Check-out trả phòng, tự động chuyển phòng sang Dirty và đối soát minibar
     Route::post('/frontdesk/checkout', [HousekeepingFrontdeskController::class, 'checkOut'])->name('frontdesk.checkout');
+    // 7. Polling kiểm tra cập nhật thời gian thực cho Sơ đồ Buồng phòng
+    Route::get('/housekeeping/poll', [HousekeepingFrontdeskController::class, 'poll'])->name('housekeeping.poll');
 });
 
 // Phân hệ Buồng phòng (Housekeeping) - Tối ưu di động
