@@ -87,6 +87,10 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
 
     public function roleSlug(): ?string
     {
+        if ($this->role === 'superadmin') {
+            return 'superadmin';
+        }
+
         $roleRecord = $this->relationLoaded('roleRecord')
             ? $this->getRelation('roleRecord')
             : ($this->role_id ? $this->roleRecord : null);
@@ -96,6 +100,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         }
 
         return match ($this->role) {
+            'superadmin' => 'superadmin',
             'admin' => 'admin',
             'manager', 'staff' => 'manager',
             'receptionist' => 'receptionist',
@@ -117,6 +122,7 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         }
 
         return match ($this->roleSlug()) {
+            'superadmin' => 'Quản trị viên tối cao (Superadmin)',
             'admin' => 'Admin he thong',
             'unverified_landlord' => 'Chu tro chua xac minh',
             'landlord' => 'Chu tro',
@@ -154,9 +160,14 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
         return in_array($this->roleSlug(), ['landlord', 'unverified_landlord', 'manager', 'receptionist'], true);
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->roleSlug() === 'superadmin' || $this->role === 'superadmin';
+    }
+
     public function isAdmin(): bool
     {
-        return $this->roleSlug() === 'admin';
+        return in_array($this->roleSlug(), ['admin', 'superadmin'], true) || in_array($this->role, ['admin', 'superadmin'], true);
     }
 
     public function isManager(): bool

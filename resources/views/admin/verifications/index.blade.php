@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duyệt Hồ Sơ Xác Minh - SmartRoom & Renty</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@laragear/webpass@2/dist/webpass.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,9 +80,9 @@
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white overflow-hidden">
-    {{-- @include('admin.partials.sidebar') --}}
+    @include('admin.partials.sidebar')
 
-    <div id="admin-shell" class="min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200">
+    <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200">
         <!-- Background Elements -->
         <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600 glow-circle"></div>
         <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-sky-600 glow-circle"></div>
@@ -420,7 +421,19 @@
         // ================= WebAuthn FIDO2 Biometric Security =================
         window.hasPasskey = false;
 
+        function ensureSecureWebAuthnDomain() {
+            if (window.location.hostname === '127.0.0.1') {
+                const newUrl = window.location.href.replace('127.0.0.1', 'localhost');
+                if (confirm('Chuẩn bảo mật WebAuthn (Passkey) bắt buộc truy cập qua "localhost" hoặc HTTPS (không hỗ trợ địa chỉ IP 127.0.0.1 theo tiêu chuẩn W3C WebAuthn).\n\nBạn có muốn chuyển sang ' + newUrl + ' ngay bây giờ?')) {
+                    window.location.href = newUrl;
+                }
+                return false;
+            }
+            return true;
+        }
+
         function base64UrlToUint8Array(base64Url) {
+            if (!base64Url) return new Uint8Array(0);
             const padding = '='.repeat((4 - base64Url.length % 4) % 4);
             const base64 = (base64Url + padding).replace(/\-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
@@ -431,7 +444,29 @@
             return outputArray;
         }
 
-        function bufferToBase64(buffer) {
+        function hexToUint8Array(hex) {
+            const cleanHex = hex.replace(/[^0-9a-fA-F]/g, '');
+            const match = cleanHex.match(/.{1,2}/g) || [];
+            return new Uint8Array(match.map(byte => parseInt(byte, 16)));
+        }
+
+        function parseUserIdToUint8Array(userId) {
+            if (userId instanceof Uint8Array) return userId;
+            if (typeof userId === 'string') {
+                // Nếu là chuỗi HEX 32 ký tự (UUID Hex format do Laragear backend sinh ra)
+                if (/^[0-9a-fA-F]{32}$/.test(userId)) {
+                    return hexToUint8Array(userId);
+                }
+                try {
+                    return base64UrlToUint8Array(userId);
+                } catch (e) {
+                    return new TextEncoder().encode(userId);
+                }
+            }
+            return new TextEncoder().encode(String(userId || ''));
+        }
+
+        function bufferToBase64Url(buffer) {
             let binary = '';
             const bytes = new Uint8Array(buffer);
             const len = bytes.byteLength;
@@ -468,6 +503,10 @@
         }
 
         async function registerBiometricDevice() {
+            if (!ensureSecureWebAuthnDomain()) {
+                return;
+            }
+
             if (typeof PublicKeyCredential === "undefined") {
                 showToast("Trình duyệt hoặc thiết bị của bạn không hỗ trợ WebAuthn/Passkeys.", "error");
                 return;
@@ -475,7 +514,27 @@
 
             try {
                 showToast("Đang kết nối máy chủ để khởi tạo Passkey...", "info");
-                
+
+                // 1. Thử sử dụng thư viện chính thức @laragear/webpass nếu đã tải xong
+                if (typeof window.Webpass !== "undefined" && typeof window.Webpass.attest === "function") {
+                    try {
+                        const { success, error } = await window.Webpass.attest('/webauthn/register/options', '/webauthn/register');
+                        if (success) {
+                            showToast("Đăng ký thiết bị bảo mật (Passkey) thành công!", "success");
+                            window.hasPasskey = true;
+                            updatePasskeyButtonState();
+                            return;
+                        }
+                        if (error) {
+                            throw new Error(error);
+                        }
+                    } catch (webpassErr) {
+                        console.warn("Webpass attest gặp sự cố, chuyển sang Native API:", webpassErr);
+                        // Fallback tiếp tục với Native API phía dưới
+                    }
+                }
+
+                // 2. Native WebAuthn API (Xử lý chuẩn Hex UUID & Base64Url)
                 const optionsResponse = await fetch('/webauthn/register/options', {
                     method: 'POST',
                     headers: {
@@ -485,37 +544,38 @@
                     },
                     body: JSON.stringify({})
                 });
-                
+
                 if (!optionsResponse.ok) {
-                    throw new Error("Không thể lấy cấu hình đăng ký từ máy chủ.");
+                    const errRes = await optionsResponse.json().catch(() => ({}));
+                    throw new Error(errRes.message || "Không thể lấy cấu hình đăng ký từ máy chủ.");
                 }
-                
+
                 const options = await optionsResponse.json();
                 options.challenge = base64UrlToUint8Array(options.challenge);
-                options.user.id = base64UrlToUint8Array(options.user.id);
-                
-                if (options.excludeCredentials) {
+                options.user.id = parseUserIdToUint8Array(options.user.id);
+
+                if (options.excludeCredentials && Array.isArray(options.excludeCredentials)) {
                     options.excludeCredentials = options.excludeCredentials.map(cred => ({
                         ...cred,
                         id: base64UrlToUint8Array(cred.id)
                     }));
                 }
-                
+
                 showToast("Vui lòng hoàn tất quét vân tay/khuôn mặt trên thiết bị của bạn...", "info");
                 const credential = await navigator.credentials.create({
                     publicKey: options
                 });
-                
+
                 const attestationResponse = {
                     id: credential.id,
-                    rawId: bufferToBase64(credential.rawId),
+                    rawId: bufferToBase64Url(credential.rawId),
                     type: credential.type,
                     response: {
-                        clientDataJSON: bufferToBase64(credential.response.clientDataJSON),
-                        attestationObject: bufferToBase64(credential.response.attestationObject)
+                        clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON),
+                        attestationObject: bufferToBase64Url(credential.response.attestationObject)
                     }
                 };
-                
+
                 const saveResponse = await fetch('/webauthn/register', {
                     method: 'POST',
                     headers: {
@@ -525,18 +585,18 @@
                     },
                     body: JSON.stringify(attestationResponse)
                 });
-                
+
                 if (saveResponse.ok) {
                     showToast("Đăng ký thiết bị bảo mật (Passkey) thành công!", "success");
                     window.hasPasskey = true;
                     updatePasskeyButtonState();
                 } else {
-                    const errData = await saveResponse.json();
+                    const errData = await saveResponse.json().catch(() => ({}));
                     throw new Error(errData.message || "Không thể lưu thiết bị bảo mật.");
                 }
-                
+
             } catch (error) {
-                console.error(error);
+                console.error("Lỗi đăng ký Passkey:", error);
                 showToast(error.message || "Đăng ký Passkey thất bại hoặc bị hủy bỏ.", "error");
             }
         }
@@ -544,6 +604,10 @@
         async function handleJitUnlockSubmit(event, form) {
             event.preventDefault();
             
+            if (!ensureSecureWebAuthnDomain()) {
+                return;
+            }
+
             if (!window.hasPasskey) {
                 showToast("Bảo mật bắt buộc: Vui lòng click nút 'Đăng ký Passkey' ở trên đầu trang trước khi mở khóa tài liệu nhạy cảm.", "error");
                 return;
@@ -591,13 +655,13 @@
                 
                 const payload = {
                     id: assertion.id,
-                    rawId: bufferToBase64(assertion.rawId),
+                    rawId: bufferToBase64Url(assertion.rawId),
                     type: assertion.type,
                     response: {
-                        clientDataJSON: bufferToBase64(assertion.response.clientDataJSON),
-                        authenticatorData: bufferToBase64(assertion.response.authenticatorData),
-                        signature: bufferToBase64(assertion.response.signature),
-                        userHandle: assertion.response.userHandle ? bufferToBase64(assertion.response.userHandle) : null
+                        clientDataJSON: bufferToBase64Url(assertion.response.clientDataJSON),
+                        authenticatorData: bufferToBase64Url(assertion.response.authenticatorData),
+                        signature: bufferToBase64Url(assertion.response.signature),
+                        userHandle: assertion.response.userHandle ? bufferToBase64Url(assertion.response.userHandle) : null
                     },
                     reason: reason
                 };

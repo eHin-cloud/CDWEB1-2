@@ -31,6 +31,7 @@ class CrudUserController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
             $targetRoute = match (true) {
+                $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
@@ -79,6 +80,7 @@ class CrudUserController extends Controller
             Auth::login($user, $request->filled('remember'));
             
             $defaultRoute = match (true) {
+                $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
@@ -512,7 +514,10 @@ class CrudUserController extends Controller
     public function readUser(Request $request)
     {
         $user_id = $request->get('id');
-        $user = User::find($user_id);
+        $user = User::with(['roleRecord', 'tenant'])->find($user_id);
+        if (!$user) {
+            return redirect()->route('user.list')->with('error', 'Người dùng không tồn tại hoặc đã bị xóa!');
+        }
 
         return view('login.login', ['page' => 'read', 'messi' => $user]);
     }
@@ -543,9 +548,14 @@ class CrudUserController extends Controller
     public function updateUser(Request $request)
     {
         $user_id = $request->get('id');
-        $user = User::find($user_id);
+        $user = User::with(['roleRecord', 'tenant'])->find($user_id);
+        if (!$user) {
+            return redirect()->route('user.list')->with('error', 'Người dùng không tồn tại hoặc đã bị xóa!');
+        }
 
-        return view('login.login', ['page' => 'update', 'user' => $user]);
+        $tenants = Tenant::orderBy('name')->get();
+
+        return view('login.login', ['page' => 'update', 'user' => $user, 'tenants' => $tenants]);
     }
 
     /**
@@ -572,6 +582,7 @@ class CrudUserController extends Controller
                 },
             ],
             'email' => 'nullable|email|unique:users,email,' . $input['id'],
+            'status' => 'nullable|in:active,locked,pending',
             'like' => 'nullable|max:255',
             'password' => 'nullable|min:6',
         ], [
@@ -584,11 +595,25 @@ class CrudUserController extends Controller
         ]);
 
         $user = User::find($input['id']);
+        if (!$user) {
+            return redirect()->route('user.list')->with('error', 'Người dùng không tồn tại hoặc đã bị xóa!');
+        }
+
+        if (Auth::id() == $user->id && ($request->input('status') === 'locked')) {
+            return back()->with('error', 'Không thể tự khóa tài khoản của chính mình!');
+        }
+
         $user->name = $input['name'];
         $user->username = $input['username'];
         $user->phone = $input['phone'];
         $user->email = $input['email'] ?? null;
-        $user->like = $input['like'];
+        $user->like = $input['like'] ?? null;
+        if ($request->filled('status')) {
+            $user->status = $request->input('status');
+        }
+        if ($request->has('tenant_id')) {
+            $user->tenant_id = $request->input('tenant_id') ?: null;
+        }
         if (!empty($input['password'])) {
             $user->password = Hash::make($input['password']);
         }
@@ -600,13 +625,55 @@ class CrudUserController extends Controller
     /**
      * List of users
      */
-    public function listUser()
+    public function listUser(Request $request)
     {
         if (Auth::check()) {
-            $users = User::with(['roleRecord', 'tenant'])->orderByDesc('id')->paginate(10);
-            $roles = Role::whereIn('slug', ['admin', 'unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper', 'resident', 'guest'])
-                ->orderByRaw("field(slug, 'admin', 'unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper', 'resident', 'guest')")
-                ->get();
+            $query = User::with(['roleRecord', 'tenant']);
+
+            // 1. Tìm kiếm theo Tên, Username, Email, Phone
+            if ($search = trim($request->get('search', ''))) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            // 2. Lọc theo Vai trò
+            if ($roleSlug = $request->get('role')) {
+                if ($roleSlug !== 'all') {
+                    $query->whereHas('roleRecord', function ($q) use ($roleSlug) {
+                        $q->where('slug', $roleSlug);
+                    });
+                }
+            }
+
+            // 3. Lọc theo Trạng thái tài khoản
+            if ($status = $request->get('status')) {
+                if ($status !== 'all') {
+                    $query->where('status', $status);
+                }
+            }
+
+            $users = $query->orderByDesc('id')->paginate(10)->appends($request->query());
+
+            // Thống kê toàn hệ thống (toàn diện & chính xác trên toàn DB)
+            $stats = [
+                'total' => User::count(),
+                'admin' => User::whereHas('roleRecord', fn($q) => $q->whereIn('slug', ['admin', 'superadmin']))
+                               ->orWhereIn('role', ['admin', 'superadmin'])->count(),
+                'landlord' => User::whereHas('roleRecord', fn($q) => $q->whereIn('slug', ['landlord', 'unverified_landlord']))
+                                 ->orWhere('role', 'landlord')->count(),
+                'resident' => User::whereHas('roleRecord', fn($q) => $q->where('slug', 'resident'))
+                                 ->orWhere('role', 'user')->count(),
+            ];
+
+            $roleOrder = ['superadmin', 'admin', 'unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper', 'resident', 'guest'];
+            $roles = Role::whereIn('slug', $roleOrder)
+                ->get()
+                ->sortBy(fn($r) => array_search($r->slug, $roleOrder, true))
+                ->values();
             $tenants = Tenant::orderBy('name')->get();
 
             return view('login.login', [
@@ -614,6 +681,7 @@ class CrudUserController extends Controller
                 'users' => $users,
                 'roles' => $roles,
                 'tenants' => $tenants,
+                'stats' => $stats,
             ]);
         }
 

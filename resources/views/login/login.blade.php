@@ -1,5 +1,6 @@
 @php
     $page = $page ?? 'login';
+    $isAdminPage = Auth::check() && (in_array($page, ['list', 'read', 'update']) || ($page === 'create' && Auth::user()->isAdmin()));
     $titles = [
         'login' => 'Đăng Nhập - SmartRoom & Renty',
         'create' => 'Đăng Ký - SmartRoom & Renty',
@@ -24,6 +25,9 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @if($isAdminPage)
+        <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
+    @endif
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
@@ -47,7 +51,11 @@
         .email-hint-visible{opacity:1;max-height:48px;margin-top:.375rem!important;transform:translateY(0);pointer-events:auto}
     </style>
 </head>
-<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen {{ $isAdminPage ? 'overflow-hidden font-sans' : 'flex flex-col justify-between overflow-x-hidden' }} selection:bg-indigo-500 selection:text-white">
+    @if($isAdminPage)
+        @include('admin.partials.sidebar')
+        <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200">
+    @endif
     <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none"></div>
     <div id="toast-container" class="toast-container"></div>
@@ -105,7 +113,7 @@
                     <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
                         <div>
                             <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Tổng thành viên</span>
-                            <h3 class="text-2xl font-black text-slate-100 mt-1">{{ $users->count() }}</h3>
+                            <h3 class="text-2xl font-black text-slate-100 mt-1">{{ number_format($stats['total'] ?? $users->total()) }}</h3>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-users text-lg"></i>
@@ -115,7 +123,7 @@
                     <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
                         <div>
                             <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Quản trị viên</span>
-                            <h3 class="text-2xl font-black text-rose-450 mt-1">{{ $users->filter(fn($u) => $u->roleSlug() === 'admin')->count() }}</h3>
+                            <h3 class="text-2xl font-black text-rose-400 mt-1">{{ number_format($stats['admin'] ?? 0) }}</h3>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-user-shield text-lg"></i>
@@ -125,7 +133,7 @@
                     <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
                         <div>
                             <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Chủ nhà trọ</span>
-                            <h3 class="text-2xl font-black text-sky-400 mt-1">{{ $users->filter(fn($u) => in_array($u->roleSlug(), ['landlord', 'unverified_landlord']))->count() }}</h3>
+                            <h3 class="text-2xl font-black text-sky-400 mt-1">{{ number_format($stats['landlord'] ?? 0) }}</h3>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-house-user text-lg"></i>
@@ -135,136 +143,221 @@
                     <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
                         <div>
                             <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Cư dân thuê trọ</span>
-                            <h3 class="text-2xl font-black text-emerald-450 mt-1">{{ $users->filter(fn($u) => $u->roleSlug() === 'resident')->count() }}</h3>
+                            <h3 class="text-2xl font-black text-emerald-400 mt-1">{{ number_format($stats['resident'] ?? 0) }}</h3>
                         </div>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 flex items-center justify-center shadow-inner">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-door-closed text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Filters & Search -->
-                <div class="flex flex-col md:flex-row gap-3 justify-between items-center mb-6">
+                <!-- Filters & Search Form -->
+                <form method="GET" action="{{ route('user.list') }}" class="flex flex-col md:flex-row gap-3 justify-between items-center mb-6">
                     <div class="relative w-full md:w-80">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-550 pointer-events-none">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 pointer-events-none">
                             <i class="fa-solid fa-magnifying-glass text-xs"></i>
                         </span>
-                        <input type="text" id="user-search" onkeyup="filterUserList()" placeholder="Tìm tên, email, số điện thoại..." class="w-full bg-slate-950/60 border border-slate-800 hover:border-slate-700/60 focus:border-indigo-550 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none transition-all text-slate-200 placeholder-slate-500">
+                        <input type="text" 
+                               name="search" 
+                               id="user-search" 
+                               value="{{ request('search') }}" 
+                               onkeyup="filterUserList()" 
+                               placeholder="Tìm tên, username, email, SĐT..." 
+                               class="w-full bg-slate-950/60 border border-slate-800 hover:border-slate-700/60 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none transition-all text-slate-200 placeholder-slate-500">
                     </div>
-                    <div class="flex gap-2 w-full md:w-auto justify-end">
-                        <select id="role-filter" onchange="filterUserList()" class="bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-555 transition-all text-slate-300">
-                            <option value="all">Tất cả vai trò</option>
-                            <option value="admin">Quản trị viên</option>
-                            <option value="landlord">Chủ trọ</option>
-                            <option value="unverified_landlord">Chủ trọ chưa xác minh</option>
-                            <option value="manager">Nhân viên quản lý</option>
-                            <option value="resident">Cư dân</option>
-                            <option value="guest">Khách xem phòng</option>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end items-center">
+                        <select name="role" id="role-filter" onchange="this.form.submit()" class="bg-slate-950/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 transition-all text-slate-300">
+                            <option value="all">-- Tất cả vai trò --</option>
+                            @foreach($roles as $r)
+                                <option value="{{ $r->slug }}" {{ request('role') === $r->slug ? 'selected' : '' }}>{{ $r->name }}</option>
+                            @endforeach
                         </select>
+                        <select name="status" id="status-filter" onchange="this.form.submit()" class="bg-slate-950/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 transition-all text-slate-300">
+                            <option value="all">-- Tất cả trạng thái --</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Đang hoạt động</option>
+                            <option value="locked" {{ request('status') === 'locked' ? 'selected' : '' }}>Đã khóa</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Chờ duyệt</option>
+                        </select>
+                        <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-500/20 flex items-center gap-1.5">
+                            <i class="fa-solid fa-filter"></i> Lọc
+                        </button>
+                        @if(request()->hasAny(['search', 'role', 'status']))
+                            <a href="{{ route('user.list') }}" class="px-3 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-semibold transition-all" title="Làm mới bộ lọc">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </a>
+                        @endif
                     </div>
-                </div>
+                </form>
 
                 <!-- Table Content -->
                 <div class="bg-slate-900/35 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse" id="users-table">
                             <thead>
-                                <tr class="border-b border-slate-800 bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                    <th class="px-6 py-4.5">ID</th>
-                                    <th class="px-6 py-4.5">Thành Viên</th>
-                                    <th class="px-6 py-4.5">Liên Hệ</th>
-                                    <th class="px-6 py-4.5">Vai Trò &amp; Đối Tác</th>
-                                    <th class="px-6 py-4.5">Ghi Chú</th>
-                                    <th class="px-6 py-4.5 text-center">Phân Quyền</th>
-                                    <th class="px-6 py-4.5 text-right">Hành Động</th>
+                                <tr class="border-b border-slate-800 bg-slate-900/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <th class="px-5 py-4">ID & Ngày Tạo</th>
+                                    <th class="px-5 py-4">Thành Viên</th>
+                                    <th class="px-5 py-4">Liên Hệ</th>
+                                    <th class="px-5 py-4">Vai Trò &amp; Đối Tác</th>
+                                    <th class="px-5 py-4 text-center">Tình Trạng</th>
+                                    <th class="px-5 py-4">Ghi Chú</th>
+                                    <th class="px-5 py-4 text-center">Phân Quyền</th>
+                                    <th class="px-5 py-4 text-right">Hành Động</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-800/40 text-slate-200">
-                                @foreach($users as $userItem)
-                                    <tr class="hover:bg-slate-800/15 transition-colors user-row"
+                                @forelse($users as $userItem)
+                                    <tr class="hover:bg-slate-800/15 transition-colors user-row {{ $userItem->id === auth()->id() ? 'bg-amber-500/5' : '' }}"
                                         data-name="{{ strtolower($userItem->name) }}"
-                                        data-email="{{ strtolower($userItem->email) }}"
-                                        data-phone="{{ strtolower($userItem->phone) }}"
+                                        data-email="{{ strtolower($userItem->email ?? '') }}"
+                                        data-phone="{{ strtolower($userItem->phone ?? '') }}"
                                         data-role="{{ $userItem->roleSlug() }}">
-                                        <td class="px-6 py-5 text-xs font-semibold text-slate-500">#{{ $userItem->id }}</td>
-                                        <td class="px-6 py-5">
+                                        
+                                        <!-- Cột 1: ID & Ngày tạo -->
+                                        <td class="px-5 py-4">
+                                            <span class="text-xs font-bold text-slate-300 block">#{{ $userItem->id }}</span>
+                                            <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
+                                                {{ $userItem->created_at ? $userItem->created_at->format('d/m/Y') : '—' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Cột 2: Thành viên -->
+                                        <td class="px-5 py-4">
                                             <div class="flex items-center gap-3">
                                                 <!-- Letter Avatar -->
-                                                <div class="w-8.5 h-8.5 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-xs font-extrabold text-white shadow-md shadow-indigo-500/10">
-                                                    {{ mb_strtoupper(mb_substr($userItem->name, 0, 1)) }}
+                                                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-xs font-extrabold text-white shadow-md shadow-indigo-500/10 shrink-0">
+                                                    {{ mb_strtoupper(mb_substr($userItem->name ?: 'U', 0, 1)) }}
                                                 </div>
                                                 <div>
-                                                    <span class="font-bold text-slate-200 text-sm block leading-tight">{{ $userItem->name }}</span>
-                                                    <span class="text-[10px] text-slate-500">@<span>{{ $userItem->username }}</span></span>
+                                                    <span class="font-bold text-slate-100 text-xs block leading-tight flex items-center gap-1.5">
+                                                        {{ $userItem->name }}
+                                                        @if($userItem->id === auth()->id())
+                                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">Bạn</span>
+                                                        @endif
+                                                    </span>
+                                                    <span class="text-[11px] text-slate-400 font-mono">@<span>{{ $userItem->username }}</span></span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-5">
-                                            <span class="text-xs text-slate-350 block">{{ $userItem->email ?: 'Chưa cập nhật email' }}</span>
-                                            <span class="text-[10px] text-slate-550 flex items-center gap-1 mt-0.5">
-                                                <i class="fa-solid fa-phone text-[9px] text-slate-600"></i>
-                                                {{ $userItem->phone }}
+
+                                        <!-- Cột 3: Liên hệ -->
+                                        <td class="px-5 py-4">
+                                            <span class="text-xs text-slate-300 block font-mono">{{ $userItem->email ?: '—' }}</span>
+                                            <span class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
+                                                <i class="fa-solid fa-phone text-[9px] text-slate-500"></i>
+                                                {{ $userItem->phone ?: 'Chưa cập nhật' }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-5">
+
+                                        <!-- Cột 4: Vai trò & Đối tác -->
+                                        <td class="px-5 py-4">
                                             @php
-                                                $roleColor = match ($userItem->roleSlug()) {
-                                                    'admin' => 'bg-rose-500/10 text-rose-300 border-rose-500/15',
-                                                    'landlord' => 'bg-blue-500/10 text-blue-300 border-blue-500/15',
-                                                    'unverified_landlord' => 'bg-amber-500/10 text-amber-300 border-amber-500/15',
-                                                    'manager' => 'bg-teal-500/10 text-teal-300 border-teal-500/15',
-                                                    'resident' => 'bg-emerald-500/10 text-emerald-350 border-emerald-500/15',
-                                                    default => 'bg-slate-500/10 text-slate-300 border-slate-500/15',
+                                                $slug = $userItem->roleSlug();
+                                                $roleBadge = match ($slug) {
+                                                    'superadmin' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                                                    'admin' => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                                                    'landlord' => 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+                                                    'unverified_landlord' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                                                    'manager' => 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+                                                    'receptionist' => 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+                                                    'housekeeper' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                                                    'resident' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                                                    default => 'bg-slate-700/30 text-slate-300 border-slate-700',
                                                 };
                                             @endphp
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border {{ $roleColor }} inline-block uppercase tracking-wider">
+                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold border {{ $roleBadge }} inline-flex items-center gap-1 uppercase tracking-wider">
+                                                @if($slug === 'superadmin')
+                                                    <i class="fa-solid fa-crown text-[9px]"></i>
+                                                @elseif($slug === 'admin')
+                                                    <i class="fa-solid fa-user-shield text-[9px]"></i>
+                                                @elseif(in_array($slug, ['landlord', 'unverified_landlord']))
+                                                    <i class="fa-solid fa-hotel text-[9px]"></i>
+                                                @endif
                                                 {{ $userItem->roleName() }}
                                             </span>
                                             @if($userItem->tenant)
-                                                <span class="text-[10px] text-slate-400 block mt-1.5 flex items-center gap-1">
-                                                    <i class="fa-solid fa-hotel text-[9px] text-indigo-400"></i>
+                                                <span class="text-[10px] text-slate-400 block mt-1 flex items-center gap-1 font-medium">
+                                                    <i class="fa-solid fa-building text-[9px] text-indigo-400"></i>
                                                     {{ $userItem->tenant->name }}
                                                 </span>
                                             @else
-                                                <span class="text-[10px] text-slate-600 block mt-1.5 italic">Không gắn đối tác</span>
+                                                <span class="text-[10px] text-slate-500 block mt-1 italic">
+                                                    {{ in_array($slug, ['superadmin', 'admin', 'guest']) ? 'Toàn hệ thống' : 'Chưa gắn nhà trọ' }}
+                                                </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-5 text-slate-450 text-xs italic">{{ Str::limit($userItem->like, 25) }}</td>
-                                        <td class="px-6 py-5 text-center">
+
+                                        <!-- Cột 5: Tình trạng tài khoản -->
+                                        <td class="px-5 py-4 text-center">
+                                            @if($userItem->status === 'locked')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Đã khóa
+                                                </span>
+                                            @elseif($userItem->status === 'pending')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Chờ duyệt
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hoạt động
+                                                </span>
+                                            @endif
+                                        </td>
+
+                                        <!-- Cột 6: Ghi chú / Sở thích -->
+                                        <td class="px-5 py-4 text-slate-400 text-xs italic max-w-[150px] truncate" title="{{ $userItem->like }}">
+                                            {{ $userItem->like ?: '—' }}
+                                        </td>
+
+                                        <!-- Cột 7: Phân quyền -->
+                                        <td class="px-5 py-4 text-center">
                                             <button type="button"
                                                     onclick="openAssignRoleModal({{ $userItem->id }}, '{{ addslashes($userItem->name) }}', '{{ $userItem->roleSlug() }}', '{{ $userItem->tenant_id }}')"
                                                     class="mx-auto px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs font-semibold border border-indigo-500/20 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/5 active:scale-[0.97]">
                                                 <i class="fa-solid fa-user-gear"></i> Phân quyền
                                             </button>
                                         </td>
-                                        <td class="px-6 py-5 text-right">
-                                            <div class="inline-flex gap-2">
+
+                                        <!-- Cột 8: Hành động -->
+                                        <td class="px-5 py-4 text-right">
+                                            <div class="inline-flex gap-1.5 justify-end">
                                                 <a href="{{ route('user.readUser', ['id' => $userItem->id]) }}"
-                                                   class="p-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-300 hover:text-white transition-all flex items-center justify-center shadow"
-                                                   title="Xem chi tiết">
+                                                   class="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-300 hover:text-white transition-all flex items-center justify-center shadow"
+                                                   title="Xem chi tiết tài khoản">
                                                     <i class="fa-regular fa-eye text-xs"></i>
                                                 </a>
                                                 <a href="{{ route('user.updateUser', ['id' => $userItem->id]) }}"
-                                                   class="p-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-indigo-550 rounded-xl text-indigo-400 hover:text-indigo-300 transition-all flex items-center justify-center shadow"
-                                                   title="Chỉnh sửa">
+                                                   class="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-xl text-indigo-400 hover:text-indigo-300 transition-all flex items-center justify-center shadow"
+                                                   title="Chỉnh sửa thông tin">
                                                     <i class="fa-regular fa-pen-to-square text-xs"></i>
                                                 </a>
                                                 <a href="{{ route('user.deleteUser', ['id' => $userItem->id]) }}"
                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');"
-                                                   class="p-2 bg-rose-500/5 hover:bg-rose-500/20 border border-rose-500/10 hover:border-rose-500/30 rounded-xl text-rose-400 transition-all flex items-center justify-center shadow"
-                                                   title="Xóa">
+                                                   class="p-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 rounded-xl text-rose-400 transition-all flex items-center justify-center shadow"
+                                                   title="Xóa tài khoản">
                                                     <i class="fa-regular fa-trash-can text-xs"></i>
                                                 </a>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="px-6 py-10 text-center text-slate-500">
+                                            <i class="fa-solid fa-user-slash text-2xl mb-2 block text-slate-600"></i>
+                                            Không tìm thấy tài khoản người dùng nào phù hợp với bộ lọc hiện tại.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
                     @if($users->hasPages())
-                        <div class="mt-6 flex justify-center pb-4">
+                        <div class="p-4 border-t border-slate-800/60">
                             {{ $users->links() }}
+                        </div>
+                    @else
+                        <div class="p-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+                            <span>Hiển thị <strong class="text-slate-200">{{ $users->total() }}</strong> thành viên</span>
                         </div>
                     @endif
                 </div>
@@ -362,7 +455,7 @@
                     const roleSelect = document.getElementById('modal-role-select').value;
                     const tenantContainer = document.getElementById('modal-tenant-container');
                     // If the role needs a tenant assignment
-                    if (['landlord', 'unverified_landlord', 'manager'].includes(roleSelect)) {
+                    if (['landlord', 'unverified_landlord', 'manager', 'receptionist', 'housekeeper'].includes(roleSelect)) {
                         tenantContainer.style.display = 'block';
                     } else {
                         tenantContainer.style.display = 'none';
@@ -835,11 +928,38 @@
                                 <input type="text" name="like" id="like" value="{{ old('like', $editing ? $user->like : '') }}" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ Auth::check() ? 'Ghi chú công việc hoặc vai trò' : 'Ví dụ: Tìm phòng trọ khu vực Quận 10' }}">
                             </div>
                         </div>
+                        @if($editing)
+                            <div class="register-field">
+                                <label class="block text-xs font-semibold text-slate-300 mb-2" for="status">Tình trạng tài khoản</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-signal"></i></span>
+                                    <select name="status" id="status" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all">
+                                        <option value="active" {{ old('status', $user->status) === 'active' ? 'selected' : '' }}>Đang hoạt động</option>
+                                        <option value="locked" {{ old('status', $user->status) === 'locked' ? 'selected' : '' }}>Đã khóa</option>
+                                        <option value="pending" {{ old('status', $user->status) === 'pending' ? 'selected' : '' }}>Chờ duyệt</option>
+                                    </select>
+                                </div>
+                            </div>
+                            @if(isset($tenants))
+                                <div class="register-field">
+                                    <label class="block text-xs font-semibold text-slate-300 mb-2" for="tenant_id">Cơ sở lưu trú / Tenant</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-building"></i></span>
+                                        <select name="tenant_id" id="tenant_id" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all">
+                                            <option value="">Không gán cơ sở (Toàn hệ thống)</option>
+                                            @foreach($tenants as $t)
+                                                <option value="{{ $t->id }}" {{ old('tenant_id', $user->tenant_id) == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
                         <div class="register-field register-field-wide">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="password">{{ $editing ? 'Mật khẩu mới' : 'Mật khẩu' }}</label>
+                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="password">{{ $editing ? 'Mật khẩu mới (Tùy chọn)' : 'Mật khẩu' }}</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="password" id="password" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ $editing ? 'Nhập mật khẩu mới hoặc cũ để xác nhận' : '•••••••• (tối thiểu 6 ký tự)' }}">
+                                <input type="password" name="password" id="password" {{ $editing ? '' : 'required' }} class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ $editing ? 'Để trống nếu giữ nguyên mật khẩu hiện tại' : '•••••••• (tối thiểu 6 ký tự)' }}">
                             </div>
                         </div>
                         <div class="register-actions">
@@ -848,30 +968,60 @@
                         </div>
                     </form>
                 @elseif($page === 'read')
-                    <div class="text-center mb-8">
-                        <div class="w-20 h-20 mx-auto rounded-2xl bg-indigo-950/60 border border-indigo-500/20 flex items-center justify-center text-3xl text-indigo-400 mb-4">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 mb-3 shadow-inner">
                             <i class="fa-solid fa-user-shield"></i>
                         </div>
-                        <h1 class="text-2xl font-extrabold text-slate-200">{{ $messi->name }}</h1>
-                        <p class="text-xs text-indigo-400 mt-1">ID Admin: #{{ $messi->id }}</p>
+                        <h1 class="text-2xl font-extrabold text-slate-100">{{ $messi->name }}</h1>
+                        <p class="text-xs text-indigo-400 mt-1 font-mono">@ {{ $messi->username }} &bull; ID: #{{ $messi->id }}</p>
                     </div>
-                    <div class="space-y-4">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Email liên hệ</label>
-                            <p class="text-slate-200 mt-1 text-sm bg-slate-950/45 px-3 py-2.5 rounded-xl border border-slate-800/40">{{ $messi->email }}</p>
+                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-mono">{{ $messi->email ?: 'Chưa cập nhật email' }}</p>
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Mô tả / Sở thích</label>
-                            <p class="text-slate-200 mt-1 text-sm bg-slate-950/45 px-3 py-2.5 rounded-xl border border-slate-800/40">{{ $messi->like }}</p>
+                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Số điện thoại</label>
+                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-mono">{{ $messi->phone ?: 'Chưa cập nhật SĐT' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Vai trò hiện tại</label>
+                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-semibold text-indigo-400">
+                                {{ $messi->roleName() }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Trạng thái tài khoản</label>
+                            <div class="mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800">
+                                @if($messi->status === 'locked')
+                                    <span class="text-rose-400 font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> Đã khóa</span>
+                                @elseif($messi->status === 'pending')
+                                    <span class="text-amber-400 font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-clock text-[10px]"></i> Chờ duyệt</span>
+                                @else
+                                    <span class="text-emerald-400 font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-[10px]"></i> Đang hoạt động</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Cơ sở lưu trú / Tenant</label>
+                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800">
+                                {{ $messi->tenant?->name ?: 'Toàn hệ thống' }}
+                            </p>
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Ngày đăng ký</label>
-                            <p class="text-slate-200 mt-1 text-sm bg-slate-950/45 px-3 py-2.5 rounded-xl border border-slate-800/40">{{ $messi->created_at ? $messi->created_at->format('d/m/Y H:i') : 'Chưa rõ' }}</p>
+                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-mono">{{ $messi->created_at ? $messi->created_at->format('d/m/Y H:i:s') : 'Chưa rõ' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Mô tả / Ghi chú</label>
+                            <p class="text-slate-300 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 italic">{{ $messi->like ?: 'Không có ghi chú' }}</p>
                         </div>
                     </div>
-                    <div class="mt-8 flex gap-3">
-                        <a href="{{ route('user.list') }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 transition-all">Quay Lại Danh Sách</a>
-                        <a href="{{ route('user.updateUser', ['id' => $messi->id]) }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-indigo-650 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition-all">Chỉnh Sửa</a>
+
+                    <div class="mt-6 flex gap-3">
+                        <a href="{{ route('user.list') }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 transition-all">Quay Lại Danh Sách</a>
+                        <a href="{{ route('user.updateUser', ['id' => $messi->id]) }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition-all">Chỉnh Sửa</a>
                     </div>
                 @elseif($page === 'login' && Auth::check())
                     @php
@@ -1466,5 +1616,8 @@
             showToast(@json($errors->first()), "error");
         @endif
     </script>
+    @if($isAdminPage)
+        </div>
+    @endif
 </body>
 </html>
