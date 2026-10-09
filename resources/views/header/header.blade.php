@@ -134,7 +134,11 @@
                         <span class="font-bold text-slate-300 flex items-center gap-1.5">
                             <i class="fa-solid fa-user-circle text-emerald-400"></i> {{ Auth::user()->name }}
                         </span>
-                        @if(Auth::user()->canAccessLandlordDashboard())
+                        @if(Auth::user()->isHousekeeper())
+                            <a href="{{ route('smartroom.admin.housekeeping.matrix') }}" class="px-2.5 py-1 rounded-lg bg-teal-500/15 text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition-all font-bold flex items-center gap-1.5 shadow-sm" title="Trang Sơ đồ Buồng phòng">
+                                <i class="fa-solid fa-broom-ball text-xs"></i> Buồng phòng
+                            </a>
+                        @elseif(Auth::user()->canAccessLandlordDashboard())
                             <a href="{{ route('smartroom.admin') }}" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all font-bold flex items-center gap-1.5 shadow-sm" title="Trang Quản lý nhà trọ (Admin)">
                                 <i class="fa-solid fa-gauge-high text-xs"></i> Quản lý trọ
                             </a>

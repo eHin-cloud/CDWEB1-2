@@ -84,6 +84,7 @@
     <nav id="admin-sidebar-nav" class="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-4">
         
         <!-- NHÓM 1: TỔNG QUAN -->
+        @if(!$isHousekeeper)
         <div class="sidebar-group">
             <div class="sidebar-group-title px-3 mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Tổng Quan
@@ -106,25 +107,28 @@
                 @endif
             </div>
         </div>
+        @endif
 
         <!-- NHÓM 2: QUẢN LÝ PHÒNG & TÒA NHÀ -->
         <div class="sidebar-group">
             <div class="sidebar-group-title px-3 mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Quản Lý Phòng
+                {{ $isHousekeeper ? 'Buồng Phòng' : 'Quản Lý Phòng' }}
             </div>
             <div class="sidebar-group-divider hidden my-2 border-t border-slate-800/60"></div>
             <div class="space-y-0.5">
+                @if(!$isHousekeeper)
                 <a href="{{ route('smartroom.admin') }}?tab=room-map-section" 
                    data-section="room-map-section" 
                    class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'room-map-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                     <i class="fa-solid fa-cubes w-5 text-center text-[15px]"></i>
                     <span class="truncate">Sơ Đồ Phòng</span>
                 </a>
+                @endif
 
                 <a href="{{ route('smartroom.admin.housekeeping.matrix') }}" 
                    class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('smartroom.admin.housekeeping.*') ? 'text-teal-400 bg-teal-500/10 border-teal-500/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                     <i class="fa-solid fa-broom-ball w-5 text-center text-[15px] text-teal-400"></i>
-                    <span class="truncate">Sơ Đồ Buồng Phòng & Lễ Tân</span>
+                    <span class="truncate">{{ $isHousekeeper ? 'Sơ Đồ Buồng Phòng' : 'Sơ Đồ Buồng Phòng & Lễ Tân' }}</span>
                     @if($sidebarDirtyRoomsCount > 0)
                         <span id="sidebar-housekeeping-badge" class="sidebar-badge ml-auto bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30">
                             {{ $sidebarDirtyRoomsCount }}
@@ -132,12 +136,14 @@
                     @endif
                 </a>
 
+                @if(!$isHousekeeper)
                 <a href="{{ route('smartroom.admin') }}?tab=housekeeping-section" 
                    data-section="housekeeping-section" 
                    class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'housekeeping-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                     <i class="fa-solid fa-paintbrush w-5 text-center text-[15px]"></i>
                     <span class="truncate">Nhiệm Vụ Dọn Phòng</span>
                 </a>
+                @endif
                 
                 @if($isLandlord)
                     <a href="{{ route('admin.buildings.index') }}" 
@@ -164,6 +170,7 @@
         </div>
 
         <!-- NHÓM 3: KHÁCH THUÊ & HỢP ĐỒNG -->
+        @if(!$isHousekeeper)
         <div class="sidebar-group">
             <div class="sidebar-group-title px-3 mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Cư Dân & Khách Thuê
@@ -197,8 +204,10 @@
                 </a>
             </div>
         </div>
+        @endif
 
         <!-- NHÓM 4: DỊCH VỤ & TÀI CHÍNH -->
+        @if(!$isHousekeeper)
         <div class="sidebar-group">
             <div class="sidebar-group-title px-3 mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Vận Hành & Tài Chính
@@ -239,8 +248,10 @@
                 @endif
             </div>
         </div>
+        @endif
 
         <!-- NHÓM 5: TÀI KHOẢN & HỆ THỐNG -->
+        @if(!$isHousekeeper)
         <div class="sidebar-group">
             <div class="sidebar-group-title px-3 mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Hệ Thống
@@ -263,6 +274,7 @@
                 </a>
             </div>
         </div>
+        @endif
     </nav>
 
     <!-- Sidebar Footer (Cố định ở đáy) -->

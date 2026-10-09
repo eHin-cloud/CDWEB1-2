@@ -110,6 +110,29 @@
                             Truy cập Dashboard Quản Trị <i class="fa-solid fa-arrow-right"></i>
                         </div>
                     </a>
+                @elseif(Auth::user()->isHousekeeper())
+                    <!-- PORTAL 1: HOUSEKEEPER (SMARTROOM HOUSEKEEPING) -->
+                    <a href="{{ route('smartroom.admin.housekeeping.matrix') }}" id="portal-housekeeper" class="glass-card portal-teal group rounded-3xl p-8 flex flex-col justify-between">
+                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-teal-600/10 rounded-full blur-2xl group-hover:bg-teal-600/20 transition-all duration-500"></div>
+                        <div>
+                            <div class="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
+                                <i class="fa-solid fa-broom-ball text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-3 group-hover:text-teal-400 transition-colors duration-300">Sơ Đồ Buồng Phòng</h2>
+                            <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                                Dành cho Nhân viên Buồng phòng. Theo dõi trạng thái phòng thời gian thực, nhận ca phân công dọn dẹp và cập nhật tiến độ phòng Sạch / Bẩn / Đang dọn.
+                            </p>
+                            <ul class="space-y-2.5 text-xs text-slate-400 mb-8">
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-400 text-[10px]"></i> Xem sơ đồ ma trận phòng trực quan theo thời gian thực</li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-400 text-[10px]"></i> Bắt đầu ca dọn phòng và cập nhật tiến độ công việc</li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-400 text-[10px]"></i> Báo cáo phòng dọn xong để lễ tân/quản lý nghiệm thu</li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-400 text-[10px]"></i> Nhận diện phòng ưu tiên khẩn cấp đón khách mới</li>
+                            </ul>
+                        </div>
+                        <div class="flex items-center gap-2 text-teal-400 font-semibold text-sm group-hover:gap-4 transition-all duration-300">
+                            Truy cập Sơ Đồ Buồng Phòng <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </a>
                 @elseif(Auth::user()->canAccessLandlordDashboard())
                     <!-- PORTAL 1: ADMIN (SMARTROOM) -->
                     <a href="{{ route('smartroom.admin') }}" id="portal-admin" class="glass-card portal-indigo group rounded-3xl p-8 flex flex-col justify-between">

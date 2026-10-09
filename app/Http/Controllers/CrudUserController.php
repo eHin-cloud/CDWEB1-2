@@ -32,6 +32,7 @@ class CrudUserController extends Controller
             $user = Auth::user();
             $targetRoute = match (true) {
                 $user->isAdmin() => route('user.list'),
+                $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),
@@ -80,6 +81,7 @@ class CrudUserController extends Controller
             
             $defaultRoute = match (true) {
                 $user->isAdmin() => route('user.list'),
+                $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
                 $user->canAccessLandlordDashboard() => route('smartroom.admin'),
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),
