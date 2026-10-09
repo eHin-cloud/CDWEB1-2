@@ -431,4 +431,76 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
         $response->assertSee(route('smartroom.admin.housekeeping.matrix'), false);
         $response->assertSee('Buồng phòng');
     }
+
+    /**
+     * Test 10: Phân quyền buồng phòng - Không có quyền phân công, check-in, check-out nhưng được chọn dọn và nghiệm thu
+     */
+    public function test_housekeeper_has_restricted_permissions_and_can_take_dirty_room(): void
+    {
+        // 1. Buồng phòng không được quyền gọi API phân công (assign) -> 403
+        $assignRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.housekeeping.assign'), [
+                'room_id' => $this->room->id,
+                'assigned_staff_id' => $this->housekeeper->id,
+                'priority' => 'normal',
+            ]);
+        $assignRes->assertStatus(403)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('code', 'ERR_18_07');
+
+        // 2. Buồng phòng không được quyền gọi API Check-in -> 403
+        $this->room->update(['housekeeping_status' => 'inspected', 'cleaning_status' => 'inspected']);
+        $checkinRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.frontdesk.checkin'), [
+                'room_id' => $this->room->id,
+                'guest_name' => 'Khách Vãng Lai',
+                'rental_type' => 'day',
+            ]);
+        $checkinRes->assertStatus(403);
+
+        // 3. Buồng phòng không được quyền gọi API Check-out -> 403
+        $checkoutRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.frontdesk.checkout'), [
+                'room_id' => $this->room->id,
+            ]);
+        $checkoutRes->assertStatus(403);
+
+        // 4. Buồng phòng nhìn thấy phòng dirty chưa ai nhận và bấm "Bắt đầu dọn" -> Tự động gán phân công
+        $this->room->update([
+            'housekeeping_status' => 'dirty',
+            'cleaning_status' => 'dirty',
+            'assigned_staff_id' => null,
+        ]);
+
+        $takeRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.housekeeping.status'), [
+                'room_id' => $this->room->id,
+                'housekeeping_status' => 'cleaning',
+            ]);
+
+        $takeRes->assertStatus(200)->assertJsonPath('success', true);
+        $this->room->refresh();
+        $this->assertEquals('cleaning', $this->room->housekeeping_status);
+        $this->assertEquals($this->housekeeper->id, $this->room->assigned_staff_id);
+
+        // 5. Buồng phòng xác nhận đã dọn xong -> clean
+        $cleanRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.housekeeping.status'), [
+                'room_id' => $this->room->id,
+                'housekeeping_status' => 'clean',
+            ]);
+        $cleanRes->assertStatus(200);
+        $this->room->refresh();
+        $this->assertEquals('clean', $this->room->housekeeping_status);
+
+        // 6. Buồng phòng nghiệm thu xác nhận hoàn tất -> inspected
+        $inspectRes = $this->actingAs($this->housekeeper)
+            ->postJson(route('smartroom.admin.housekeeping.inspect'), [
+                'room_id' => $this->room->id,
+                'inspection_notes' => 'Buồng phòng đã nghiệm thu sạch sẽ đạt chuẩn',
+            ]);
+        $inspectRes->assertStatus(200)->assertJsonPath('code', 'ERR_18_06');
+        $this->room->refresh();
+        $this->assertEquals('inspected', $this->room->housekeeping_status);
+    }
 }
