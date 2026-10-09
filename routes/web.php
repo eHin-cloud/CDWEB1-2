@@ -124,7 +124,6 @@ Route::prefix('smartroom/resident')->group(function () {
     Route::post('/tickets/analyze', [ResidentPortalController::class, 'analyzeTicket'])->name('smartroom.resident.tickets.analyze');
     Route::post('/tickets', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store');
     Route::post('/tickets/store', [ResidentPortalController::class, 'storeTicket'])->name('smartroom.resident.tickets.store.alias');
-    Route::post('/housekeeping', [ResidentPortalController::class, 'storeHousekeepingRequest'])->name('smartroom.resident.housekeeping.store');
     Route::post('/contract/{id}/request-renewal', [ResidentPortalController::class, 'requestRenewal'])->name('smartroom.resident.contract.request_renewal');
 });
 
