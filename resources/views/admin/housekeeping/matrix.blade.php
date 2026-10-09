@@ -66,9 +66,8 @@
 
         #admin-shell {
             margin-left: 16rem !important;
-            width: calc(100% - 16rem) !important;
             min-width: 0;
-            transition: margin-left 0.2s ease-in-out, width 0.2s ease-in-out;
+            transition: margin-left 0.2s ease-in-out;
         }
 
         html.sidebar-collapsed #admin-sidebar,
@@ -79,14 +78,6 @@
         html.sidebar-collapsed #admin-shell,
         body.sidebar-collapsed #admin-shell {
             margin-left: 5rem !important;
-            width: calc(100% - 5rem) !important;
-        }
-
-        @media (max-width: 768px) {
-            #admin-shell {
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
         }
     </style>
 </head>
@@ -103,7 +94,7 @@
     @include('admin.partials.sidebar')
 
     <!-- MAIN APP WRAPPER CÓ THANH SIDEBAR BÊN TRÁI -->
-    <div id="admin-shell" class="min-w-0 flex flex-col h-screen overflow-hidden relative z-10 transition-[margin-left,width] duration-200">
+    <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-hidden relative z-10 transition-[margin-left] duration-200">
         
         <!-- TOP NAVBAR ĐIỀU HÀNH -->
         <header class="h-16 border-b border-slate-900 bg-[#080b11]/90 backdrop-blur-md flex items-center justify-between px-6 sm:px-8 sticky top-0 z-20 shrink-0">
@@ -832,8 +823,7 @@
         </div>
     </div>
 
-    <!-- Scripts điều khiển sidebar & các hành động tương tác -->
-    <script src="{{ asset('js/admin-sidebar.js') }}"></script>
+    <!-- Scripts điều khiển tương tác -->
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -1302,6 +1292,5 @@
             }
         }
     </script>
-    <script src="{{ asset('js/admin-sidebar.js') }}"></script>
 </body>
 </html>
