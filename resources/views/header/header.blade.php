@@ -1,5 +1,5 @@
 <!-- Decorative search backdrop -->
-<div id="renty-search-backdrop" class="renty-search-backdrop" onclick="blurRentySearch()"></div>
+<div id="renty-search-backdrop" class="renty-search-backdrop hidden" onclick="blurRentySearch()" style="display:none!important;"></div>
 
 <!-- NAVBAR -->
 <header class="h-20 border-b border-slate-900 bg-[#080b11]/80 backdrop-blur-md sticky top-0 z-40 flex items-center">

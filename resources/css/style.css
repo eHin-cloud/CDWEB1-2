@@ -757,25 +757,19 @@ summary:active {
 }
 
 .renty-search-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 35;
-    pointer-events: none;
-    opacity: 0;
-    background: rgba(2, 6, 23, 0.12);
-    backdrop-filter: blur(0);
-    -webkit-backdrop-filter: blur(0);
-    transition:
-        opacity var(--transition-normal),
-        backdrop-filter var(--transition-normal),
-        -webkit-backdrop-filter var(--transition-normal);
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .renty-search-backdrop.is-active {
-    opacity: 1;
-    pointer-events: auto;
-    backdrop-filter: blur(5px) saturate(118%);
-    -webkit-backdrop-filter: blur(5px) saturate(118%);
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .renty-search-panel {
@@ -900,7 +894,7 @@ summary:active {
 }
 
 .theme-light .renty-search-backdrop.is-active {
-    background: rgba(248, 250, 252, 0.3);
+    display: none !important;
 }
 
 .theme-light .renty-search-panel.is-search-active {
