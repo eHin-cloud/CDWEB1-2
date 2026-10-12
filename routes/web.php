@@ -20,6 +20,7 @@ use App\Http\Controllers\HousekeepingController;
 use App\Http\Controllers\HousekeepingFrontdeskController;
 use App\Http\Controllers\SuperadminController;
 use App\Http\Controllers\ResidentManagementController;
+use App\Http\Controllers\RoomReviewReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -585,41 +586,14 @@ Route::get('/renty/room/{id}', function ($id) use ($rentyRooms) {
     ]);
 })->name('renty.room.show');
 
-Route::post('/renty/room/{id}/review', function (Illuminate\Http\Request $request, $id) {
-    $request->validate([
-        'author_name' => 'required|string|max:255',
-        'rating' => 'required|integer|min:1|max:5',
-        'comment' => 'required|string'
-    ]);
+// FEAT_25_REVIEW_REPORT: ĐÁNH GIÁ PHÒNG THỰC TẾ & BÁO CÁO SAI PHẠM - HUỲNH VĂN VĨNH EM
+Route::post('/renty/room/{id}/review', [RoomReviewReportController::class, 'storeReview'])
+    ->middleware(['auth', 'verified_tenant'])
+    ->name('renty.room.review.store');
 
-    \App\Models\Review::create([
-        'room_id' => $id,
-        'author_name' => $request->author_name,
-        'rating' => $request->rating,
-        'comment' => $request->comment
-    ]);
-
-    return back()->with('success', 'Cảm ơn bạn đã gửi đánh giá thực tế!');
-})->middleware('throttle:10,1')->name('renty.room.review.store');
-
-Route::post('/renty/room/{id}/report', function (Illuminate\Http\Request $request, $id) {
-    $request->validate([
-        'reporter_name' => 'nullable|string|max:255',
-        'reporter_phone' => 'nullable|string|max:50',
-        'reason' => 'required|in:scam,fake_images,wrong_price,unsafe,spam,other',
-        'description' => 'required|string|min:10|max:2000',
-    ]);
-
-    \App\Models\RoomReport::create([
-        'room_id' => $id,
-        'reporter_name' => $request->reporter_name,
-        'reporter_phone' => $request->reporter_phone,
-        'reason' => $request->reason,
-        'description' => $request->description,
-        'status' => 'pending',
-    ]);
-    return back()->with('success', 'Cảm ơn bạn đã gửi báo cáo. Renty Review sẽ kiểm tra phòng này sớm nhất.');
-})->middleware('throttle:5,1')->name('renty.room.report.store');
+Route::post('/renty/room/{id}/report', [RoomReviewReportController::class, 'storeReport'])
+    ->middleware('throttle:5,1')
+    ->name('renty.room.report.store');
 
 Route::post('/renty/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat'])
     ->name('renty.chatbot.chat')

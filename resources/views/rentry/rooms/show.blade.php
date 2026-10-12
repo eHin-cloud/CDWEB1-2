@@ -103,6 +103,19 @@
             opacity: 1;
         }
 
+        @keyframes starWarningPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0.3); }
+            50% { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.4); border-color: #f59e0b; }
+        }
+        .star-warning-animate {
+            animation: starWarningPulse 0.4s ease-in-out 3;
+            border-color: #f59e0b !important;
+        }
+        .is-invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 1px #ef4444 !important;
+        }
+
         /* AI Summary Glowing Pulsing Box */
         #review-summary-box {
             position: relative;
@@ -124,9 +137,34 @@
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+    <!-- Toast container cho FEAT_25 -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
     @include('header.header')
 
     <main class="container mx-auto px-6 py-8 max-w-6xl">
+        @if(session('success'))
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-between animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-lg"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+                @if(session('code'))
+                    <span class="text-xs font-mono bg-emerald-500/20 px-2 py-0.5 rounded">{{ session('code') }}</span>
+                @endif
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-semibold flex items-center justify-between animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+                @if(session('error_code'))
+                    <span class="text-xs font-mono bg-rose-500/20 px-2 py-0.5 rounded">{{ session('error_code') }}</span>
+                @endif
+            </div>
+        @endif
         <!-- Back navigation link -->
         <div class="mb-6">
             <a href="{{ route('renty.user') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-emerald-500/30 text-slate-350 hover:text-emerald-300 text-xs font-bold transition-all active:scale-[0.98]">
@@ -300,32 +338,70 @@
                         @endforelse
                     </div>
 
-                    <!-- Gửi đánh giá form -->
-                    <form action="{{ route('renty.room.review.store', $room['id']) }}" method="POST" class="mt-8 pt-6 border-t border-slate-800/60 space-y-4">
+                    <!-- Gửi đánh giá form (FEAT_25_REVIEW_REPORT) -->
+                    <form id="formRoomReview" action="{{ route('renty.room.review.store', $room['id']) }}" method="POST" class="mt-8 pt-6 border-t border-slate-800/60 space-y-4">
                         @csrf
-                        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-                            <i class="fa-solid fa-pen-to-square text-emerald-400"></i> Chia sẻ trải nghiệm trọ
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <input type="text" name="author_name" required value="{{ Auth::user()->name ?? '' }}" placeholder="Tên hiển thị của bạn" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-600 transition-colors">
-                            </div>
-                            <div>
-                                <select name="rating" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
-                                    <option value="5">5 sao - Xuất sắc</option>
-                                    <option value="4">4 sao - Tốt</option>
-                                    <option value="3">3 sao - Trung bình</option>
-                                    <option value="2">2 sao - Kém</option>
-                                    <option value="1">1 sao - Rất kém</option>
-                                </select>
-                            </div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-to-square text-indigo-400"></i> Chia sẻ trải nghiệm trọ thực tế
+                            </h3>
+                            @guest
+                                <a href="{{ route('login') }}" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
+                                    <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i> Đăng nhập để đánh giá
+                                </a>
+                            @endguest
                         </div>
+
+                        <!-- STT 1: Star Rating Bar (star_picker) -->
                         <div>
-                            <textarea name="comment" required rows="3.5" placeholder="Bạn thấy phòng như thế nào? An ninh có đảm bảo? Chủ trọ có nhiệt tình? Chi phí phát sinh có hợp lý không?..." class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-600 transition-colors resize-none"></textarea>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Chấm điểm sao <span class="text-rose-500">*</span>
+                            </label>
+                            <div id="star_picker" class="star_picker flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 transition-all">
+                                <input type="hidden" name="rating" id="rating_input" value="">
+                                <div class="stars-group flex items-center gap-2 cursor-pointer text-2xl text-slate-600 select-none">
+                                    <i class="fa-solid fa-star star-item transition-all hover:scale-110" data-value="1" title="1 sao - Rất kém"></i>
+                                    <i class="fa-solid fa-star star-item transition-all hover:scale-110" data-value="2" title="2 sao - Kém"></i>
+                                    <i class="fa-solid fa-star star-item transition-all hover:scale-110" data-value="3" title="3 sao - Trung bình"></i>
+                                    <i class="fa-solid fa-star star-item transition-all hover:scale-110" data-value="4" title="4 sao - Tốt"></i>
+                                    <i class="fa-solid fa-star star-item transition-all hover:scale-110" data-value="5" title="5 sao - Xuất sắc"></i>
+                                </div>
+                                <span id="star_rating_text" class="text-xs font-semibold text-slate-400">★ ★ ★ ★ ★ (Chưa chọn sao)</span>
+                            </div>
+                            <p id="err_rating" class="text-xs text-rose-500 mt-1.5 hidden flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                <span class="err-text"></span>
+                            </p>
                         </div>
-                        <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 active:scale-95 transition-all">
-                            Gửi đánh giá
-                        </button>
+
+                        <!-- STT 2: Textarea comment -->
+                        <div>
+                            <label for="comment" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Nội dung nhận xét thực tế <span class="text-rose-500">*</span>
+                            </label>
+                            <textarea id="comment" name="comment" rows="3.5" 
+                                placeholder="Phòng sạch sẽ, chủ nhà thân thiện..." 
+                                class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none placeholder-slate-600 transition-colors resize-none"></textarea>
+                            <p id="err_comment" class="text-xs text-rose-500 mt-1.5 hidden flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                <span class="err-text"></span>
+                            </p>
+                        </div>
+
+                        <!-- STT 3: Button btnSubmitReview & STT 4: Report Link lnkReport -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                            <button type="submit" id="btnSubmitReview" 
+                                class="px-6 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/20 active:scale-95 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane text-[11px]"></i>
+                                <span>Gửi đánh giá</span>
+                            </button>
+
+                            <a href="javascript:void(0)" id="lnkReport" onclick="openReportModal()" 
+                                class="text-xs font-semibold text-rose-400/90 hover:text-rose-300 transition-colors flex items-center gap-1.5">
+                                <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
+                                <span>Báo cáo tin này có sai phạm</span>
+                            </a>
+                        </div>
                     </form>
                 </section>
             </div>
@@ -539,24 +615,43 @@
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('renty.room.report.store', $room['id']) }}" class="space-y-4">
+            <form id="formRoomReport" method="POST" action="{{ route('renty.room.report.store', $room['id']) }}" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" name="reporter_name" value="{{ Auth::user()->name ?? '' }}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none placeholder-slate-600 transition-colors" placeholder="Họ tên của bạn">
                     <input type="tel" name="reporter_phone" value="{{ Auth::user()->phone ?? '' }}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none placeholder-slate-600 transition-colors" placeholder="Số điện thoại của bạn">
                 </div>
-                <select name="reason" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none transition-colors">
-                    <option value="scam">Nghi ngờ lừa đảo / yêu cầu cọc bất thường</option>
-                    <option value="fake_images">Ảnh chụp không đúng thực tế phòng</option>
-                    <option value="wrong_price">Giá hoặc phí phát sinh sai khác nhiều</option>
-                    <option value="unsafe">Vấn đề an toàn / an ninh khu trọ</option>
-                    <option value="spam">Tin đăng spam / trùng lặp / hết phòng từ lâu</option>
-                    <option value="other">Lý do khác</option>
-                </select>
-                <textarea name="description" required minlength="10" rows="4" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" placeholder="Vui lòng mô tả chi tiết điều bạn thấy bất thường để quản trị viên xác minh..."></textarea>
+                
+                <!-- Lý do vi phạm (report_reason) -->
+                <div>
+                    <label for="report_reason" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                        Lý do báo cáo sai phạm <span class="text-rose-500">*</span>
+                    </label>
+                    <select id="report_reason" name="report_reason" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none transition-colors">
+                        <option value="">-- Chọn lý do vi phạm --</option>
+                        <option value="Lừa cọc / yêu cầu cọc bất thường">Lừa cọc / yêu cầu cọc bất thường</option>
+                        <option value="Ảnh sai thực tế phòng">Ảnh sai thực tế phòng</option>
+                        <option value="Giá ảo / phụ phí phát sinh sai lệch">Giá ảo / phụ phí phát sinh sai lệch</option>
+                        <option value="Vấn đề an toàn / an ninh khu trọ">Vấn đề an toàn / an ninh khu trọ</option>
+                        <option value="Tin spam / đã hết phòng từ lâu">Tin spam / đã hết phòng từ lâu</option>
+                        <option value="Lý do khác">Lý do khác</option>
+                    </select>
+                    <p id="err_report_reason" class="text-xs text-rose-500 mt-1.5 hidden flex items-center gap-1">
+                        <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                        <span class="err-text"></span>
+                    </p>
+                </div>
+
+                <div>
+                    <label for="report_description" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                        Mô tả chi tiết vi phạm
+                    </label>
+                    <textarea id="report_description" name="description" rows="3.5" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none placeholder-slate-600 transition-colors resize-none" placeholder="Vui lòng mô tả chi tiết điều bạn thấy bất thường để quản trị viên xác minh..."></textarea>
+                </div>
+
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="closeReportModal()" class="px-4.5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 hover:text-slate-100 text-slate-355 text-xs font-bold transition-all active:scale-95">Hủy</button>
-                    <button type="submit" class="px-5.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-rose-600/10 hover:shadow-rose-600/20">
+                    <button type="submit" id="btnSubmitReport" class="px-5.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-rose-600/10 hover:shadow-rose-600/20">
                         Gửi báo cáo
                     </button>
                 </div>
@@ -786,6 +881,279 @@
                 });
             });
         });
+
+        // ==========================================
+        // FEAT_25_REVIEW_REPORT: XỬ LÝ ĐÁNH GIÁ & BÁO CÁO VI PHẠM
+        // ==========================================
+        const starRatingLabels = {
+            1: '1 sao - Rất kém',
+            2: '2 sao - Kém',
+            3: '3 sao - Trung bình',
+            4: '4 sao - Tốt',
+            5: '5 sao - Xuất sắc'
+        };
+
+        // Khởi tạo tương tác Star Picker
+        const starItems = document.querySelectorAll('#star_picker .star-item');
+        const ratingInput = document.getElementById('rating_input');
+        const starRatingText = document.getElementById('star_rating_text');
+        const starPickerBox = document.getElementById('star_picker');
+
+        function updateStarUI(rating) {
+            starItems.forEach(star => {
+                const val = parseInt(star.getAttribute('data-value'), 10);
+                if (val <= rating) {
+                    star.classList.remove('text-slate-600');
+                    star.classList.add('text-amber-400');
+                } else {
+                    star.classList.remove('text-amber-400');
+                    star.classList.add('text-slate-600');
+                }
+            });
+            if (rating > 0) {
+                starRatingText.innerText = starRatingLabels[rating] || (rating + ' sao');
+                starRatingText.classList.remove('text-slate-400');
+                starRatingText.classList.add('text-amber-400');
+            } else {
+                starRatingText.innerText = '★ ★ ★ ★ ★ (Chưa chọn sao)';
+                starRatingText.classList.remove('text-amber-400');
+                starRatingText.classList.add('text-slate-400');
+            }
+        }
+
+        if (starItems.length > 0) {
+            starItems.forEach(star => {
+                star.addEventListener('mouseenter', () => {
+                    const hoverVal = parseInt(star.getAttribute('data-value'), 10);
+                    updateStarUI(hoverVal);
+                });
+                star.addEventListener('click', () => {
+                    const clickVal = parseInt(star.getAttribute('data-value'), 10);
+                    ratingInput.value = clickVal;
+                    updateStarUI(clickVal);
+                    // Xóa lỗi nếu có
+                    starPickerBox?.classList.remove('star-warning-animate');
+                    document.getElementById('err_rating')?.classList.add('hidden');
+                });
+            });
+
+            document.querySelector('#star_picker .stars-group')?.addEventListener('mouseleave', () => {
+                const currentRating = parseInt(ratingInput.value, 10) || 0;
+                updateStarUI(currentRating);
+            });
+        }
+
+        // Toast thông báo
+        function showToast(message, isSuccess = true, code = '') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-2xl border text-sm font-semibold flex items-center justify-between gap-4 shadow-2xl transition-all duration-300 pointer-events-auto animate-fade-in ${
+                isSuccess 
+                ? 'bg-emerald-950/95 border-emerald-500 text-emerald-300 shadow-emerald-900/30' 
+                : 'bg-rose-950/95 border-rose-500 text-rose-300 shadow-rose-900/30'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid ${isSuccess ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'} text-lg"></i>
+                    <span>${message}</span>
+                </div>
+                ${code ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded ${isSuccess ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${code}</span>` : ''}
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Xử lý gửi Form Đánh giá phòng (Review)
+        const formRoomReview = document.getElementById('formRoomReview');
+        if (formRoomReview) {
+            formRoomReview.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const ratingVal = ratingInput.value;
+                const commentEl = document.getElementById('comment');
+                const commentVal = commentEl.value.trim();
+
+                let hasError = false;
+
+                // 1. Kiểm tra chưa chọn số sao (ERR_25_01)
+                if (!ratingVal || parseInt(ratingVal, 10) < 1 || parseInt(ratingVal, 10) > 5) {
+                    starPickerBox?.classList.remove('star-warning-animate');
+                    void starPickerBox?.offsetWidth; // trigger reflow
+                    starPickerBox?.classList.add('star-warning-animate');
+                    
+                    const errRating = document.getElementById('err_rating');
+                    if (errRating) {
+                        errRating.querySelector('.err-text').innerText = 'Vui lòng chọn số sao xếp hạng (từ 1 đến 5 sao).';
+                        errRating.classList.remove('hidden');
+                    }
+                    hasError = true;
+                } else {
+                    document.getElementById('err_rating')?.classList.add('hidden');
+                    starPickerBox?.classList.remove('star-warning-animate');
+                }
+
+                // 2. Kiểm tra nhận xét quá ngắn (ERR_25_02: < 10 ký tự)
+                if (!commentVal || commentVal.length < 10) {
+                    commentEl.classList.add('is-invalid');
+                    commentEl.classList.add('border-red-500');
+                    const errComment = document.getElementById('err_comment');
+                    if (errComment) {
+                        errComment.querySelector('.err-text').innerText = 'Nội dung nhận xét đánh giá phải có độ dài tối thiểu 10 ký tự.';
+                        errComment.classList.remove('hidden');
+                    }
+                    hasError = true;
+                } else {
+                    commentEl.classList.remove('is-invalid');
+                    commentEl.classList.remove('border-red-500');
+                    document.getElementById('err_comment')?.classList.add('hidden');
+                }
+
+                if (hasError) return;
+
+                // Submit qua Ajax / Fetch
+                const btn = document.getElementById('btnSubmitReview');
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[11px]"></i> <span>Đang gửi...</span>`;
+
+                try {
+                    const response = await fetch(formRoomReview.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            rating: parseInt(ratingVal, 10),
+                            comment: commentVal
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            showToast(data.message || 'Vui lòng đăng nhập tài khoản để thực hiện đánh giá.', false, 'AUTH_REQUIRED');
+                        } else if (response.status === 403) {
+                            showToast(data.message || 'Chỉ người có hợp đồng thuê phòng mới được quyền gửi đánh giá thực tế.', false, 'FORBIDDEN');
+                        } else {
+                            if (data.errors) {
+                                if (data.errors.rating) {
+                                    starPickerBox?.classList.add('star-warning-animate');
+                                    const errRating = document.getElementById('err_rating');
+                                    if (errRating) {
+                                        errRating.querySelector('.err-text').innerText = data.errors.rating[0];
+                                        errRating.classList.remove('hidden');
+                                    }
+                                }
+                                if (data.errors.comment) {
+                                    commentEl.classList.add('is-invalid', 'border-red-500');
+                                    const errComment = document.getElementById('err_comment');
+                                    if (errComment) {
+                                        errComment.querySelector('.err-text').innerText = data.errors.comment[0];
+                                        errComment.classList.remove('hidden');
+                                    }
+                                }
+                            }
+                            showToast(data.message || 'Dữ liệu đánh giá không hợp lệ.', false, data.code || 'ERR');
+                        }
+                    } else {
+                        showToast(data.message || 'Cảm ơn bạn đã gửi đánh giá thực tế!', true, 'SUCCESS');
+                        commentEl.value = '';
+                        ratingInput.value = '';
+                        updateStarUI(0);
+                        setTimeout(() => window.location.reload(), 1200);
+                    }
+                } catch (err) {
+                    showToast('Đã xảy ra lỗi kết nối. Vui lòng thử lại!', false, 'NETWORK_ERROR');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            });
+
+            // Khi người dùng gõ vào textarea thì xóa viền đỏ lỗi
+            document.getElementById('comment')?.addEventListener('input', function() {
+                if (this.value.trim().length >= 10) {
+                    this.classList.remove('is-invalid', 'border-red-500');
+                    document.getElementById('err_comment')?.classList.add('hidden');
+                }
+            });
+        }
+
+        // Xử lý gửi Form Báo cáo vi phạm (Report)
+        const formRoomReport = document.getElementById('formRoomReport');
+        if (formRoomReport) {
+            formRoomReport.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const reasonSelect = document.getElementById('report_reason');
+                const reasonVal = reasonSelect.value.trim();
+                const descVal = document.getElementById('report_description')?.value.trim() || '';
+
+                // Kiểm tra chưa chọn lý do vi phạm (ERR_25_03)
+                if (!reasonVal) {
+                    reasonSelect.classList.add('is-invalid', 'border-red-500');
+                    const errReport = document.getElementById('err_report_reason');
+                    if (errReport) {
+                        errReport.querySelector('.err-text').innerText = 'Vui lòng chọn lý do vi phạm (Lừa cọc, Ảnh sai thực tế, Giá ảo...).';
+                        errReport.classList.remove('hidden');
+                    }
+                    return;
+                } else {
+                    reasonSelect.classList.remove('is-invalid', 'border-red-500');
+                    document.getElementById('err_report_reason')?.classList.add('hidden');
+                }
+
+                const btn = document.getElementById('btnSubmitReport');
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>`;
+
+                try {
+                    const response = await fetch(formRoomReport.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            report_reason: reasonVal,
+                            description: descVal
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        showToast(data.message || 'Không thể gửi báo cáo.', false, data.code || 'ERR');
+                    } else {
+                        // Thành công: ERR_25_04
+                        closeReportModal();
+                        showToast(data.message || 'Đã tiếp nhận báo cáo vi phạm. Quản trị viên sẽ kiểm duyệt tin này trong 12h.', true, data.code || 'ERR_25_04');
+                        formRoomReport.reset();
+                    }
+                } catch (err) {
+                    showToast('Đã xảy ra lỗi kết nối. Vui lòng thử lại!', false, 'NETWORK_ERROR');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            });
+
+            document.getElementById('report_reason')?.addEventListener('change', function() {
+                if (this.value) {
+                    this.classList.remove('is-invalid', 'border-red-500');
+                    document.getElementById('err_report_reason')?.classList.add('hidden');
+                }
+            });
+        }
     </script>
 </body>
 </html>
