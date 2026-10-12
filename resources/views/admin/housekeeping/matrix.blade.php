@@ -61,24 +61,53 @@
         }
 
         #admin-sidebar {
-            width: 16rem !important;
+            width: 16rem;
             transition: width 0.2s ease-in-out;
         }
 
         #admin-shell {
-            margin-left: 16rem !important;
+            margin-left: 16rem;
             min-width: 0;
             transition: margin-left 0.2s ease-in-out;
         }
 
-        html.sidebar-collapsed #admin-sidebar,
-        body.sidebar-collapsed #admin-sidebar {
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar {
             width: 5rem !important;
         }
 
-        html.sidebar-collapsed #admin-shell,
-        body.sidebar-collapsed #admin-shell {
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-shell {
             margin-left: 5rem !important;
+        }
+
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav a,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav button,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-user,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-logout {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-brand {
+            display: none !important;
+        }
+
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav span,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-brand span,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-logout span,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-text,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-profile,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-badge,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-group-title {
+            display: none !important;
+        }
+
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-group-divider {
+            display: block !important;
+        }
+
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #sidebar-toggle i {
+            transform: rotate(180deg) !important;
         }
     </style>
 </head>
@@ -2436,5 +2465,6 @@
             setTimeout(initHousekeepingRealtime, 250);
         });
     </script>
+    <script src="{{ asset('js/admin-sidebar.js') }}"></script>
 </body>
 </html>
