@@ -494,7 +494,13 @@
                                     if (preview) preview.src = data.avatarUrl;
                                     // Cập nhật cả avatar trên sidebar/header nếu có
                                     const headerAvatar = document.querySelector('.header-avatar-img');
-                                    if (headerAvatar) headerAvatar.src = data.avatarUrl;
+                                    if (headerAvatar) {
+                                        headerAvatar.src = data.avatarUrl;
+                                        headerAvatar.classList.remove('hidden');
+                                        headerAvatar.style.display = 'block';
+                                        const fallback = document.querySelector('.header-avatar-fallback');
+                                        if (fallback) fallback.style.display = 'none';
+                                    }
                                 } else {
                                     if (err) {
                                         err.textContent = data.message || 'Lỗi khi tải ảnh lên máy chủ.';
