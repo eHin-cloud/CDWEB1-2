@@ -5754,14 +5754,16 @@ body.theme-light .renty-chatbot-mascot {
 }
 
         /* ============================================================ */
-    /* ÁNH LỬA XANH CHÁY NHẸ BẬP BÙNG QUANH VIỀN BANNER (TÍCH XANH) */
+    /* ÁNH LỬA XANH CHÁY NHẸ BẬP BÙNG QUANH VIỀN THẺ PHÒNG HÌNH CHỮ NHẬT */
     /* ============================================================ */
+    .room-item-card.verified-flame-card,
+    .verified-flame-card,
     .verified-flame-banner {
         position: relative !important;
-        border-radius: 1rem 1rem 0 0 !important;
-        /* Ánh lửa xanh nhẹ bập bùng quanh viền, KHÔNG xoay vòng, KHÔNG che ảnh */
+        /* Ánh lửa xanh nhẹ bập bùng ôm trọn viền hình chữ nhật của thẻ */
         border: 1.5px solid rgba(56, 189, 248, 0.75) !important;
         animation: blueFlameNaturalFlicker 2.2s ease-in-out infinite !important;
+        transition: transform var(--transition-normal, 0.25s), box-shadow 0.25s ease, border-color 0.25s ease !important;
     }
 
     @keyframes blueFlameNaturalFlicker {
@@ -5817,6 +5819,7 @@ body.theme-light .renty-chatbot-mascot {
     }
 
     /* Khi rê chuột: ngọn lửa bùng sáng nhẹ hơn */
+    .room-item-card.verified-flame-card:hover,
     .room-item-card:hover .verified-flame-banner {
         box-shadow: 
             0 0 12px rgba(56, 189, 248, 1),
