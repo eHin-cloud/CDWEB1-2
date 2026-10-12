@@ -95,18 +95,32 @@
                 });
             } else {
                 document.body.classList.remove('renty-map-mode');
+                document.body.classList.remove('renty-map-fullscreen');
+                const fsIcon = document.getElementById('gm-fullscreen-icon');
+                if (fsIcon) fsIcon.className = 'fa-solid fa-expand';
+                const fsBtn = document.getElementById('gm-fullscreen-btn');
+                if (fsBtn) {
+                    fsBtn.title = 'Toàn màn hình (Esc)';
+                    fsBtn.classList.remove('border-amber-500/60', 'text-amber-400');
+                }
                 if (mapBtn) mapBtn.classList.remove('active');
                 if (gridBtn) gridBtn.classList.add('active');
                 localStorage.setItem('rentry_view_mode', 'grid');
             }
         };
 
-        // Auto activate map if view=map is in URL
+        // Mặc định luôn ở giao diện 2D (Lưới danh sách). Chỉ mở bản đồ khi URL có chỉ định view=map
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const requestedView = params.get('view') || localStorage.getItem('rentry_view_mode');
-            if (requestedView === 'map' && typeof window.setViewMode === 'function') {
-                window.setViewMode('map');
+            if (params.get('view') === 'map') {
+                if (typeof window.setViewMode === 'function') {
+                    window.setViewMode('map');
+                }
+            } else {
+                localStorage.setItem('rentry_view_mode', 'grid');
+                if (typeof window.setViewMode === 'function') {
+                    window.setViewMode('grid');
+                }
             }
         });
     </script>
@@ -336,6 +350,9 @@
                         <div class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
                             <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
                             <input type="text" id="hero-search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
+                            <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-3 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
 
                         <!-- AI / Smart Search Spell Correction (Did You Mean) Banner -->
@@ -577,101 +594,260 @@
 
     <!-- MAIN WORKSPACE -->
     <main class="container mx-auto px-6 py-6 max-w-6xl flex-grow flex flex-col relative z-10">
-        <!-- Interactive Map Pane (Left 50% in map mode) -->
-        <div class="renty-split-left relative h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl">
+        <!-- Interactive Map Pane (Left 50% in map mode) - STT 1: map_view (Bản đồ số) -->
+        <div class="renty-split-left relative h-full rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl" data-field-name="map_view">
             <!-- Map Viewport (Fills 100% of left pane) -->
-            <div id="renty-interactive-map" class="w-full h-full"></div>
+            <div id="renty-interactive-map" name="map_view" data-field-name="map_view" class="w-full h-full"></div>
 
-            <!-- Floating Google Maps Pro HUD Control Bar -->
-            <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] bg-slate-950/92 border border-slate-800/90 rounded-2xl p-3 shadow-2xl backdrop-blur-md flex flex-col gap-2.5 transition-all duration-300">
-                <!-- Top row: Brand & Layer Switchers & Quick Action Controls -->
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span class="text-xs font-black tracking-wide bg-gradient-to-r from-blue-400 via-emerald-400 to-teal-300 bg-clip-text text-transparent flex items-center gap-1.5">
-                            <i class="fa-brands fa-google text-blue-400"></i> Google Maps
-                        </span>
-                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Services Pro</span>
+            <!-- Toast Thông báo Tọa độ ngoài phạm vi [ERR_05_03] -->
+            <div id="gm-coord-error-toast" class="hidden absolute top-24 left-1/2 -translate-x-1/2 z-[2000] px-4 py-2 rounded-2xl bg-slate-950/95 border-2 border-rose-500 text-rose-200 text-xs font-bold shadow-2xl flex items-center gap-2.5 transition-all animate-bounce">
+                <i class="fa-solid fa-circle-exclamation text-rose-400 text-base"></i>
+                <span>[ERR_05_03] Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.</span>
+            </div>
+
+            <!-- Banner Lỗi Tiles Server [ERR_05_04] -->
+            <div id="gm-tiles-error-banner" class="hidden absolute top-28 left-4 right-4 z-[2000] p-4 rounded-2xl bg-slate-950/95 border-2 border-rose-500 shadow-2xl text-slate-100 flex items-center justify-between gap-4 flex-wrap">
+                <div class="flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Mã lỗi: ERR_05_04</span>
+                            <span class="text-xs font-extrabold text-white">Lỗi kết nối dịch vụ bản đồ số</span>
+                        </div>
+                        <div class="text-[11px] text-rose-200 mt-0.5">Không thể tải lớp bản đồ số (Tiles Server timeout).</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="/renty?view=grid" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-cells"></i> Chuyển sang chế độ danh sách
+                    </a>
+                    <button type="button" onclick="window.location.reload()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all">
+                        <i class="fa-solid fa-rotate-right"></i> Thử lại
+                    </button>
+                </div>
+            </div>
+
+            <!-- Floating Google Maps Pro HUD Control Bar (Hiệu ứng Liquid Glass lỏng trong suốt, Search Box giữ bình thường) -->
+            <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] rounded-2xl p-2.5 flex flex-col gap-2 transition-all duration-300"
+                 style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.45) 45%, rgba(15, 23, 42, 0.70) 100%) !important; backdrop-filter: blur(24px) saturate(200%) contrast(95%) !important; -webkit-backdrop-filter: blur(24px) saturate(200%) contrast(95%) !important; border: 1px solid rgba(255, 255, 255, 0.22) !important; border-top: 1.5px solid rgba(255, 255, 255, 0.45) !important; box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 0 15px rgba(255, 255, 255, 0.05) !important;">
+                
+                <!-- Row 1: City Tabs + Smart Search Engine + Compact Map Controls (Khóa cứng 1 dòng, không bao giờ nhảy xuống) -->
+                <div class="flex items-center gap-2 w-full flex-nowrap">
+                    <!-- City Switcher Tabs -->
+                    <div class="flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[11px] font-bold shrink-0">
+                        <button type="button" onclick="switchMapCity('all', this)" id="city-tab-all" class="gm-city-tab active px-2 py-1 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm">
+                            🌐 Toàn quốc
+                        </button>
+                        <button type="button" onclick="switchMapCity('hcm', this)" id="city-tab-hcm" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
+                            🏙️ TP.HCM
+                        </button>
+                        <button type="button" onclick="switchMapCity('hanoi', this)" id="city-tab-hanoi" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
+                            🏛️ Hà Nội
+                        </button>
                     </div>
 
-                    <!-- Layer Switcher Buttons -->
-                    <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
-                        <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm">
-                            <i class="fa-solid fa-map"></i> Đường phố
-                        </button>
-                        <button type="button" onclick="setRentyMapLayer('satellite')" id="gm-layer-satellite" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
-                            <i class="fa-solid fa-satellite"></i> Vệ tinh
-                        </button>
-                        <button type="button" onclick="setRentyMapLayer('terrain')" id="gm-layer-terrain" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 font-semibold transition-all">
-                            <i class="fa-solid fa-mountain"></i> Địa hình
-                        </button>
+                    <!-- Live Search Engine Input (Rõ nét, màu bình thường đậm đặc) -->
+                    <div class="relative flex-grow min-w-0" id="gm-search-engine-wrapper">
+                        <form onsubmit="onMapSearchSubmit(event)" class="w-full flex items-center relative">
+                            <input type="text" id="gm-search-input" autocomplete="off"
+                                placeholder="Tìm mọi địa điểm du lịch, đường phố, trường học, trọ..." 
+                                style="background-color: #0f172a !important; opacity: 1 !important;"
+                                class="w-full pl-8 pr-12 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 transition-all font-medium truncate shadow-inner">
+                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-sky-400 text-[11px]"></i>
+                            
+                            <!-- Nút xóa nhanh nếu có text -->
+                            <button type="button" id="gm-search-clear-btn" onclick="clearMapSearchInput()" class="hidden absolute right-6 w-4 h-4 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] transition-all" title="Xóa">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+
+                            <button type="submit" class="absolute right-1.5 w-4 h-4 rounded-md bg-sky-500 text-white flex items-center justify-center text-[9px] transition-all" title="Tìm">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+
+                        <!-- Dropdown Autocomplete: ĐẶC 100%, KHÔNG TRONG SUỐT, NỔI LÊN MỌI THỨ -->
+                        <div id="gm-search-autocomplete" style="background-color: #0b0f19 !important; background: #0b0f19 !important; opacity: 1 !important; z-index: 999999 !important; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1.5px #38bdf8 !important;" class="hidden absolute left-0 right-0 top-full mt-2 border border-sky-500/50 rounded-2xl overflow-hidden max-h-84 overflow-y-auto text-xs divide-y divide-slate-800">
+                            <!-- Kết quả tìm kiếm tự động đổ vào đây -->
+                        </div>
                     </div>
 
-                    <!-- Action buttons: Geolocation & Center & Toggle Collapse -->
-                    <div class="flex items-center gap-1">
-                        <button type="button" onclick="locateUserRentyMap()" title="Định vị vị trí GPS của tôi" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                    <!-- Right Controls: Layer + GPS + Compass + Collapse -->
+                    <div class="flex items-center gap-1 shrink-0">
+                        <!-- Layer Buttons -->
+                        <div class="flex items-center gap-0.5 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[10px] font-bold">
+                            <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="w-6 h-6 rounded-lg bg-blue-600 text-white font-bold transition-all flex items-center justify-center" title="Đường phố">
+                                <i class="fa-solid fa-map"></i>
+                            </button>
+                            <button type="button" onclick="setRentyMapLayer('satellite')" id="gm-layer-satellite" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center" title="Vệ tinh">
+                                <i class="fa-solid fa-satellite"></i>
+                            </button>
+                            <button type="button" onclick="setRentyMapLayer('terrain')" id="gm-layer-terrain" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center" title="Địa hình">
+                                <i class="fa-solid fa-mountain"></i>
+                            </button>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <button type="button" onclick="locateUserRentyMap()" title="Định vị GPS" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-crosshairs"></i>
                         </button>
-                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm khu vực" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-xs transition-all shadow-sm">
+                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-compass"></i>
                         </button>
-                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Thu gọn / Mở rộng bộ lọc" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-xs transition-all shadow-sm">
-                            <i class="fa-solid fa-chevron-up transition-transform duration-200" id="gm-hud-toggle-icon"></i>
+                        <button type="button" onclick="toggleRentyMapFullscreen()" id="gm-fullscreen-btn" title="Toàn màn hình (Esc)" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 flex items-center justify-center text-[10px] transition-all">
+                            <i class="fa-solid fa-expand" id="gm-fullscreen-icon"></i>
+                        </button>
+                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Tiện ích & Lọc" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-[10px] transition-all">
+                            <i class="fa-solid fa-chevron-down transition-transform duration-200" id="gm-hud-toggle-icon"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Collapsible filter section -->
-                <div id="gm-hud-collapsible" class="flex flex-col gap-2.5 transition-all duration-300">
-                    <!-- Second row: Distance Matrix Commute Calculator & Nearby Places -->
-                    <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-800/80 flex-wrap sm:flex-nowrap">
-                        <div class="flex items-center gap-2 w-full sm:w-auto">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1">
-                                <i class="fa-solid fa-route text-sky-400"></i> Điểm đến:
-                            </span>
-                            <select id="gm-uni-select" onchange="onUniversityDestinationChange(this.value)" class="w-full sm:w-56 bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-medium">
-                                <option value="">-- Chọn ĐH tính thời gian đi lại --</option>
-                                <optgroup label="Hà Nội">
-                                    <option value="hust">ĐH Bách Khoa Hà Nội</option>
-                                    <option value="neu">ĐH Kinh Tế Quốc Dân</option>
-                                    <option value="vnu">ĐH Quốc Gia Hà Nội (Cầu Giấy)</option>
-                                    <option value="ftu">ĐH Ngoại Thương Hà Nội</option>
-                                    <option value="fpt_hn">ĐH FPT Hà Nội</option>
-                                </optgroup>
-                                <optgroup label="TP. Hồ Chí Minh">
-                                    <option value="hutech">ĐH HUTECH (Điện Biên Phủ)</option>
-                                    <option value="ueh">ĐH Kinh Tế TP.HCM (UEH)</option>
-                                    <option value="vnuhcm">Làng ĐH Quốc Gia TP.HCM (Thủ Đức)</option>
-                                    <option value="rmit">ĐH RMIT (Quận 7)</option>
-                                </optgroup>
-                            </select>
+                <!-- Row 2: Campus Quick Chips + Navigation Arrows + Radius Selector -->
+                <div class="flex items-center justify-between gap-1.5 pt-1 border-t border-white/10">
+                    <span class="text-[10px] font-bold text-sky-400 flex items-center gap-1 shrink-0 mr-0.5">
+                        <i class="fa-solid fa-graduation-cap"></i> Trường:
+                    </span>
+
+                    <!-- Nút trượt trái -->
+                    <button type="button" onclick="scrollCampusBar(-160)" class="w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang trái">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+
+                    <!-- Campus Quick Chips (Lướt ngang, Kéo chuột hoặc lăn chuột mượt mà) -->
+                    <div class="gm-campus-bar flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar flex-grow min-w-0 select-none cursor-grab" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <button type="button" onclick="selectCampusFilter('all', this)" id="campus-chip-all" class="gm-campus-chip active px-2.5 py-0.5 rounded-lg bg-blue-600 text-white text-[11px] font-bold transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🌐 Tất cả</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('hcmut', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Bách Khoa TP.HCM</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('vnuhcm', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Làng ĐH Thủ Đức</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('spkt', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH SPKT</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('ueh', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Kinh Tế UEH</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('hutech', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH HUTECH</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('tdtu', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Tôn Đức Thắng</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('rmit', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH RMIT Q.7</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('iuh', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Công Nghiệp IUH</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('vanlang', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Văn Lang</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('vnu_hn', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐHQG Hà Nội</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('hust', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Bách Khoa HN</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('neu', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH KT Quốc Dân</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('ftu', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Ngoại Thương</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('ptit', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Học viện PTIT</span>
+                        </button>
+                    </div>
+
+                    <!-- Nút trượt phải -->
+                    <button type="button" onclick="scrollCampusBar(160)" class="w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang phải">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+
+                    <!-- Commute Radius Slider & Selector (STT 3: range_radius - Bán kính quét) -->
+                    <div class="relative flex items-center gap-1.5 bg-slate-900/95 px-2 py-0.5 rounded-xl border border-slate-800 text-[10px] font-bold shrink-0 shadow-sm" id="radius_slider_wrapper">
+                        <label for="range_radius" class="text-slate-300 font-bold shrink-0 flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-arrows-to-circle text-emerald-400"></i> Bán kính:
+                        </label>
+                        <input type="range" 
+                               id="range_radius" 
+                               name="range_radius" 
+                               min="0" 
+                               max="10" 
+                               step="0.5" 
+                               value="3.5" 
+                               placeholder="5 km"
+                               oninput="onRadiusSliderChange(this.value)" 
+                               onchange="onRadiusSliderChange(this.value)" 
+                               class="w-16 sm:w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all border border-transparent">
+                        <span id="range_radius_val" class="text-emerald-400 font-extrabold min-w-[28px] text-center">3.5km</span>
+
+                        <!-- Preset Radius Chips -->
+                        <div class="hidden sm:flex items-center gap-0.5 border-l border-slate-700/60 pl-1">
+                            <button type="button" onclick="applyPresetRadius(1.5)" id="radius-chip-1500" class="gm-radius-chip px-1.5 py-0.2 rounded text-[9px] text-slate-400 hover:text-white transition-all">1.5km</button>
+                            <button type="button" onclick="applyPresetRadius(3.5)" id="radius-chip-3500" class="gm-radius-chip active px-1.5 py-0.2 rounded text-[9px] bg-emerald-600 text-white font-bold transition-all shadow-sm">3.5km</button>
+                            <button type="button" onclick="applyPresetRadius(5.0)" id="radius-chip-5000" class="gm-radius-chip px-1.5 py-0.2 rounded text-[9px] text-slate-400 hover:text-white transition-all">5km</button>
                         </div>
 
-                        <!-- Nearby Places Filter Chips -->
-                        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
-                            <button type="button" onclick="toggleNearbyPlace('supermarket', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
-                                🛒 Siêu thị
+                        <!-- Khung thông báo lỗi viền đỏ theo kịch bản DoD: Bán kính tối thiểu phải từ 1km -->
+                        <div id="range_radius_error" class="hidden absolute -bottom-7 right-0 z-50 px-2 py-0.5 rounded-lg bg-rose-950/95 border border-rose-500 text-rose-300 text-[10px] font-bold shadow-xl whitespace-nowrap animate-bounce flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400"></i> Bán kính tối thiểu phải từ 1km
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible filter section (Mặc định ẩn gọn) -->
+                <div id="gm-hud-collapsible" class="hidden flex flex-col gap-2 transition-all duration-300 pt-2 border-t border-slate-800/80">
+                    <!-- Nearby Places Amenities Scanner -->
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1.5">
+                                <i class="fa-solid fa-layer-group text-sky-400"></i> Quét tiện ích:
+                            </span>
+                        </div>
+
+                        <!-- Nearby Places Filter Chips (Đầy đủ 8 tiện ích thiết thực) -->
+                        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar flex-grow">
+                            <button type="button" onclick="toggleNearbyPlace('supermarket', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🛒 Siêu thị & Tiện lợi
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('hospital', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
-                                🏥 Bệnh viện
+                            <button type="button" onclick="toggleNearbyPlace('hospital', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🏥 Bệnh viện & Nhà thuốc
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('bus', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
-                                🚌 Xe buýt
+                            <button type="button" onclick="toggleNearbyPlace('bus', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🚌 Xe buýt & Metro
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('cafe', this)" class="gm-nearby-chip px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
-                                ☕ Cà phê
+                            <button type="button" onclick="toggleNearbyPlace('food', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🍜 Quán ăn sinh viên
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('cafe', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                ☕ Cà phê học bài
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('atm', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🏧 Cây ATM & Ngân hàng
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('laundry', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🧺 Giặt sấy 24/7
+                            </button>
+                            <button type="button" onclick="toggleNearbyPlace('gym', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                                🏋️ Phòng Gym
                             </button>
                         </div>
                     </div>
 
                     <!-- Distance Matrix Result Banner (shown when university selected) -->
-                    <div id="gm-commute-box" class="hidden p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30"></div>
+                    <div id="gm-commute-box" class="hidden p-2 rounded-xl bg-blue-950/60 border border-blue-500/30"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Room Cards List Pane (Right 50% in map mode) -->
-        <div class="renty-split-right">
+        <!-- Room Cards List Pane (Right 50% in map mode) [UI Element: room_list_panel] -->
+        <div class="renty-split-right" name="room_list_panel" data-field-name="room_list_panel" id="room_list_panel">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-slate-900 pb-4 renty-split-header">
             <div class="flex items-center gap-3.5 flex-wrap">
                 <h2 class="text-lg font-bold text-slate-200" id="results-count">Tìm thấy {{ count($rooms) }} phòng</h2>
@@ -794,567 +970,6 @@
                 </button>
             @endif
         </div>
-
-        <section id="viewed-rooms-section" class="hidden mb-16">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i>
-                        Phòng bạn đã xem gần đây
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-1">Lưu nhanh trên trình duyệt để tránh mở nhầm lại cùng một phòng.</p>
-                </div>
-                <button type="button" onclick="clearViewedRooms()" class="text-xs font-bold text-slate-500 hover:text-slate-200">
-                    Xóa lịch sử
-                </button>
-            </div>
-            <div id="viewed-rooms-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-        </section>
-
-        <!-- FEATURED ARTICLES SECTION -->
-        <section class="mb-16">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-newspaper text-teal-400"></i>
-                        Bài viết nổi bật
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-1">Tổng hợp chia sẻ kinh nghiệm tìm phòng trọ và review khu vực từ cộng đồng sinh viên.</p>
-                </div>
-            </div>
-            
-            @php
-            $featuredArticles = [
-                [
-                    'id' => 1,
-                    'tag' => 'Review Phòng',
-                    'tag_class' => 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
-                    'time' => '5 giờ trước',
-                    'title' => 'Kinh nghiệm tìm nhà trọ quanh Đại học Bách Khoa Hà Nội',
-                    'summary' => 'Tổng hợp danh sách các khu vực trọ an ninh tốt, giá hợp lý ở ngõ Tự Do, Trần Đại Nghĩa và Lê Thanh Nghị cho tân sinh viên khóa mới chuẩn bị nhập học.',
-                    'author' => 'Hoàng Anh',
-                    'border_color' => 'teal',
-                    'shadow_color' => '20,184,166',
-                    'text_color' => 'teal-400',
-                    'text_hover_color' => 'teal-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Ngõ Tự Do (Hai Bà Trưng):</strong> Khu vực yên tĩnh, cách cổng trường Bách Khoa chỉ 300m. Giá phòng dao động từ 2.5 – 4 triệu/tháng. An ninh tốt nhờ camera và bảo vệ khu phố. Nhược điểm: đường vào hẹp, hay ngập khi mưa lớn.</p>
-                        <p><strong class="text-slate-200">2. Trần Đại Nghĩa:</strong> Nhiều lựa chọn phòng mới xây với đầy đủ tiện nghi (điều hòa, nóng lạnh, giặt miễn phí). Giá cao hơn khu Tự Do khoảng 500k–1tr. Gần quán ăn, tiện đi lại. Phù hợp bạn nào thích tiện nghi.</p>
-                        <p><strong class="text-slate-200">3. Lê Thanh Nghị:</strong> Giá mềm hơn (2 – 3.5 triệu), nhưng phòng thường cũ hơn. Gần ga Hà Nội nên hơi ồn ban đêm. Bù lại, rất thuận tiện đi các tuyến xe buýt và đường sắt đô thị.</p>
-                        <p><strong class="text-teal-400">💡 Mẹo:</strong> Nên đi xem phòng vào buổi tối để đánh giá tiếng ồn thực tế và kiểm tra ánh sáng hành lang, camera an ninh. Hỏi rõ về tiền điện nước trước khi đặt cọc.</p>
-                    '
-                ],
-                [
-                    'id' => 2,
-                    'tag' => 'Khu Vực',
-                    'tag_class' => 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
-                    'time' => '1 ngày trước',
-                    'title' => 'Đánh giá an ninh ngõ 119 Chùa Láng đợt nắng nóng cao điểm',
-                    'summary' => 'Phản hồi chân thực từ cộng đồng khách thuê về tình hình điện nước, camera giám sát và giờ giấc đóng mở cửa của các tòa nhà chung cư mini trong khu vực.',
-                    'author' => 'Khánh Linh',
-                    'border_color' => 'teal',
-                    'shadow_color' => '20,184,166',
-                    'text_color' => 'teal-400',
-                    'text_hover_color' => 'teal-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">Tình hình điện nước:</strong> Đợt nắng nóng tháng 6, khu 119 Chùa Láng bị cúp nước 2–3 lần/tuần, mỗi lần kéo dài 4–6 tiếng. Điện ổn định hơn nhưng giá điện tại một số nhà trọ bị tính cao (4.000đ/kWh so với giá EVN).</p>
-                        <p><strong class="text-slate-200">Camera an ninh:</strong> Khoảng 60% nhà trọ trong ngõ đã lắp camera ở cổng và hành lang. Tuy nhiên, vẫn có tình trạng mất trộm xe đạp điện tại các nhà chưa có bảo vệ trực đêm.</p>
-                        <p><strong class="text-slate-200">Giờ giấc đóng cửa:</strong> Đa số nhà trọ khóa cổng lúc 23h00. Một số nhà linh hoạt hơn cho ra vào bằng vân tay đến 1h sáng. Sinh viên hay đi làm thêm ca tối nên cần hỏi kỹ trước khi thuê.</p>
-                        <p><strong class="text-teal-400">⚠️ Lưu ý:</strong> Nên kiểm tra hợp đồng có ghi rõ giá điện nước không. Tham khảo thêm bảng giá EVN để so sánh. Nếu chủ nhà tính quá cao, có thể phản ánh qua Sở Công Thương.</p>
-                    '
-                ],
-                [
-                    'id' => 3,
-                    'tag' => 'TP. HCM',
-                    'tag_class' => 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-                    'time' => '3 giờ trước',
-                    'title' => 'Top khu trọ giá rẻ quanh Làng Đại Học Thủ Đức cho tân sinh viên',
-                    'summary' => 'Hướng dẫn chi tiết tìm phòng trọ gần ĐH Bách Khoa, KHTN, Nông Lâm TP.HCM với giá từ 2.5 – 4 triệu/tháng kèm review thực tế từ sinh viên.',
-                    'author' => 'Minh Đức',
-                    'border_color' => 'amber',
-                    'shadow_color' => '245,158,11',
-                    'text_color' => 'amber-400',
-                    'text_hover_color' => 'amber-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Khu Linh Trung – Linh Chiểu:</strong> Vị trí sát Làng Đại học, đi bộ 5–10 phút đến cổng trường. Giá phòng 2.5 – 3.5tr/tháng, đa số là nhà trọ dân xây. Ưu điểm: rẻ, gần trường. Nhược điểm: phòng nhỏ, ít tiện nghi cao cấp.</p>
-                        <p><strong class="text-slate-200">2. Khu Xa lộ Hà Nội – Trường Thọ:</strong> Phòng mới xây hơn, nhiều căn hộ mini có thang máy. Giá 3.5 – 4.5tr/tháng. Gần trạm Metro số 1 (Bến Xe Miền Đông mới), đi Quận 1 chỉ 20 phút. Phù hợp bạn đi làm thêm ở trung tâm.</p>
-                        <p><strong class="text-slate-200">3. Khu Đường số 7 – Khu phố 6:</strong> Khu trọ sinh viên lâu đời, giá mềm nhất (2 – 3tr). Nhà trọ đông đúc, vui, dễ tìm bạn ở ghép. Lưu ý: hay ngập khi mưa lớn, nên chọn phòng tầng 2 trở lên.</p>
-                        <p><strong class="text-amber-400">💡 Mẹo:</strong> Đăng lên nhóm Facebook "Phòng trọ Thủ Đức – Làng ĐH" để tìm phòng nhanh. Luôn đến xem phòng trước khi cọc. Hỏi kỹ giá điện (trên 3.500đ/kWh là đắt), nước, wifi và có cho nấu ăn không.</p>
-                    '
-                ],
-                [
-                    'id' => 4,
-                    'tag' => 'TP. HCM',
-                    'tag_class' => 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-                    'time' => '2 ngày trước',
-                    'title' => 'So sánh chi phí thuê trọ Quận 7 vs Gò Vấp – Đâu là lựa chọn tốt nhất?',
-                    'summary' => 'Phân tích giá phòng, tiện ích xung quanh, giao thông và chất lượng sống giữa 2 khu vực hot nhất Sài Gòn cho dân văn phòng và sinh viên.',
-                    'author' => 'Thanh Trúc',
-                    'border_color' => 'amber',
-                    'shadow_color' => '245,158,11',
-                    'text_color' => 'amber-400',
-                    'text_hover_color' => 'amber-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">Quận 7 – Phú Mỹ Hưng:</strong> Giá thuê cao hơn (5 – 8tr/tháng) nhưng đổi lại là môi trường sống sạch đẹp, an ninh tốt, gần Lotte Mart, SC VivoCity, bệnh viện FV. Phù hợp dân văn phòng thu nhập khá hoặc gia đình trẻ.</p>
-                        <p><strong class="text-slate-200">Gò Vấp:</strong> Giá mềm hơn nhiều (2.5 – 4tr/tháng), tiện ích đa dạng: chợ, Emart, Công viên Gia Định. Giao thông thuận tiện đi Quận 1, Bình Thạnh. Gần ĐH Công nghiệp, Văn Lang. Nhược điểm: kẹt xe giờ cao điểm ở Nguyễn Oanh và Phan Văn Trị.</p>
-                        <p><strong class="text-slate-200">Bình Thạnh – phương án trung gian:</strong> Giá 3.5 – 6tr, nằm giữa trung tâm và ngoại ô. Gần Ngã tư Hàng Xanh, Metro, nhiều trường ĐH (HUTECH, Ngoại Thương). Khu Nguyễn Gia Trí (D2 cũ) có nhiều studio đẹp, phù hợp freelancer.</p>
-                        <p><strong class="text-amber-400">⚠️ Lưu ý:</strong> Ở HCM nên ưu tiên phòng có ban công (thoáng, đỡ nóng). Kiểm tra kỹ hệ thống thoát nước (hay ngập mùa mưa). Nên thuê gần trạm Metro nếu đi làm ở Quận 1 – tiết kiệm thời gian và chi phí.</p>
-                    '
-                ],
-                [
-                    'id' => 5,
-                    'tag' => 'Cảnh Báo',
-                    'tag_class' => 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-                    'time' => '3 ngày trước',
-                    'title' => 'Cảnh giác các chiêu trò lừa đảo đặt cọc phòng trọ mùa nhập học',
-                    'summary' => 'Tổng hợp các mánh khóe lừa tiền cọc giữ chỗ phổ biến hiện nay từ những kẻ mạo danh chủ trọ trên mạng xã hội.',
-                    'author' => 'Quốc Việt',
-                    'border_color' => 'rose',
-                    'shadow_color' => '244,63,94',
-                    'text_color' => 'rose-400',
-                    'text_hover_color' => 'rose-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Đặt cọc giữ chỗ qua mạng không gặp mặt:</strong> Kẻ lừa đảo copy hình ảnh phòng đẹp từ các trang khác, rao giá cực rẻ rồi hối thúc khách chuyển khoản giữ chỗ qua tài khoản ảo ngân hàng.</p>
-                        <p><strong class="text-slate-200">2. Chủ nhà giả mạo:</strong> Dẫn khách đi xem phòng nhưng thực ra là thuê AirBnb theo ngày hoặc giả danh quản lý để nhận tiền cọc của 5-10 người cùng một lúc rồi biến mất.</p>
-                        <p><strong class="text-slate-200">3. Phát sinh phí khôn lường:</strong> Ghi hợp đồng mập mờ, sau khi chuyển vào thì bắt buộc đóng thêm phí dịch vụ cắt cổ như tiền giặt, tiền bảo trì thang máy, tiền rác gấp 5 lần bình thường.</p>
-                        <p><strong class="text-rose-400">⚠️ Cách phòng tránh:</strong> Tuyệt đối không cọc khi chưa xem phòng trực tiếp, chưa gặp chủ nhà và kiểm tra giấy tờ chứng minh sở hữu căn nhà.</p>
-                    '
-                ],
-                [
-                    'id' => 6,
-                    'tag' => 'Chia Sẻ',
-                    'tag_class' => 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
-                    'time' => '4 ngày trước',
-                    'title' => 'Kinh nghiệm ở ghép cùng người lạ: Làm sao để tránh xung đột?',
-                    'summary' => 'Các nguyên tắc vàng để duy trì mối quan hệ hòa thuận, chia sẻ chi phí sòng phẳng khi thuê phòng ở ghép cùng người mới quen.',
-                    'author' => 'Phương Thảo',
-                    'border_color' => 'indigo',
-                    'shadow_color' => '99,102,241',
-                    'text_color' => 'indigo-400',
-                    'text_hover_color' => 'indigo-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Thống nhất quy tắc tài chính:</strong> Chia đều hóa đơn điện nước, mạng internet, ga ăn uống ngay từ đầu tháng. Tạo file Excel theo dõi minh bạch.</p>
-                        <p><strong class="text-slate-200">2. Giờ giấc sinh hoạt & Dọn dẹp vệ sinh:</strong> Phân chia lịch trực nhật phòng tắm, nấu ăn cụ thể. Hạn chế dẫn bạn bè về phòng tụ tập khuya gây ảnh hưởng đến giấc ngủ của người khác.</p>
-                        <p><strong class="text-slate-200">3. Tôn trọng không gian riêng tư:</strong> Không tự ý sử dụng đồ dùng cá nhân, mỹ phẩm hay quần áo của bạn cùng phòng khi chưa được sự đồng ý.</p>
-                        <p><strong class="text-indigo-400">💡 Gợi ý:</strong> Nên có một buổi nói chuyện thẳng thắn mỗi tháng để cùng nhau tháo gỡ những điểm chưa hài lòng, tránh tích tụ bức xúc lâu ngày.</p>
-                    '
-                ],
-                [
-                    'id' => 7,
-                    'tag' => 'Khu Vực',
-                    'tag_class' => 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
-                    'time' => '5 ngày trước',
-                    'title' => 'Đánh giá chi tiết ngõ 175 Xuân Thủy Cầu Giấy dưới góc nhìn sinh viên',
-                    'summary' => 'Phân tích tiện ích xung quanh, tình hình giao thông, giá cả sinh hoạt tại ngõ trọ hot bậc nhất Cầu Giấy.',
-                    'author' => 'Bảo Châu',
-                    'border_color' => 'teal',
-                    'shadow_color' => '20,184,166',
-                    'text_color' => 'teal-400',
-                    'text_hover_color' => 'teal-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">Ưu điểm:</strong> Nằm ngay trung tâm Cầu Giấy, gần các trường Đại học Sư Phạm, Quốc Gia, Báo Chí. Xung quanh ngõ có chợ dân sinh, siêu thị mini và vô vàn quán ăn giá rẻ cho sinh viên.</p>
-                        <p><strong class="text-slate-200">Nhược điểm:</strong> Mật độ dân cư quá đông đúc, ngõ nhỏ hẹp thường xuyên xảy ra ùn tắc vào giờ cao điểm từ 17h00 - 19h00. Tiếng ồn từ các hàng quán mở muộn có thể ảnh hưởng đến học tập.</p>
-                        <p><strong class="text-slate-200">Chi phí:</strong> Giá phòng ở đây dao động từ 2.8 - 4.5tr. Chi phí ăn uống cực kỳ rẻ nhờ cạnh tranh cao, trung bình chỉ 30k-35k cho một suất cơm trưa chất lượng.</p>
-                    '
-                ],
-                [
-                    'id' => 8,
-                    'tag' => 'Tiện Ích',
-                    'tag_class' => 'bg-violet-500/10 text-violet-400 border border-violet-500/20',
-                    'time' => '1 tuần trước',
-                    'title' => 'Những tiện ích bắt buộc phải có khi thuê căn hộ dịch vụ Quận 10',
-                    'summary' => 'Danh sách các trang bị cơ bản giúp tối ưu cuộc sống bận rộn của người đi làm khi thuê phòng dịch vụ.',
-                    'author' => 'Anh Tuấn',
-                    'border_color' => 'violet',
-                    'shadow_color' => '139,92,246',
-                    'text_color' => 'violet-400',
-                    'text_hover_color' => 'violet-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Hệ thống giặt sấy chung/riêng:</strong> Giúp tiết kiệm thời gian phơi phóng quần áo, đặc biệt tiện lợi trong mùa mưa kéo dài ở Sài Gòn.</p>
-                        <p><strong class="text-slate-200">2. Khóa vân tay tích hợp camera:</strong> Đảm bảo chỉ người trong tòa nhà được ra vào, hạn chế người lạ đột nhập trộm xe máy ở tầng trệt.</p>
-                        <p><strong class="text-slate-200">3. Khu bếp nấu ăn thông thoáng:</strong> Phòng có cửa sổ lớn hoặc máy hút mùi giúp tránh ám mùi dầu mỡ vào giường ngủ.</p>
-                        <p><strong class="text-violet-400">🔥 Lưu ý đặc biệt:</strong> Kiểm tra xem tòa nhà có trang bị thang thoát hiểm bên ngoài và hệ thống báo cháy tự động hoạt động tốt hay không.</p>
-                    '
-                ],
-                [
-                    'id' => 9,
-                    'tag' => 'Khu Vực',
-                    'tag_class' => 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
-                    'time' => '1 tuần trước',
-                    'title' => 'Review khu vực trọ Phùng Khoang, Thanh Xuân – Thiên đường giá rẻ',
-                    'summary' => 'Đánh giá chân thực về mức giá thuê phòng, chi phí ăn uống và những lưu ý an ninh tại khu chợ Phùng Khoang.',
-                    'author' => 'Tiến Đạt',
-                    'border_color' => 'teal',
-                    'shadow_color' => '20,184,166',
-                    'text_color' => 'teal-400',
-                    'text_hover_color' => 'teal-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">Giá phòng:</strong> Rất rẻ, chỉ từ 1.8 - 2.5 triệu cho phòng khép kín cơ bản, phù hợp với các bạn sinh viên muốn tối ưu ngân sách chi tiêu hàng tháng.</p>
-                        <p><strong class="text-slate-200">Ăn uống & Mua sắm:</strong> Chợ Phùng Khoang bán thực phẩm tươi sống với giá vô cùng hạt dẻ. Đồ ăn vặt, quần áo thời trang dọc ngõ trọ phong phú, phục vụ học sinh sinh viên.</p>
-                        <p><strong class="text-slate-200">An ninh:</strong> Do lượng người qua lại lớn nên an ninh phức tạp hơn các khu khác. Cần chọn tòa nhà có bảo vệ hoặc camera giám sát bãi để xe 24/24.</p>
-                    '
-                ],
-                [
-                    'id' => 10,
-                    'tag' => 'Cẩm Nang',
-                    'tag_class' => 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-                    'time' => '2 tuần trước',
-                    'title' => 'Check-list 10 điều bắt buộc phải kiểm tra trước khi đặt bút ký hợp đồng trọ',
-                    'summary' => 'Cẩm nang pháp lý và thực tế giúp người thuê nhà bảo vệ quyền lợi, tránh các tranh chấp về sau.',
-                    'author' => 'Lan Hương',
-                    'border_color' => 'emerald',
-                    'shadow_color' => '16,185,129',
-                    'text_color' => 'emerald-400',
-                    'text_hover_color' => 'emerald-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Xác minh thông tin chủ nhà:</strong> Yêu cầu xem sổ hồng căn nhà hoặc hợp đồng ủy quyền quản lý hợp pháp của chủ nhà.</p>
-                        <p><strong class="text-slate-200">2. Làm rõ giá dịch vụ:</strong> Ghi rõ giá điện, nước, internet, tiền rác, tiền xe trong hợp đồng; tránh việc tăng giá đột ngột sau vài tháng ở.</p>
-                        <p><strong class="text-slate-200">3. Chụp ảnh tình trạng thiết bị:</strong> Lưu lại hình ảnh hiện trạng tường sơn, tủ lạnh, điều hòa khi bàn giao để đối chiếu khi chuyển đi, tránh bị trừ tiền cọc oan.</p>
-                        <p><strong class="text-emerald-400">💡 Lời khuyên:</strong> Hãy thỏa thuận rõ về thời gian báo trước khi trả phòng (thường là 30 ngày) để nhận lại đầy đủ 100% tiền đặt cọc.</p>
-                    '
-                ],
-                [
-                    'id' => 11,
-                    'tag' => 'Review Phòng',
-                    'tag_class' => 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-                    'time' => '2 tuần trước',
-                    'title' => 'Đánh giá chất lượng chung cư mini khu vực Quận Bình Thạnh',
-                    'summary' => 'Trải nghiệm thực tế về không gian sống, dịch vụ vệ sinh và sự thuận tiện đi lại của các căn hộ studio Bình Thạnh.',
-                    'author' => 'Tuấn Kiệt',
-                    'border_color' => 'amber',
-                    'shadow_color' => '245,158,11',
-                    'text_color' => 'amber-400',
-                    'text_hover_color' => 'amber-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">Vị trí đắc địa:</strong> Gần Ngã tư Hàng Xanh, dễ dàng kết nối sang Quận 1, Quận 2 và Thủ Đức. Khu Nguyễn Gia Trí nhộn nhịp, đầy đủ tiện ích mua sắm, ăn chơi giải trí.</p>
-                        <p><strong class="text-slate-200">Chất lượng phòng:</strong> Hầu hết là chung cư mini mới xây từ 3-5 năm, thiết kế studio hiện đại có ban công lớn đón ánh sáng tự nhiên. Giá thuê tầm 5.5 - 7.5 triệu.</p>
-                        <p><strong class="text-slate-200">Điểm trừ:</strong> Tình trạng ngập úng nhẹ ở các hẻm nhỏ dọc đường Nguyễn Hữu Cảnh, Xô Viết Nghệ Tĩnh khi triều cường lên cao hoặc mưa lớn liên tục.</p>
-                    '
-                ],
-                [
-                    'id' => 12,
-                    'tag' => 'Khu Vực',
-                    'tag_class' => 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
-                    'time' => '3 tuần trước',
-                    'title' => 'Review trọ khu vực Tây Hồ: Sang xịn mịn, view hồ thoáng mát',
-                    'summary' => 'Khảo sát giá thuê căn hộ studio, phong cách thiết kế và đối tượng người thuê chủ yếu tại khu vực ven Hồ Tây.',
-                    'author' => 'Thu Trang',
-                    'border_color' => 'teal',
-                    'shadow_color' => '20,184,166',
-                    'text_color' => 'teal-400',
-                    'text_hover_color' => 'teal-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">Không gian sống:</strong> Không khí trong lành nhất Hà Nội, thoáng đãng, nhiều cây xanh. Phù hợp cho những ai yêu thích sự yên tĩnh, bình yên sau giờ học và làm việc căng thẳng.</p>
-                        <p><strong class="text-slate-200">Giá cả:</strong> Khá cao, dao động từ 6 – 10 triệu/tháng cho căn hộ studio đầy đủ nội thất cao cấp. Đối tượng thuê chủ yếu là người nước ngoài và người đi làm thu nhập cao.</p>
-                        <p><strong class="text-slate-200">Tiện ích:</strong> Nhiều quán cafe view hồ xinh xắn, phòng gym hiện đại, nhà hàng Tây Âu và siêu thị đồ nhập khẩu chất lượng cao.</p>
-                    '
-                ],
-                [
-                    'id' => 13,
-                    'tag' => 'Chia Sẻ',
-                    'tag_class' => 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
-                    'time' => '3 tuần trước',
-                    'title' => 'Kinh nghiệm vàng giúp tiết kiệm tối đa chi phí sinh hoạt cho sinh viên ở trọ',
-                    'summary' => 'Những mẹo thực tiễn giúp quản lý tài chính thông minh, giảm thiểu hóa đơn tiền điện nước hàng tháng hiệu quả.',
-                    'author' => 'Minh Quân',
-                    'border_color' => 'indigo',
-                    'shadow_color' => '99,102,241',
-                    'text_color' => 'indigo-400',
-                    'text_hover_color' => 'indigo-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Tự nấu ăn tại phòng:</strong> Hạn chế ăn ngoài hàng quán, chuẩn bị cơm hộp đi học giúp tiết kiệm đến 50% chi phí ăn uống mỗi tháng.</p>
-                        <p><strong class="text-slate-200">2. Sử dụng điện nước tiết kiệm:</strong> Tắt điều hòa khi ra ngoài, tận dụng ánh sáng tự nhiên ban ngày, gom quần áo giặt chung máy giặt để tiết kiệm điện nước.</p>
-                        <p><strong class="text-slate-200">3. Tìm bạn ở ghép:</strong> Chia sẻ không gian sống cùng 1-2 người bạn thân giúp giảm thiểu một nửa tiền phòng và các phí dịch vụ chung khác.</p>
-                    '
-                ],
-                [
-                    'id' => 14,
-                    'tag' => 'An Toàn',
-                    'tag_class' => 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-                    'time' => '1 tháng trước',
-                    'title' => 'Cẩm nang an toàn phòng cháy chữa cháy tại các khu nhà trọ nhiều tầng',
-                    'summary' => 'Hướng dẫn kiểm tra lối thoát hiểm, cách sử dụng bình chữa cháy và xử lý tình huống khẩn cấp khi xảy ra hỏa hoạn.',
-                    'author' => 'Đức Hùng',
-                    'border_color' => 'rose',
-                    'shadow_color' => '244,63,94',
-                    'text_color' => 'rose-400',
-                    'text_hover_color' => 'rose-300',
-                    'detail' => '
-                        <p><strong class="text-slate-200">1. Khảo sát lối thoát hiểm:</strong> Luôn xác định rõ các hướng thoát hiểm phụ như ban công, lối lên sân thượng của tòa nhà khi mới chuyển đến ở.</p>
-                        <p><strong class="text-slate-200">2. Trang bị bình chữa cháy mini:</strong> Đề xuất chủ nhà trang bị đầy đủ bình chữa cháy dạng bột/khí CO2 tại khu vực cầu thang bộ mỗi tầng trệt.</p>
-                        <p><strong class="text-slate-200">3. Quy tắc an toàn điện xe máy:</strong> Hạn chế sạc xe máy điện, xe đạp điện qua đêm ở tầng trệt khi không có hệ thống ngắt điện tự động an toàn.</p>
-                    '
-                ]
-            ];
-            @endphp
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                @foreach ($featuredArticles as $index => $article)
-                    <!-- Article Card {{ $article['id'] }} -->
-                    <article id="article-card-{{ $article['id'] }}" class="group bg-slate-900/40 backdrop-blur-md border border-slate-800 hover:border-{{ $article['border_color'] }}/40 rounded-2xl overflow-hidden hover:shadow-[0_20px_50px_rgba({{ $article['shadow_color'] }},0.12)] transition-all duration-300 flex flex-col justify-between {{ $index >= 4 ? 'article-extra hidden' : '' }}">
-                        <div class="p-6">
-                            <div class="flex items-center gap-2 mb-4">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $article['tag_class'] }} uppercase tracking-wider">
-                                    {{ $article['tag'] }}
-                                </span>
-                                <span class="text-[11px] text-slate-500 font-bold">{{ $article['time'] }}</span>
-                            </div>
-                            <h3 class="text-sm font-bold text-slate-200 group-hover:text-{{ $article['text_color'] }} transition-colors mb-3">
-                                {{ $article['title'] }}
-                            </h3>
-                            <p class="text-slate-400 text-[11px] leading-relaxed mb-4">
-                                {{ $article['summary'] }}
-                            </p>
-                            <div id="article-detail-{{ $article['id'] }}" class="hidden mt-2 pt-4 border-t border-slate-800/30 space-y-3 text-[11px] text-slate-400 leading-relaxed animate-fadeIn">
-                                {!! $article['detail'] !!}
-                            </div>
-                        </div>
-                        <div class="px-6 pb-6 pt-3 border-t border-slate-800/40 flex justify-between items-center bg-slate-950/20">
-                            <span class="text-[10px] text-slate-500 font-semibold">Tác giả: {{ $article['author'] }}</span>
-                            <button type="button" onclick="toggleArticleDetail({{ $article['id'] }})" id="article-toggle-{{ $article['id'] }}" class="text-[11px] text-{{ $article['text_color'] }} hover:text-{{ $article['text_hover_color'] }} font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-all cursor-pointer">
-                                Đọc tiếp <i class="fa-solid fa-angle-right text-[9px] transition-transform" id="article-icon-{{ $article['id'] }}"></i>
-                            </button>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-
-            @if (count($featuredArticles) > 4)
-                <div class="flex justify-center mt-8" id="show-more-articles-btn-container">
-                    <button type="button" onclick="toggleMoreArticles()" id="toggle-more-articles-btn" class="px-6 py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 hover:border-teal-500/40 text-teal-400 hover:text-teal-300 text-xs font-bold transition-all shadow-lg flex items-center gap-2 cursor-pointer">
-                        <span id="toggle-more-articles-btn-text">Xem thêm bài viết</span>
-                        <i id="toggle-more-articles-btn-icon" class="fa-solid fa-chevron-down text-[10px]"></i>
-                    </button>
-                </div>
-            @endif
-
-            <script>
-            function toggleMoreArticles() {
-                const extraArticles = document.querySelectorAll('.article-extra');
-                const btnText = document.getElementById('toggle-more-articles-btn-text');
-                const btnIcon = document.getElementById('toggle-more-articles-btn-icon');
-                if (!btnText || !btnIcon || extraArticles.length === 0) return;
-
-                const isHidden = extraArticles[0].classList.contains('hidden');
-
-                if (isHidden) {
-                    extraArticles.forEach(art => {
-                        art.classList.remove('hidden');
-                        art.style.animation = 'fadeSlideDown 0.4s ease-out forwards';
-                    });
-                    btnText.textContent = 'Thu gọn bài viết';
-                    btnIcon.className = 'fa-solid fa-chevron-up text-[10px]';
-                } else {
-                    extraArticles.forEach(art => {
-                        art.classList.add('hidden');
-                    });
-                    btnText.textContent = 'Xem thêm bài viết';
-                    btnIcon.className = 'fa-solid fa-chevron-down text-[10px]';
-                    
-                    // Smoothly scroll back to the top of featured articles section
-                    const sectionHeader = document.querySelector('.fa-newspaper')?.closest('h2');
-                    if (sectionHeader) {
-                        sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            }
-
-            function toggleArticleDetail(id) {
-                const detail = document.getElementById('article-detail-' + id);
-                const toggleBtn = document.getElementById('article-toggle-' + id);
-                if (!detail || !toggleBtn) return;
-
-                const isHidden = detail.classList.contains('hidden');
-                detail.classList.toggle('hidden', !isHidden);
-                
-                if (isHidden) {
-                    toggleBtn.innerHTML = 'Thu gọn <i class="fa-solid fa-angle-up text-[9px] transition-transform"></i>';
-                    detail.style.animation = 'fadeSlideDown 0.3s ease-out forwards';
-                } else {
-                    toggleBtn.innerHTML = 'Đọc tiếp <i class="fa-solid fa-angle-right text-[9px] transition-transform"></i>';
-                }
-            }
-
-            window.toggleMoreArticles = toggleMoreArticles;
-            window.toggleArticleDetail = toggleArticleDetail;
-            </script>
-        </section>
-
-        <!-- COMMUNITY Q&A SECTION -->
-        <section class="qa-section mt-12 rounded-3xl border border-slate-800/60 overflow-hidden" id="community-qa">
-            @php
-                $qaCards = [
-                    [
-                        'question' => 'Khu ngõ 105 Xuân Thủy đợt này có hay mất nước không ạ? Nghe bảo hay bị mất nước đột ngột vào mùa hè.',
-                        'area' => 'Cầu Giấy', 'areaColor' => 'teal', 'time' => '2 giờ trước',
-                        'votes' => 32, 'comments' => 14, 'tags' => ['Nước sinh hoạt', 'Mùa hè'],
-                        'reply_author' => 'Hoàng Anh', 'reply_school' => 'Sinh viên Sư Phạm',
-                        'reply_text' => 'Khu này bể ngầm hơi nhỏ nên nếu mất nước chung thì cúp tầm nửa ngày thôi bạn, chủ nhà có bể dự phòng nhé.',
-                        'is_hot' => true,
-                    ],
-                    [
-                        'question' => 'Có bác nào ở chung chủ ngõ 119 Chùa Láng không? Cho em xin review chủ nhà có khó tính không ạ?',
-                        'area' => 'Đống Đa', 'areaColor' => 'violet', 'time' => '5 giờ trước',
-                        'votes' => 18, 'comments' => 8, 'tags' => ['Review chủ nhà'],
-                        'reply_author' => 'Khánh Linh', 'reply_school' => 'Ngoại Thương',
-                        'reply_text' => 'Chủ nhà ngõ này hiền lắm, giữ xe free mà 11h đêm khóa cổng thôi. Không chung đụng gì nhiều đâu em.',
-                        'is_hot' => false,
-                    ],
-                    [
-                        'question' => 'Trọ gần Bách Khoa ngõ Tự Do tầm giá 3M5 đợt này có phòng nào có ban công thoáng không mọi người?',
-                        'area' => 'Hai Bà Trưng', 'areaColor' => 'amber', 'time' => '1 ngày trước',
-                        'votes' => 45, 'comments' => 21, 'tags' => ['Tìm phòng', 'Ban công'],
-                        'reply_author' => 'Minh Đức', 'reply_school' => 'Bách Khoa',
-                        'reply_text' => 'Tầm giá này ở ngõ Tự Do hơi hiếm ban công rộng, bạn chịu khó lùi ra Trần Đại Nghĩa hoặc Lê Thanh Nghị thì nhiều phòng đẹp hơn nha.',
-                        'is_hot' => true,
-                    ],
-                    [
-                        'question' => 'Ngõ 20 Hồ Tùng Mậu an ninh thế nào ạ? Em thấy ngõ hơi sâu, con gái đi học tối về có an toàn không?',
-                        'area' => 'Cầu Giấy', 'areaColor' => 'teal', 'time' => '3 ngày trước',
-                        'votes' => 27, 'comments' => 12, 'tags' => ['An ninh', 'Con gái'],
-                        'reply_author' => 'Thu Trang', 'reply_school' => 'Báo Chí',
-                        'reply_text' => 'Đầu ngõ có chốt dân phòng với đèn đường sáng trưng tới sáng luôn bạn, yên tâm cực kỳ nha.',
-                        'is_hot' => false,
-                    ],
-                ];
-                $areaColorMap = [
-                    'teal'   => 'bg-teal-500/10 text-teal-400 border-teal-500/20',
-                    'violet' => 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-                    'amber'  => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-                    'rose'   => 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-                ];
-            @endphp
-
-            <!-- Section Hero Header -->
-            <div class="qa-section-header px-6 pt-7 pb-5" style="background: linear-gradient(145deg, #121214 0%, #161620 100%);">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
-                            <i class="fa-solid fa-comments text-white text-base"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-base font-extrabold text-slate-100 tracking-tight">Hỏi Đáp Cộng Đồng</h2>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Chia sẻ thắc mắc ẩn danh &bull; Không lộ danh tính</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-3 py-1.5 rounded-full text-[10px] font-extrabold flex items-center gap-1.5 bg-teal-500/8 text-teal-400 border border-teal-500/15">
-                            <i class="fa-solid fa-shield-halved text-[9px]"></i> 100% Ẩn danh
-                        </span>
-                        <span class="px-3 py-1.5 rounded-full text-[10px] font-extrabold flex items-center gap-1.5 bg-slate-800/60 text-slate-400 border border-slate-700/40">
-                            <i class="fa-solid fa-fire text-orange-400 text-[9px]"></i> {{ count($qaCards) }} câu hỏi hot
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Input Box -->
-                <div class="relative w-full">
-                    <input type="text" id="qa-input-field" onkeyup="updateQaCharCount()" placeholder="Hỏi ẩn danh về khu vực hoặc chủ nhà tại đây..." maxlength="200" class="w-full pl-12 pr-28 py-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl text-slate-200 placeholder-slate-550 text-xs focus:outline-none transition-all duration-300" />
-                    <i class="fa-solid fa-user-secret absolute left-4.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 z-[1]">
-                        <span id="qa-char-count" class="text-[9px] font-bold text-slate-600 tabular-nums">0/200</span>
-                        <button type="button" onclick="submitQaQuestion()" class="qa-submit-btn px-3.5 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white rounded-lg text-[10px] font-extrabold transition-all shadow-md shadow-teal-600/15 uppercase tracking-wider">
-                            <i class="fa-solid fa-paper-plane mr-1"></i> Gửi
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Trending Area Tags -->
-                <div class="flex flex-wrap items-center gap-2 mt-4">
-                    <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest mr-1">Xu hướng:</span>
-                    @foreach(['Cầu Giấy' => 'teal', 'Đống Đa' => 'violet', 'Hai Bà Trưng' => 'amber', 'Thanh Xuân' => 'rose'] as $areaName => $color)
-                        <button type="button" class="px-2.5 py-1 rounded-full text-[9px] font-bold border transition-all hover:scale-105 {{ $areaColorMap[$color] }}">
-                            {{ $areaName }}
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Q&A Cards Grid -->
-            <div id="qa-grid" class="px-6 pb-6 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4" style="background-color: #121214;">
-                @foreach($qaCards as $qaIndex => $qa)
-                    <div class="qa-card rounded-2xl border border-slate-800/50 flex flex-col justify-between transition-all duration-300 hover:border-slate-700/60 group/card overflow-hidden" style="background-color: #1a1a20; animation-delay: {{ $qaIndex * 0.08 }}s;">
-                        <div class="p-5 pb-0">
-                            <!-- Meta Row -->
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-full bg-slate-800/80 flex items-center justify-center border border-slate-700/60">
-                                        <i class="fa-solid fa-user-secret text-xs text-teal-400"></i>
-                                    </div>
-                                    <div>
-                                        <span class="block text-[10px] font-extrabold text-slate-300">Người dùng ẩn danh</span>
-                                        <span class="block text-[8px] text-slate-600 font-bold mt-0.5">{{ $qa['time'] }}</span>
-                                    </div>
-                                </div>
-                                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider {{ $areaColorMap[$qa['areaColor']] }}">
-                                    {{ $qa['area'] }}
-                                </span>
-                            </div>
-
-                            <!-- Question Title -->
-                            <h3 class="text-xs font-bold text-slate-200 leading-relaxed group-hover/card:text-teal-400 transition-colors mb-2.5 flex items-start gap-1.5">
-                                @if($qa['is_hot'])
-                                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-400 text-[8px] border border-rose-500/20 font-bold uppercase tracking-wider scale-95 origin-left" title="Câu hỏi tiêu biểu">
-                                        <i class="fa-solid fa-fire text-[8px]"></i> HOT
-                                    </span>
-                                @endif
-                                {{ $qa['question'] }}
-                            </h3>
-
-                            <!-- Tags -->
-                            <div class="flex flex-wrap gap-1.5 mb-3">
-                                @foreach($qa['tags'] as $tag)
-                                    <span class="px-2 py-0.5 rounded-md bg-slate-800/60 text-slate-500 text-[9px] font-bold border border-slate-800/40">#{{ $tag }}</span>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <!-- Bottom Section -->
-                        <div class="px-5 pb-4 pt-3 mt-auto border-t border-slate-800/40">
-                            <!-- Interaction Row -->
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-0.5 bg-slate-900/50 border border-slate-800/60 rounded-lg overflow-hidden">
-                                    <button type="button" onclick="voteQa(this, 'up')" class="qa-vote-btn px-2.5 py-1.5 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/8 transition-all text-xs" aria-label="Upvote">
-                                        <i class="fa-solid fa-arrow-up"></i>
-                                    </button>
-                                    <span class="px-2 text-[11px] font-extrabold text-slate-300 tabular-nums qa-vote-count select-none">{{ $qa['votes'] }}</span>
-                                    <button type="button" onclick="voteQa(this, 'down')" class="qa-vote-btn px-2.5 py-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/8 transition-all text-xs" aria-label="Downvote">
-                                        <i class="fa-solid fa-arrow-down"></i>
-                                    </button>
-                                </div>
-                                <button type="button" onclick="openQaCommentsModal(this)" class="qa-comment-btn flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-300 transition-colors" data-qa-index="{{ $qaIndex }}" data-qa-question="{{ e($qa['question']) }}" data-qa-area="{{ $qa['area'] }}" data-qa-time="{{ $qa['time'] }}">
-                                    <i class="fa-regular fa-message text-[10px]"></i>
-                                    <span class="qa-comment-count">{{ $qa['comments'] }} bình luận</span>
-                                </button>
-                            </div>
-
-                            <!-- Best Reply -->
-                            <div class="qa-best-reply rounded-xl p-3 flex flex-col gap-1.5 bg-slate-900/40 border border-slate-800/30">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-[10px] font-bold text-slate-400">{{ $qa['reply_author'] }} ({{ $qa['reply_school'] }})</span>
-                                        <span class="w-3.5 h-3.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[7px] border border-emerald-500/15 inline-flex items-center justify-center" title="Đã xác minh">
-                                            <i class="fa-solid fa-check"></i>
-                                        </span>
-                                    </div>
-                                    <span class="text-[8px] text-teal-500/70 font-bold uppercase tracking-wider">Best</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400 leading-relaxed italic">
-                                    "{{ $qa['reply_text'] }}"
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            <!-- Load More Bar -->
-            <div class="qa-load-more-bar px-6 py-4 border-t border-slate-800/40 flex items-center justify-center" style="background-color: #121214;">
-                <button type="button" onclick="loadMoreQaQuestions(this)" class="qa-load-more px-6 py-2.5 rounded-xl bg-slate-800/40 border border-slate-700/40 text-xs font-bold text-slate-400 hover:text-teal-400 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-angles-down text-[10px]"></i> Xem thêm câu hỏi
-                </button>
-            </div>
-        </section>
 
         <!-- FOOTER -->
         @include('footer.footer')
@@ -2274,11 +1889,58 @@
         if (window.rentySessionSuccess) {
             showRentyToast(window.rentySessionSuccess, 'success');
         }
-        if (window.rentySessionError) {
-            showRentyToast(window.rentySessionError, 'error');
         }
     });
 </script>
 
+    <!-- Popup Modal: Hướng dẫn bật GPS [ERR_05_01] -->
+    <div id="gps-permission-modal" class="hidden fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="relative w-full max-w-md p-6 rounded-3xl bg-slate-900 border-2 border-rose-500 shadow-2xl shadow-rose-950/50 text-slate-100 flex flex-col gap-4 animate-scale-in">
+            <div class="flex items-center gap-3">
+                <span class="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-2xl shrink-0 shadow-lg">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                </span>
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Mã lỗi: ERR_05_01</span>
+                    <h3 class="text-base font-black text-white mt-1">Yêu cầu quyền truy cập vị trí</h3>
+                </div>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-semibold leading-relaxed">
+                Vui lòng cho phép truy cập vị trí trên trình duyệt để tìm phòng gần bạn nhất.
+            </div>
+
+            <div class="text-xs text-slate-300 space-y-2">
+                <div class="font-bold text-white flex items-center gap-1.5 text-xs">
+                    <i class="fa-solid fa-circle-info text-sky-400"></i> Hướng dẫn bật lại GPS trên trình duyệt:
+                </div>
+                <ul class="space-y-1.5 pl-4 list-disc text-slate-300 text-[11px] leading-relaxed">
+                    <li>Nhấp vào biểu tượng <b>Cài đặt trang / Ổ khóa 🔒</b> bên trái thanh địa chỉ trình duyệt.</li>
+                    <li>Tìm mục <b>Vị trí (Location)</b> và chuyển từ <b>Chặn</b> sang <b>Cho phép</b>.</li>
+                    <li>Nhấn nút <b>"Thử lại định vị"</b> bên dưới để quét các phòng trọ lân cận bạn.</li>
+                </ul>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">
+                <button type="button" onclick="closeGpsModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                    Đóng
+                </button>
+                <button type="button" onclick="retryLocateUser()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i class="fa-solid fa-rotate-right"></i> Thử lại định vị
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeGpsModal() {
+            const m = document.getElementById('gps-permission-modal');
+            if (m) m.classList.add('hidden');
+        }
+        function retryLocateUser() {
+            closeGpsModal();
+            if (window.locateUserRentyMap) window.locateUserRentyMap();
+        }
+    </script>
 </body>
 </html>

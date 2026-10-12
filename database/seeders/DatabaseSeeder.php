@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(FullDemoSeeder::class);
         $this->call(ThuDucChatbotRoomsSeeder::class);
+        $this->call(HcmRoomsSeeder::class);
 
         $defaultTenantId = Tenant::where('email', 'contact@smartroom-caugiay.vn')->value('id')
             ?? Tenant::query()->orderBy('id')->value('id');

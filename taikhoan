@@ -243,9 +243,37 @@ Mật khẩu chung: 123456
 8. khach8  - SĐT: 0930000008 - Email: khach8@smartroom.local  - Mật khẩu: 123456
 9. khach9  - SĐT: 0930000009 - Email: khach9@smartroom.local  - Mật khẩu: 123456
 10. khach10 - SĐT: 0930000010 - Email: khach10@smartroom.local - Mật khẩu: 123456
+11. khachhcm - SĐT: 0912345678 - Email: khach.hcm@smartroom.local - Mật khẩu: 123456 (Sinh viên HUTECH demo)
+
+
+--------------------------------------------------------------------------------
+8. TÀI KHOẢN VÀ CƠ SỞ TẠI TP. HỒ CHÍ MINH (RENTY SÀI GÒN)
+--------------------------------------------------------------------------------
+* Chủ trọ TP.HCM (Tích xanh KYC):
+  - Tên đăng nhập: chutrohcm
+  - Tên chủ trọ: Huỳnh Minh Trí (Chủ chuỗi Renty TP.HCM)
+  - Số điện thoại: 0938112233
+  - Email: chutro.hcm@smartroom.local
+  - Mật khẩu: 123456
+  - Trạng thái: ĐÃ XÁC MINH KYC (Tích xanh)
+
+* Quản lý chi nhánh TP.HCM:
+  - Tên đăng nhập: quanlyhcm
+  - Tên quản lý: Trần Anh Khoa (Quản lý chi nhánh TP.HCM)
+  - Số điện thoại: 0938998877
+  - Email: quanly.hcm@smartroom.local
+  - Mật khẩu: 123456
+
+* 6 Cụm Tòa Nhà & Phòng Trọ TP.HCM (Tích hợp Smart Map quanh các trường ĐH):
+  1. Ký túc xá & Studio Renty HUTECH - Bình Thạnh (475A Điện Biên Phủ, P.25, Bình Thạnh) -> Gần ĐH HUTECH, Ngoại Thương, GTVT
+  2. Chung cư mini Renty Thủ Đức Campus - SPKT (24 Võ Văn Ngân, Linh Chiểu, Thủ Đức) -> Gần ĐH Sư Phạm Kỹ Thuật (HCMUTE)
+  3. Nhà trọ Renty Sinh Viên Làng Đại Học Quốc Gia (Khu phố 6, Linh Trung, Thủ Đức) -> Gần ĐHQG TP.HCM, KTX Khu A & B
+  4. Căn hộ Studio Renty Quận 10 - UEH Center (279 Nguyễn Tri Phương, P.5, Q.10) -> Gần ĐH Kinh Tế TP.HCM (UEH), Bách Khoa
+  5. Renty Boutique Residence Quận 7 - RMIT & TDTU (702 Nguyễn Văn Linh, Tân Phong, Q.7) -> Gần ĐH RMIT, ĐH Tôn Đức Thắng
+  6. Nhà trọ Renty Sinh Viên Gò Vấp - IUH (12 Nguyễn Văn Bảo, P.4, Gò Vấp) -> Gần ĐH Công Nghiệp TP.HCM (IUH)
 
 ================================================================================
-TỔNG CỘNG: 172 TÀI KHOẢN HỆ THỐNG
+TỔNG CỘNG: 175 TÀI KHOẢN HỆ THỐNG (ĐẦY ĐỦ HÀ NỘI & TP. HỒ CHÍ MINH)
 TẤT CẢ ĐÃ SẴN SÀNG SỬ DỤNG - MẬT KHẨU: 123456
 ĐĂNG NHẬP TRỰC TIẾP TẠI: http://localhost:8088/login (HOẶC :8000/login)
 ================================================================================
