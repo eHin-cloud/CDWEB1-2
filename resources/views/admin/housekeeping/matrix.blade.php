@@ -75,14 +75,25 @@
         html.sidebar-collapsed #admin-sidebar,
         body.sidebar-collapsed #admin-sidebar,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar {
-            width: 5rem !important;
+            width: 4.5rem !important;
+            min-width: 4.5rem !important;
+            max-width: 4.5rem !important;
+            box-sizing: border-box !important;
             overflow-x: hidden !important;
         }
 
         html.sidebar-collapsed #admin-shell,
         body.sidebar-collapsed #admin-shell,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-shell {
-            margin-left: 5rem !important;
+            margin-left: 5.75rem !important;
+        }
+
+        /* Căn giữa và chuẩn hóa padding navigation */
+        html.sidebar-collapsed #admin-sidebar nav,
+        body.sidebar-collapsed #admin-sidebar nav,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav {
+            padding-left: 0.35rem !important;
+            padding-right: 0.35rem !important;
         }
 
         html.sidebar-collapsed #admin-sidebar nav a,
@@ -101,14 +112,16 @@
             padding-left: 0 !important;
             padding-right: 0 !important;
             text-align: center !important;
+            gap: 0 !important;
+            width: 100% !important;
         }
 
         html.sidebar-collapsed #admin-sidebar > div:first-child,
         body.sidebar-collapsed #admin-sidebar > div:first-child,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar > div:first-child {
             justify-content: center !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
         }
 
         html.sidebar-collapsed #admin-sidebar .sidebar-brand,
@@ -117,6 +130,7 @@
             display: none !important;
             visibility: hidden !important;
             width: 0 !important;
+            height: 0 !important;
             overflow: hidden !important;
         }
 
@@ -139,6 +153,10 @@
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-profile,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-badge {
             display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
         }
 
         html.sidebar-collapsed #admin-sidebar .sidebar-group-title,
@@ -160,8 +178,8 @@
         html.sidebar-collapsed #admin-sidebar .sidebar-footer,
         body.sidebar-collapsed #admin-sidebar .sidebar-footer,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-footer {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-left: 0.35rem !important;
+            padding-right: 0.35rem !important;
         }
 
         html.sidebar-collapsed #sidebar-toggle i,
