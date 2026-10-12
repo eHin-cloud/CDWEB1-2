@@ -197,8 +197,9 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/ticket/{id}/update', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.ticket.update');
     Route::post('/smartroom/admin/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.tickets.status');
     Route::get('/smartroom/admin/tickets', [AdminDashboardController::class, 'ticketsIndex'])->name('smartroom.admin.tickets.index');
-    Route::get('/smartroom/admin/tickets/poll', [AdminDashboardController::class, 'pollTickets'])->name('smartroom.admin.tickets.poll');
+    Route::get('/smartroom/admin/profile', [AdminDashboardController::class, 'profileView'])->name('smartroom.admin.profile');
     Route::post('/smartroom/admin/profile', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update');
+    Route::post('/smartroom/admin/profile/update', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update_post');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');

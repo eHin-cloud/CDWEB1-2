@@ -1926,29 +1926,63 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Xem thông tin hồ sơ và cấu hình tài khoản chủ trọ (GET /smartroom/admin/profile)
+     */
+    public function profileView()
+    {
+        return redirect()->route('smartroom.admin', ['tab' => 'profile-section']);
+    }
+
+    /**
+     * Cập nhật thông tin hồ sơ chủ trọ (FEAT_02_PROFILE)
+     */
     public function updateProfile(Request $request)
     {
         $tenantId = $this->currentTenantId();
         $user = Auth::user();
 
+        // Chuẩn hóa họ tên: loại bỏ khoảng trắng thừa, viết hoa chữ cái đầu theo spec
+        if ($request->has('full_name') && is_string($request->input('full_name'))) {
+            $cleaned = trim(preg_replace('/\s+/', ' ', $request->input('full_name')));
+            if ($cleaned !== '') {
+                $request->merge(['full_name' => mb_convert_case($cleaned, MB_CASE_TITLE, "UTF-8")]);
+            }
+        }
+
         $validated = $request->validate([
             'username' => ['nullable', 'string', 'alpha_dash:ascii', 'min:3', 'max:50', 'unique:users,username,' . $user->id],
-            'full_name' => ['required', 'string', 'max:120'],
-            'phone' => ['nullable', 'regex:/^0[0-9]{9}$/', 'unique:users,phone,' . $user->id],
+            'full_name' => ['required', 'string', 'min:2', 'max:100'],
+            'phone' => ['required', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/', 'unique:users,phone,' . $user->id],
             'email' => ['nullable', 'string', 'email', 'max:150', 'unique:users,email,' . $user->id],
+            'property_name' => ['nullable', 'string', 'max:150'],
+            'property_address' => ['nullable', 'string', 'max:500'],
             'national_id' => ['nullable', 'string', 'max:50'],
             'permanent_address' => ['nullable', 'string', 'max:500'],
-            'bank_account_number' => ['nullable', 'string', 'max:60'],
-            'bank_name' => ['nullable', 'string', 'max:120'],
+            'bank_account_number' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'max:60', 'required_with:bank_name'],
+            'bank_name' => ['nullable', 'string', 'max:120', 'required_with:bank_account_number'],
             'business_license' => ['nullable', 'string', 'max:150'],
             'password' => ['nullable', 'string', 'min:6'],
         ], [
+            // ERR_02_01
+            'full_name.required' => 'Họ và tên chủ cơ sở không được để trống.',
+            // ERR_02_02
+            'phone.required' => 'Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.',
+            'phone.regex' => 'Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.',
+            'phone.unique' => 'Số điện thoại này đã được đăng ký tài khoản trong hệ thống.',
+            // ERR_02_03
+            'property_name.required' => 'Tên cơ sở lưu trú / khu trọ không được để trống.',
+            // ERR_02_04
+            'property_address.required' => 'Địa chỉ cơ sở lưu trú là bắt buộc để khách hàng định vị.',
+            // ERR_02_05
+            'bank_account_number.required_with' => 'Số tài khoản ngân hàng không được để trống để tạo mã VietQR.',
+            // ERR_02_06
+            'bank_name.required_with' => 'Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.',
+            // ERR_02_07
+            'bank_account_number.regex' => 'Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.',
             'username.alpha_dash' => 'Tài khoản đăng nhập chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới.',
             'username.min' => 'Tài khoản đăng nhập tối thiểu 3 ký tự.',
             'username.unique' => 'Tài khoản đăng nhập này đã được sử dụng bởi tài khoản khác.',
-            'full_name.required' => 'Họ và tên chủ trọ là bắt buộc.',
-            'phone.regex' => 'Số điện thoại phải là định dạng Việt Nam gồm 10 chữ số và bắt đầu bằng số 0 (ví dụ: 0988123456).',
-            'phone.unique' => 'Số điện thoại này đã được sử dụng bởi tài khoản khác.',
             'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
             'email.unique' => 'Địa chỉ email này đã được sử dụng bởi tài khoản khác.',
             'password.min' => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
@@ -1985,6 +2019,12 @@ class AdminDashboardController extends Controller
         if (!empty($validated['password'])) {
             $profile->password = $user->password;
         }
+        if (!empty($validated['property_name'])) {
+            $profile->property_name = $validated['property_name'];
+        }
+        if (!empty($validated['property_address'])) {
+            $profile->property_address = $validated['property_address'];
+        }
         $profile->national_id = $validated['national_id'] ?? null;
         $profile->permanent_address = $validated['permanent_address'] ?? null;
         $profile->bank_account_number = $validated['bank_account_number'] ?? null;
@@ -1997,17 +2037,19 @@ class AdminDashboardController extends Controller
         }
         $profile->save();
 
-        // Đồng bộ thông tin ngân hàng sang Tenant để xuất hóa đơn và QR
+        // Đồng bộ thông tin cơ sở và ngân hàng sang Tenant để xuất hóa đơn và QR
         $tenant = \App\Models\Tenant::find($tenantId);
         if ($tenant) {
+            if (!empty($validated['property_name'])) $tenant->name = $validated['property_name'];
             if (!empty($validated['bank_name'])) $tenant->bank_name = $validated['bank_name'];
             if (!empty($validated['bank_account_number'])) $tenant->bank_account_no = $validated['bank_account_number'];
             $tenant->save();
         }
 
+        // ERR_02_08: Cập nhật hồ sơ chủ trọ và tài khoản nhận tiền thành công!
         $msg = $profile->status === 'pending_approval' 
-            ? 'Cập nhật hồ sơ thành công! Hồ sơ đã được gửi và đang chờ Admin duyệt để mở quyền đăng tin công khai.'
-            : 'Cập nhật thông tin hồ sơ chủ trọ thành công!';
+            ? 'Cập nhật hồ sơ chủ trọ và tài khoản nhận tiền thành công! Hồ sơ đã được gửi và đang chờ Admin duyệt để mở quyền đăng tin công khai.'
+            : 'Cập nhật hồ sơ chủ trọ và tài khoản nhận tiền thành công!';
 
         return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
             ->with('success', $msg);

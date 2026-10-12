@@ -250,9 +250,24 @@
                         </span>
                     </div>
 
-                    <!-- FORM CẬP NHẬT HỒ SƠ CHỦ TRỌ -->
-                    <form method="POST" action="{{ route('smartroom.admin.profile.update') }}" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-5">
+                    <!-- FORM CẬP NHẬT HỒ SƠ CHỦ TRỌ (FEAT_02_PROFILE) -->
+                    <form id="profile-form" method="POST" action="{{ route('smartroom.admin.profile.update') }}" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-6">
                         @csrf
+
+                        <!-- STT 1: Avatar Upload (96px circle) -->
+                        <div class="flex items-center gap-5 border-b border-slate-800/60 pb-5">
+                            <div class="relative w-24 h-24 rounded-full border-2 border-indigo-500/40 bg-slate-900 flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-500/10">
+                                <img id="avatar-preview" src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=4f46e5&color=fff' }}" alt="Avatar" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-camera text-indigo-400"></i> Ảnh Đại Diện Chủ Cơ Sở
+                                </h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Định dạng PNG, JPG hoặc WebP chuẩn tỷ lệ 1:1</p>
+                            </div>
+                        </div>
+
+                        <!-- 1. Thông tin cơ bản & Tài khoản -->
                         <div class="border-b border-slate-800/60 pb-3 flex items-center justify-between">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
                                 <i class="fa-solid fa-user-gear"></i> Thông tin cơ bản &amp; Đăng nhập
@@ -264,38 +279,74 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tài khoản đăng nhập</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-circle-user absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="username" value="{{ old('username', $landlordProfile->username ?? Auth::user()->username) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-indigo-500 transition-all">
+                                    <input type="text" name="username" id="username" value="{{ old('username', $landlordProfile->username ?? Auth::user()->username) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-indigo-500 transition-all">
                                 </div>
+                                <span id="err-username" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
 
+                            <!-- STT 2: Họ và tên -->
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Họ và tên *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-user-tie absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="full_name" required value="{{ old('full_name', $landlordProfile->full_name ?? Auth::user()->name) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                    <input type="text" name="full_name" id="full_name" required value="{{ old('full_name', $landlordProfile->full_name ?? Auth::user()->name) }}" placeholder="Nguyễn Văn A" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordFullName()">
                                 </div>
+                                <span id="err-full_name" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
 
+                            <!-- STT 3: Số điện thoại liên hệ -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số điện thoại</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số điện thoại liên hệ *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-phone absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="tel" name="phone" pattern="^0[0-9]{9}$" value="{{ old('phone', $landlordProfile->phone ?? Auth::user()->phone) }}" placeholder="0988123456" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                    <input type="tel" name="phone" id="phone" required value="{{ old('phone', $landlordProfile->phone ?? Auth::user()->phone) }}" placeholder="0912345678" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordPhone()">
                                 </div>
+                                <span id="err-phone" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
 
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ Email</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="email" name="email" value="{{ old('email', $landlordProfile->email ?? Auth::user()->email) }}" placeholder="chutro@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                    <input type="email" name="email" id="email" value="{{ old('email', $landlordProfile->email ?? Auth::user()->email) }}" placeholder="chutro@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
                                 </div>
+                                <span id="err-email" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
                         </div>
 
+                        <!-- 2. Thông tin cơ sở lưu trú & Kinh doanh -->
+                        <div class="border-b border-slate-800/60 pt-2 pb-3 flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-hotel"></i> Thông tin cơ sở lưu trú &amp; Khu trọ
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Tên cơ sở lưu trú (ERR_02_03) -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên cơ sở lưu trú / Khu trọ</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-building absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="property_name" id="property_name" value="{{ old('property_name', $landlordProfile->property_name ?? $tenant->name ?? '') }}" placeholder="Khu trọ Bình An, Tòa nhà Diamond..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-amber-500 transition-all" onblur="validateLandlordPropertyName()">
+                                </div>
+                                <span id="err-property_name" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                            </div>
+
+                            <!-- Địa chỉ cơ sở lưu trú (ERR_02_04) -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ cơ sở lưu trú</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-location-dot absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                    <input type="text" name="property_address" id="property_address" value="{{ old('property_address', $landlordProfile->property_address ?? $tenant->address ?? '') }}" placeholder="Số 123 Đường Số 1, Phường Linh Trung, TP. Thủ Đức" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-amber-500 transition-all" onblur="validateLandlordPropertyAddress()">
+                                </div>
+                                <span id="err-property_address" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Thông tin pháp lý & Tài khoản ngân hàng VietQR -->
                         <div class="border-b border-slate-800/60 pt-2 pb-3 flex items-center justify-between">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                                <i class="fa-solid fa-shield-halved"></i> Thông tin pháp lý &amp; Tài khoản ngân hàng
+                                <i class="fa-solid fa-shield-halved"></i> Thông tin pháp lý &amp; Tài khoản nhận tiền VietQR
                             </h3>
                         </div>
 
@@ -305,7 +356,7 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">CCCD / CMND</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="national_id" value="{{ old('national_id', $landlordProfile->national_id ?? '') }}" placeholder="001203040506" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="national_id" id="national_id" value="{{ old('national_id', $landlordProfile->national_id ?? '') }}" placeholder="001203040506" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
                                 </div>
                             </div>
 
@@ -314,7 +365,7 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ thường trú</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-house-user absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="permanent_address" value="{{ old('permanent_address', $landlordProfile->permanent_address ?? '') }}" placeholder="Địa chỉ theo CCCD" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="permanent_address" id="permanent_address" value="{{ old('permanent_address', $landlordProfile->permanent_address ?? '') }}" placeholder="Địa chỉ theo CCCD" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
                                 </div>
                             </div>
 
@@ -323,16 +374,16 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Giấy phép kinh doanh / Mã số thuế</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-file-invoice absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="business_license" value="{{ old('business_license', $landlordProfile->business_license ?? '') }}" placeholder="Số ĐKKD hoặc Mã số thuế" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="business_license" id="business_license" value="{{ old('business_license', $landlordProfile->business_license ?? '') }}" placeholder="Số ĐKKD hoặc Mã số thuế" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
                                 </div>
                             </div>
 
-                            <!-- Tên ngân hàng -->
+                            <!-- Tên ngân hàng (ERR_02_06) -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên ngân hàng</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên ngân hàng thụ hưởng</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-building-columns absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="bank_name" list="bank-list-admin" value="{{ old('bank_name', $landlordProfile->bank_name ?? $tenant->bank_name ?? '') }}" placeholder="MB Bank, Vietcombank..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="bank_name" id="bank_name" list="bank-list-admin" value="{{ old('bank_name', $landlordProfile->bank_name ?? $tenant->bank_name ?? '') }}" placeholder="MB Bank, Vietcombank..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBank()">
                                     <datalist id="bank-list-admin">
                                         <option value="MB Bank (Quân Đội)">
                                         <option value="Vietcombank">
@@ -345,15 +396,17 @@
                                         <option value="TPBank">
                                     </datalist>
                                 </div>
+                                <span id="err-bank_name" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
 
-                            <!-- Số tài khoản ngân hàng -->
+                            <!-- Số tài khoản ngân hàng (ERR_02_05 & ERR_02_07) -->
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số tài khoản ngân hàng</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-credit-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $landlordProfile->bank_account_number ?? $tenant->bank_account_no ?? '') }}" placeholder="Số tài khoản ngân hàng" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="bank_account_number" id="bank_account_number" value="{{ old('bank_account_number', $landlordProfile->bank_account_number ?? $tenant->bank_account_no ?? '') }}" placeholder="Số tài khoản ngân hàng" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBankAccount()">
                                 </div>
+                                <span id="err-bank_account_number" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
 
                             <!-- Đổi mật khẩu mới -->
@@ -361,18 +414,132 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Đổi mật khẩu mới</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="password" name="password" minlength="6" placeholder="Để trống nếu không đổi" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                    <input type="password" name="password" id="password" minlength="6" placeholder="Để trống nếu không đổi" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end gap-3 pt-2">
-                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                        <!-- STT 4: Nút Submit (btnSave) Nền xanh Indigo -->
+                        <div class="flex items-center justify-end gap-3 pt-3">
+                            <button type="submit" id="btnSave" name="btnSave" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/25 transition-all flex items-center gap-2 cursor-pointer">
                                 <i class="fa-solid fa-floppy-disk text-xs"></i>
-                                <span>Lưu Thay Đổi Hồ Sơ Chủ Trọ</span>
+                                <span>Lưu thay đổi</span>
                             </button>
                         </div>
                     </form>
+
+                    <script>
+                        // Client-side Validation cho Form Hồ Sơ Chủ Trọ (FEAT_02_PROFILE)
+                        function validateLandlordFullName() {
+                            const input = document.getElementById('full_name');
+                            const err = document.getElementById('err-full_name');
+                            if (!input || !err) return true;
+                            if (input.value.trim() === '') {
+                                err.textContent = 'Họ và tên chủ cơ sở không được để trống.';
+                                err.classList.remove('hidden');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordPhone() {
+                            const input = document.getElementById('phone');
+                            const err = document.getElementById('err-phone');
+                            if (!input || !err) return true;
+                            const regex = /^0[0-9]{9}$/;
+                            if (input.value.trim() === '' || !regex.test(input.value.trim())) {
+                                err.textContent = 'Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.';
+                                err.classList.remove('hidden');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordPropertyName() {
+                            const input = document.getElementById('property_name');
+                            const err = document.getElementById('err-property_name');
+                            if (!input || !err) return true;
+                            // Chỉ cảnh báo nếu người dùng nhập rỗng khi đang điền
+                            if (input.value.trim() === '' && input.dataset.touched === 'true') {
+                                err.textContent = 'Tên cơ sở lưu trú / khu trọ không được để trống.';
+                                err.classList.remove('hidden');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordPropertyAddress() {
+                            const input = document.getElementById('property_address');
+                            const err = document.getElementById('err-property_address');
+                            if (!input || !err) return true;
+                            if (input.value.trim() === '' && input.dataset.touched === 'true') {
+                                err.textContent = 'Địa chỉ cơ sở lưu trú là bắt buộc để khách hàng định vị.';
+                                err.classList.remove('hidden');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordBankAccount() {
+                            const input = document.getElementById('bank_account_number');
+                            const err = document.getElementById('err-bank_account_number');
+                            if (!input || !err) return true;
+                            const val = input.value.trim();
+                            if (val !== '' && !/^[0-9]+$/.test(val)) {
+                                err.textContent = 'Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.';
+                                err.classList.remove('hidden');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordBank() {
+                            const bankInput = document.getElementById('bank_name');
+                            const accInput = document.getElementById('bank_account_number');
+                            const errBank = document.getElementById('err-bank_name');
+                            const errAcc = document.getElementById('err-bank_account_number');
+                            
+                            if (accInput && accInput.value.trim() !== '' && (!bankInput || bankInput.value.trim() === '')) {
+                                if (errBank) {
+                                    errBank.textContent = 'Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.';
+                                    errBank.classList.remove('hidden');
+                                    bankInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                }
+                                return false;
+                            }
+                            if (errBank) {
+                                errBank.classList.add('hidden');
+                                bankInput?.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            }
+                            return true;
+                        }
+
+                        document.getElementById('profile-form')?.addEventListener('submit', function(e) {
+                            const okName = validateLandlordFullName();
+                            const okPhone = validateLandlordPhone();
+                            const okAcc = validateLandlordBankAccount();
+                            const okBank = validateLandlordBank();
+                            if (!okName || !okPhone || !okAcc || !okBank) {
+                                e.preventDefault();
+                                return false;
+                            }
+                        });
+                    </script>
 
                     <div class="border-t border-slate-800 pt-6">
                         <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 flex items-center gap-2">

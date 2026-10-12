@@ -61,6 +61,43 @@
   * ✅ Đổi mật khẩu tài khoản trực tiếp: Cho phép đổi mật khẩu mới (tối thiểu 6 ký tự) ngay trên form cập nhật hồ sơ với cơ chế băm `Hash::make`.
   * ✅ Đồng bộ cơ sở dữ liệu 2 chiều: Tự động đồng bộ và cập nhật thông tin đồng thời trên cả 2 bảng `users` và `landlord_profiles` theo `tenant_id`.
   * ✅ Kịch bản xử lý lỗi (`ERR_02_01` -> `ERR_02_08`): Bắt buộc các trường họ tên, số điện thoại, kiểm tra số tài khoản ngân hàng, thông báo thành công hoặc trả lỗi chi tiết dưới từng ô nhập liệu.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Để trống họ và tên chủ trọ | **`ERR_02_01`** | `Họ và tên chủ cơ sở không được để trống.` | Bôi đỏ viền ô input Họ và tên (`border-rose-500 ring-2 ring-rose-500`) |
+| Để trống số điện thoại liên hệ | **`ERR_02_02`** | `Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.` | Bôi đỏ viền ô input Số điện thoại |
+| Để trống tên cơ sở lưu trú | **`ERR_02_03`** | `Tên cơ sở lưu trú / khu trọ không được để trống.` | Bôi đỏ viền ô input Tên cơ sở |
+| Để trống địa chỉ cơ sở | **`ERR_02_04`** | `Địa chỉ cơ sở lưu trú là bắt buộc để khách hàng định vị.` | Bôi đỏ viền ô input Địa chỉ |
+| Để trống số tài khoản ngân hàng | **`ERR_02_05`** | `Số tài khoản ngân hàng không được để trống để tạo mã VietQR.` | Bôi đỏ viền ô input Số tài khoản |
+| Chưa chọn ngân hàng thụ hưởng | **`ERR_02_06`** | `Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.` | Bôi đỏ dropdown Ngân hàng thụ hưởng |
+| Số tài khoản chứa chữ cái | **`ERR_02_07`** | `Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.` | Bôi đỏ ô input Số tài khoản |
+| Cập nhật hồ sơ thành công | **`ERR_02_08`** | `Cập nhật hồ sơ chủ trọ và tài khoản nhận tiền thành công!` | Hiển thị Toast thông báo màu xanh lá góc trên bên phải |
+
+#### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
+* **Hình 2.1: Giao diện Quản Lý Hồ Sơ & Thông Tin Chủ Trọ**
+  * *Mô tả chức năng*: Màn hình tiếp nhận cập nhật hồ sơ chủ trọ: Họ và tên, Số điện thoại, Email liên hệ, Căn cước công dân và Tài khoản ngân hàng nhận tiền.
+* **Hình 2.2: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi để trống Họ và tên**
+  * *Mô tả chức năng*: Hệ thống kiểm tra validation và chặn lưu khi người dùng xóa trắng trường Họ và tên bắt buộc, hiển thị cảnh báo đỏ trực tiếp dưới ô.
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Avatar Upload | `avatar` | Ảnh đại diện | — | Vòng tròn 96px, có nút tải ảnh PNG/JPG |
+| **2** | Input | `name` / `full_name` | Họ và tên * | `Nguyễn Văn A` | Rộng 100%, viền xám sáng; bôi đỏ khi rỗng |
+| **3** | Input | `phone` | Số điện thoại liên hệ * | `0912345678` | Kèm icon điện thoại, bắt buộc 10 số |
+| **4** | Button | `btnSave` | `Lưu thay đổi` | — | Nền xanh Indigo, căn phải cuối form |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Xóa trắng trường Họ và tên và bấm Lưu | Báo lỗi đỏ 'Họ và tên chủ cơ sở không được để trống.' kèm bôi đỏ viền ô Họ và tên | Kiểm tra Required (`ERR_02_01`) |
+| **2** | Nhập SĐT chữ: 'abcdef' | Báo lỗi đỏ 'Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.' kèm bôi đỏ viền ô SĐT | Kiểm tra Regex SĐT (`ERR_02_02`) |
+| **3** | Nhập thông tin hợp lệ và bấm Lưu | Cập nhật DB (đồng bộ cả `users` và `landlord_profiles`), hiển thị Toast xanh 'Cập nhật hồ sơ chủ trọ và tài khoản nhận tiền thành công!' | Happy case (`ERR_02_08`) |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---
