@@ -729,6 +729,63 @@ class HousekeepingFrontdeskController extends Controller
     }
 
     /**
+     * Xem trước tính tiền phòng & dịch vụ trước khi Check-out (Room Charge Preview)
+     * GET /smartroom/admin/frontdesk/preview-checkout/{roomId}
+     */
+    public function previewCheckOut(Request $request, $roomId)
+    {
+        $user = Auth::user();
+        $tenantId = $request->attributes->get('scoped_tenant_id') ?? $user->tenant_id;
+
+        $room = Room::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->with(['activeHotelBooking.folioItems', 'building'])
+            ->findOrFail($roomId);
+
+        $booking = $room->activeHotelBooking ?: HotelBooking::where('room_id', $room->id)
+            ->where('status', 'checked_in')
+            ->latest('id')
+            ->first();
+
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => "Phòng P.{$room->room_number} hiện không có thông tin lượt khách lưu trú hợp lệ.",
+            ], 404);
+        }
+
+        // Tính toán chi phí trả phòng theo BillingEngine
+        $calc = BillingEngine::calculateHotelCheckout($booking->fresh(['folioItems']), now());
+
+        $rentalType = $booking->rental_type ?: ($room->rental_type ?: 'day');
+        $effectiveDayRate = (float) ($booking->unit_rate ?: ($room->price_per_day ?: ($room->price ? round($room->price / 30) : 500000)));
+        $effectiveHourRate = (float) ($room->price_per_hour ?: 120000);
+
+        return response()->json([
+            'success' => true,
+            'room' => [
+                'id' => $room->id,
+                'room_number' => $room->room_number,
+                'price_per_day' => $effectiveDayRate,
+                'price_per_hour' => $effectiveHourRate,
+                'rental_type' => $rentalType,
+            ],
+            'booking' => [
+                'id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'guest_name' => $booking->guest_name,
+                'check_in_at' => $booking->check_in_at ? \Carbon\Carbon::parse($booking->check_in_at)->format('d/m/Y H:i') : null,
+                'rental_type' => $rentalType,
+                'rental_type_label' => $rentalType === 'hour' ? 'Thuê theo giờ' : 'Thuê theo ngày',
+                'unit_rate' => $booking->unit_rate ?: ($rentalType === 'hour' ? $effectiveHourRate : $effectiveDayRate),
+                'formatted_rate' => number_format($booking->unit_rate ?: ($rentalType === 'hour' ? $effectiveHourRate : $effectiveDayRate)) . 'đ' . ($rentalType === 'hour' ? '/2h' : '/ngày'),
+                'deposit_amount' => (float) ($booking->deposit_amount ?: 0),
+                'formatted_deposit' => number_format((float) ($booking->deposit_amount ?: 0)) . 'đ',
+            ],
+            'calculation' => $calc,
+        ]);
+    }
+
+    /**
      * Chuẩn hóa payload thông tin phòng phục vụ Realtime & Optimistic Locking
      */
     public function formatRoomPayload(Room $room, string $action = 'update'): array

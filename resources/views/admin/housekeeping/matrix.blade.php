@@ -765,6 +765,52 @@
             <form id="form-checkout" onsubmit="handleCheckOutSubmit(event)" class="space-y-4">
                 <input type="hidden" id="checkout-room-id" name="room_id">
 
+                <!-- 1. BẢNG KÊ TẠM TÍNH TIỀN PHÒNG LƯU TRÚ (THEO NGÀY / THEO GIỜ CÓ SẴN) -->
+                <div class="bg-[#080b11] border border-sky-500/30 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                        <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5 uppercase tracking-wider">
+                            <i class="fa-solid fa-hotel"></i> Tạm tính tiền phòng lưu trú
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span id="checkout-rental-type-badge" class="px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-bold">
+                                Theo ngày
+                            </span>
+                            <span id="checkout-guest-name-badge" class="text-xs text-slate-300 font-semibold truncate max-w-[150px]">
+                                Khách lưu trú
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Lưới thông tin đơn giá & thời gian -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div class="bg-[#0f1423] p-2.5 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block">Đơn giá phòng:</span>
+                            <span id="checkout-rate-display" class="font-bold text-white font-mono text-xs">--đ</span>
+                        </div>
+                        <div class="bg-[#0f1423] p-2.5 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block">Thời gian nhận:</span>
+                            <span id="checkout-checkin-display" class="font-medium text-slate-200">--/-- --:--</span>
+                        </div>
+                        <div class="bg-[#0f1423] p-2.5 rounded-xl border border-slate-800 col-span-2 sm:col-span-1">
+                            <span class="text-[10px] text-slate-400 block">Đã đặt cọc:</span>
+                            <span id="checkout-deposit-display" class="font-bold text-emerald-400 font-mono">0đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách các khoản mục tiền phòng & phụ thu trễ giờ -->
+                    <div id="checkout-room-breakdown-container" class="space-y-1.5 text-xs pt-1 border-t border-slate-800/80">
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span id="checkout-breakdown-label">Tiền phòng lưu trú:</span>
+                            <span id="checkout-room-amount-text" class="font-mono font-bold text-white">0đ</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-800 font-bold text-xs">
+                        <span class="text-slate-400">Tiền phòng &amp; Phụ thu tạm tính:</span>
+                        <span id="checkout-room-subtotal-text" class="text-sky-300 font-mono text-sm">0đ</span>
+                    </div>
+                </div>
+
                 <!-- Bảng Đối Soát Vật Tư Tiêu Hao & Dịch Vụ Phát Sinh (Mua hộ, đồ ăn ngoài...) -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
@@ -843,6 +889,30 @@
                                 class="text-xs text-amber-400 hover:text-amber-300 font-semibold inline-flex items-center gap-1 transition">
                             <i class="fa-solid fa-circle-plus text-[11px]"></i> Thêm mặt hàng khách mua hộ / phát sinh khác
                         </button>
+                    </div>
+                </div>
+
+                <!-- TỔNG KẾT CHI PHÍ CHECK-OUT FOLIO -->
+                <div class="bg-[#0b101c] border border-amber-500/30 rounded-2xl p-4 space-y-2.5">
+                    <div class="flex justify-between items-center text-xs text-slate-400">
+                        <span>1. Tiền phòng lưu trú:</span>
+                        <span class="font-mono text-slate-200" id="summary-room-amount">0đ</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-400" id="summary-surcharge-row">
+                        <span>2. Phụ thu trả phòng muộn:</span>
+                        <span class="font-mono text-amber-400" id="summary-surcharge-amount">+0đ</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-400">
+                        <span>3. Phụ thu Minibar &amp; Mua hộ:</span>
+                        <span class="font-mono text-amber-300" id="summary-minibar-amount">+0đ</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-400" id="summary-deposit-row">
+                        <span>4. Đã khấu trừ đặt cọc:</span>
+                        <span class="font-mono text-emerald-400" id="summary-deposit-amount">-0đ</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
+                        <span class="text-xs font-bold text-white uppercase tracking-wider">TỔNG CẦN THANH TOÁN:</span>
+                        <span class="text-xl font-black text-amber-400 font-mono" id="summary-total-due">0đ</span>
                     </div>
                 </div>
 
@@ -1738,30 +1808,41 @@
         // ==================== CHECK-OUT & ĐỐI SOÁT MINIBAR & DỊCH VỤ PHÁT SINH ====================
         let currentCheckoutRoomNumber = '';
         let currentCheckoutBookingCode = '';
+        let currentRoomCalculation = null;
+        let currentRoomBooking = null;
 
-        // Tạo & cập nhật mã QR chuyển khoản VietQR theo thời gian thực
-        function updateCheckoutQrCode() {
+        // Tạo & cập nhật mã QR chuyển khoản VietQR theo thời gian thực (gồm cả tiền phòng + minibar)
+        function updateCheckoutQrCode(customTotalDue = null) {
             const qrBox = document.getElementById('checkout-vietqr-box');
             if (!qrBox || qrBox.classList.contains('hidden')) return;
 
-            let grandTotal = 0;
-            document.querySelectorAll('.minibar-qty-input').forEach(inp => {
-                const q = parseInt(inp.value) || 0;
-                const p = parseFloat(inp.getAttribute('data-unit-price') || 0);
-                if (q > 0) grandTotal += (q * p);
-            });
-            document.querySelectorAll('.custom-service-row').forEach(row => {
-                const q = parseInt(row.querySelector('.custom-item-qty')?.value) || 0;
-                const p = parseFloat(row.querySelector('.custom-item-price')?.value) || 0;
-                if (q > 0 && p > 0) grandTotal += (q * p);
-            });
+            let amount = 0;
+            if (customTotalDue !== null) {
+                amount = customTotalDue;
+            } else {
+                let minibarTotal = 0;
+                document.querySelectorAll('.minibar-qty-input').forEach(inp => {
+                    const q = parseInt(inp.value) || 0;
+                    const p = parseFloat(inp.getAttribute('data-unit-price') || 0);
+                    if (q > 0) minibarTotal += (q * p);
+                });
+                document.querySelectorAll('.custom-service-row').forEach(row => {
+                    const q = parseInt(row.querySelector('.custom-item-qty')?.value) || 0;
+                    const p = parseFloat(row.querySelector('.custom-item-price')?.value) || 0;
+                    if (q > 0 && p > 0) minibarTotal += (q * p);
+                });
+                const roomAmount = currentRoomCalculation ? (currentRoomCalculation.room_amount || 0) : 0;
+                const surchargeAmount = currentRoomCalculation ? (currentRoomCalculation.surcharge_amount || 0) : 0;
+                const depositAmount = currentRoomCalculation ? (currentRoomCalculation.deposit_amount || 0) : 0;
+                amount = Math.max(0, roomAmount + surchargeAmount + minibarTotal - depositAmount);
+            }
 
             const codeText = currentCheckoutBookingCode ? currentCheckoutBookingCode : (`Phong P.${currentCheckoutRoomNumber || '---'}`);
             const addInfo = `Thanh toan ${codeText}`;
             const accountName = 'RENTRY HOTEL';
 
             // Sinh URL VietQR Napas247 tự động
-            const amountParam = grandTotal > 0 ? `amount=${grandTotal}&` : '';
+            const amountParam = amount > 0 ? `amount=${amount}&` : '';
             const qrUrl = `https://img.vietqr.io/image/VCB-1051572297-compact.png?${amountParam}addInfo=${encodeURIComponent(addInfo)}&accountName=${encodeURIComponent(accountName)}`;
 
             const qrImg = document.getElementById('checkout-qr-image');
@@ -1769,8 +1850,8 @@
 
             const amtEl = document.getElementById('checkout-qr-amount-text');
             if (amtEl) {
-                amtEl.textContent = grandTotal > 0 
-                    ? new Intl.NumberFormat('vi-VN').format(grandTotal) + 'đ'
+                amtEl.textContent = amount > 0 
+                    ? new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
                     : 'Tùy chỉnh (Khách nhập số tiền)';
             }
 
@@ -1791,16 +1872,72 @@
             }
         }
 
-        function openCheckOutModal(roomId) {
+        function renderRoomChargePreview(data) {
+            const b = data.booking;
+            const c = data.calculation;
+
+            const badgeRental = document.getElementById('checkout-rental-type-badge');
+            if (badgeRental) badgeRental.textContent = b.rental_type_label || (b.rental_type === 'hour' ? 'Thuê theo giờ' : 'Thuê theo ngày');
+
+            const badgeGuest = document.getElementById('checkout-guest-name-badge');
+            if (badgeGuest) badgeGuest.textContent = b.guest_name || 'Khách lưu trú';
+
+            const rateDisp = document.getElementById('checkout-rate-display');
+            if (rateDisp) rateDisp.textContent = b.formatted_rate || '--đ';
+
+            const checkinDisp = document.getElementById('checkout-checkin-display');
+            if (checkinDisp) checkinDisp.textContent = b.check_in_at || '--/-- --:--';
+
+            const depDisp = document.getElementById('checkout-deposit-display');
+            if (depDisp) depDisp.textContent = b.formatted_deposit || '0đ';
+
+            // Render breakdown items
+            const container = document.getElementById('checkout-room-breakdown-container');
+            if (container && Array.isArray(c.breakdown)) {
+                let html = '';
+                c.breakdown.forEach(item => {
+                    html += `
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span><i class="fa-solid fa-angle-right text-[10px] text-slate-500 mr-1"></i>${item.label}:</span>
+                            <span class="font-mono font-bold text-white">${new Intl.NumberFormat('vi-VN').format(item.amount)}đ</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+
+            const roomSubtotal = (c.room_amount || 0) + (c.surcharge_amount || 0);
+            const subtotalText = document.getElementById('checkout-room-subtotal-text');
+            if (subtotalText) {
+                subtotalText.textContent = new Intl.NumberFormat('vi-VN').format(roomSubtotal) + 'đ';
+            }
+        }
+
+        async function openCheckOutModal(roomId) {
             const card = document.getElementById(`room-card-${roomId}`);
             const roomNum = card?.getAttribute('data-room-number') || roomId;
             const bookingCode = card?.getAttribute('data-booking-code') || '';
 
             currentCheckoutRoomNumber = roomNum;
             currentCheckoutBookingCode = bookingCode;
+            currentRoomCalculation = null;
+            currentRoomBooking = null;
 
             document.getElementById('checkout-room-id').value = roomId;
             document.getElementById('checkout-modal-room-label').textContent = `Phòng P.${roomNum} - Đối soát trả phòng`;
+
+            // Reset thông tin bảng tính tiền phòng
+            document.getElementById('checkout-rental-type-badge').textContent = 'Đang tính toán...';
+            document.getElementById('checkout-guest-name-badge').textContent = '...';
+            document.getElementById('checkout-rate-display').textContent = '...';
+            document.getElementById('checkout-checkin-display').textContent = '...';
+            document.getElementById('checkout-deposit-display').textContent = '0đ';
+            document.getElementById('checkout-room-subtotal-text').textContent = '0đ';
+            document.getElementById('checkout-room-breakdown-container').innerHTML = `
+                <div class="text-slate-400 italic text-center py-1 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-spinner fa-spin text-xs"></i> Đang tải dữ liệu tạm tính tiền phòng...
+                </div>
+            `;
 
             // Reset inputs Minibar catalog
             document.querySelectorAll('.minibar-qty-input').forEach(input => {
@@ -1822,17 +1959,42 @@
             toggleCheckoutPaymentMethod('vietqr');
 
             openModal('modal-checkout');
+
+            // Gọi API preview-checkout lấy tính toán chi phí thực tế
+            try {
+                const res = await fetch(`/smartroom/admin/frontdesk/preview-checkout/${roomId}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentRoomCalculation = data.calculation;
+                    currentRoomBooking = data.booking;
+                    currentCheckoutBookingCode = data.booking.booking_code || currentCheckoutBookingCode;
+
+                    renderRoomChargePreview(data);
+                    recalculateGrandTotal();
+                } else {
+                    document.getElementById('checkout-room-breakdown-container').innerHTML = `
+                        <div class="text-amber-400 text-xs py-1">${data.message || 'Chưa có thông tin đặt phòng.'}</div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Lỗi preview checkout:", err);
+                document.getElementById('checkout-room-breakdown-container').innerHTML = `
+                    <div class="text-red-400 text-xs py-1">Lỗi kết nối khi tải bảng tính tiền phòng.</div>
+                `;
+            }
         }
 
-        // Tính lại tổng tiền chung (Minibar catalog + Mặt hàng/dịch vụ mua hộ phát sinh)
+        // Tính lại tổng tiền chung (Tiền phòng + Phụ thu trễ + Minibar & Dịch vụ - Tiền cọc)
         function recalculateGrandTotal() {
-            let grandTotal = 0;
+            let minibarTotal = 0;
 
             // 1. Minibar catalog mặc định
             document.querySelectorAll('.minibar-qty-input').forEach(inp => {
                 const q = parseInt(inp.value) || 0;
                 const p = parseFloat(inp.getAttribute('data-unit-price') || 0);
-                if (q > 0) grandTotal += (q * p);
+                if (q > 0) minibarTotal += (q * p);
             });
 
             // 2. Custom services / mặt hàng phát sinh mua hộ
@@ -1842,17 +2004,40 @@
                 const q = parseInt(qtyInp?.value) || 0;
                 const p = parseFloat(priceInp?.value) || 0;
                 if (q > 0 && p > 0) {
-                    grandTotal += (q * p);
+                    minibarTotal += (q * p);
                 }
             });
 
             const grandTotalEl = document.getElementById('minibar-grand-total');
             if (grandTotalEl) {
-                grandTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(grandTotal) + 'đ';
+                grandTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(minibarTotal) + 'đ';
             }
 
-            // Đồng bộ mã QR chuyển khoản theo tổng tiền mới
-            updateCheckoutQrCode();
+            // Tính tổng thanh toán Check-out Folio
+            const roomAmount = currentRoomCalculation ? (currentRoomCalculation.room_amount || 0) : 0;
+            const surchargeAmount = currentRoomCalculation ? (currentRoomCalculation.surcharge_amount || 0) : 0;
+            const depositAmount = currentRoomCalculation ? (currentRoomCalculation.deposit_amount || 0) : 0;
+
+            const totalDue = Math.max(0, roomAmount + surchargeAmount + minibarTotal - depositAmount);
+
+            // Cập nhật khối TỔNG KẾT CHI PHÍ
+            const sumRoom = document.getElementById('summary-room-amount');
+            if (sumRoom) sumRoom.textContent = new Intl.NumberFormat('vi-VN').format(roomAmount) + 'đ';
+
+            const sumSurcharge = document.getElementById('summary-surcharge-amount');
+            if (sumSurcharge) sumSurcharge.textContent = '+' + new Intl.NumberFormat('vi-VN').format(surchargeAmount) + 'đ';
+
+            const sumMinibar = document.getElementById('summary-minibar-amount');
+            if (sumMinibar) sumMinibar.textContent = '+' + new Intl.NumberFormat('vi-VN').format(minibarTotal) + 'đ';
+
+            const sumDeposit = document.getElementById('summary-deposit-amount');
+            if (sumDeposit) sumDeposit.textContent = '-' + new Intl.NumberFormat('vi-VN').format(depositAmount) + 'đ';
+
+            const sumTotal = document.getElementById('summary-total-due');
+            if (sumTotal) sumTotal.textContent = new Intl.NumberFormat('vi-VN').format(totalDue) + 'đ';
+
+            // Đồng bộ mã QR chuyển khoản theo TỔNG CẦN THANH TOÁN
+            updateCheckoutQrCode(totalDue);
         }
 
         function calcMinibarRow(input) {
