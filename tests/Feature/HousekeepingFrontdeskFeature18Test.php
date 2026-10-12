@@ -726,4 +726,44 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
         $booking->refresh();
         $this->assertEquals('paid', $booking->payment_status);
     }
+
+    /**
+     * Test xem trước tính tiền phòng theo ngày/giờ có sẵn (Room Billing Preview)
+     */
+    public function test_preview_checkout_room_billing(): void
+    {
+        $this->room->update([
+            'status' => 'occupied',
+            'housekeeping_status' => 'inspected',
+            'price_per_day' => 500000,
+            'price_per_hour' => 120000,
+        ]);
+
+        $booking = HotelBooking::create([
+            'tenant_id' => $this->tenant->id,
+            'room_id' => $this->room->id,
+            'booking_code' => 'HB-PREVIEW-500K',
+            'guest_name' => 'Nguyễn Văn Phòng 201',
+            'rental_type' => 'day',
+            'unit_rate' => 500000,
+            'deposit_amount' => 100000,
+            'check_in_at' => now()->subDay(),
+            'status' => 'checked_in',
+            'payment_status' => 'unpaid',
+        ]);
+
+        $res = $this->actingAs($this->receptionist)
+            ->getJson(route('smartroom.admin.frontdesk.preview_checkout', $this->room->id));
+
+        $res->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('room.price_per_day', 500000)
+            ->assertJsonPath('booking.unit_rate', 500000)
+            ->assertJsonPath('calculation.deposit_amount', 100000)
+            ->assertJsonStructure([
+                'room' => ['id', 'room_number', 'price_per_day', 'price_per_hour'],
+                'booking' => ['id', 'booking_code', 'guest_name', 'rental_type', 'unit_rate'],
+                'calculation' => ['room_amount', 'surcharge_amount', 'service_amount', 'deposit_amount', 'total_amount', 'breakdown'],
+            ]);
+    }
 }
