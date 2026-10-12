@@ -73,7 +73,7 @@ class LandlordProfile extends Model
             if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
                 return $this->avatar;
             }
-            return asset('storage/' . $this->avatar);
+            return '/storage/' . ltrim($this->avatar, '/');
         }
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name ?? 'Landlord') . '&background=4f46e5&color=fff';
     }

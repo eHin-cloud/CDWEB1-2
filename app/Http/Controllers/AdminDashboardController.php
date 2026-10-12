@@ -2094,7 +2094,7 @@ class AdminDashboardController extends Controller
             $profile->save();
         }
 
-        $avatarUrl = asset('storage/' . $path);
+        $avatarUrl = '/storage/' . ltrim($path, '/');
 
         return response()->json([
             'status' => 'success',

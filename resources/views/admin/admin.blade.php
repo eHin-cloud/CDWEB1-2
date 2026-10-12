@@ -257,7 +257,7 @@
                         <!-- STT 1: Avatar Upload (96px circle) -->
                         <div class="flex items-center gap-5 border-b border-slate-800/60 pb-5">
                             <div class="relative w-24 h-24 rounded-full border-2 border-indigo-500/40 bg-slate-900 flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-500/10 group cursor-pointer" onclick="document.getElementById('avatar-input').click()">
-                                <img id="avatar-preview" src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=4f46e5&color=fff' }}" alt="Avatar" class="w-full h-full object-cover group-hover:opacity-75 transition-all">
+                                <img id="avatar-preview" src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=4f46e5&color=fff' }}" alt="Avatar" class="w-full h-full object-cover group-hover:opacity-75 transition-all" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'User') }}&background=4f46e5&color=fff';">
                                 <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-[10px] font-bold">
                                     <i class="fa-solid fa-camera text-base mb-1"></i>
                                     <span>Đổi ảnh</span>
