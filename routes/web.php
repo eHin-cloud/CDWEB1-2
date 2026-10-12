@@ -246,6 +246,8 @@ Route::middleware('admin')->group(function () {
     // Phân hệ Khách sạn / Lễ tân (Reception & Hospitality)
     Route::prefix('smartroom/admin/hotel')->name('admin.hotel.')->group(function () {
         Route::post('/check-in', [HotelReceptionController::class, 'checkIn'])->name('checkin');
+        Route::get('/folio/{bookingId}', [HotelReceptionController::class, 'printFolio'])->name('folio');
+        Route::post('/folio/{bookingId}/confirm-payment', [HotelReceptionController::class, 'confirmPayment'])->name('folio.confirm_payment');
         Route::post('/folio/{bookingId}/items', [HotelReceptionController::class, 'addFolioItem'])->name('folio.add_item');
         Route::post('/check-out/{bookingId}', [HotelReceptionController::class, 'checkOut'])->name('checkout');
     });
