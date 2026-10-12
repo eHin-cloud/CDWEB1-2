@@ -41,9 +41,21 @@
                ->unique()
                ->take(4)
                ->values();
+           $isVerifiedLandlord = in_array($room['listing_badge'] ?? '', ['verified', 'premium_verified'], true)
+               || in_array($room['tenant_verification_status'] ?? '', ['verified', 'premium_verified'], true)
+               || str_contains(mb_strtolower($room['trust_badge']['label'] ?? ''), 'tich xanh')
+               || str_contains(mb_strtolower($room['trust_badge']['label'] ?? ''), 'tích xanh');
        @endphp
        <!-- Room photo -->
-       <div class="room-card-media h-48 bg-slate-950 relative overflow-hidden border-b border-slate-900 group">
+       <div class="room-card-media h-48 bg-slate-950 relative overflow-hidden border-b border-slate-900 group {{ $isVerifiedLandlord ? 'verified-flame-banner' : '' }}">
+           @if($isVerifiedLandlord)
+               <!-- Lớp hiệu ứng Cháy Lửa Xanh quanh banner phòng -->
+               <div class="verified-flame-border-runner" aria-hidden="true"></div>
+               <div class="verified-flame-aura" aria-hidden="true"></div>
+               <div class="verified-flame-tongue-bottom" aria-hidden="true"></div>
+               <div class="verified-flame-tongue-top" aria-hidden="true"></div>
+               <div class="verified-flame-sparks" aria-hidden="true"></div>
+           @endif
            <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')" class="absolute inset-0 z-0 renty-card-carousel" aria-label="Xem chi tiết phòng {{ $room['room_number'] }}">
                @foreach($cardImages as $imageIndex => $imageUrl)
                    <img src="{{ $imageUrl }}" alt="Ảnh {{ $imageIndex + 1 }} phòng {{ $room['room_number'] }}" class="renty-card-carousel-image" style="--carousel-delay: {{ $imageIndex * 2 }}s;" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80';">
@@ -78,8 +90,12 @@
                    </span>
                @endif
 
-               <span class="px-2.5 py-1 border rounded-lg text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-1.5 {{ $room['trust_badge']['class'] }}">
-                   <i class="fa-solid {{ $room['trust_badge']['icon'] }}"></i>
+               <span class="px-2.5 py-1 border rounded-lg text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-1.5 {{ $room['trust_badge']['class'] }} {{ $isVerifiedLandlord ? 'verified-flame-badge' : '' }}">
+                   @if($isVerifiedLandlord)
+                       <i class="fa-solid fa-fire-flame-curved text-sky-400 animate-pulse"></i>
+                   @else
+                       <i class="fa-solid {{ $room['trust_badge']['icon'] }}"></i>
+                   @endif
                    {{ $room['trust_badge']['label'] }}
                </span>
            </div>
