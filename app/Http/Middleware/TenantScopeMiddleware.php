@@ -27,16 +27,16 @@ class TenantScopeMiddleware
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để tiếp tục.');
         }
 
-        // Kiểm tra vai trò được phép truy cập phân hệ Buồng phòng & Lễ tân
-        $allowedRoles = ['admin', 'landlord', 'unverified_landlord', 'manager', 'receptionist', 'housekeeper'];
+        // Kiểm tra vai trò được phép truy cập
+        $allowedRoles = ['admin', 'landlord', 'unverified_landlord', 'manager', 'receptionist', 'housekeeper', 'police', 'officer'];
         if (!in_array($user->roleSlug(), $allowedRoles, true)) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bạn không có quyền truy cập phân hệ Lễ tân & Buồng phòng.'
+                    'message' => 'Bạn không có quyền truy cập tính năng này.'
                 ], 403);
             }
-            return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập phân hệ này.');
+            return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập tính năng này.');
         }
 
         // Thiết lập tenant_id hợp lệ vào request attributes

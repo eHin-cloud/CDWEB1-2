@@ -2081,7 +2081,7 @@
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-300">
+                        <table id="tblResidents" class="w-full text-left text-sm text-slate-300">
                             <thead class="text-xs text-slate-500 uppercase bg-slate-900/50 border-b border-slate-900">
                                 <tr>
                                     <th class="px-4 py-4 font-bold">Họ tên</th>
