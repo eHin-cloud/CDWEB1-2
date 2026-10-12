@@ -142,6 +142,14 @@ class HospitalityDummyDataSeeder extends Seeder
         ];
 
         foreach ($hotelRoomsData as $data) {
+            $data['housekeeping_status'] = $data['cleaning_status'] ?? 'clean';
+            $data['version'] = 1;
+            if ($data['room_number'] === 'KS-204') {
+                $demoStaff = User::where('username', 'demo-housekeeper')->orWhere('username', 'buongphong1')->first();
+                if ($demoStaff) {
+                    $data['assigned_staff_id'] = $demoStaff->id;
+                }
+            }
             $room = Room::updateOrCreate(
                 ['tenant_id' => $tenantId, 'building_id' => $hotel->id, 'room_number' => $data['room_number']],
                 $data
