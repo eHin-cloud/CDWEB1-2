@@ -203,4 +203,28 @@ class LandlordProfileManagementTest extends TestCase
             'bank_name' => 'MB Bank (Quân Đội)',
         ]);
     }
+
+    /**
+     * STT 1: Tải lên ảnh đại diện chủ cơ sở (PNG, JPG, WebP <= 2MB)
+     */
+    public function test_can_upload_avatar_image_successfully(): void
+    {
+        [$user] = $this->setupLandlord();
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $avatarFile = \Illuminate\Http\UploadedFile::fake()->create('my-avatar.jpg', 500, 'image/jpeg');
+
+        $response = $this->actingAs($user)->post(route('smartroom.admin.profile.update'), [
+            'full_name' => 'Nguyễn Thanh Hiền',
+            'phone' => '0912345678',
+            'avatar' => $avatarFile,
+        ]);
+
+        $response->assertRedirect(route('smartroom.admin', ['tab' => 'profile-section']))
+            ->assertSessionHas('success');
+
+        $updatedUser = $user->fresh();
+        $this->assertNotNull($updatedUser->avatar);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($updatedUser->avatar);
+    }
 }

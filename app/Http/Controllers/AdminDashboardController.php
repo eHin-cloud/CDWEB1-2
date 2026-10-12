@@ -1963,6 +1963,7 @@ class AdminDashboardController extends Controller
             'bank_name' => ['nullable', 'string', 'max:120', 'required_with:bank_account_number'],
             'business_license' => ['nullable', 'string', 'max:150'],
             'password' => ['nullable', 'string', 'min:6'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ], [
             // ERR_02_01
             'full_name.required' => 'Họ và tên chủ cơ sở không được để trống.',
@@ -1986,6 +1987,8 @@ class AdminDashboardController extends Controller
             'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
             'email.unique' => 'Địa chỉ email này đã được sử dụng bởi tài khoản khác.',
             'password.min' => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
+            'avatar.image' => 'Ảnh đại diện phải là tệp hình ảnh hợp lệ (PNG, JPG, WebP).',
+            'avatar.max' => 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (2MB).',
         ]);
 
         if (!empty($validated['username'])) {
@@ -1996,6 +1999,9 @@ class AdminDashboardController extends Controller
         $user->email = !empty($validated['email']) ? $validated['email'] : null;
         if (!empty($validated['password'])) {
             $user->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+        if ($request->hasFile('avatar')) {
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
         }
         $user->save();
 
@@ -2016,6 +2022,9 @@ class AdminDashboardController extends Controller
         $profile->full_name = $validated['full_name'];
         $profile->phone = !empty($validated['phone']) ? $validated['phone'] : null;
         $profile->email = !empty($validated['email']) ? $validated['email'] : null;
+        if (!empty($user->avatar)) {
+            $profile->avatar = $user->avatar;
+        }
         if (!empty($validated['password'])) {
             $profile->password = $user->password;
         }

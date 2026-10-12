@@ -251,19 +251,29 @@
                     </div>
 
                     <!-- FORM CẬP NHẬT HỒ SƠ CHỦ TRỌ (FEAT_02_PROFILE) -->
-                    <form id="profile-form" method="POST" action="{{ route('smartroom.admin.profile.update') }}" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-6">
+                    <form id="profile-form" method="POST" action="{{ route('smartroom.admin.profile.update') }}" enctype="multipart/form-data" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-6">
                         @csrf
 
                         <!-- STT 1: Avatar Upload (96px circle) -->
                         <div class="flex items-center gap-5 border-b border-slate-800/60 pb-5">
-                            <div class="relative w-24 h-24 rounded-full border-2 border-indigo-500/40 bg-slate-900 flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-500/10">
-                                <img id="avatar-preview" src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=4f46e5&color=fff' }}" alt="Avatar" class="w-full h-full object-cover">
+                            <div class="relative w-24 h-24 rounded-full border-2 border-indigo-500/40 bg-slate-900 flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-500/10 group cursor-pointer" onclick="document.getElementById('avatar-input').click()">
+                                <img id="avatar-preview" src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=4f46e5&color=fff' }}" alt="Avatar" class="w-full h-full object-cover group-hover:opacity-75 transition-all">
+                                <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-[10px] font-bold">
+                                    <i class="fa-solid fa-camera text-base mb-1"></i>
+                                    <span>Đổi ảnh</span>
+                                </div>
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                                     <i class="fa-solid fa-camera text-indigo-400"></i> Ảnh Đại Diện Chủ Cơ Sở
                                 </h4>
-                                <p class="text-[11px] text-slate-400 mt-1">Định dạng PNG, JPG hoặc WebP chuẩn tỷ lệ 1:1</p>
+                                <p class="text-[11px] text-slate-400 mt-1 mb-2">Định dạng PNG, JPG hoặc WebP (tối đa 2MB)</p>
+                                <input type="file" name="avatar" id="avatar-input" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="previewLandlordAvatar(this)">
+                                <button type="button" onclick="document.getElementById('avatar-input').click()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+                                    <span>Chọn ảnh từ máy tính</span>
+                                </button>
+                                <span id="err-avatar" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
                         </div>
 
@@ -429,6 +439,40 @@
                     </form>
 
                     <script>
+                        // Xem trước ảnh đại diện khi chọn file từ máy tính
+                        function previewLandlordAvatar(input) {
+                            const file = input.files[0];
+                            const preview = document.getElementById('avatar-preview');
+                            const err = document.getElementById('err-avatar');
+                            if (!file) return;
+
+                            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                            if (!allowedTypes.includes(file.type)) {
+                                if (err) {
+                                    err.textContent = 'Ảnh đại diện phải là tệp hình ảnh hợp lệ (PNG, JPG, WebP).';
+                                    err.classList.remove('hidden');
+                                }
+                                input.value = '';
+                                return;
+                            }
+
+                            if (file.size > 2 * 1024 * 1024) {
+                                if (err) {
+                                    err.textContent = 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (2MB).';
+                                    err.classList.remove('hidden');
+                                }
+                                input.value = '';
+                                return;
+                            }
+
+                            if (err) err.classList.add('hidden');
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                if (preview) preview.src = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        }
+
                         // Client-side Validation cho Form Hồ Sơ Chủ Trọ (FEAT_02_PROFILE)
                         function validateLandlordFullName() {
                             const input = document.getElementById('full_name');

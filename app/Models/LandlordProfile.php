@@ -34,6 +34,7 @@ class LandlordProfile extends Model
         'verification_method',
         'property_name',
         'property_address',
+        'avatar',
         'status',
         'verification_status',
         'reject_reason',
