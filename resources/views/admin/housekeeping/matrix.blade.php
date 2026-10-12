@@ -271,6 +271,8 @@
                     <div id="room-card-{{ $room->id }}" 
                          data-room-id="{{ $room->id }}"
                          data-room-number="{{ $room->room_number }}"
+                         data-booking-code="{{ $activeBooking?->booking_code ?? '' }}"
+                         data-guest-name="{{ $activeBooking?->guest_name ?? '' }}"
                          data-housekeeping-status="{{ $hStatus }}"
                          data-status="{{ $room->status }}"
                          data-version="{{ (int) $room->version }}"
@@ -851,14 +853,63 @@
                     </label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="flex items-center gap-2 p-3 rounded-xl border border-indigo-500/40 bg-indigo-500/10 cursor-pointer hover:bg-indigo-500/15 transition">
-                            <input type="radio" name="payment_method" value="vietqr" checked class="text-indigo-600 focus:ring-indigo-500">
+                            <input type="radio" name="payment_method" value="vietqr" checked onchange="toggleCheckoutPaymentMethod(this.value)" class="text-indigo-600 focus:ring-indigo-500">
                             <span class="text-xs font-bold text-white"><i class="fa-solid fa-qrcode mr-1 text-indigo-400"></i> VietQR Napas247</span>
                         </label>
                         <label class="flex items-center gap-2 p-3 rounded-xl border border-slate-700 bg-slate-800/40 cursor-pointer hover:bg-slate-800/60 transition">
-                            <input type="radio" name="payment_method" value="cash" class="text-indigo-600 focus:ring-indigo-500">
+                            <input type="radio" name="payment_method" value="cash" onchange="toggleCheckoutPaymentMethod(this.value)" class="text-indigo-600 focus:ring-indigo-500">
                             <span class="text-xs font-semibold text-slate-300"><i class="fa-solid fa-money-bill-wave mr-1 text-emerald-400"></i> Tiền mặt</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Khung hiển thị mã QR khi chọn Chuyển khoản VietQR -->
+                <div id="checkout-vietqr-box" class="p-4 bg-[#080b11] border border-indigo-500/30 rounded-2xl space-y-3 transition-all duration-200">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="text-xs font-bold text-indigo-300 flex items-center gap-1.5 uppercase tracking-wider">
+                            <i class="fa-solid fa-qrcode text-indigo-400"></i> Mã VietQR Chuyển Khoản Trực Tiếp
+                        </span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">
+                            Napas 247 Tự Động
+                        </span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <!-- Ảnh QR VietQR -->
+                        <div class="p-2 bg-white rounded-xl shadow-lg border border-slate-200 shrink-0">
+                            <img id="checkout-qr-image" 
+                                 src="https://img.vietqr.io/image/VCB-1051572297-compact.png" 
+                                 alt="VietQR Chuyển Khoản" 
+                                 class="w-32 h-32 object-contain">
+                        </div>
+
+                        <!-- Thông tin chuyển khoản -->
+                        <div class="flex-1 space-y-1.5 text-xs text-slate-300 w-full">
+                            <div class="flex justify-between items-center py-0.5">
+                                <span class="text-slate-400">Ngân hàng:</span>
+                                <span class="font-bold text-white">Vietcombank (VCB)</span>
+                            </div>
+                            <div class="flex justify-between items-center py-0.5">
+                                <span class="text-slate-400">Số tài khoản:</span>
+                                <span class="font-mono font-bold text-emerald-400 tracking-wider">1051572297</span>
+                            </div>
+                            <div class="flex justify-between items-center py-0.5">
+                                <span class="text-slate-400">Chủ tài khoản:</span>
+                                <span class="font-semibold text-slate-200 uppercase">RENTRY HOTEL</span>
+                            </div>
+                            <div class="flex justify-between items-center py-0.5">
+                                <span class="text-slate-400">Số tiền:</span>
+                                <span class="font-mono font-black text-amber-400 text-sm" id="checkout-qr-amount-text">0đ</span>
+                            </div>
+                            <div class="flex justify-between items-center py-0.5">
+                                <span class="text-slate-400">Nội dung:</span>
+                                <span class="font-mono text-indigo-300 font-semibold truncate max-w-[160px]" id="checkout-qr-content-text">Thanh toan Folio</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 italic text-center">
+                        * Khách hàng quét mã bằng ứng dụng ngân hàng bất kỳ để chuyển khoản nhanh 24/7.
+                    </p>
                 </div>
 
                 <!-- Trạng thái thu tiền tại quầy Lễ tân -->
@@ -963,6 +1014,21 @@
                     <div id="receipt-status-badge">
                         <!-- Render động badge paid hoặc unpaid -->
                     </div>
+                </div>
+            </div>
+
+            <!-- Mã QR VietQR thanh toán nhanh trên Biên lai nếu là chuyển khoản -->
+            <div id="receipt-vietqr-box" class="p-3 bg-[#080b11] border border-indigo-500/30 rounded-xl flex items-center gap-3.5 hidden">
+                <img id="receipt-qr-image" 
+                     src="" 
+                     alt="VietQR Chuyển khoản" 
+                     class="w-20 h-20 object-contain rounded-lg bg-white p-1 shrink-0 shadow">
+                <div class="text-xs space-y-1">
+                    <span class="font-bold text-amber-400 block text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-qrcode text-indigo-400"></i> Quét mã VietQR chuyển khoản
+                    </span>
+                    <p class="text-slate-300 text-[11px]">Ngân hàng: <span class="font-bold text-white">VCB (1051572297)</span></p>
+                    <p class="text-slate-400 text-[11px]">Nội dung: <span id="receipt-qr-code-text" class="text-indigo-400 font-mono font-semibold">---</span></p>
                 </div>
             </div>
 
@@ -1670,9 +1736,68 @@
         }
 
         // ==================== CHECK-OUT & ĐỐI SOÁT MINIBAR & DỊCH VỤ PHÁT SINH ====================
+        let currentCheckoutRoomNumber = '';
+        let currentCheckoutBookingCode = '';
+
+        // Tạo & cập nhật mã QR chuyển khoản VietQR theo thời gian thực
+        function updateCheckoutQrCode() {
+            const qrBox = document.getElementById('checkout-vietqr-box');
+            if (!qrBox || qrBox.classList.contains('hidden')) return;
+
+            let grandTotal = 0;
+            document.querySelectorAll('.minibar-qty-input').forEach(inp => {
+                const q = parseInt(inp.value) || 0;
+                const p = parseFloat(inp.getAttribute('data-unit-price') || 0);
+                if (q > 0) grandTotal += (q * p);
+            });
+            document.querySelectorAll('.custom-service-row').forEach(row => {
+                const q = parseInt(row.querySelector('.custom-item-qty')?.value) || 0;
+                const p = parseFloat(row.querySelector('.custom-item-price')?.value) || 0;
+                if (q > 0 && p > 0) grandTotal += (q * p);
+            });
+
+            const codeText = currentCheckoutBookingCode ? currentCheckoutBookingCode : (`Phong P.${currentCheckoutRoomNumber || '---'}`);
+            const addInfo = `Thanh toan ${codeText}`;
+            const accountName = 'RENTRY HOTEL';
+
+            // Sinh URL VietQR Napas247 tự động
+            const amountParam = grandTotal > 0 ? `amount=${grandTotal}&` : '';
+            const qrUrl = `https://img.vietqr.io/image/VCB-1051572297-compact.png?${amountParam}addInfo=${encodeURIComponent(addInfo)}&accountName=${encodeURIComponent(accountName)}`;
+
+            const qrImg = document.getElementById('checkout-qr-image');
+            if (qrImg) qrImg.src = qrUrl;
+
+            const amtEl = document.getElementById('checkout-qr-amount-text');
+            if (amtEl) {
+                amtEl.textContent = grandTotal > 0 
+                    ? new Intl.NumberFormat('vi-VN').format(grandTotal) + 'đ'
+                    : 'Tùy chỉnh (Khách nhập số tiền)';
+            }
+
+            const contentEl = document.getElementById('checkout-qr-content-text');
+            if (contentEl) contentEl.textContent = addInfo;
+        }
+
+        // Ẩn / hiện mã QR khi chọn phương thức thanh toán
+        function toggleCheckoutPaymentMethod(method) {
+            const qrBox = document.getElementById('checkout-vietqr-box');
+            if (!qrBox) return;
+
+            if (method === 'vietqr') {
+                qrBox.classList.remove('hidden');
+                updateCheckoutQrCode();
+            } else {
+                qrBox.classList.add('hidden');
+            }
+        }
+
         function openCheckOutModal(roomId) {
             const card = document.getElementById(`room-card-${roomId}`);
             const roomNum = card?.getAttribute('data-room-number') || roomId;
+            const bookingCode = card?.getAttribute('data-booking-code') || '';
+
+            currentCheckoutRoomNumber = roomNum;
+            currentCheckoutBookingCode = bookingCode;
 
             document.getElementById('checkout-room-id').value = roomId;
             document.getElementById('checkout-modal-room-label').textContent = `Phòng P.${roomNum} - Đối soát trả phòng`;
@@ -1690,6 +1815,11 @@
 
             document.getElementById('minibar-grand-total').textContent = '0đ';
             document.getElementById('err-minibar-qty').classList.add('hidden');
+
+            // Reset phương thức thanh toán về vietqr và mở khung VietQR
+            const vietqrRadio = document.querySelector('input[name="payment_method"][value="vietqr"]');
+            if (vietqrRadio) vietqrRadio.checked = true;
+            toggleCheckoutPaymentMethod('vietqr');
 
             openModal('modal-checkout');
         }
@@ -1720,6 +1850,9 @@
             if (grandTotalEl) {
                 grandTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(grandTotal) + 'đ';
             }
+
+            // Đồng bộ mã QR chuyển khoản theo tổng tiền mới
+            updateCheckoutQrCode();
         }
 
         function calcMinibarRow(input) {
@@ -1998,6 +2131,23 @@
             document.getElementById('receipt-total-amount').textContent = b.formatted_total || (new Intl.NumberFormat('vi-VN').format(b.total_amount || 0) + 'đ');
 
             renderReceiptStatusBadge(b.payment_status);
+
+            // Cập nhật mã VietQR trên modal biên lai nếu là chuyển khoản
+            const receiptQrBox = document.getElementById('receipt-vietqr-box');
+            if (receiptQrBox) {
+                if (b.payment_method === 'vietqr') {
+                    receiptQrBox.classList.remove('hidden');
+                    const amt = parseInt(b.total_amount) || 0;
+                    const addInfo = `Thanh toan Folio ${b.booking_code}`;
+                    const qrUrl = `https://img.vietqr.io/image/VCB-1051572297-compact.png?amount=${amt}&addInfo=${encodeURIComponent(addInfo)}&accountName=RENTRY%20HOTEL`;
+                    const qrImg = document.getElementById('receipt-qr-image');
+                    if (qrImg) qrImg.src = qrUrl;
+                    const qrCodeTxt = document.getElementById('receipt-qr-code-text');
+                    if (qrCodeTxt) qrCodeTxt.textContent = b.booking_code;
+                } else {
+                    receiptQrBox.classList.add('hidden');
+                }
+            }
 
             const invoiceBtn = document.getElementById('btn-open-invoice-link');
             if (invoiceBtn && data.invoice_url) {
