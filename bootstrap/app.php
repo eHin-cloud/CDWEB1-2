@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'adminMiddleware' => \App\Http\Middleware\SystemAdminMiddleware::class,
             'tenant.scope' => \App\Http\Middleware\TenantScopeMiddleware::class,
+            'verified_tenant' => \App\Http\Middleware\VerifiedTenantMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
