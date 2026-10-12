@@ -649,6 +649,13 @@ class HousekeepingFrontdeskController extends Controller
         // Tính toán thanh toán
         $calc = BillingEngine::calculateHotelCheckout($booking->fresh(['folioItems']), now());
 
+        $paymentStatus = in_array($request->input('payment_status'), ['paid', 'unpaid', 'partial'], true)
+            ? $request->input('payment_status')
+            : 'paid';
+
+        $paymentMethod = $request->input('payment_method', 'vietqr');
+        $paymentNote = $request->input('payment_note') ?: ($request->input('note') ?: null);
+
         $booking->update([
             'actual_check_out_at' => now(),
             'room_amount' => $calc['room_amount'],
@@ -656,8 +663,9 @@ class HousekeepingFrontdeskController extends Controller
             'service_amount' => $calc['service_amount'],
             'total_amount' => $calc['total_amount'],
             'status' => 'checked_out',
-            'payment_status' => 'paid',
-            'payment_method' => $request->input('payment_method', 'vietqr'),
+            'payment_status' => $paymentStatus,
+            'payment_method' => $paymentMethod,
+            'note' => $paymentNote ?: $booking->note,
         ]);
 
         // TỰ ĐỘNG CHUYỂN PHÒNG SANG DIRTY THEO ĐẶC TẢ FSM
@@ -685,12 +693,13 @@ class HousekeepingFrontdeskController extends Controller
             'notes' => "Khách trả phòng (Booking #{$booking->booking_code}). Tự động chuyển phòng sang Dirty.",
         ]);
 
+        $statusText = $paymentStatus === 'paid' ? 'Đã thu đủ tiền' : 'Chưa thu tiền (Ghi nợ)';
         AdminActivityLogger::log(
             'check_out',
             'hotel_bookings',
-            "Phòng {$room->room_number} Check-out, tự động chuyển sang Cần dọn (Dirty). Tổng tiền: " . number_format($calc['total_amount']) . "đ",
+            "Phòng {$room->room_number} Check-out, tự động chuyển sang Cần dọn (Dirty). Tổng tiền: " . number_format($calc['total_amount']) . "đ ({$statusText})",
             $booking,
-            ['total_amount' => $calc['total_amount']]
+            ['total_amount' => $calc['total_amount'], 'payment_status' => $paymentStatus]
         );
 
         $payload = $this->broadcastAndCacheRoomUpdate($room->fresh(['building', 'assignedStaff']), 'checkout_dirty');
@@ -701,6 +710,17 @@ class HousekeepingFrontdeskController extends Controller
                 'message' => "Trả phòng thành công! Phòng {$room->room_number} đã tự động chuyển sang trạng thái Cần dọn (Dirty).",
                 'calculation' => $calc,
                 'room' => $payload,
+                'booking' => [
+                    'id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'guest_name' => $booking->guest_name,
+                    'room_number' => $room->room_number,
+                    'payment_status' => $paymentStatus,
+                    'payment_method' => $paymentMethod,
+                    'total_amount' => $calc['total_amount'],
+                    'formatted_total' => number_format($calc['total_amount']) . 'đ',
+                ],
+                'invoice_url' => route('admin.hotel.folio', $booking->id),
             ]);
         }
 

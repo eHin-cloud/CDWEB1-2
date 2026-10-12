@@ -181,4 +181,33 @@ class HotelReceptionController extends Controller
 
         return view('admin.hotel.folio', compact('booking', 'calc'));
     }
+
+    /**
+     * Lễ tân xác nhận đã thu đủ tiền
+     */
+    public function confirmPayment(Request $request, $bookingId)
+    {
+        $booking = HotelBooking::with('room')->findOrFail($bookingId);
+        $booking->update([
+            'payment_status' => 'paid',
+        ]);
+
+        AdminActivityLogger::log(
+            'confirm_payment',
+            'hotel_bookings',
+            "Lễ tân xác nhận đã nhận đủ tiền cho lượt đặt phòng {$booking->booking_code} (Phòng P.{$booking->room?->room_number})",
+            $booking,
+            ['total_amount' => $booking->total_amount]
+        );
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Đã xác nhận nhận đủ tiền cho đặt phòng {$booking->booking_code}!",
+                'booking' => $booking,
+            ]);
+        }
+
+        return back()->with('success', "Đã xác nhận nhận đủ tiền cho đặt phòng {$booking->booking_code}!");
+    }
 }

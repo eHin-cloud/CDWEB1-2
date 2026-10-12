@@ -6,6 +6,7 @@
     <title>Hóa Đơn Folio Khách Sạn - {{ $booking->booking_code }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -17,13 +18,25 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
     <div class="max-w-3xl mx-auto bg-slate-800 border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl print-card">
         <!-- Top Action Bar -->
-        <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700 no-print">
-            <a href="{{ route('admin.rooms.index') }}" class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
-                <i class="fa-solid fa-arrow-left"></i> Quay lại Sơ đồ phòng
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700 no-print gap-3">
+            <a href="{{ route('smartroom.admin.housekeeping.matrix') }}" class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại Sơ đồ Buồng phòng & Lễ tân
             </a>
-            <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg transition inline-flex items-center gap-2">
-                <i class="fa-solid fa-print"></i> In Hóa Đơn Folio
-            </button>
+            <div class="flex items-center gap-2.5">
+                @if(($booking->payment_status ?? '') !== 'paid')
+                <button type="button" 
+                        id="btn-confirm-folio-payment" 
+                        onclick="confirmFolioPayment()" 
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition inline-flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Xác Nhận Đã Thu Tiền
+                </button>
+                @endif
+                <button type="button" 
+                        onclick="window.print()" 
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg transition inline-flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-print"></i> In Hóa Đơn Folio
+                </button>
+            </div>
         </div>
 
         <!-- Header -->
@@ -154,8 +167,16 @@
                     <span>CẦN THANH TOÁN:</span>
                     <span class="text-emerald-400 text-2xl font-mono">{{ number_format($calc['total_amount']) }}đ</span>
                 </div>
-                <div class="text-right text-xs text-emerald-400">
-                    <i class="fa-solid fa-circle-check"></i> Trạng thái: Đã hoàn tất trả phòng
+                <div class="text-right text-xs" id="folio-payment-status-container">
+                    @if(($booking->payment_status ?? '') === 'paid')
+                    <span class="text-emerald-400 font-bold inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check"></i> ĐÃ THANH TOÁN (Lễ tân đã thu đủ tiền)
+                    </span>
+                    @else
+                    <span class="text-amber-400 font-bold inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock"></i> CHƯA THU TIỀN (Ghi nợ phòng)
+                    </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -164,5 +185,54 @@
             Cảm ơn Quý khách đã lựa chọn dịch vụ lưu trú của chúng tôi. Hẹn gặp lại Quý khách!
         </div>
     </div>
+
+    <!-- Script tương tác xác nhận thanh toán trên Hóa đơn -->
+    <script>
+        async function confirmFolioPayment() {
+            const btn = document.getElementById('btn-confirm-folio-payment');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xác nhận...`;
+            }
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            try {
+                const res = await fetch("{{ route('admin.hotel.folio.confirm_payment', $booking->id) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    if (btn) btn.remove();
+                    const statusContainer = document.getElementById('folio-payment-status-container');
+                    if (statusContainer) {
+                        statusContainer.innerHTML = `
+                            <span class="text-emerald-400 font-bold inline-flex items-center gap-1.5 animate-in fade-in">
+                                <i class="fa-solid fa-circle-check"></i> ĐÃ THANH TOÁN (Lễ tân đã thu đủ tiền)
+                            </span>
+                        `;
+                    }
+                } else {
+                    alert(data.message || "Lỗi khi xác nhận thanh toán.");
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i class="fa-solid fa-hand-holding-dollar"></i> Xác Nhận Đã Thu Tiền`;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối máy chủ.");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-hand-holding-dollar"></i> Xác Nhận Đã Thu Tiền`;
+                }
+            }
+        }
+    </script>
 </body>
 </html>

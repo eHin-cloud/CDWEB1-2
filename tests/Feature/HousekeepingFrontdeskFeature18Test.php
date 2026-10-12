@@ -649,4 +649,81 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
         $this->room->refresh();
         $this->assertEquals('dirty', $this->room->housekeeping_status);
     }
+
+    /**
+     * Test Checkout hỗ trợ chọn trạng thái thanh toán (paid/unpaid) và trả về invoice_url hóa đơn
+     */
+    public function test_checkout_payment_status_and_invoice_url(): void
+    {
+        $this->room->update([
+            'status' => 'occupied',
+            'housekeeping_status' => 'inspected',
+        ]);
+
+        $booking = HotelBooking::create([
+            'tenant_id' => $this->tenant->id,
+            'room_id' => $this->room->id,
+            'booking_code' => 'HB-INVOICE-TEST',
+            'guest_name' => 'Trần Khách Nợ',
+            'rental_type' => 'day',
+            'unit_rate' => 300000,
+            'check_in_at' => now()->subDay(),
+            'status' => 'checked_in',
+            'payment_status' => 'unpaid',
+        ]);
+
+        // 1. Trả phòng nhưng ghi nợ (unpaid)
+        $res = $this->actingAs($this->receptionist)
+            ->postJson(route('smartroom.admin.frontdesk.checkout'), [
+                'room_id' => $this->room->id,
+                'minibar_items' => [],
+                'payment_method' => 'cash',
+                'payment_status' => 'unpaid',
+            ]);
+
+        $res->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('booking.payment_status', 'unpaid')
+            ->assertJsonStructure(['invoice_url', 'booking']);
+
+        $booking->refresh();
+        $this->assertEquals('unpaid', $booking->payment_status);
+        $this->assertEquals('checked_out', $booking->status);
+
+        // 2. Truy cập xem hóa đơn Folio
+        $folioRes = $this->actingAs($this->receptionist)
+            ->get(route('admin.hotel.folio', $booking->id));
+        $folioRes->assertStatus(200);
+        $folioRes->assertSee('HB-INVOICE-TEST');
+        $folioRes->assertSee('CHƯA THU TIỀN');
+    }
+
+    /**
+     * Test Lễ tân xác nhận đã nhận đủ tiền sau khi check-out ghi nợ
+     */
+    public function test_confirm_payment_at_frontdesk(): void
+    {
+        $booking = HotelBooking::create([
+            'tenant_id' => $this->tenant->id,
+            'room_id' => $this->room->id,
+            'booking_code' => 'HB-CONFIRM-PAY',
+            'guest_name' => 'Lê Thanh Toán',
+            'rental_type' => 'day',
+            'unit_rate' => 400000,
+            'check_in_at' => now()->subDays(2),
+            'actual_check_out_at' => now(),
+            'status' => 'checked_out',
+            'payment_status' => 'unpaid',
+            'total_amount' => 800000,
+        ]);
+
+        $res = $this->actingAs($this->receptionist)
+            ->postJson(route('admin.hotel.folio.confirm_payment', $booking->id));
+
+        $res->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $booking->refresh();
+        $this->assertEquals('paid', $booking->payment_status);
+    }
 }

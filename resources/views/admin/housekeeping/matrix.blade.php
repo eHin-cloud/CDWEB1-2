@@ -850,15 +850,51 @@
                         Phương thức thanh toán Folio
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2 p-3 rounded-xl border border-indigo-500/40 bg-indigo-500/10 cursor-pointer">
-                            <input type="radio" name="payment_method" value="vietqr" checked class="text-indigo-600">
+                        <label class="flex items-center gap-2 p-3 rounded-xl border border-indigo-500/40 bg-indigo-500/10 cursor-pointer hover:bg-indigo-500/15 transition">
+                            <input type="radio" name="payment_method" value="vietqr" checked class="text-indigo-600 focus:ring-indigo-500">
                             <span class="text-xs font-bold text-white"><i class="fa-solid fa-qrcode mr-1 text-indigo-400"></i> VietQR Napas247</span>
                         </label>
-                        <label class="flex items-center gap-2 p-3 rounded-xl border border-slate-700 bg-slate-800/40 cursor-pointer">
-                            <input type="radio" name="payment_method" value="cash" class="text-indigo-600">
+                        <label class="flex items-center gap-2 p-3 rounded-xl border border-slate-700 bg-slate-800/40 cursor-pointer hover:bg-slate-800/60 transition">
+                            <input type="radio" name="payment_method" value="cash" class="text-indigo-600 focus:ring-indigo-500">
                             <span class="text-xs font-semibold text-slate-300"><i class="fa-solid fa-money-bill-wave mr-1 text-emerald-400"></i> Tiền mặt</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Trạng thái thu tiền tại quầy Lễ tân -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span><i class="fa-solid fa-hand-holding-dollar text-emerald-400 mr-1"></i> Xác nhận thu tiền tại quầy</span>
+                        <span class="text-[11px] text-slate-400 font-normal">Tình trạng thanh toán</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/15 transition">
+                            <input type="radio" name="payment_status" value="paid" checked class="text-emerald-500 focus:ring-emerald-500 mt-0.5">
+                            <div>
+                                <div class="text-xs font-bold text-emerald-300 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-emerald-400"></i> Đã nhận đủ tiền
+                                </div>
+                                <div class="text-[10px] text-emerald-400/80 mt-0.5">Lễ tân đã thu tiền mặt / chuyển khoản</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 cursor-pointer hover:bg-amber-500/15 transition">
+                            <input type="radio" name="payment_status" value="unpaid" class="text-amber-500 focus:ring-amber-500 mt-0.5">
+                            <div>
+                                <div class="text-xs font-bold text-amber-300 flex items-center gap-1">
+                                    <i class="fa-solid fa-clock text-amber-400"></i> Chưa thu / Ghi nợ
+                                </div>
+                                <div class="text-[10px] text-amber-400/80 mt-0.5">Khách chưa thanh toán, xác nhận sau</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Tùy chọn In & Xuất hóa đơn Folio -->
+                <div class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <label class="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-auto-invoice" checked class="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                        <span class="font-medium"><i class="fa-solid fa-file-invoice text-indigo-400 mr-1"></i> Tự động xuất / mở Hóa Đơn Folio ngay sau khi trả phòng</span>
+                    </label>
                 </div>
 
                 <!-- Cảnh báo tự động chuyển sang Dirty -->
@@ -876,6 +912,85 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 6: BIÊN LAI THANH TOÁN & XUẤT HÓA ĐƠN ==================== -->
+    <div id="modal-receipt-invoice" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#0f1423] border border-slate-700/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in duration-150">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">Biên Lai &amp; Hóa Đơn Trả Phòng</h3>
+                        <p class="text-xs text-slate-400" id="receipt-modal-sub">Hoàn tất thủ tục Check-out thành công</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('modal-receipt-invoice')" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Thẻ tóm tắt thông tin thanh toán -->
+            <div class="bg-[#080b11] border border-slate-800 rounded-xl p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span>Mã đặt phòng:</span>
+                    <span class="font-mono font-bold text-indigo-400 text-sm" id="receipt-booking-code">HB----</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span>Khách lưu trú:</span>
+                    <span class="font-semibold text-white" id="receipt-guest-name">---</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span>Số phòng:</span>
+                    <span class="font-bold text-white font-mono" id="receipt-room-number">P.---</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span>Phương thức:</span>
+                    <span class="font-medium text-slate-200" id="receipt-payment-method">---</span>
+                </div>
+
+                <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300 uppercase">Tổng tiền thanh toán:</span>
+                    <span class="text-xl font-black text-amber-400 font-mono" id="receipt-total-amount">0đ</span>
+                </div>
+
+                <!-- Trạng thái thanh toán hiện tại -->
+                <div class="pt-2 border-t border-slate-800 flex justify-between items-center" id="receipt-status-container">
+                    <span class="text-xs text-slate-400">Tình trạng thu tiền:</span>
+                    <div id="receipt-status-badge">
+                        <!-- Render động badge paid hoặc unpaid -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút hành động xác nhận đã nhận tiền (nếu trạng thái là unpaid) -->
+            <div id="receipt-unpaid-action-box" class="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 hidden">
+                <div class="text-xs text-amber-300">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> Chưa xác nhận thu tiền tại quầy.
+                </div>
+                <button type="button" 
+                        id="btn-confirm-receipt-payment" 
+                        onclick="confirmReceiptPayment()" 
+                        class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Xác Nhận Đã Nhận Tiền
+                </button>
+            </div>
+
+            <!-- Các nút hành động chính -->
+            <div class="pt-3 border-t border-slate-800 flex flex-col sm:flex-row justify-end gap-2.5">
+                <button type="button" onclick="closeModal('modal-receipt-invoice')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition order-2 sm:order-1">
+                    Đóng
+                </button>
+                <a id="btn-open-invoice-link" 
+                   href="#" 
+                   target="_blank" 
+                   class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition inline-flex items-center justify-center gap-2 order-1 sm:order-2">
+                    <i class="fa-solid fa-print"></i> Xem &amp; In Hóa Đơn Folio
+                </a>
+            </div>
         </div>
     </div>
 
@@ -1720,6 +1835,8 @@
             const form = e.target;
             const roomId = form.room_id.value;
             const paymentMethod = form.payment_method.value;
+            const paymentStatus = form.payment_status?.value || 'paid';
+            const autoOpenInvoice = document.getElementById('chk-auto-invoice')?.checked ?? true;
 
             // Kiểm tra validate ERR_18_05
             let hasError = false;
@@ -1806,7 +1923,8 @@
                     body: JSON.stringify({
                         room_id: parseInt(roomId),
                         minibar_items: items,
-                        payment_method: paymentMethod
+                        payment_method: paymentMethod,
+                        payment_status: paymentStatus
                     })
                 });
 
@@ -1816,6 +1934,14 @@
                     closeModal('modal-checkout');
                     if (data.room) {
                         applyHousekeepingCardUpdate(data.room);
+                    }
+
+                    // Mở modal biên lai / xác nhận xuất hóa đơn
+                    openReceiptModal(data);
+
+                    // Tự động mở tab Hóa Đơn Folio nếu người dùng lựa chọn
+                    if (autoOpenInvoice && data.invoice_url) {
+                        window.open(data.invoice_url, '_blank');
                     }
                 } else {
                     if (data.code === 'ERR_18_05') {
@@ -1829,6 +1955,92 @@
             } catch (err) {
                 console.error(err);
                 showToast("Lỗi kết nối máy chủ.", "error");
+            }
+        }
+
+        // ==================== BIÊN LAI & XÁC NHẬN THU TIỀN / IN HÓA ĐƠN ====================
+        let currentReceiptBookingId = null;
+
+        function renderReceiptStatusBadge(status) {
+            const badgeEl = document.getElementById('receipt-status-badge');
+            const unpaidBox = document.getElementById('receipt-unpaid-action-box');
+            if (!badgeEl) return;
+
+            if (status === 'paid') {
+                badgeEl.innerHTML = `
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold inline-flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> ĐÃ NHẬN ĐỦ TIỀN
+                    </span>
+                `;
+                if (unpaidBox) unpaidBox.classList.add('hidden');
+            } else {
+                badgeEl.innerHTML = `
+                    <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold inline-flex items-center gap-1">
+                        <i class="fa-solid fa-clock"></i> CHƯA THU (GHI NỢ)
+                    </span>
+                `;
+                if (unpaidBox) unpaidBox.classList.remove('hidden');
+            }
+        }
+
+        function openReceiptModal(data) {
+            if (!data || !data.booking) return;
+
+            const b = data.booking;
+            currentReceiptBookingId = b.id;
+
+            document.getElementById('receipt-booking-code').textContent = b.booking_code || '---';
+            document.getElementById('receipt-guest-name').textContent = b.guest_name || 'Khách lưu trú';
+            document.getElementById('receipt-room-number').textContent = `P.${b.room_number || '---'}`;
+            
+            const methodLabel = b.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR Napas247';
+            document.getElementById('receipt-payment-method').textContent = methodLabel;
+            document.getElementById('receipt-total-amount').textContent = b.formatted_total || (new Intl.NumberFormat('vi-VN').format(b.total_amount || 0) + 'đ');
+
+            renderReceiptStatusBadge(b.payment_status);
+
+            const invoiceBtn = document.getElementById('btn-open-invoice-link');
+            if (invoiceBtn && data.invoice_url) {
+                invoiceBtn.href = data.invoice_url;
+            }
+
+            openModal('modal-receipt-invoice');
+        }
+
+        async function confirmReceiptPayment() {
+            if (!currentReceiptBookingId) return;
+
+            const btn = document.getElementById('btn-confirm-receipt-payment');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xác nhận...`;
+            }
+
+            try {
+                const res = await fetch(`/smartroom/admin/hotel/folio/${currentReceiptBookingId}/confirm-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || "Xác nhận đã nhận đủ tiền thành công!", "success");
+                    renderReceiptStatusBadge('paid');
+                } else {
+                    showToast(data.message || "Lỗi khi xác nhận thanh toán.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Lỗi kết nối máy chủ.", "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-hand-holding-dollar"></i> Xác Nhận Đã Nhận Tiền`;
+                }
             }
         }
 
