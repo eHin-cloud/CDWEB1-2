@@ -66,7 +66,7 @@
 @endphp
 
 <!-- SIDEBAR -->
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-[#0d121f] border-r border-slate-900 flex flex-col h-screen z-30 transition-[width] duration-200 shrink-0 select-none">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-[#0d121f] border-r border-slate-900 flex flex-col h-screen z-30 transition-[width] duration-200 shrink-0 select-none overflow-x-hidden">
     <!-- Sidebar Header (Cố định ở đỉnh) -->
     <div class="px-5 py-4 border-b border-slate-900 flex items-center justify-between shrink-0">
         <a href="{{ route('home') }}" class="sidebar-brand flex items-center gap-3 min-w-0 group" title="Về trang chủ">

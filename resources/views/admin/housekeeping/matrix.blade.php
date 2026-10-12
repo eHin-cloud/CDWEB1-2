@@ -26,7 +26,7 @@
     
     <!-- FontAwesome & Sidebar CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}?v={{ filemtime(public_path('css/admin-sidebar.css')) }}">
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     
     <script>
@@ -63,6 +63,7 @@
         #admin-sidebar {
             width: 16rem;
             transition: width 0.2s ease-in-out;
+            overflow-x: hidden;
         }
 
         #admin-shell {
@@ -71,14 +72,27 @@
             transition: margin-left 0.2s ease-in-out;
         }
 
+        html.sidebar-collapsed #admin-sidebar,
+        body.sidebar-collapsed #admin-sidebar,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar {
             width: 5rem !important;
+            overflow-x: hidden !important;
         }
 
+        html.sidebar-collapsed #admin-shell,
+        body.sidebar-collapsed #admin-shell,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-shell {
             margin-left: 5rem !important;
         }
 
+        html.sidebar-collapsed #admin-sidebar nav a,
+        body.sidebar-collapsed #admin-sidebar nav a,
+        html.sidebar-collapsed #admin-sidebar nav button,
+        body.sidebar-collapsed #admin-sidebar nav button,
+        html.sidebar-collapsed #admin-sidebar .sidebar-user,
+        body.sidebar-collapsed #admin-sidebar .sidebar-user,
+        html.sidebar-collapsed #admin-sidebar .sidebar-logout,
+        body.sidebar-collapsed #admin-sidebar .sidebar-logout,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav a,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav button,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-user,
@@ -86,26 +100,72 @@
             justify-content: center !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
+            text-align: center !important;
         }
 
+        html.sidebar-collapsed #admin-sidebar > div:first-child,
+        body.sidebar-collapsed #admin-sidebar > div:first-child,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar > div:first-child {
+            justify-content: center !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+
+        html.sidebar-collapsed #admin-sidebar .sidebar-brand,
+        body.sidebar-collapsed #admin-sidebar .sidebar-brand,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-brand {
             display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            overflow: hidden !important;
         }
 
+        html.sidebar-collapsed #admin-sidebar nav span,
+        body.sidebar-collapsed #admin-sidebar nav span,
+        html.sidebar-collapsed #admin-sidebar .sidebar-brand span,
+        body.sidebar-collapsed #admin-sidebar .sidebar-brand span,
+        html.sidebar-collapsed #admin-sidebar .sidebar-logout span,
+        body.sidebar-collapsed #admin-sidebar .sidebar-logout span,
+        html.sidebar-collapsed #admin-sidebar .sidebar-text,
+        body.sidebar-collapsed #admin-sidebar .sidebar-text,
+        html.sidebar-collapsed #admin-sidebar .sidebar-profile,
+        body.sidebar-collapsed #admin-sidebar .sidebar-profile,
+        html.sidebar-collapsed #admin-sidebar .sidebar-badge,
+        body.sidebar-collapsed #admin-sidebar .sidebar-badge,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar nav span,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-brand span,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-logout span,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-text,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-profile,
-        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-badge,
-        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-group-title {
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-badge {
             display: none !important;
         }
 
+        html.sidebar-collapsed #admin-sidebar .sidebar-group-title,
+        body.sidebar-collapsed #admin-sidebar .sidebar-group-title,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-group-title {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+        }
+
+        html.sidebar-collapsed #admin-sidebar .sidebar-group-divider,
+        body.sidebar-collapsed #admin-sidebar .sidebar-group-divider,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-group-divider {
             display: block !important;
         }
 
+        html.sidebar-collapsed #admin-sidebar .sidebar-footer,
+        body.sidebar-collapsed #admin-sidebar .sidebar-footer,
+        :is(html.sidebar-collapsed, body.sidebar-collapsed) #admin-sidebar .sidebar-footer {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+
+        html.sidebar-collapsed #sidebar-toggle i,
+        body.sidebar-collapsed #sidebar-toggle i,
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #sidebar-toggle i {
             transform: rotate(180deg) !important;
         }
@@ -2465,6 +2525,6 @@
             setTimeout(initHousekeepingRealtime, 250);
         });
     </script>
-    <script src="{{ asset('js/admin-sidebar.js') }}"></script>
+    <script src="{{ asset('js/admin-sidebar.js') }}?v={{ filemtime(public_path('js/admin-sidebar.js')) }}"></script>
 </body>
 </html>
