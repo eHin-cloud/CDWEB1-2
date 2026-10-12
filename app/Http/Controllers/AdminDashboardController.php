@@ -1991,9 +1991,7 @@ class AdminDashboardController extends Controller
             'avatar.max' => 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (2MB).',
         ]);
 
-        if (!empty($validated['username'])) {
-            $user->username = $validated['username'];
-        }
+        // Username là định danh tài khoản cố định - không cho phép thay đổi từ form hồ sơ
         $user->name = $validated['full_name'];
         $user->phone = !empty($validated['phone']) ? $validated['phone'] : null;
         $user->email = !empty($validated['email']) ? $validated['email'] : null;
@@ -2016,9 +2014,8 @@ class AdminDashboardController extends Controller
             $profile->status = 'unverified';
         }
 
-        if (!empty($validated['username'])) {
-            $profile->username = $validated['username'];
-        }
+        // Định danh username trên profile luôn đồng bộ theo username gốc của user
+        $profile->username = $user->username;
         $profile->full_name = $validated['full_name'];
         $profile->phone = !empty($validated['phone']) ? $validated['phone'] : null;
         $profile->email = !empty($validated['email']) ? $validated['email'] : null;

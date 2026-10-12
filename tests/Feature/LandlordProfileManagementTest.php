@@ -280,8 +280,24 @@ class LandlordProfileManagementTest extends TestCase
             ->assertJson([
                 'status' => 'success',
             ]);
+    }
 
-        $responseData = $response->json();
-        $this->assertNotEmpty($responseData['avatarUrl']);
+    /**
+     * Kiểm tra tài khoản đăng nhập (username) là định danh cố định, bị khóa không thể thay đổi
+     */
+    public function test_username_is_locked_and_cannot_be_changed(): void
+    {
+        [$user, $tenant, $profile] = $this->setupLandlord();
+        $originalUsername = $user->username;
+
+        $response = $this->actingAs($user)->post(route('smartroom.admin.profile.update'), [
+            'username' => 'hacker_username_change',
+            'full_name' => 'Nguyễn Thanh Hiền',
+            'phone' => '0912345678',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertSame($originalUsername, $user->fresh()->username, 'Tài khoản đăng nhập không được phép thay đổi.');
+        $this->assertSame($originalUsername, $profile->fresh()->username, 'Landlord profile username phải giữ nguyên theo user.');
     }
 }

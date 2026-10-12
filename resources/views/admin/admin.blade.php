@@ -286,10 +286,16 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tài khoản đăng nhập</label>
-                                <div class="relative">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5 flex items-center justify-between">
+                                    <span>Tài khoản đăng nhập</span>
+                                    <span class="text-[10px] text-slate-500 font-semibold flex items-center gap-1 normal-case" title="Tài khoản đăng nhập là định danh cố định">
+                                        <i class="fa-solid fa-lock text-[9px] text-amber-500/80"></i> Cố định
+                                    </span>
+                                </label>
+                                <div class="relative" title="Tài khoản đăng nhập là định danh cố định, không thể thay đổi">
                                     <i class="fa-solid fa-circle-user absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="username" id="username" value="{{ old('username', $landlordProfile->username ?? Auth::user()->username) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-indigo-500 transition-all">
+                                    <input type="text" name="username" id="username" readonly onkeydown="return false;" value="{{ old('username', $landlordProfile->username ?? Auth::user()->username) }}" class="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-800/80 bg-slate-950/70 text-xs text-slate-400 font-mono outline-none cursor-not-allowed select-none transition-all" tabindex="-1">
+                                    <i class="fa-solid fa-lock absolute right-3.5 top-3 text-slate-500 text-xs"></i>
                                 </div>
                                 <span id="err-username" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
                             </div>
