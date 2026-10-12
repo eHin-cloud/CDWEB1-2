@@ -346,55 +346,101 @@
             input.value = cleanString(input.value).replace(/[^0-9]/g, '');
         }
 
+        // [ERR_03_01 & ERR_03_02]: Số phòng
         function validateRoomNumber() {
             const input = document.getElementById('room_number');
             input.value = cleanString(input.value);
             const errSpan = document.getElementById('err-room_number');
+            const buildingSelect = document.getElementById('building_id');
+
+            // [ERR_03_01]: Để trống số phòng
             if (input.value === '') {
-                errSpan.textContent = 'Số phòng không được bỏ trống.';
+                errSpan.textContent = 'Số phòng không được để trống.';
                 errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 return false;
             }
+
+            // [ERR_03_02]: Số phòng bị trùng trong cùng tòa (loại trừ chính phòng hiện tại)
+            const buildingId = buildingSelect ? buildingSelect.value : '';
+            if (buildingId && input.value !== '') {
+                fetch(`{{ route('admin.rooms.check_number') }}?building_id=${buildingId}&room_number=${encodeURIComponent(input.value)}&exclude_id={{ $room->id }}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.exists) {
+                            errSpan.textContent = 'Số phòng này đã tồn tại trong cơ sở lưu trú, vui lòng chọn số khác.';
+                            errSpan.classList.remove('hidden');
+                            input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                        } else {
+                            errSpan.classList.add('hidden');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                        }
+                    })
+                    .catch(() => {});
+            }
+
             errSpan.classList.add('hidden');
+            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
             return true;
         }
 
+        // [ERR_03_07]: Để trống tầng hoặc tầng <= 0
         function validateFloor() {
             const input = document.getElementById('floor');
             input.value = cleanString(input.value);
             const errSpan = document.getElementById('err-floor');
             if (input.value === '' || isNaN(input.value) || parseInt(input.value) <= 0) {
-                errSpan.textContent = 'Số tầng phải là số nguyên dương hợp lệ.';
+                errSpan.textContent = 'Vui lòng nhập tầng bố trí phòng.';
                 errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 return false;
             }
             errSpan.classList.add('hidden');
+            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
             return true;
         }
 
+        // [ERR_03_05 & ERR_03_06]: Diện tích phòng
         function validateArea() {
             const input = document.getElementById('area');
             input.value = cleanString(input.value);
             const errSpan = document.getElementById('err-area');
-            if (input.value === '' || isNaN(input.value) || parseInt(input.value) <= 0) {
-                errSpan.textContent = 'Diện tích phải là số nguyên dương hợp lệ.';
+            if (input.value === '') {
+                errSpan.textContent = 'Vui lòng nhập diện tích phòng lưu trú.';
                 errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                return false;
+            }
+            if (isNaN(input.value) || parseFloat(input.value) <= 0) {
+                errSpan.textContent = 'Diện tích phòng phải lớn hơn 0 mét vuông.';
+                errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 return false;
             }
             errSpan.classList.add('hidden');
+            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
             return true;
         }
 
+        // [ERR_03_03 & ERR_03_04]: Giá thuê phòng
         function validatePrice() {
             const input = document.getElementById('price');
             input.value = cleanString(input.value);
             const errSpan = document.getElementById('err-price');
-            if (input.value === '' || isNaN(input.value) || parseInt(input.value) <= 0) {
-                errSpan.textContent = 'Giá thuê phải là số nguyên dương lớn hơn 0.';
+            if (input.value === '') {
+                errSpan.textContent = 'Giá thuê phòng hàng tháng là bắt buộc.';
                 errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                return false;
+            }
+            if (isNaN(input.value) || parseInt(input.value) <= 0) {
+                errSpan.textContent = 'Giá thuê phòng phải là số nguyên dương lớn hơn 0 đồng.';
+                errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 return false;
             }
             errSpan.classList.add('hidden');
+            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
             return true;
         }
 
@@ -406,9 +452,11 @@
             if (input.value !== '' && (isNaN(input.value) || parseInt(input.value) < 0)) {
                 errSpan.textContent = 'Tiền cọc không được là số âm.';
                 errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 return false;
             }
             errSpan.classList.add('hidden');
+            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
             return true;
         }
 
@@ -425,6 +473,7 @@
             return true;
         }
 
+        // Preview ảnh và validate file ảnh (ERR_03_08 & ERR_03_09)
         function previewImages(input) {
             const errSpan = document.getElementById('err-image');
             const previewList = document.getElementById('preview-list');
@@ -437,28 +486,34 @@
             if (files.length > 10) {
                 errSpan.textContent = 'Chỉ được chọn tối đa 10 hình ảnh.';
                 errSpan.classList.remove('hidden');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 input.value = '';
                 return;
             }
 
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
             for (const file of files) {
+                // [ERR_03_08]: Tải tệp ảnh sai định dạng
                 if (!allowedTypes.includes(file.type)) {
-                    errSpan.textContent = 'Chỉ chấp nhận định dạng hình ảnh (.jpg, .png, .webp). Chặn file lạ!';
+                    errSpan.textContent = 'Tệp ảnh phòng phải có định dạng hợp lệ (JPG, JPEG, PNG).';
                     errSpan.classList.remove('hidden');
+                    input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                     input.value = '';
                     return;
                 }
 
+                // [ERR_03_09]: Dung lượng ảnh vượt quá 5MB
                 if (file.size > 5 * 1024 * 1024) {
-                    errSpan.textContent = 'Mỗi hình ảnh không được vượt quá 5MB.';
+                    errSpan.textContent = 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (5MB).';
                     errSpan.classList.remove('hidden');
+                    input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                     input.value = '';
                     return;
                 }
             }
 
             errSpan.classList.add('hidden');
+            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
             previewList.innerHTML = '';
 
             files.forEach((file) => {

@@ -110,35 +110,93 @@
                         <h3 class="text-base font-bold text-slate-200">Quản Lý Phòng</h3>
                         <p class="text-xs text-slate-500 mt-1">Danh sách phòng hiện có trong hệ thống của bạn.</p>
                     </div>
-                    <a href="{{ route('admin.rooms.create') }}" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/25 hover:-translate-y-0.5">
-                        <i class="fa-solid fa-plus-circle text-sm"></i> Thêm Phòng Mới
+                    <!-- UI Element STT 4: btnAdd - Thêm phòng mới nền xanh Emerald lá cây -->
+                    <a href="{{ route('admin.rooms.create') }}" 
+                       id="btnAdd" 
+                       name="btnAdd" 
+                       class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/25 hover:-translate-y-0.5">
+                        <i class="fa-solid fa-plus-circle text-sm"></i> + Thêm phòng mới
                     </a>
                 </div>
 
-                <form method="GET" action="{{ route('admin.rooms.index') }}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-3 mb-6">
-                    <input type="search" name="room_number" value="{{ $filters['room_number'] }}" class="xl:col-span-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="So phong">
-                    <select name="status" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-                        <option value="">Tat ca trang thai</option>
-                        <option value="empty" @selected($filters['status'] === 'empty')>Trong</option>
-                        <option value="occupied" @selected($filters['status'] === 'occupied')>Dang thue</option>
-                        <option value="overdue" @selected($filters['status'] === 'overdue')>No tien</option>
-                        <option value="maintenance" @selected($filters['status'] === 'maintenance')>Bao tri</option>
-                    </select>
-                    <input type="number" name="floor" value="{{ $filters['floor'] }}" min="1" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="Tang">
-                    <input type="number" name="min_price" value="{{ $filters['min_price'] }}" min="0" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="Gia tu">
-                    <input type="number" name="max_price" value="{{ $filters['max_price'] }}" min="0" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="Gia den">
+                <!-- Cảnh báo lỗi khoảng giá lọc DoD 1 -->
+                <div id="price-range-error-banner" class="{{ !empty($rangePriceError) ? '' : 'hidden' }} mb-4 p-3.5 rounded-xl bg-rose-950/60 border border-rose-500 text-rose-300 text-xs font-bold flex items-center gap-2 animate-pulse">
+                    <i class="fa-solid fa-circle-exclamation text-rose-400 text-base"></i>
+                    <span id="price-range-error-text">Khoảng giá lọc không hợp lệ: Giá tối thiểu phải nhỏ hơn hoặc bằng giá tối đa</span>
+                </div>
+
+                <form id="filter-rooms-form" method="GET" action="{{ route('admin.rooms.index') }}" onsubmit="return validateFilterPriceRange(event)" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-3 mb-6">
+                    <!-- UI Element STT 1: txtSearch - Tìm kiếm phòng -->
+                    <div class="xl:col-span-2">
+                        <input type="search" 
+                               id="txtSearch" 
+                               name="txtSearch" 
+                               value="{{ $filters['txtSearch'] ?? $filters['room_number'] }}" 
+                               placeholder="Nhập tên phòng, số phòng..." 
+                               class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                               title="Tìm kiếm phòng">
+                    </div>
+
+                    <!-- UI Element STT 2: cboBuilding - Chọn tòa nhà -->
+                    <div>
+                        <select id="cboBuilding" 
+                                name="cboBuilding" 
+                                class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                                title="Chọn tòa nhà">
+                            <option value="">Tất cả tòa nhà</option>
+                            @foreach($buildings ?? [] as $b)
+                                <option value="{{ $b->id }}" @selected(($filters['cboBuilding'] ?? $filters['building_id']) == $b->id)>{{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <select name="status" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="empty" @selected($filters['status'] === 'empty')>Trống</option>
+                            <option value="occupied" @selected($filters['status'] === 'occupied')>Đang thuê</option>
+                            <option value="overdue" @selected($filters['status'] === 'overdue')>Nợ tiền</option>
+                            <option value="maintenance" @selected($filters['status'] === 'maintenance')>Bảo trì</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <input type="number" name="floor" value="{{ $filters['floor'] }}" min="1" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="Tầng">
+                    </div>
+
+                    <div>
+                        <input type="number" 
+                               id="min_price" 
+                               name="min_price" 
+                               value="{{ $filters['min_price'] }}" 
+                               min="0" 
+                               placeholder="Giá từ (VNĐ)" 
+                               class="w-full px-3 py-2 rounded-xl bg-slate-900 border {{ !empty($rangePriceError) ? 'border-rose-500 ring-2 ring-rose-500' : 'border-slate-800' }} text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <input type="number" 
+                               id="max_price" 
+                               name="max_price" 
+                               value="{{ $filters['max_price'] }}" 
+                               min="0" 
+                               placeholder="Giá đến (VNĐ)" 
+                               class="w-full px-3 py-2 rounded-xl bg-slate-900 border {{ !empty($rangePriceError) ? 'border-rose-500 ring-2 ring-rose-500' : 'border-slate-800' }} text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    </div>
+
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
-                            <i class="fa-solid fa-filter"></i> Loc
+                        <button type="submit" class="flex-1 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md">
+                            <i class="fa-solid fa-filter"></i> Lọc
                         </button>
-                        <a href="{{ route('admin.rooms.index') }}" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold">
+                        <a href="{{ route('admin.rooms.index') }}" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold transition-all" title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     </div>
                 </form>
 
+                <!-- UI Element STT 3: tblRooms - Danh sách phòng -->
                 <div class="overflow-x-auto rounded-xl border border-slate-900">
-                    <table class="w-full text-left text-sm text-slate-300">
+                    <table id="tblRooms" name="tblRooms" data-field-name="tblRooms" class="w-full text-left text-sm text-slate-300">
                         <thead class="text-xs text-slate-500 uppercase bg-slate-900/80 border-b border-slate-900">
                             <tr>
                                 <th class="px-6 py-4 font-bold">Hình Ảnh</th>
@@ -268,6 +326,34 @@
 
     <!-- JS CHỐNG PHÁ HOẠI QUA DEVTOOLS & SPAM CLICK -->
     <script>
+        // Kiểm tra logic khoảng giá lọc (DoD 1)
+        function validateFilterPriceRange(e) {
+            const minInput = document.getElementById('min_price');
+            const maxInput = document.getElementById('max_price');
+            const banner = document.getElementById('price-range-error-banner');
+            const text = document.getElementById('price-range-error-text');
+
+            const minVal = minInput && minInput.value !== '' ? parseFloat(minInput.value) : null;
+            const maxVal = maxInput && maxInput.value !== '' ? parseFloat(maxInput.value) : null;
+
+            // Kịch bản DoD 1: Giá tối thiểu lớn hơn giá tối đa
+            if (minVal !== null && maxVal !== null && minVal > maxVal) {
+                if (e) e.preventDefault();
+                if (banner) {
+                    banner.classList.remove('hidden');
+                    if (text) text.textContent = 'Khoảng giá lọc không hợp lệ: Giá tối thiểu phải nhỏ hơn hoặc bằng giá tối đa';
+                }
+                if (minInput) minInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                if (maxInput) maxInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                return false;
+            }
+
+            if (minInput) minInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+            if (maxInput) maxInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+            if (banner) banner.classList.add('hidden');
+            return true;
+        }
+
         // 1. Chống spam click nút xóa
         function confirmDelete(e, roomNumber) {
             e.preventDefault();

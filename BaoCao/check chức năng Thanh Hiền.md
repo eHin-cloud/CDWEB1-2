@@ -82,6 +82,45 @@
   * ✅ Bảo vệ an ninh BOLA & Ngăn chặn xóa qua URL: Chặn xóa phòng bằng phương thức HTTP GET trực tiếp; kiểm tra quyền sở hữu `tenant_id` chống xóa phòng cơ sở khác; tự động xóa sạch file media trên Disk Storage khi xóa phòng.
   * ✅ Tính năng mở rộng phong phú: Hỗ trợ tải lên nhiều ảnh kèm gán nhãn góc chụp thực tế; tích hợp Trợ lý AI Gemini tự sinh nội dung mô tả phòng thu hút (`POST /smartroom/admin/rooms/description/ai`).
   * ✅ Kịch bản xử lý lỗi (`ERR_03_01` -> `ERR_03_10`): Bắt trùng lặp số phòng trong cùng tòa nhà, kiểm tra giá thuê > 0, diện tích > 0, xử lý xung đột đồng thời khi xóa.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Để trống số phòng | **`ERR_03_01`** | `Số phòng không được để trống.` | Bôi đỏ viền ô input Số phòng |
+| Số phòng bị trùng trong cùng tòa | **`ERR_03_02`** | `Số phòng này đã tồn tại trong cơ sở lưu trú, vui lòng chọn số khác.` | Bôi đỏ ô input Số phòng và cảnh báo trùng lặp |
+| Để trống giá thuê phòng | **`ERR_03_03`** | `Giá thuê phòng hàng tháng là bắt buộc.` | Bôi đỏ viền ô input Giá thuê |
+| Nhập giá thuê phòng nhỏ hơn 0 | **`ERR_03_04`** | `Giá thuê phòng phải là số nguyên dương lớn hơn 0 đồng.` | Bôi đỏ viền ô input Giá thuê |
+| Để trống diện tích phòng | **`ERR_03_05`** | `Vui lòng nhập diện tích phòng lưu trú.` | Bôi đỏ viền ô input Diện tích |
+| Diện tích phòng nhỏ hơn hoặc bằng 0 | **`ERR_03_06`** | `Diện tích phòng phải lớn hơn 0 mét vuông.` | Bôi đỏ viền ô input Diện tích |
+| Để trống tầng | **`ERR_03_07`** | `Vui lòng nhập tầng bố trí phòng.` | Bôi đỏ viền ô input Tầng |
+| Tải tệp ảnh sai định dạng | **`ERR_03_08`** | `Tệp ảnh phòng phải có định dạng hợp lệ (JPG, JPEG, PNG).` | Viền đỏ khung tải ảnh, từ chối nạp tệp |
+| Dung lượng ảnh vượt quá 5MB | **`ERR_03_09`** | `Ảnh tải lên vượt quá dung lượng tối đa cho phép (5MB).` | Hiển thị Toast thông báo cảnh báo dung lượng |
+| Lưu phòng thành công | **`ERR_03_10`** | `Lưu thông tin phòng lưu trú thành công!` | Đóng modal / chuyển hướng danh sách phòng và hiện Toast xanh |
+
+#### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
+* **Hình 3.1: Giao diện Quản lý danh mục phòng trọ & Trạng thái phòng**
+  * *Mô tả chức năng*: Bảng thống kê toàn bộ phòng trọ theo tòa nhà, hiển thị mã phòng, diện tích, đơn giá cho thuê và trạng thái hoạt động.
+* **Hình 3.2: Giao diện hiển thị cảnh báo lỗi khi lọc khoảng giá phòng bất hợp lý**
+  * *Mô tả chức năng*: Thông báo cảnh báo đỏ xuất hiện khi chủ trọ nhập khoảng giá lọc bất hợp lý (Giá tối thiểu lớn hơn giá tối đa).
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Input | `txtSearch` | Tìm kiếm phòng | `Nhập tên phòng, số phòng...` | Thanh công cụ trên cùng |
+| **2** | Select | `cboBuilding` | Chọn tòa nhà | `Tất cả tòa nhà` | Dropdown lọc tòa nhà |
+| **3** | Table | `tblRooms` | Danh sách phòng | — | Cột: Mã phòng, Tòa nhà, Diện tích, Giá thuê & Cọc, Trạng thái, Thao tác |
+| **4** | Button | `btnAdd` | `+ Thêm phòng mới` | — | Nền xanh Emerald lá cây (`bg-emerald-600`), góc phải phía trên |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Nhập Giá min = 5,000,000 và Giá max = 2,000,000 rồi bấm Lọc | Báo lỗi 'Khoảng giá lọc không hợp lệ: Giá tối thiểu phải nhỏ hơn hoặc bằng giá tối đa' kèm viền đỏ ô giá | Kiểm tra Range logic |
+| **2** | Nhập từ khóa tìm kiếm 'Phòng 201' vào ô `txtSearch` | Bảng chỉ hiển thị các phòng có tên hoặc số chứa '201' | Kiểm tra Search |
+| **3** | Tạo phòng mới với đầy đủ thông tin hợp lệ | Lưu CSDL thành công và hiển thị phòng mới trong danh sách kèm thông báo `ERR_03_10` | Happy case |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---

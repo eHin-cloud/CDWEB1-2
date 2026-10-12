@@ -37,6 +37,7 @@ class RoomManagementCrudTest extends TestCase
         $tenant = Tenant::create([
             'name' => 'Công Ty Test Thuê Phòng',
             'email' => 'landlord-crud@example.com',
+            'verification_status' => 'kyc_verified',
         ]);
 
         $landlordRole = Role::firstOrCreate(['slug' => 'landlord'], ['name' => 'Chủ trọ']);
@@ -47,8 +48,20 @@ class RoomManagementCrudTest extends TestCase
             'name' => 'Chủ Trọ Admin',
             'username' => 'landlord_admin',
             'email' => 'landlord@example.com',
-            'role' => 'admin',
+            'role' => 'landlord',
             'password' => Hash::make('password'),
+        ]);
+
+        \App\Models\LandlordProfile::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $admin->id,
+            'full_name' => 'Chủ Trọ Admin',
+            'phone' => '0912345678',
+            'property_name' => 'Tòa Nhà Diamond',
+            'property_address' => '123 Đường Số 1, Quận 9, TP.HCM',
+            'national_id' => '079200001234',
+            'business_license' => 'GPKD123456',
+            'status' => 'approved',
         ]);
 
         $building = Building::create([
@@ -336,5 +349,100 @@ class RoomManagementCrudTest extends TestCase
         $data = $response->json();
         $this->assertTrue($data['success']);
         $this->assertNotEmpty($data['description']['description']);
+    }
+
+    /**
+     * DoD 1: Nhập min_price = 5,000,000 và max_price = 2,000,000 rồi bấm Lọc -> Báo lỗi khoảng giá không hợp lệ
+     */
+    public function test_dod_1_price_range_validation_when_min_price_exceeds_max_price(): void
+    {
+        [$admin] = $this->setupTenantAdminAndBuilding();
+
+        $response = $this->actingAs($admin)->get(route('admin.rooms.index', [
+            'min_price' => 5000000,
+            'max_price' => 2000000,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSessionHas('error', 'Khoảng giá lọc không hợp lệ: Giá tối thiểu phải nhỏ hơn hoặc bằng giá tối đa');
+    }
+
+    /**
+     * DoD 2: Nhập từ khóa tìm kiếm 'Phòng 201' vào ô txtSearch -> Bảng chỉ hiển thị phòng có số/tên chứa '201'
+     */
+    public function test_dod_2_search_rooms_by_txt_search_keyword(): void
+    {
+        [$admin, $tenant, $building] = $this->setupTenantAdminAndBuilding();
+
+        $room201 = Room::create([
+            'building_id' => $building->id,
+            'tenant_id' => $tenant->id,
+            'room_number' => 'Phòng 201',
+            'floor' => 2,
+            'status' => 'empty',
+            'room_type' => 'standard',
+            'price' => 3500000,
+            'deposit' => 1000000,
+            'area' => 20,
+        ]);
+
+        $room305 = Room::create([
+            'building_id' => $building->id,
+            'tenant_id' => $tenant->id,
+            'room_number' => 'Phòng 305',
+            'floor' => 3,
+            'status' => 'empty',
+            'room_type' => 'standard',
+            'price' => 4000000,
+            'deposit' => 1500000,
+            'area' => 22,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.rooms.index', [
+            'txtSearch' => 'Phòng 201',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Phòng 201');
+        $response->assertDontSee('Phòng 305');
+    }
+
+    /**
+     * Kiểm tra AJAX check-number: Trả về exists = true khi trùng số phòng trong cùng tòa nhà (ERR_03_02)
+     */
+    public function test_ajax_check_room_number_duplicate(): void
+    {
+        [$admin, $tenant, $building] = $this->setupTenantAdminAndBuilding();
+
+        Room::create([
+            'building_id' => $building->id,
+            'tenant_id' => $tenant->id,
+            'room_number' => '101',
+            'floor' => 1,
+            'status' => 'empty',
+            'room_type' => 'standard',
+            'price' => 3000000,
+            'deposit' => 1000000,
+            'area' => 18,
+        ]);
+
+        // Trùng số phòng 101 trong cùng tòa nhà
+        $responseDup = $this->actingAs($admin)->getJson(route('admin.rooms.check_number', [
+            'building_id' => $building->id,
+            'room_number' => '101',
+        ]));
+        $responseDup->assertStatus(200)
+            ->assertJson([
+                'exists' => true,
+                'message' => 'Số phòng này đã tồn tại trong cơ sở lưu trú, vui lòng chọn số khác.',
+            ]);
+
+        // Không trùng với số phòng 102
+        $responseUnique = $this->actingAs($admin)->getJson(route('admin.rooms.check_number', [
+            'building_id' => $building->id,
+            'room_number' => '102',
+        ]));
+        $responseUnique->assertStatus(200)
+            ->assertJson(['exists' => false]);
     }
 }

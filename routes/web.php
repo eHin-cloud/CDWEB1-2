@@ -238,6 +238,7 @@ Route::middleware('admin')->group(function () {
     Route::prefix('smartroom/admin/rooms')->name('admin.rooms.')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
         Route::get('/create', [RoomController::class, 'create'])->name('create');
+        Route::get('/check-number', [RoomController::class, 'checkNumber'])->name('check_number');
         Route::post('/store', [RoomController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::post('/{id}/update', [RoomController::class, 'update'])->name('update');
