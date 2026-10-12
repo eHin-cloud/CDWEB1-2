@@ -227,4 +227,61 @@ class LandlordProfileManagementTest extends TestCase
         $this->assertNotNull($updatedUser->avatar);
         \Illuminate\Support\Facades\Storage::disk('public')->assertExists($updatedUser->avatar);
     }
+
+    /**
+     * AJAX Upload ảnh đại diện qua FormData, trả về phản hồi JSON với status=success và avatarUrl
+     */
+    public function test_can_upload_avatar_via_ajax_endpoint_and_receive_json(): void
+    {
+        [$user, $tenant, $profile] = $this->setupLandlord();
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $avatarFile = \Illuminate\Http\UploadedFile::fake()->create('avatar-upload.png', 400, 'image/png');
+
+        $response = $this->actingAs($user)->post(route('smartroom.admin.profile.upload_avatar'), [
+            'avatar' => $avatarFile,
+        ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+            ])
+            ->assertJsonStructure([
+                'status',
+                'avatarUrl',
+                'message',
+            ]);
+
+        $responseData = $response->json();
+        $this->assertStringContainsString('storage/avatars/', $responseData['avatarUrl']);
+
+        // Đồng bộ CSDL
+        $updatedUser = $user->fresh();
+        $this->assertNotNull($updatedUser->avatar);
+        $this->assertSame($updatedUser->avatar, $profile->fresh()->avatar);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($updatedUser->avatar);
+    }
+
+    /**
+     * Kiểm tra upload avatar qua alias endpoint /api/upload-avatar
+     */
+    public function test_can_upload_avatar_via_api_upload_avatar_alias(): void
+    {
+        [$user] = $this->setupLandlord();
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $avatarFile = \Illuminate\Http\UploadedFile::fake()->create('avatar-api.webp', 300, 'image/webp');
+
+        $response = $this->actingAs($user)->post('/api/upload-avatar', [
+            'avatar' => $avatarFile,
+        ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+            ]);
+
+        $responseData = $response->json();
+        $this->assertNotEmpty($responseData['avatarUrl']);
+    }
 }

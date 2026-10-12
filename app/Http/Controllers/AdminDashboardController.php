@@ -2063,4 +2063,43 @@ class AdminDashboardController extends Controller
         return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
             ->with('success', $msg);
     }
+
+    /**
+     * AJAX Upload ảnh đại diện độc lập qua FormData (multipart/form-data)
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+        ], [
+            'avatar.required' => 'Vui lòng chọn tệp ảnh đại diện cần tải lên.',
+            'avatar.image' => 'Ảnh đại diện phải là tệp hình ảnh hợp lệ (PNG, JPG, WebP).',
+            'avatar.mimes' => 'Ảnh đại diện phải là tệp hình ảnh hợp lệ (PNG, JPG, WebP).',
+            'avatar.max' => 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (2MB).',
+        ]);
+
+        $user = Auth::user();
+        $tenantId = $this->currentTenantId();
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->avatar = $path;
+        $user->save();
+
+        $profile = \App\Models\LandlordProfile::where('tenant_id', $tenantId)
+            ->orWhere('user_id', $user->id)
+            ->first();
+
+        if ($profile) {
+            $profile->avatar = $path;
+            $profile->save();
+        }
+
+        $avatarUrl = asset('storage/' . $path);
+
+        return response()->json([
+            'status' => 'success',
+            'avatarUrl' => $avatarUrl,
+            'message' => 'Tải ảnh đại diện lên máy chủ thành công!'
+        ]);
+    }
 }
