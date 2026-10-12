@@ -110,7 +110,7 @@
                    <span>ĐÃ XEM</span>
                </div>
                <div class="flex justify-between items-start mb-2 gap-2">
-                   <h3 class="font-bold text-slate-200 text-sm group-hover:text-emerald-400 transition-all line-clamp-1">
+                   <h3 class="font-bold text-slate-100 text-[15px] group-hover:text-emerald-400 transition-all line-clamp-1 sm:line-clamp-2 leading-snug">
                        <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')">{{ $room['title'] }}</a>
                    </h3>
                    <div class="relative group/rating flex items-center gap-1 text-xs text-amber-400 font-bold shrink-0 cursor-pointer py-1 px-1.5 rounded-lg hover:bg-amber-500/10 transition-colors">
@@ -184,7 +184,7 @@
                        </div>
                    </div>
                </div>
-               <p class="text-xs text-slate-500 mb-4 flex items-center gap-1"><i class="fa-solid fa-map-marker-alt text-[10px] text-slate-650"></i> {{ $room['address'] }}</p>
+               <p class="text-xs text-slate-400 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-map-marker-alt text-[10px] text-slate-650"></i> {{ $room['address'] }}</p>
                <!-- Prices and tags -->
                <div class="flex items-baseline gap-1.5 mb-4">
                    <span class="text-xl font-extrabold text-emerald-400">{{ number_format($room['price'], 0, ',', '.') }}đ</span>
@@ -216,7 +216,7 @@
        </div>
    </div>
    <!-- Card footer action -->
-   <div class="px-5 pb-5 pt-3 border-t border-slate-900/50 flex justify-between items-center bg-slate-950/20 gap-3">
+   <div class="room-card-footer px-5 pb-5 pt-3 border-t border-slate-900/50 flex justify-between items-center bg-slate-950/20 gap-3">
        <label class="flex items-center gap-2 text-xs font-bold text-slate-400 cursor-pointer hover:text-slate-355 transition-colors">
            <input type="checkbox" value="{{ $room['id'] }}" data-room-id="{{ $room['id'] }}" data-room-title="{{ e($room['title']) }}" data-room-price="{{ $room['price'] }}" onchange="toggleCompare('{{ $room['id'] }}', this)" class="compare-checkbox rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" style="accent-color: #10b981; width: 17px; height: 17px;">
            <span>So sánh</span>

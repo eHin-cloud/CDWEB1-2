@@ -2068,6 +2068,7 @@ function filterItems(options = {}) {
         const endIndex = startIndex + rentyItemsPerPage;
 
         matches.forEach((card, index) => {
+            card.style.display = '';
             if (index >= startIndex && index < endIndex) {
                 card.classList.remove('hidden');
             } else {
@@ -2459,15 +2460,42 @@ function triggerRentySearch() {
 }
 window.triggerRentySearch = triggerRentySearch;
 
+function clearGlobalSearch() {
+    const sInput = document.getElementById('search-input');
+    const hInput = document.getElementById('hero-search-input');
+    if (sInput) sInput.value = '';
+    if (hInput) hInput.value = '';
+    const btn = document.getElementById('header-search-clear-btn');
+    if (btn) btn.classList.add('hidden');
+    const heroBtn = document.getElementById('hero-search-clear-btn');
+    if (heroBtn) heroBtn.classList.add('hidden');
+
+    resetAllFilters();
+    if (typeof window.clearMapSearchInput === 'function') {
+        window.clearMapSearchInput();
+    }
+}
+window.clearGlobalSearch = clearGlobalSearch;
+
 function handleSearchInput(e) {
     const input = e.target;
     const query = input ? input.value : '';
     const trimmed = query.trim();
 
-    // Đồng bộ sang hero input nếu có
+    // Toggle nút xóa nhanh trên header và hero
+    const headerClearBtn = document.getElementById('header-search-clear-btn');
+    if (headerClearBtn) headerClearBtn.classList.toggle('hidden', !trimmed);
+    const heroClearBtn = document.getElementById('hero-search-clear-btn');
+    if (heroClearBtn) heroClearBtn.classList.toggle('hidden', !trimmed);
+
+    // Đồng bộ sang hero input và navbar input nếu có
     const heroInput = document.getElementById('hero-search-input');
     if (heroInput && heroInput !== input) {
         heroInput.value = query;
+    }
+    const navInput = document.getElementById('search-input');
+    if (navInput && navInput !== input) {
+        navInput.value = query;
     }
 
     // 1. Khi KHÔNG gõ chữ hoặc đã xóa hết chữ:
@@ -2483,6 +2511,17 @@ function handleSearchInput(e) {
         document.getElementById('smart-search-did-you-mean-banner')?.classList.add('hidden');
         document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
         document.getElementById('smart-search-suggestion')?.classList.add('hidden');
+
+        // Khôi phục HTML gốc nếu từng bị API đè
+        const roomsGrid = document.getElementById('rooms-grid');
+        if (roomsGrid && window.originalRoomsGridHtml) {
+            roomsGrid.innerHTML = window.originalRoomsGridHtml;
+        }
+        window.isUsingSmartSearchApi = false;
+
+        document.querySelectorAll('.room-item-card').forEach(card => {
+            card.style.display = '';
+        });
 
         // Hiện lại toàn bộ danh sách phòng từ database
         if (document.getElementById('rooms-grid')) {
@@ -2542,11 +2581,31 @@ function handlePricePresetChange(preset) {
 window.handlePricePresetChange = handlePricePresetChange;
 
 function resetAllFilters() {
+    // 0. Khôi phục lại HTML phòng gốc nếu từng bị API ghi đè
+    const roomsGrid = document.getElementById('rooms-grid');
+    if (roomsGrid && window.originalRoomsGridHtml) {
+        roomsGrid.innerHTML = window.originalRoomsGridHtml;
+    }
+    window.isUsingSmartSearchApi = false;
+
+    // Xóa banner Empty State của map nếu có
+    const mapEmptyBanner = document.getElementById('map-empty-state-banner');
+    if (mapEmptyBanner) mapEmptyBanner.remove();
+
+    // Khôi phục inline display
+    document.querySelectorAll('.room-item-card').forEach(card => {
+        card.style.display = '';
+    });
+
     // 1. Reset các ô tìm kiếm
     const searchInput = document.getElementById('search-input');
     const heroInput = document.getElementById('hero-search-input');
     if (searchInput) searchInput.value = '';
     if (heroInput) heroInput.value = '';
+    const headerClearBtn = document.getElementById('header-search-clear-btn');
+    if (headerClearBtn) headerClearBtn.classList.add('hidden');
+    const heroClearBtn = document.getElementById('hero-search-clear-btn');
+    if (heroClearBtn) heroClearBtn.classList.add('hidden');
 
     // 2. Reset khoảng giá
     const filterPrice = document.getElementById('filter-price');
@@ -2600,7 +2659,7 @@ function resetAllFilters() {
     }
 
     // 9. Chạy lại bộ lọc hiển thị đầy đủ
-    filterItems();
+    filterItems({ resetPage: true });
 }
 window.resetAllFilters = resetAllFilters;
 
@@ -2824,8 +2883,8 @@ function initRentyDashboard() {
     // Set initial view mode, checking URL param first
     const urlParams = new URLSearchParams(window.location.search);
     const viewQuery = urlParams.get('view');
-    const savedMode = (viewQuery === 'map' || viewQuery === 'grid') ? viewQuery : (localStorage.getItem('rentry_view_mode') || 'grid');
-    setViewMode(savedMode);
+    const initialMode = (viewQuery === 'map') ? 'map' : 'grid';
+    setViewMode(initialMode);
 
     // Read search param from URL
     const searchQuery = urlParams.get('search');
@@ -5343,6 +5402,11 @@ function checkCompareUrlParams() {
 
 // Tự động đồng bộ trạng thái khi tải trang
 document.addEventListener('DOMContentLoaded', () => {
+    const roomsGridEl = document.getElementById('rooms-grid');
+    if (roomsGridEl && !window.originalRoomsGridHtml) {
+        window.originalRoomsGridHtml = roomsGridEl.innerHTML;
+    }
+
     updateCompareBar();
     syncCompareCheckboxes();
     checkCompareUrlParams();

@@ -6,7 +6,7 @@
     <div class="container mx-auto px-4 md:px-6 flex justify-between items-center gap-2 md:gap-4">
         <!-- Left: Logo and Nav Links -->
         <div class="flex items-center gap-3 md:gap-6 shrink-0">
-            <a href="{{ route('renty.user') }}" class="flex items-center gap-2 md:gap-3 group">
+            <a href="{{ route('renty.user') }}" onclick="handleExploreClick(event)" class="flex items-center gap-2 md:gap-3 group">
                 <div class="renty-logo-badge w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-lg">
                     <i class="renty-logo-icon fa-solid fa-magnifying-glass-location text-emerald-400 text-lg transition-transform duration-300 group-hover:rotate-12"></i>
                 </div>
@@ -28,7 +28,10 @@
             <div class="relative w-full renty-search-shell">
                 <div class="relative flex items-center w-full">
                     <i class="fa-solid fa-location-dot absolute left-3.5 text-slate-500 pointer-events-none text-xs z-10 renty-search-icon"></i>
-                    <input type="text" id="search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-9 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
+                    <input type="text" id="search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-14 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
+                    <button type="button" id="header-search-clear-btn" onclick="clearGlobalSearch()" class="hidden absolute right-8 text-slate-400 hover:text-white transition-colors w-5 h-5 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-[10px] z-10" title="Xóa tìm kiếm">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                     <button type="button" onclick="triggerRentySearch()" class="absolute right-2.5 text-slate-400 hover:text-emerald-400 transition-colors w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-800/40 z-10" title="Tìm kiếm" aria-label="Tìm kiếm">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </button>
