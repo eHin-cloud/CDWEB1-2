@@ -5572,82 +5572,77 @@ body.theme-light .renty-chatbot-mascot {
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 6px rgba(16, 185, 129, 0.8)) !important;
 }
 
-    /* ============================================================ */
-    /* ÁNH SÁNG LỬA XANH NHẸ XUNG QUANH VIỀN BANNER (TÍCH XANH)     */
+        /* ============================================================ */
+    /* ÁNH LỬA XANH CHÁY NHẸ BẬP BÙNG QUANH VIỀN BANNER (TÍCH XANH) */
     /* ============================================================ */
     .verified-flame-banner {
         position: relative !important;
         border-radius: 1rem 1rem 0 0 !important;
-        /* Ánh sáng lửa xanh nhẹ nhàng CHỈ TỎA RA NGOÀI VIỀN, tuyệt đối không che ảnh */
-        box-shadow: 
-            0 0 8px rgba(56, 189, 248, 0.45),
-            0 0 16px rgba(14, 165, 233, 0.22) !important;
-        border: 1.5px solid rgba(56, 189, 248, 0.65) !important;
-        animation: blueFlameSubtlePulse 3s ease-in-out infinite alternate !important;
+        /* Ánh lửa xanh nhẹ bập bùng quanh viền, KHÔNG xoay vòng, KHÔNG che ảnh */
+        border: 1.5px solid rgba(56, 189, 248, 0.75) !important;
+        animation: blueFlameNaturalFlicker 2.2s ease-in-out infinite !important;
     }
 
-    /* Viền ánh sáng lửa xanh thanh mảnh chạy lướt nhẹ quanh mép ngoài */
-    .verified-flame-border-runner {
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        pointer-events: none;
-        z-index: 5;
-        overflow: hidden;
-    }
-    .verified-flame-border-runner::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: conic-gradient(
-            transparent 0deg,
-            rgba(56, 189, 248, 0.35) 60deg,
-            rgba(0, 242, 254, 0.75) 90deg,
-            transparent 120deg,
-            transparent 180deg,
-            rgba(56, 189, 248, 0.35) 240deg,
-            rgba(0, 242, 254, 0.75) 270deg,
-            transparent 300deg
-        );
-        animation: blueFlameRotate 5s linear infinite;
-        opacity: 0.6;
-    }
-    .verified-flame-border-runner::after {
-        content: '';
-        position: absolute;
-        inset: 1.5px;
-        border-radius: inherit;
-        background: transparent;
-    }
-
-    @keyframes blueFlameSubtlePulse {
+    @keyframes blueFlameNaturalFlicker {
         0% {
             box-shadow: 
-                0 0 6px rgba(56, 189, 248, 0.35),
-                0 0 12px rgba(14, 165, 233, 0.18);
-            border-color: rgba(56, 189, 248, 0.5);
+                0 0 5px rgba(56, 189, 248, 0.65),
+                0 0 11px rgba(14, 165, 233, 0.35),
+                0 0 18px rgba(2, 132, 199, 0.15);
+            border-color: rgba(56, 189, 248, 0.7);
         }
-        50% {
+        18% {
             box-shadow: 
-                0 0 10px rgba(56, 189, 248, 0.65),
-                0 0 20px rgba(14, 165, 233, 0.3);
-            border-color: rgba(56, 189, 248, 0.85);
+                0 0 8px rgba(56, 189, 248, 0.85),
+                0 0 16px rgba(14, 165, 233, 0.45),
+                0 0 24px rgba(2, 132, 199, 0.22);
+            border-color: rgba(125, 211, 252, 0.9);
+        }
+        35% {
+            box-shadow: 
+                0 0 4px rgba(56, 189, 248, 0.55),
+                0 0 9px rgba(14, 165, 233, 0.28),
+                0 0 16px rgba(2, 132, 199, 0.12);
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+        52% {
+            box-shadow: 
+                0 0 9px rgba(56, 189, 248, 0.95),
+                0 0 18px rgba(14, 165, 233, 0.5),
+                0 0 28px rgba(2, 132, 199, 0.25);
+            border-color: rgba(186, 230, 253, 1);
+        }
+        70% {
+            box-shadow: 
+                0 0 6px rgba(56, 189, 248, 0.7),
+                0 0 13px rgba(14, 165, 233, 0.38),
+                0 0 20px rgba(2, 132, 199, 0.18);
+            border-color: rgba(56, 189, 248, 0.75);
+        }
+        85% {
+            box-shadow: 
+                0 0 8px rgba(56, 189, 248, 0.8),
+                0 0 15px rgba(14, 165, 233, 0.42),
+                0 0 23px rgba(2, 132, 199, 0.2);
+            border-color: rgba(125, 211, 252, 0.85);
         }
         100% {
             box-shadow: 
-                0 0 7px rgba(56, 189, 248, 0.4),
-                0 0 14px rgba(14, 165, 233, 0.2);
-            border-color: rgba(56, 189, 248, 0.55);
+                0 0 5px rgba(56, 189, 248, 0.65),
+                0 0 11px rgba(14, 165, 233, 0.35),
+                0 0 18px rgba(2, 132, 199, 0.15);
+            border-color: rgba(56, 189, 248, 0.7);
         }
     }
 
-    @keyframes blueFlameRotate {
-        100% {
-            transform: rotate(360deg);
-        }
+    /* Khi rê chuột: ngọn lửa bùng sáng nhẹ hơn */
+    .room-item-card:hover .verified-flame-banner {
+        box-shadow: 
+            0 0 12px rgba(56, 189, 248, 1),
+            0 0 24px rgba(14, 165, 233, 0.6),
+            0 0 36px rgba(2, 132, 199, 0.3) !important;
+        border-color: #38bdf8 !important;
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
     }
 
     /* Huy hiệu Tích Xanh ánh lửa rực rỡ */
@@ -5670,13 +5665,4 @@ body.theme-light .renty-chatbot-mascot {
         100% {
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 18px rgba(14, 165, 233, 0.35);
         }
-    }
-
-    /* Khi rê chuột: viền sáng rõ hơn nhẹ nhàng */
-    .room-item-card:hover .verified-flame-banner {
-        box-shadow: 
-            0 0 12px rgba(56, 189, 248, 0.8),
-            0 0 22px rgba(14, 165, 233, 0.4) !important;
-        border-color: #38bdf8 !important;
-        transition: box-shadow 0.3s ease, border-color 0.3s ease;
     }

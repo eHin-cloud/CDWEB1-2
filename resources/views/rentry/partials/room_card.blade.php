@@ -48,10 +48,6 @@
        @endphp
        <!-- Room photo -->
        <div class="room-card-media h-48 bg-slate-950 relative overflow-hidden border-b border-slate-900 group {{ $isVerifiedLandlord ? 'verified-flame-banner' : '' }}">
-           @if($isVerifiedLandlord)
-               <!-- Ánh sáng viền lửa xanh nhẹ nhàng quanh viền banner, không che ảnh -->
-               <div class="verified-flame-border-runner" aria-hidden="true"></div>
-           @endif
            <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')" class="absolute inset-0 z-0 renty-card-carousel" aria-label="Xem chi tiết phòng {{ $room['room_number'] }}">
                @foreach($cardImages as $imageIndex => $imageUrl)
                    <img src="{{ $imageUrl }}" alt="Ảnh {{ $imageIndex + 1 }} phòng {{ $room['room_number'] }}" class="renty-card-carousel-image" style="--carousel-delay: {{ $imageIndex * 2 }}s;" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80';">
