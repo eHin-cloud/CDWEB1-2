@@ -63,27 +63,26 @@
 
     <style>
     /* ============================================================ */
-    /* ANIMATION CHÁY LỬA XANH XUNG QUANH BANNER PHÒNG (TÍCH XANH) */
+    /* ÁNH SÁNG LỬA XANH NHẸ XUNG QUANH VIỀN BANNER (TÍCH XANH)     */
     /* ============================================================ */
     .verified-flame-banner {
         position: relative !important;
         border-radius: 1rem 1rem 0 0 !important;
-        overflow: hidden !important;
+        /* Ánh sáng lửa xanh nhẹ nhàng CHỈ TỎA RA NGOÀI VIỀN, tuyệt đối không che ảnh */
         box-shadow: 
-            0 0 14px rgba(56, 189, 248, 0.75),
-            0 0 28px rgba(14, 165, 233, 0.5),
-            inset 0 0 16px rgba(56, 189, 248, 0.35) !important;
-        border: 2px solid rgba(56, 189, 248, 0.85) !important;
-        animation: blueFlameContainerPulse 2.4s ease-in-out infinite alternate !important;
+            0 0 8px rgba(56, 189, 248, 0.45),
+            0 0 16px rgba(14, 165, 233, 0.22) !important;
+        border: 1.5px solid rgba(56, 189, 248, 0.65) !important;
+        animation: blueFlameSubtlePulse 3s ease-in-out infinite alternate !important;
     }
 
-    /* Lớp viền tia lửa xanh xoay tròn quanh banner */
+    /* Viền ánh sáng lửa xanh thanh mảnh chạy lướt nhẹ quanh mép ngoài */
     .verified-flame-border-runner {
         position: absolute;
-        inset: -2px;
+        inset: 0;
         border-radius: inherit;
         pointer-events: none;
-        z-index: 22;
+        z-index: 5;
         overflow: hidden;
     }
     .verified-flame-border-runner::before {
@@ -94,87 +93,45 @@
         width: 200%;
         height: 200%;
         background: conic-gradient(
-            transparent,
-            rgba(56, 189, 248, 0.3) 15deg,
-            rgba(0, 242, 254, 0.95) 60deg,
-            rgba(125, 211, 252, 1) 90deg,
-            rgba(56, 189, 248, 0.4) 120deg,
-            transparent 160deg,
-            rgba(14, 165, 233, 0.3) 195deg,
-            rgba(0, 242, 254, 0.95) 240deg,
-            rgba(125, 211, 252, 1) 270deg,
-            rgba(56, 189, 248, 0.4) 300deg,
-            transparent 340deg
+            transparent 0deg,
+            rgba(56, 189, 248, 0.35) 60deg,
+            rgba(0, 242, 254, 0.75) 90deg,
+            transparent 120deg,
+            transparent 180deg,
+            rgba(56, 189, 248, 0.35) 240deg,
+            rgba(0, 242, 254, 0.75) 270deg,
+            transparent 300deg
         );
-        animation: blueFlameRotate 3.6s linear infinite;
+        animation: blueFlameRotate 5s linear infinite;
+        opacity: 0.6;
     }
-
-    /* Lớp hào quang ngọn lửa xanh bập bùng */
-    .verified-flame-aura {
+    .verified-flame-border-runner::after {
+        content: '';
         position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 23;
+        inset: 1.5px;
         border-radius: inherit;
-        box-shadow: 
-            inset 0 0 20px rgba(56, 189, 248, 0.45),
-            inset 0 -15px 30px rgba(14, 165, 233, 0.35),
-            inset 0 15px 25px rgba(56, 189, 248, 0.3);
-        animation: blueFlameAuraFlicker 1.8s ease-in-out infinite alternate;
+        background: transparent;
     }
 
-    /* Lưỡi lửa xanh liếm ở cạnh dưới banner */
-    .verified-flame-tongue-bottom {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 26px;
-        background: linear-gradient(0deg, rgba(56, 189, 248, 0.5) 0%, rgba(14, 165, 233, 0.25) 55%, transparent 100%);
-        pointer-events: none;
-        z-index: 24;
-        filter: drop-shadow(0 -4px 8px rgba(56, 189, 248, 0.7));
-        animation: blueFlameTongueDance 1.6s ease-in-out infinite alternate;
-    }
-
-    /* Lưỡi lửa xanh liếm ở cạnh trên banner */
-    .verified-flame-tongue-top {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        height: 18px;
-        background: linear-gradient(180deg, rgba(56, 189, 248, 0.45) 0%, rgba(0, 242, 254, 0.2) 60%, transparent 100%);
-        pointer-events: none;
-        z-index: 24;
-        animation: blueFlameTongueDance 2s ease-in-out infinite alternate-reverse;
-    }
-
-    /* Đốm lửa xanh li ti bốc lên */
-    .verified-flame-sparks {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 24;
-        background: 
-            radial-gradient(circle at 20% 85%, rgba(0, 242, 254, 0.8) 0, transparent 4px),
-            radial-gradient(circle at 45% 90%, rgba(56, 189, 248, 0.85) 0, transparent 3px),
-            radial-gradient(circle at 70% 88%, rgba(125, 211, 252, 0.9) 0, transparent 4px),
-            radial-gradient(circle at 88% 82%, rgba(0, 242, 254, 0.8) 0, transparent 3px);
-        animation: blueFlameSparksRise 2.5s ease-in-out infinite;
-    }
-
-    /* Huy hiệu Tích Xanh ánh lửa rực rỡ */
-    .verified-flame-badge {
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(56, 189, 248, 0.25)) !important;
-        border: 1px solid rgba(56, 189, 248, 0.75) !important;
-        color: #e0f2fe !important;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.75), 0 0 20px rgba(14, 165, 233, 0.45) !important;
-        animation: blueFlameBadgeGlow 2s ease-in-out infinite alternate !important;
-    }
-    .verified-flame-badge i {
-        color: #38bdf8 !important;
-        filter: drop-shadow(0 0 6px #00f2fe) !important;
+    @keyframes blueFlameSubtlePulse {
+        0% {
+            box-shadow: 
+                0 0 6px rgba(56, 189, 248, 0.35),
+                0 0 12px rgba(14, 165, 233, 0.18);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+        50% {
+            box-shadow: 
+                0 0 10px rgba(56, 189, 248, 0.65),
+                0 0 20px rgba(14, 165, 233, 0.3);
+            border-color: rgba(56, 189, 248, 0.85);
+        }
+        100% {
+            box-shadow: 
+                0 0 7px rgba(56, 189, 248, 0.4),
+                0 0 14px rgba(14, 165, 233, 0.2);
+            border-color: rgba(56, 189, 248, 0.55);
+        }
     }
 
     @keyframes blueFlameRotate {
@@ -183,93 +140,35 @@
         }
     }
 
-    @keyframes blueFlameContainerPulse {
-        0% {
-            box-shadow: 
-                0 0 10px rgba(56, 189, 248, 0.6),
-                0 0 22px rgba(14, 165, 233, 0.4),
-                inset 0 0 12px rgba(56, 189, 248, 0.3);
-            border-color: rgba(56, 189, 248, 0.75);
-        }
-        50% {
-            box-shadow: 
-                0 0 18px rgba(56, 189, 248, 0.95),
-                0 0 36px rgba(14, 165, 233, 0.65),
-                0 0 50px rgba(2, 132, 199, 0.45),
-                inset 0 0 20px rgba(125, 211, 252, 0.45);
-            border-color: #38bdf8;
-        }
-        100% {
-            box-shadow: 
-                0 0 12px rgba(56, 189, 248, 0.7),
-                0 0 26px rgba(14, 165, 233, 0.45),
-                inset 0 0 14px rgba(56, 189, 248, 0.35);
-            border-color: rgba(56, 189, 248, 0.8);
-        }
+    /* Huy hiệu Tích Xanh ánh lửa rực rỡ */
+    .verified-flame-badge {
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(56, 189, 248, 0.2)) !important;
+        border: 1px solid rgba(56, 189, 248, 0.75) !important;
+        color: #e0f2fe !important;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.5), 0 0 14px rgba(14, 165, 233, 0.25) !important;
+        animation: blueFlameBadgeGlow 2.5s ease-in-out infinite alternate !important;
     }
-
-    @keyframes blueFlameAuraFlicker {
-        0% {
-            opacity: 0.75;
-            filter: blur(1px);
-        }
-        50% {
-            opacity: 1;
-            filter: blur(0px);
-        }
-        100% {
-            opacity: 0.85;
-            filter: blur(1.5px);
-        }
-    }
-
-    @keyframes blueFlameTongueDance {
-        0% {
-            transform: scaleY(0.9) skewX(-1.5deg);
-            opacity: 0.7;
-        }
-        50% {
-            transform: scaleY(1.4) skewX(2.5deg);
-            opacity: 1;
-        }
-        100% {
-            transform: scaleY(1.05) skewX(-2deg);
-            opacity: 0.8;
-        }
-    }
-
-    @keyframes blueFlameSparksRise {
-        0% {
-            opacity: 0.3;
-            transform: translateY(4px);
-        }
-        50% {
-            opacity: 0.9;
-            transform: translateY(-5px);
-        }
-        100% {
-            opacity: 0.2;
-            transform: translateY(-12px);
-        }
+    .verified-flame-badge i {
+        color: #38bdf8 !important;
+        filter: drop-shadow(0 0 4px #00f2fe) !important;
     }
 
     @keyframes blueFlameBadgeGlow {
         0% {
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 5px rgba(56, 189, 248, 0.35);
         }
         100% {
-            box-shadow: 0 0 18px rgba(56, 189, 248, 0.9), 0 0 30px rgba(14, 165, 233, 0.5);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 18px rgba(14, 165, 233, 0.35);
         }
     }
 
-    /* Tăng sức cháy khi di chuột vào thẻ phòng */
+    /* Khi rê chuột: viền sáng rõ hơn nhẹ nhàng */
     .room-item-card:hover .verified-flame-banner {
         box-shadow: 
-            0 0 22px rgba(56, 189, 248, 1),
-            0 0 45px rgba(14, 165, 233, 0.8),
-            0 0 65px rgba(2, 132, 199, 0.55),
-            inset 0 0 24px rgba(125, 211, 252, 0.55) !important;
-        transition: box-shadow 0.3s ease;
+            0 0 12px rgba(56, 189, 248, 0.8),
+            0 0 22px rgba(14, 165, 233, 0.4) !important;
+        border-color: #38bdf8 !important;
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
     }
     </style>
 

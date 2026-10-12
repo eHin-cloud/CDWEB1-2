@@ -49,12 +49,8 @@
        <!-- Room photo -->
        <div class="room-card-media h-48 bg-slate-950 relative overflow-hidden border-b border-slate-900 group {{ $isVerifiedLandlord ? 'verified-flame-banner' : '' }}">
            @if($isVerifiedLandlord)
-               <!-- Lớp hiệu ứng Cháy Lửa Xanh quanh banner phòng -->
+               <!-- Ánh sáng viền lửa xanh nhẹ nhàng quanh viền banner, không che ảnh -->
                <div class="verified-flame-border-runner" aria-hidden="true"></div>
-               <div class="verified-flame-aura" aria-hidden="true"></div>
-               <div class="verified-flame-tongue-bottom" aria-hidden="true"></div>
-               <div class="verified-flame-tongue-top" aria-hidden="true"></div>
-               <div class="verified-flame-sparks" aria-hidden="true"></div>
            @endif
            <a href="{{ route('renty.room.show', $room['id']) }}" onclick="if(typeof saveViewedRoom==='function') saveViewedRoom('{{ $room['id'] }}')" class="absolute inset-0 z-0 renty-card-carousel" aria-label="Xem chi tiết phòng {{ $room['room_number'] }}">
                @foreach($cardImages as $imageIndex => $imageUrl)
