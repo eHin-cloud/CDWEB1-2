@@ -19,6 +19,7 @@ use App\Http\Controllers\HotelReceptionController;
 use App\Http\Controllers\HousekeepingController;
 use App\Http\Controllers\HousekeepingFrontdeskController;
 use App\Http\Controllers\SuperadminController;
+use App\Http\Controllers\ResidentManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -280,6 +281,13 @@ Route::middleware('admin')->group(function () {
         Route::post('/folio/{bookingId}/items', [HotelReceptionController::class, 'addFolioItem'])->name('folio.add_item');
         Route::post('/check-out/{bookingId}', [HotelReceptionController::class, 'checkOut'])->name('checkout');
     });
+});
+
+// FEAT_26_RESIDENTS: QUẢN LÝ CƯ DÂN & KHÁCH THUÊ (RESIDENT MANAGEMENT) - HUỲNH VĂN VĨNH EM
+Route::middleware(['auth', 'tenant.scope'])->group(function () {
+    Route::get('/smartroom/admin/residents', [ResidentManagementController::class, 'index'])->name('admin.residents.index');
+    Route::post('/smartroom/admin/residents/store', [ResidentManagementController::class, 'store'])->name('admin.residents.store');
+    Route::post('/smartroom/admin/residents', [ResidentManagementController::class, 'store'])->name('admin.residents.store.direct');
 });
 
 // TÍNH NĂNG 18: PHÂN HỆ LỄ TÂN & BUỒNG PHÒNG (FEAT_18_HOUSEKEEPING_FRONTDESK)
