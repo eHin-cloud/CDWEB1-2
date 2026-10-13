@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
 use App\Models\Room;
 use App\Models\Tenant;
+use App\Models\Transaction;
 use App\Models\UtilityRecord;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,9 +19,10 @@ class PaymentController extends Controller
     private const SERVICE_FEE = 150000;
 
     private const PAYMENT_METHODS = [
+        'bank_transfer' => 'Chuyển khoản VietQR',
         'cash' => 'Tiền mặt',
-        'bank_transfer' => 'Chuyển khoản',
-        'vietqr' => 'VietQR',
+        'vietqr' => 'Chuyển khoản VietQR',
+        'gateway' => 'Cổng thanh toán',
         'other' => 'Khác',
     ];
 
@@ -46,13 +49,21 @@ class PaymentController extends Controller
             ])
             ->values();
 
+        $paidTotal = (int) $records->where('status', 'paid')->sum('total_amount');
+        $unpaidTotal = (int) $records->whereIn('status', ['sent', 'overdue'])->sum('total_amount');
+        $totalBilled = $paidTotal + $unpaidTotal;
+        $collectionRate = $totalBilled > 0 ? round(($paidTotal / $totalBilled) * 100, 1) : 0;
+        $vietqrCount = $records->whereIn('payment_method', ['bank_transfer', 'vietqr'])->where('status', 'paid')->count();
+
         $summary = [
             'draft_count' => $paymentRows->where('status', 'draft')->count(),
             'sent_count' => $paymentRows->where('status', 'sent')->count(),
             'paid_count' => $paymentRows->where('status', 'paid')->count(),
             'overdue_count' => $paymentRows->where('status', 'overdue')->count(),
-            'paid_total' => $records->where('status', 'paid')->sum('total_amount'),
-            'unpaid_total' => $records->whereIn('status', ['sent', 'overdue'])->sum('total_amount'),
+            'paid_total' => $paidTotal,
+            'unpaid_total' => $unpaidTotal,
+            'collection_rate' => $collectionRate,
+            'vietqr_count' => $vietqrCount,
         ];
 
         $rooms = Room::where('tenant_id', $tenantId)
@@ -82,6 +93,179 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * FEAT_29_PAYMENTS: Xác nhận gạch nợ thanh toán hóa đơn tiền mặt hoặc chuyển khoản VietQR
+     */
+    public function confirmPayment(Request $request)
+    {
+        $invoiceId = $request->input('invoice_id') ?? $request->input('payment_id');
+        $rawAmount = $request->input('payment_amount');
+        $rawMethod = $request->input('payment_method');
+        $transactionRef = trim((string) $request->input('transaction_ref', ''));
+
+        // 1. Kiểm tra để trống số tiền
+        if ($rawAmount === null || trim((string) $rawAmount) === '') {
+            $errorMsg = 'Vui lòng nhập số tiền thanh toán';
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'field' => 'payment_amount',
+                    'message' => $errorMsg,
+                ], 422);
+            }
+            return back()->withInput()->withErrors(['payment_amount' => $errorMsg]);
+        }
+
+        // 2. Bấm cập nhật nhưng chưa chọn phương thức (Mã lỗi ERR_29_01)
+        if ($rawMethod === null || trim((string) $rawMethod) === '') {
+            $errorMsg = 'Vui lòng chọn hình thức nhận tiền (Tiền mặt hoặc Chuyển khoản).';
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'ERR_29_01',
+                    'field' => 'payment_method',
+                    'message' => $errorMsg,
+                ], 422);
+            }
+            return back()->withInput()->withErrors(['payment_method' => $errorMsg]);
+        }
+
+        // Chuẩn hóa amount: loại bỏ ký tự không phải số (phân cách hàng nghìn)
+        $cleanedAmount = preg_replace('/[^\d]/', '', (string) $rawAmount);
+
+        // Regex quy định: Amount: ^[1-9][0-9]*$
+        if (!preg_match('/^[1-9][0-9]*$/', (string) $cleanedAmount)) {
+            $errorMsg = 'Số tiền thanh toán không hợp lệ (phải là số nguyên dương lớn hơn 0).';
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'field' => 'payment_amount',
+                    'message' => $errorMsg,
+                ], 422);
+            }
+            return back()->withInput()->withErrors(['payment_amount' => $errorMsg]);
+        }
+
+        $paymentAmount = (int) $cleanedAmount;
+
+        // 3. Kiểm tra invoice_id
+        if (!$invoiceId) {
+            $errorMsg = 'Mã hóa đơn không hợp lệ.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 422);
+            }
+            return back()->withInput()->withErrors(['invoice_id' => $errorMsg]);
+        }
+
+        $tenantId = $this->currentTenantId();
+        $record = UtilityRecord::with(['room.building'])
+            ->whereHas('room', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->where('id', $invoiceId)
+            ->first();
+
+        if (!$record) {
+            $errorMsg = 'Không tìm thấy hóa đơn cần thanh toán trong phạm vi cơ sở của bạn.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 404);
+            }
+            return back()->withInput()->with('error', $errorMsg);
+        }
+
+        $decorated = $this->decorateRecord($record);
+        $remainingDebt = $decorated->status === 'paid' ? 0 : (int) $decorated->total_amount;
+
+        // 4. Số tiền thanh toán không được vượt quá số tiền nợ còn lại của hóa đơn
+        if ($paymentAmount > $remainingDebt) {
+            $formattedDebt = number_format($remainingDebt, 0, ',', '.') . ' đ';
+            $errorMsg = "Số tiền thanh toán không được vượt quá số tiền nợ còn lại ({$formattedDebt})";
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'field' => 'payment_amount',
+                    'message' => $errorMsg,
+                ], 422);
+            }
+            return back()->withInput()->withErrors(['payment_amount' => $errorMsg]);
+        }
+
+        // Chuẩn hóa phương thức thanh toán
+        $normalizedMethod = match ($rawMethod) {
+            'cash', 'Tiền mặt' => 'cash',
+            'bank_transfer', 'vietqr', 'Chuyển khoản VietQR', 'Chuyển khoản' => 'bank_transfer',
+            'gateway', 'Cổng thanh toán' => 'gateway',
+            default => 'cash',
+        };
+
+        $methodDisplayLabel = match ($normalizedMethod) {
+            'bank_transfer', 'vietqr' => 'Chuyển khoản VietQR',
+            'gateway' => 'Cổng thanh toán',
+            default => 'Tiền mặt',
+        };
+
+        $before = $record->only(['status', 'payment_date', 'payment_method', 'transaction_ref']);
+
+        // Cập nhật hóa đơn sang 'Đã thanh toán'
+        $record->update([
+            'status' => 'paid',
+            'payment_date' => now(),
+            'payment_method' => $normalizedMethod,
+            'transaction_ref' => $transactionRef ?: null,
+        ]);
+
+        // Cập nhật bảng bills đồng bộ
+        Bill::where('tenant_id', $tenantId)
+            ->where('room_id', $record->room_id)
+            ->where('billing_month', $record->billing_month)
+            ->update([
+                'status' => 'paid',
+                'payment_date' => now(),
+                'transaction_ref' => $transactionRef ?: null,
+            ]);
+
+        // Tự động sinh phiếu thu trong Sổ quỹ (Transaction)
+        $roomNumber = $record->room->room_number ?? ('#' . $record->room_id);
+        Transaction::create([
+            'tenant_id' => $tenantId,
+            'type' => 'income',
+            'amount' => $paymentAmount,
+            'category' => 'rental',
+            'description' => "Thu tiền phòng {$roomNumber} tháng {$record->billing_month} ({$methodDisplayLabel}) - Gạch nợ FEAT_29" . ($transactionRef ? " - Ref: {$transactionRef}" : ''),
+            'transaction_date' => now()->toDateString(),
+        ]);
+
+        // Đồng bộ trạng thái phòng
+        $this->syncRoomPaymentStatus($record->room_id);
+
+        // Ghi nhật ký quản trị
+        AdminActivityLogger::log(
+            'payment',
+            'payments',
+            "Xác nhận gạch nợ phòng {$roomNumber} tháng {$record->billing_month} số tiền " . number_format($paymentAmount) . "đ ({$methodDisplayLabel})",
+            $record,
+            ['room_number' => $roomNumber, 'billing_month' => $record->billing_month, 'amount' => $paymentAmount],
+            $before,
+            $record->fresh()->only(['status', 'payment_date', 'payment_method', 'transaction_ref'])
+        );
+
+        // Mã phản hồi thành công ERR_29_02
+        $successMsg = 'Đã ghi nhận thanh toán tiền phòng thành công!';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'code' => 'ERR_29_02',
+                'message' => $successMsg,
+                'invoice_id' => $record->id,
+                'status' => 'paid',
+                'status_label' => 'Đã thanh toán',
+                'paid_amount' => $paymentAmount,
+                'remaining_debt' => 0,
+            ]);
+        }
+
+        return back()->with('success', $successMsg)->with('success_code', 'ERR_29_02');
+    }
+
     public function update(Request $request, UtilityRecord $payment)
     {
         $this->authorizeTenantRecord($payment);
@@ -89,7 +273,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:sent,paid,overdue',
             'payment_date' => 'nullable|required_if:status,paid|date',
-            'payment_method' => 'nullable|required_if:status,paid|in:cash,bank_transfer,vietqr,other',
+            'payment_method' => 'nullable|required_if:status,paid|in:cash,bank_transfer,vietqr,gateway,other',
         ]);
 
         if (
@@ -97,7 +281,7 @@ class PaymentController extends Controller
             && in_array($validated['payment_method'], ['bank_transfer', 'vietqr'], true)
             && !$this->tenantCanReceiveOnlinePayments($this->currentTenantId())
         ) {
-            return back()->with('error', 'Can hoan tat KYC truoc khi ghi nhan thanh toan chuyen khoan/VietQR.');
+            return back()->with('error', 'Cần hoàn tất KYC trước khi ghi nhận thanh toán chuyển khoản/VietQR.');
         }
 
         $before = $payment->only(['status', 'payment_date', 'payment_method']);
@@ -112,6 +296,27 @@ class PaymentController extends Controller
                 : null,
         ]);
 
+        if ($validated['status'] === 'paid') {
+            Bill::where('tenant_id', $this->currentTenantId())
+                ->where('room_id', $payment->room_id)
+                ->where('billing_month', $payment->billing_month)
+                ->update([
+                    'status' => 'paid',
+                    'payment_date' => now(),
+                ]);
+
+            $decorated = $this->decorateRecord($payment);
+            $roomNumber = $payment->room->room_number ?? ('#' . $payment->room_id);
+            Transaction::create([
+                'tenant_id' => $this->currentTenantId(),
+                'type' => 'income',
+                'amount' => $decorated->total_amount,
+                'category' => 'rental',
+                'description' => "Thu tiền phòng {$roomNumber} tháng {$payment->billing_month} ({$validated['payment_method']})",
+                'transaction_date' => now()->toDateString(),
+            ]);
+        }
+
         $this->syncRoomPaymentStatus($payment->room_id);
 
         $payment->loadMissing('room');
@@ -125,28 +330,96 @@ class PaymentController extends Controller
             $payment->fresh()->only(['status', 'payment_date', 'payment_method'])
         );
 
-        return back()->with('success', 'Đã cập nhật trạng thái thanh toán.');
+        return back()->with('success', 'Đã ghi nhận thanh toán tiền phòng thành công!');
     }
 
+    /**
+     * Bấm nút Xuất CSV đối soát: tải xuống tệp danh sách đối soát thanh toán định dạng .csv
+     */
     public function export(Request $request): StreamedResponse
     {
         $tenantId = $this->currentTenantId();
         $filters = $this->filters($request);
-        $rows = $this->revenueReports($tenantId, $filters);
-        $fileName = 'bao-cao-doanh-thu-' . $filters['report_period'] . '-' . now()->format('Ymd-His') . '.csv';
 
-        return response()->streamDownload(function () use ($rows, $filters) {
+        // Trường hợp 1: Xuất báo cáo doanh thu theo kỳ (quý, năm, tháng)
+        if ($request->filled('report_period')) {
+            $rows = $this->revenueReports($tenantId, $filters);
+            $fileName = 'bao-cao-doanh-thu-' . $filters['report_period'] . '-' . now()->format('Ymd-His') . '.csv';
+
+            return response()->streamDownload(function () use ($rows, $filters) {
+                $handle = fopen('php://output', 'w');
+                fputcsv($handle, ['Ky bao cao', 'So hoa don da thanh toan', 'Doanh thu']);
+
+                foreach ($rows as $row) {
+                    fputcsv($handle, [$row['label'], $row['paid_count'], $row['total_revenue']]);
+                }
+
+                fputcsv($handle, []);
+                fputcsv($handle, ['Loai bao cao', $filters['report_period']]);
+                fclose($handle);
+            }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
+
+        // Trường hợp 2: FEAT_29_PAYMENTS - Bấm nút Xuất CSV đối soát chi tiết
+        $records = $this->filteredRecordQuery($tenantId, $filters)
+            ->orderByDesc('billing_month')
+            ->orderBy('room_id')
+            ->get()
+            ->map(fn (UtilityRecord $record) => $this->decorateRecord($record));
+
+        $fileName = 'doi-soat-thanh-toan-' . ($filters['billing_month'] ?: now()->format('Y-m')) . '-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($records, $filters) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Ky bao cao', 'So hoa don da thanh toan', 'Doanh thu']);
+            // Ghi UTF-8 BOM để Excel hiển thị đúng dấu tiếng Việt
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            foreach ($rows as $row) {
-                fputcsv($handle, [$row['label'], $row['paid_count'], $row['total_revenue']]);
+            fputcsv($handle, [
+                'Mã HĐ',
+                'Kỳ hóa đơn',
+                'Số phòng',
+                'Tòa nhà / Cơ sở',
+                'Khách thuê',
+                'Tiền phòng (đ)',
+                'Tiền điện (đ)',
+                'Tiền nước (đ)',
+                'Phí dịch vụ (đ)',
+                'Tổng tiền (đ)',
+                'Đã thanh toán (đ)',
+                'Còn nợ (đ)',
+                'Trạng thái',
+                'Phương thức',
+                'Ngày thanh toán',
+                'Mã tham chiếu ngân hàng',
+            ]);
+
+            foreach ($records as $row) {
+                fputcsv($handle, [
+                    $row->id ?: 'DRAFT',
+                    $row->billing_month,
+                    'P.' . $row->room_number,
+                    $row->building_name,
+                    $row->resident_name,
+                    $row->room_amount,
+                    $row->electricity_amount,
+                    $row->water_amount,
+                    $row->service_amount,
+                    $row->total_amount,
+                    $row->paid_amount,
+                    $row->remaining_debt,
+                    $row->status_label,
+                    self::PAYMENT_METHODS[$row->payment_method] ?? ($row->payment_method ?: 'Chưa thanh toán'),
+                    $row->payment_date ? $row->payment_date->format('d/m/Y') : '',
+                    $row->transaction_ref ?: '',
+                ]);
             }
 
-            fputcsv($handle, []);
-            fputcsv($handle, ['Loai bao cao', $filters['report_period']]);
             fclose($handle);
-        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'X-Notification-Code' => 'ERR_29_03',
+            'X-Notification-Message' => rawurlencode('Tải xuống tệp danh sách đối soát thanh toán định dạng .csv thành công.'),
+        ]);
     }
 
     private function filters(Request $request): array
@@ -215,6 +488,11 @@ class PaymentController extends Controller
             ->orderBy('room_number')
             ->get()
             ->map(function (Room $room) use ($filters) {
+                $total = (int) $room->price + self::SERVICE_FEE;
+                $cleanMonth = str_replace('-', '', $filters['billing_month']);
+                $addInfo = rawurlencode("Thanh toan P{$room->room_number} T{$cleanMonth}");
+                $vietqrUrl = "https://img.vietqr.io/image/MB-999988880001-compact2.png?amount={$total}&addInfo={$addInfo}&accountName=TRAN%20VAN%20HOANG";
+
                 return (object) [
                     'id' => null,
                     'room_id' => $room->id,
@@ -231,9 +509,13 @@ class PaymentController extends Controller
                     'water_usage' => 0,
                     'water_amount' => 0,
                     'service_amount' => self::SERVICE_FEE,
-                    'total_amount' => (int) $room->price + self::SERVICE_FEE,
+                    'total_amount' => $total,
+                    'paid_amount' => 0,
+                    'remaining_debt' => $total,
                     'payment_date' => null,
                     'payment_method' => null,
+                    'transaction_ref' => null,
+                    'vietqr_url' => $vietqrUrl,
                 ];
             });
     }
@@ -246,11 +528,20 @@ class PaymentController extends Controller
         $electricityAmount = $electricityUsage * (int) $record->electricity_price;
         $waterAmount = $waterUsage * (int) $record->water_price;
         $labels = $this->statusLabels();
+        $totalAmount = $roomAmount + $electricityAmount + $waterAmount + self::SERVICE_FEE;
+
+        $roomNumber = $record->room->room_number ?? ('#' . $record->room_id);
+        $cleanMonth = str_replace('-', '', $record->billing_month);
+        $addInfo = rawurlencode("Thanh toan P{$roomNumber} T{$cleanMonth}");
+        $vietqrUrl = "https://img.vietqr.io/image/MB-999988880001-compact2.png?amount={$totalAmount}&addInfo={$addInfo}&accountName=TRAN%20VAN%20HOANG";
+
+        $paidAmount = $record->status === 'paid' ? $totalAmount : 0;
+        $remainingDebt = $record->status === 'paid' ? 0 : $totalAmount;
 
         return (object) [
             'id' => $record->id,
             'room_id' => $record->room_id,
-            'room_number' => $record->room->room_number ?? 'N/A',
+            'room_number' => $roomNumber,
             'building_name' => $record->room->building->name ?? 'Chưa có tòa nhà',
             'resident_name' => optional($record->room->residents->first())->name ?? 'Chưa gán cư dân',
             'billing_month' => $record->billing_month,
@@ -263,9 +554,13 @@ class PaymentController extends Controller
             'water_usage' => $waterUsage,
             'water_amount' => $waterAmount,
             'service_amount' => self::SERVICE_FEE,
-            'total_amount' => $roomAmount + $electricityAmount + $waterAmount + self::SERVICE_FEE,
+            'total_amount' => $totalAmount,
+            'paid_amount' => $paidAmount,
+            'remaining_debt' => $remainingDebt,
             'payment_date' => $record->payment_date,
             'payment_method' => $record->payment_method,
+            'transaction_ref' => $record->transaction_ref ?? null,
+            'vietqr_url' => $vietqrUrl,
         ];
     }
 
@@ -344,15 +639,20 @@ class PaymentController extends Controller
 
     private function currentTenantId(): int
     {
-        $tenantId = Auth::user()?->tenant_id;
+        // Ưu tiên scoped_tenant_id từ middleware tenant.scope
+        $scopedTenantId = request()->attributes->get('scoped_tenant_id');
+        if ($scopedTenantId) {
+            return (int) $scopedTenantId;
+        }
 
+        $tenantId = Auth::user()?->tenant_id;
         if ($tenantId) {
             return (int) $tenantId;
         }
 
         $fallbackTenantId = Tenant::query()->value('id');
         if (!$fallbackTenantId) {
-            abort(404, 'Khong tim thay tenant de hien thi thanh toan.');
+            abort(404, 'Không tìm thấy cơ sở (tenant) để hiển thị thanh toán.');
         }
 
         return (int) $fallbackTenantId;

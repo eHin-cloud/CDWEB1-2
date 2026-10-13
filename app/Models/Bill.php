@@ -21,7 +21,8 @@ class Bill extends Model
         'total_amount',
         'status',
         'payment_date',
-        'vietqr_url'
+        'vietqr_url',
+        'transaction_ref',
     ];
 
     protected $casts = [

@@ -183,8 +183,6 @@ Route::middleware('admin')->group(function () {
         ]);
     });
 
-    Route::get('/smartroom/admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
-    Route::post('/smartroom/admin/payments/{payment}', [PaymentController::class, 'update'])->name('admin.payments.update');
     Route::post('/smartroom/admin/utility', [AdminDashboardController::class, 'storeUtility'])->name('smartroom.admin.utility.store');
     Route::post('/smartroom/admin/utility/bulk', [AdminDashboardController::class, 'storeUtilityBulk'])->name('smartroom.admin.utility.bulk_store');
     Route::post('/smartroom/admin/resident', [AdminDashboardController::class, 'storeResident'])->name('smartroom.admin.resident.store');
@@ -210,7 +208,6 @@ Route::middleware('admin')->group(function () {
         Route::get('/smartroom/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
         Route::post('/smartroom/admin/reports/transactions', [ReportController::class, 'storeTransaction'])->name('admin.reports.transaction.store');
         Route::get('/smartroom/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity_logs.index');
-        Route::get('/smartroom/admin/payments/export', [PaymentController::class, 'export'])->name('admin.payments.export');
         Route::delete('/smartroom/admin/resident/{id}', [AdminDashboardController::class, 'deleteResident'])->name('smartroom.admin.resident.delete');
         Route::post('/smartroom/admin/utility/auto-remind', [AdminDashboardController::class, 'autoRemindUtilities'])->name('smartroom.admin.utility.auto_remind');
         Route::post('/smartroom/admin/notifications/contracts', [AdminDashboardController::class, 'notifyContracts'])->name('smartroom.admin.notifications.contracts');
@@ -291,7 +288,14 @@ Route::middleware('admin')->group(function () {
 Route::middleware(['auth', 'tenant.scope'])->group(function () {
     Route::get('/smartroom/admin/residents', [ResidentManagementController::class, 'index'])->name('admin.residents.index');
     Route::post('/smartroom/admin/residents/store', [ResidentManagementController::class, 'store'])->name('admin.residents.store');
-    Route::post('/smartroom/admin/residents', [ResidentManagementController::class, 'store'])->name('admin.residents.store.direct');
+});
+
+// FEAT_29_PAYMENTS: QUẢN LÝ THANH TOÁN & ĐỐI SOÁT CÔNG NỢ (PAYMENT MANAGEMENT) - HUỲNH VĂN VĨNH EM
+Route::middleware(['auth', 'tenant.scope'])->group(function () {
+    Route::get('/smartroom/admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
+    Route::post('/smartroom/admin/payments/confirm', [PaymentController::class, 'confirmPayment'])->name('admin.payments.confirm');
+    Route::post('/smartroom/admin/payments/{payment}', [PaymentController::class, 'update'])->name('admin.payments.update');
+    Route::get('/smartroom/admin/payments/export', [PaymentController::class, 'export'])->name('admin.payments.export');
 });
 
 // TÍNH NĂNG 18: PHÂN HỆ LỄ TÂN & BUỒNG PHÒNG (FEAT_18_HOUSEKEEPING_FRONTDESK)

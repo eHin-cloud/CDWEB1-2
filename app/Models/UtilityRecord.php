@@ -20,6 +20,7 @@ class UtilityRecord extends Model
         'status',
         'payment_date',
         'payment_method',
+        'transaction_ref',
     ];
 
     protected $casts = [
