@@ -117,69 +117,113 @@
                        <i class="fa-solid fa-star text-[10px]"></i> <span>{{ $room['rating'] }}</span>
                        
                        <!-- Popover Rating Breakdown -->
-                       <div class="rating-popover absolute bottom-full right-0 mb-3 w-64 bg-[#0b0f19]/95 border border-slate-800 p-4 rounded-2xl shadow-2xl opacity-0 invisible group-hover/rating:opacity-100 group-hover/rating:visible transition-all duration-300 transform translate-y-2 group-hover/rating:translate-y-0 z-30 pointer-events-none text-left">
-                           <div class="flex items-center justify-between border-b border-slate-800/60 pb-2 mb-3">
-                               <h4 class="text-[10px] font-extrabold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
-                                   <i class="fa-solid fa-chart-simple text-teal-400"></i>
-                                   Điểm đánh giá thực tế
-                               </h4>
-                               <span class="text-[10px] text-slate-500 font-bold">{{ $room['rating'] }}/5</span>
-                           </div>
-                           
-                           <div class="space-y-3">
-                               <!-- An ninh -->
-                               <div>
-                                   <div class="flex justify-between items-center mb-1">
-                                       <span class="text-[10px] text-slate-400 font-bold">An ninh & Trật tự</span>
-                                       <div class="flex items-center gap-0.5 text-[8px] text-teal-400">
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-regular fa-star text-slate-700"></i>
-                                       </div>
-                                   </div>
-                                   <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                                       <div class="h-full bg-teal-500 rounded-full" style="width: 80%"></div>
-                                   </div>
-                               </div>
-                               
-                               <!-- Chủ nhà -->
-                               <div>
-                                   <div class="flex justify-between items-center mb-1">
-                                       <span class="text-[10px] text-slate-400 font-bold">Chủ nhà & Hỗ trợ</span>
-                                       <div class="flex items-center gap-0.5 text-[8px] text-teal-400">
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                       </div>
-                                   </div>
-                                   <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                                       <div class="h-full bg-teal-500 rounded-full" style="width: 100%"></div>
-                                   </div>
-                               </div>
-                               
-                               <!-- Giá cả & Điện nước -->
-                               <div>
-                                   <div class="flex justify-between items-center mb-1">
-                                       <span class="text-[10px] text-slate-400 font-bold">Giá cả & Điện nước</span>
-                                       <div class="flex items-center gap-0.5 text-[8px] text-teal-400">
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star"></i>
-                                           <i class="fa-solid fa-star-half-stroke"></i>
-                                       </div>
-                                   </div>
-                                   <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                                       <div class="h-full bg-teal-500 rounded-full" style="width: 90%"></div>
-                                   </div>
-                               </div>
-                           </div>
-                           
-                           <!-- Arrow Pointing Down -->
+                        @php
+                            $renderStarItem = function($scoreVal) {
+                                $v = floatval($scoreVal);
+                                $full = (int) floor($v);
+                                $dec = $v - $full;
+                                $half = ($dec >= 0.25 && $dec < 0.75) ? 1 : 0;
+                                if ($dec >= 0.75) {
+                                    $full += 1;
+                                }
+                                $empty = max(0, 5 - $full - $half);
+                                $pct = min(100, max(0, round(($v / 5) * 100)));
+                                return [
+                                    'full' => $full,
+                                    'half' => $half,
+                                    'empty' => $empty,
+                                    'percent' => $pct,
+                                    'score' => number_format($v, 1)
+                                ];
+                            };
+                            $secItem = $renderStarItem($room['rating_security'] ?? $room['rating']);
+                            $landItem = $renderStarItem($room['rating_landlord'] ?? $room['rating']);
+                            $priceItem = $renderStarItem($room['rating_pricing'] ?? $room['rating']);
+                        @endphp
+                        <div class="rating-popover absolute bottom-full right-0 mb-3 w-64 bg-[#0b0f19]/95 border border-slate-800 p-4 rounded-2xl shadow-2xl opacity-0 invisible group-hover/rating:opacity-100 group-hover/rating:visible transition-all duration-300 transform translate-y-2 group-hover/rating:translate-y-0 z-30 pointer-events-none text-left">
+                            <div class="flex items-center justify-between border-b border-slate-800/60 pb-2 mb-3">
+                                <h4 class="text-[10px] font-extrabold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                                    <i class="fa-solid fa-chart-simple text-teal-400"></i>
+                                    Điểm đánh giá thực tế
+                                </h4>
+                                <span class="text-[10px] text-slate-400 font-bold">{{ $room['rating'] }}/5</span>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <!-- An ninh & Trật tự -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[10px] text-slate-400 font-bold">An ninh & Trật tự</span>
+                                        <div class="flex items-center gap-1">
+                                            <div class="flex items-center gap-0.5 text-[8px] text-teal-400">
+                                                @for($s = 0; $s < $secItem['full']; $s++)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @endfor
+                                                @if($secItem['half'])
+                                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                                @endif
+                                                @for($s = 0; $s < $secItem['empty']; $s++)
+                                                    <i class="fa-regular fa-star text-slate-700"></i>
+                                                @endfor
+                                            </div>
+                                            <span class="text-[8px] text-slate-400 font-bold ml-1">{{ $secItem['score'] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-teal-500 rounded-full transition-all duration-300" style="width: {{ $secItem['percent'] }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Chủ nhà & Hỗ trợ -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[10px] text-slate-400 font-bold">Chủ nhà & Hỗ trợ</span>
+                                        <div class="flex items-center gap-1">
+                                            <div class="flex items-center gap-0.5 text-[8px] text-teal-400">
+                                                @for($s = 0; $s < $landItem['full']; $s++)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @endfor
+                                                @if($landItem['half'])
+                                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                                @endif
+                                                @for($s = 0; $s < $landItem['empty']; $s++)
+                                                    <i class="fa-regular fa-star text-slate-700"></i>
+                                                @endfor
+                                            </div>
+                                            <span class="text-[8px] text-slate-400 font-bold ml-1">{{ $landItem['score'] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-teal-500 rounded-full transition-all duration-300" style="width: {{ $landItem['percent'] }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Giá cả & Điện nước -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[10px] text-slate-400 font-bold">Giá cả & Điện nước</span>
+                                        <div class="flex items-center gap-1">
+                                            <div class="flex items-center gap-0.5 text-[8px] text-teal-400">
+                                                @for($s = 0; $s < $priceItem['full']; $s++)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @endfor
+                                                @if($priceItem['half'])
+                                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                                @endif
+                                                @for($s = 0; $s < $priceItem['empty']; $s++)
+                                                    <i class="fa-regular fa-star text-slate-700"></i>
+                                                @endfor
+                                            </div>
+                                            <span class="text-[8px] text-slate-400 font-bold ml-1">{{ $priceItem['score'] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-teal-500 rounded-full transition-all duration-300" style="width: {{ $priceItem['percent'] }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Arrow Pointing Down -->
                            <div class="absolute top-full right-4 -mt-1.5 w-3 h-3 bg-[#0b0f19] border-r border-b border-slate-800 transform rotate-45"></div>
                        </div>
                    </div>

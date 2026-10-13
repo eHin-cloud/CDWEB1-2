@@ -345,12 +345,24 @@ $rentyRooms = function () {
     $mappedRooms = $rooms->map(function($room) {
         $num = intval($room->room_number);
         
+        $secScore = floatval($room->rating_security ?? 0);
+        $landScore = floatval($room->rating_landlord ?? 0);
+        $priceScore = floatval($room->rating_pricing ?? 0);
+
+        if ($secScore <= 0 || $landScore <= 0 || $priceScore <= 0) {
+            $secScore = round(3.9 + (($num * 3) % 12) / 10, 1);
+            $landScore = round(4.1 + (($num * 7) % 10) / 10, 1);
+            $priceScore = round(3.7 + (($num * 5) % 13) / 10, 1);
+            if ($secScore > 5.0) $secScore = 5.0;
+            if ($landScore > 5.0) $landScore = 5.0;
+            if ($priceScore > 5.0) $priceScore = 5.0;
+        }
+
         $dbReviews = $room->reviews;
         if ($dbReviews->count() > 0) {
             $rating = $dbReviews->avg('rating');
         } else {
-            $rating = 3.6 + (($num * 7) % 15) / 10;
-            if ($rating > 5.0) $rating = 5.0;
+            $rating = round(($secScore + $landScore + $priceScore) / 3, 1);
         }
         
         $distance = 0.4 + (($num * 3) % 12) / 10;
@@ -481,6 +493,9 @@ $rentyRooms = function () {
             'price' => $room->price,
             'status' => $room->status,
             'rating' => number_format($rating, 1),
+            'rating_security' => number_format($secScore, 1),
+            'rating_landlord' => number_format($landScore, 1),
+            'rating_pricing' => number_format($priceScore, 1),
             'distance' => $distance,
             'pets' => $pets ? 'true' : 'false',
             'loft' => $loft ? 'true' : 'false',

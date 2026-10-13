@@ -42,7 +42,10 @@ class Room extends Model
         'image',
         'images',
         'video',
-        'version'
+        'version',
+        'rating_security',
+        'rating_landlord',
+        'rating_pricing'
     ];
 
     protected $casts = [
@@ -50,6 +53,9 @@ class Room extends Model
         'images' => 'array',
         'deposit' => 'integer',
         'price' => 'integer',
+        'rating_security' => 'float',
+        'rating_landlord' => 'float',
+        'rating_pricing' => 'float',
         'inspected_at' => 'datetime',
     ];
 
