@@ -21,6 +21,7 @@ use App\Http\Controllers\HousekeepingFrontdeskController;
 use App\Http\Controllers\SuperadminController;
 use App\Http\Controllers\ResidentManagementController;
 use App\Http\Controllers\RoomReviewReportController;
+use App\Http\Controllers\LandlordDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,7 +115,7 @@ Route::get('/portal', function () {
             return redirect()->route('user.list');
         }
         if ($user->canAccessLandlordDashboard()) {
-            return redirect()->route('smartroom.admin');
+            return redirect()->route('admin.dashboard');
         }
     }
     return redirect()->route('login');
@@ -307,6 +308,12 @@ Route::middleware(['auth', 'tenant.scope'])->group(function () {
     Route::get('/smartroom/admin/residents', [ResidentManagementController::class, 'index'])->name('admin.residents.index');
     Route::post('/smartroom/admin/residents/store', [ResidentManagementController::class, 'store'])->name('admin.residents.store');
     Route::post('/smartroom/admin/residents', [ResidentManagementController::class, 'store'])->name('admin.residents.store.direct');
+});
+
+// FEAT_30_DASHBOARD: BẢNG ĐIỀU KHIỂN THỐNG KÊ TỔNG QUAN PHÒNG & DOANH THU (DASHBOARD) - HUỲNH VĂN VĨNH EM
+Route::middleware(['auth', 'tenant.scope'])->group(function () {
+    Route::get('/smartroom/admin/dashboard', [LandlordDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/smartroom/admin/dashboard/revenue-chart', [LandlordDashboardController::class, 'revenueChart'])->name('admin.dashboard.revenue_chart');
 });
 
 // TÍNH NĂNG 18: PHÂN HỆ LỄ TÂN & BUỒNG PHÒNG (FEAT_18_HOUSEKEEPING_FRONTDESK)
