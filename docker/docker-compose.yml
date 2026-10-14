@@ -1,16 +1,16 @@
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: smartroom_app
     restart: unless-stopped
     ports:
       - "8088:8000"
       - "8085:8085"
     volumes:
-      - .:/var/www/html
-      - ./docker/entrypoint.sh:/usr/local/bin/smartroom-entrypoint:ro
+      - ..:/var/www/html
+      - ./entrypoint.sh:/usr/local/bin/smartroom-entrypoint:ro
       - ./.env.docker:/var/www/html/.env
       - composer_cache:/tmp/composer-cache
     environment:
