@@ -920,40 +920,74 @@ class GoogleMapsRenty {
             }
         });
 
-        if (nearbyCount === 0) {
-            // Nếu không có phòng nào trong 6km, hiện tất cả kèm khoảng cách
-            roomDistances.forEach(item => {
-                item.card.classList.remove('hidden');
-                const bikeMins = Math.max(2, Math.round((item.distKm / 24) * 60 + 2));
-                const walkMins = Math.max(3, Math.round((item.distKm / 4.5) * 60));
-                let badge = item.card.querySelector('.campus-distance-badge');
-                if (!badge) {
-                    badge = document.createElement('div');
-                    badge.className = 'campus-distance-badge w-full my-2 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300 text-xs font-semibold flex items-center justify-between gap-2 transition-all';
-                    const detailsEl = item.card.querySelector('.room-card-content .p-5') || item.card.querySelector('.p-5') || item.card;
-                    const tagsEl = detailsEl.querySelector('.flex-wrap');
-                    if (tagsEl) {
-                        detailsEl.insertBefore(badge, tagsEl);
-                    } else {
-                        detailsEl.appendChild(badge);
-                    }
-                }
-                badge.innerHTML = `
-                    <span class="flex items-center gap-1.5 shrink-0 text-sky-300 font-bold">
-                        <i class="fa-solid fa-graduation-cap text-sky-400"></i> Cách trường:
-                    </span>
-                    <span class="text-white font-extrabold text-right shrink-0">
-                        ${item.distKm.toFixed(1)} km <span class="text-slate-400 font-normal text-[11px]">(${bikeMins}p xe máy / ${walkMins}p đi bộ)</span>
-                    </span>
-                `;
-            });
-            nearbyCount = cards.length;
-        }
+        // Xóa banner Empty State cũ nếu có
+        let existingBanner = document.getElementById('map-empty-state-banner');
+        if (existingBanner) existingBanner.remove();
 
-        // Cập nhật tiêu đề danh sách
         const countEl = document.getElementById('results-count');
-        if (countEl) {
-            countEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${nearbyCount}</span> phòng quanh <span class="text-sky-300">${uni.name.split('(')[0]}</span> (< 6km)`;
+        const roomsGrid = document.getElementById('rooms-grid');
+        const cleanUniName = uni.name.split('(')[0].trim();
+        const radiusKmText = (activeRadius / 1000).toFixed(1);
+
+        if (nearbyCount === 0) {
+            // [ERR_05_02]: Không có phòng trong bán kính chọn
+            // Chuyển vòng quét sang viền đỏ nét đứt cảnh báo theo spec
+            if (this.campusRadiusCircle) {
+                this.campusRadiusCircle.setStyle({
+                    color: '#f43f5e',
+                    fillColor: '#f43f5e',
+                    fillOpacity: 0.16,
+                    dashArray: '8, 8',
+                    weight: 3
+                });
+            }
+
+            if (countEl) {
+                countEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Không tìm thấy phòng trọ nào quanh ${cleanUniName} (< ${radiusKmText} km)</span>`;
+            }
+
+            if (roomsGrid) {
+                const emptyBanner = document.createElement('div');
+                emptyBanner.id = 'map-empty-state-banner';
+                emptyBanner.className = 'w-full my-6 p-6 rounded-3xl bg-slate-900 border-2 border-rose-500/80 text-center shadow-2xl col-span-full animate-fade-in';
+                emptyBanner.innerHTML = `
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-2xl mb-3 shadow-lg">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </div>
+                    <h4 class="text-white font-black text-base mt-2 mb-1.5">Không tìm thấy phòng trọ nào quanh ${cleanUniName}</h4>
+                    <p class="text-slate-300 text-xs mb-4 max-w-md mx-auto leading-relaxed">
+                        Hiện không có phòng trọ nào trong bán kính <span class="text-rose-400 font-bold">&lt; ${radiusKmText} km</span> quanh trường này. Bạn có thể mở rộng bán kính quét, chọn trường đại học khác hoặc chuyển sang cơ sở lưu trú gần bạn.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-2.5">
+                        <button type="button" onclick="applyPresetRadius(6)" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-lg shadow-sky-500/20 inline-flex items-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-expand"></i> Mở rộng 6 km
+                        </button>
+                        <button type="button" onclick="applyPresetRadius(10)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 inline-flex items-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-maximize"></i> Mở rộng 10 km
+                        </button>
+                        <button type="button" onclick="if(typeof clearMapSearchInput==='function'){clearMapSearchInput();}else{location.reload();}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 inline-flex items-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-rotate-left"></i> Xem tất cả phòng
+                        </button>
+                    </div>
+                `;
+                roomsGrid.parentNode.insertBefore(emptyBanner, roomsGrid);
+            }
+        } else {
+            // Có phòng phù hợp -> Vòng quét màu xanh
+            if (this.campusRadiusCircle) {
+                this.campusRadiusCircle.setStyle({
+                    color: '#0284c7',
+                    fillColor: '#38bdf8',
+                    fillOpacity: 0.12,
+                    dashArray: '6, 6',
+                    weight: 2
+                });
+            }
+
+            // Cập nhật tiêu đề danh sách
+            if (countEl) {
+                countEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${nearbyCount}</span> phòng quanh <span class="text-sky-300">${cleanUniName}</span> (< ${radiusKmText} km)`;
+            }
         }
 
         // Xóa tuyến đường nét đứt cũ nếu có
