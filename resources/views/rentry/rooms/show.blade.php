@@ -620,7 +620,7 @@
                             <textarea name="message" id="note" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
                         </div>
                         <button type="submit" id="btnSubmitRequest" name="btnBooking" data-field-name="btnBooking" 
-                            class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 cursor-pointer shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
+                            class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 cursor-pointer shadow-lg shadow-blue-600/25 hover:shadow-blue-600/35' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
                             {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             {{ (($room['status'] ?? 'empty') === 'empty') ? 'Gửi yêu cầu hẹn xem' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
                         </button>
@@ -1243,5 +1243,27 @@
             });
         }
     </script>
+    @if(session('success') && str_contains(session('success'), 'Gửi yêu cầu hẹn xem phòng thành công'))
+    <!-- Modal Popup Cảm Ơn & Xác Nhận Đặt Lịch (Table 61 - ERR_07_05) -->
+    <div id="contact-success-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="w-full max-w-md rounded-3xl bg-[#0a0f1d] border border-emerald-500/30 p-6 md:p-8 shadow-2xl text-center relative overflow-hidden">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-3xl mb-4 shadow-lg shadow-emerald-500/10 animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-extrabold uppercase tracking-widest mb-2">
+                ERR_07_05: Đặt lịch thành công
+            </span>
+            <h3 class="text-xl font-extrabold text-white mt-1">Đã gửi yêu cầu hẹn xem phòng!</h3>
+            <p class="text-xs text-slate-400 mt-2.5 leading-relaxed">
+                Cảm ơn bạn đã quan tâm. Chủ trọ đã nhận được thông tin và sẽ sớm gọi điện tư vấn, sắp xếp lịch đón bạn đến xem phòng thực tế.
+            </p>
+            <div class="mt-6 flex gap-3">
+                <button type="button" onclick="document.getElementById('contact-success-modal').remove()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-600/20 active:scale-95 cursor-pointer">
+                    Tôi đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </body>
 </html>
