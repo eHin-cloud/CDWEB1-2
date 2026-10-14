@@ -305,7 +305,11 @@
                 <span class="login-brand-word login-brand-renty">&amp; Renty</span>
             </span>
         </a>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('renty.user') }}" class="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-emerald-500/60 hover:bg-emerald-500/10 text-slate-200 hover:text-emerald-400 text-xs font-semibold transition-all flex items-center gap-2 shadow-sm group">
+                <i class="fa-solid fa-arrow-left text-xs group-hover:-translate-x-0.5 transition-transform text-emerald-400"></i>
+                <span>Quay lại Renty</span>
+            </a>
             <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                 <i class="fa-solid fa-moon" data-theme-icon></i>
             </button>
@@ -1128,6 +1132,12 @@
                             <div>
                                 <a href="{{ route('landlord.register', ['reset' => 1]) }}" onclick="['input-username', 'input-fullname', 'input-phone', 'input-email', 'input-password'].forEach(id => sessionStorage.removeItem('landlord_reg_' + id)); sessionStorage.removeItem('landlord_reg_method');" class="login-register-link inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold transition-all">
                                     <i class="fa-solid fa-house-chimney-user mr-1.5 text-indigo-300"></i> Dành cho Chủ Trọ: Đăng Ký Hệ Thống Quản Lý
+                                </a>
+                            </div>
+                            <div class="pt-1">
+                                <a href="{{ route('renty.user') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 font-medium transition-colors">
+                                    <i class="fa-solid fa-arrow-left text-[11px]"></i>
+                                    <span>Quay lại sàn thuê trọ Renty</span>
                                 </a>
                             </div>
                         </div>
