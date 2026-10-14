@@ -202,6 +202,9 @@ Route::middleware('admin')->group(function () {
     Route::get('/smartroom/admin/utility/{id}/print', [AdminDashboardController::class, 'printUtility'])->name('smartroom.admin.utility.print');
     Route::post('/smartroom/admin/utility/{id}/notify', [AdminDashboardController::class, 'notifyUtility'])->name('smartroom.admin.utility.notify');
     Route::post('/smartroom/admin/verification/kyc', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.verification.kyc');
+    Route::get('/smartroom/admin/kyc', [LandlordVerificationController::class, 'index'])->name('smartroom.admin.kyc');
+    Route::post('/smartroom/admin/kyc/submit', [LandlordVerificationController::class, 'submitKyc'])->name('smartroom.admin.kyc.submit');
+    Route::get('/smartroom/admin/kyc/status', [LandlordVerificationController::class, 'status'])->name('smartroom.admin.kyc.status');
     Route::post('/smartroom/admin/verification/premium', [LandlordVerificationController::class, 'submitPremium'])->name('smartroom.admin.verification.premium');
     Route::post('/smartroom/admin/ticket/{id}/update', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.ticket.update');
     Route::post('/smartroom/admin/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.tickets.status');

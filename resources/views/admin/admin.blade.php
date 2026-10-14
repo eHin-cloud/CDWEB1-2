@@ -593,7 +593,7 @@
                         });
                     </script>
 
-                    <div class="border-t border-slate-800 pt-6">
+                    <div id="verification-section" class="border-t border-slate-800 pt-6">
                         <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <i class="fa-solid fa-shield-halved text-sky-400"></i> Tiến Trình Xác Minh &amp; Nhận Tiền
                         </h3>
@@ -657,46 +657,58 @@
                             </div>
 
                             @if(($tenant->verification_status ?? 'unverified') === 'kyc_pending')
-                                <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-300">
-                                    <div class="flex items-center gap-2 font-bold text-amber-100">
+                                <div class="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/15 p-4 text-xs text-amber-100 shadow-lg shadow-amber-500/5">
+                                    <div class="flex items-center gap-2 font-bold text-amber-200">
                                         <i class="fa-solid fa-clock"></i>
-                                        Hồ sơ KYC đã gửi, đang chờ quản trị viên hệ thống duyệt.
+                                        Hồ sơ xác minh KYC đã được gửi thành công! Vui lòng chờ Admin duyệt.
                                     </div>
-                                    <p class="mt-2 text-slate-500">Mã hồ sơ: #{{ $kycRequest->id ?? 'N/A' }}. Bạn vẫn có thể tiếp tục thêm phòng và quản lý nhà trọ trong lúc chờ xét duyệt.</p>
+                                    <p class="mt-2 text-slate-300">Mã hồ sơ: #{{ $kycRequest->id ?? 'N/A' }}. Ban quản trị SmartRoom đang thẩm định CCCD và phê duyệt cấp Tích Xanh cho cơ sở của bạn.</p>
                                 </div>
                             @else
-                                <form method="POST" action="{{ route('smartroom.admin.verification.kyc') }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                                <form method="POST" action="{{ route('smartroom.admin.kyc.submit') }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
                                     @csrf
                                     <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                                         <label class="block">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Số CCCD</span>
-                                            <input name="cccd_number" required class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
+                                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Số CCCD 12 số *</span>
+                                            <input name="cccd_number" id="id_card_number" required maxlength="12" placeholder="07920100xxxx" value="{{ old('cccd_number', old('id_card_number', '')) }}" class="w-full rounded-xl border @error('cccd_number') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 focus:border-amber-400 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none">
+                                            @error('cccd_number')
+                                                <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
+                                            @enderror
                                         </label>
                                         <label class="block">
                                             <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ngân hàng</span>
-                                            <input name="bank_name" required value="{{ old('bank_name', $tenant->bank_name ?? 'MB') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
+                                            <input name="bank_name" value="{{ old('bank_name', $tenant->bank_name ?? 'MB') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
                                         </label>
                                         <label class="block">
                                             <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Số tài khoản</span>
-                                            <input name="bank_account_no" required value="{{ old('bank_account_no', $tenant->bank_account_no ?? '') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
+                                            <input name="bank_account_no" value="{{ old('bank_account_no', $tenant->bank_account_no ?? '') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
                                         </label>
                                         <label class="block">
                                             <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tên chủ tài khoản</span>
-                                            <input name="bank_account_name" required value="{{ old('bank_account_name', $tenant->bank_account_name ?? '') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
+                                            <input name="bank_account_name" value="{{ old('bank_account_name', $tenant->bank_account_name ?? '') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
                                         </label>
                                     </div>
 
                                     <label class="block">
-                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">CCCD mặt trước</span>
-                                        <input type="file" name="cccd_front" accept="image/*" required class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ảnh mặt trước *</span>
+                                        <input type="file" name="cccd_front" id="file_front" accept="image/*,.pdf" required class="w-full rounded-xl border @error('cccd_front') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                                        @error('cccd_front')
+                                            <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
+                                        @enderror
                                     </label>
                                     <label class="block">
-                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">CCCD mặt sau</span>
-                                        <input type="file" name="cccd_back" accept="image/*" required class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ảnh mặt sau *</span>
+                                        <input type="file" name="cccd_back" id="file_back" accept="image/*,.pdf" required class="w-full rounded-xl border @error('cccd_back') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                                        @error('cccd_back')
+                                            <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
+                                        @enderror
                                     </label>
                                     <label class="block">
                                         <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ảnh/xác nhận tài khoản NH</span>
-                                        <input type="file" name="bank_account_proof" accept="image/*" required class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                                        <input type="file" name="bank_account_proof" id="file_proof" accept="image/*,.pdf" class="w-full rounded-xl border @error('bank_account_proof') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                                        @error('bank_account_proof')
+                                            <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
+                                        @enderror
                                     </label>
 
                                     <label class="lg:col-span-3 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] leading-5 text-amber-50">
@@ -705,9 +717,9 @@
                                     </label>
 
                                     <div class="lg:col-span-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <p class="text-[11px] leading-5 text-slate-500">Thông tin này chỉ dùng để mở khóa nhận tiền/chuyển khoản. Giấy phép PCCC và ANTT sẽ là bước tích xanh riêng, không bắt buộc lúc này.</p>
-                                        <button type="submit" class="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-amber-400">
-                                            Gửi KYC nhận tiền
+                                        <p class="text-[11px] leading-5 text-slate-500">Thông tin này chỉ dùng để mở khóa nhận tiền/chuyển khoản và cấp Tích Xanh uy tín. Giấy phép PCCC và ANTT là bước nâng cấp Tích xanh toàn diện.</p>
+                                        <button type="submit" id="btnSubmitKYC" class="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-amber-400 transition-colors">
+                                            Gửi hồ sơ kiểm duyệt
                                         </button>
                                     </div>
                                 </form>

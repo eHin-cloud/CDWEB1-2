@@ -387,6 +387,19 @@ class HcmRoomsSeeder extends Seeder
                         'review' => 'Phòng sạch đẹp, ban công thoáng đãng, chủ nhà hỗ trợ tiền nước rất rẻ.',
                         'author' => 'Thanh Thảo (SV IUH)',
                         'rating' => 5
+                    ],
+                    [
+                        'room_number' => 'GV-201',
+                        'floor' => 2,
+                        'status' => 'empty',
+                        'room_type' => 'deluxe',
+                        'price' => 3300000,
+                        'area' => 26,
+                        'amenities' => ['ban công', 'wc', 'máy lạnh', 'gác lửng', 'thú cưng'],
+                        'description' => 'Phòng Deluxe tầng 2 thoáng mát gần ĐH Công Nghiệp TP.HCM, có ban công rộng rãi, máy lạnh Inverter.',
+                        'review' => 'Phòng mới xây rất sạch sẽ và an ninh, ban công thoáng đón gió.',
+                        'author' => 'Minh Triết (SV IUH)',
+                        'rating' => 5
                     ]
                 ]
             ],

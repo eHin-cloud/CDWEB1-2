@@ -9,6 +9,7 @@ use App\Support\SensitiveData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class LandlordVerificationController extends Controller
 {
@@ -18,27 +19,68 @@ class LandlordVerificationController extends Controller
     {
     }
 
+    public function index()
+    {
+        return redirect()->to(route('smartroom.admin') . '#verification-section');
+    }
+
     public function submitKyc(Request $request)
     {
         $user = Auth::user();
         $tenant = Tenant::findOrFail($user->tenant_id);
 
         if (in_array($tenant->verification_status, self::PAYMENT_VERIFIED_STATUSES, true)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Hồ sơ KYC của bạn đã được xác minh.',
+                ]);
+            }
             return back()->with('success', 'Hồ sơ KYC của bạn đã được xác minh.');
         }
 
-        $validated = $request->validate([
-            'cccd_number' => 'required|string|min:9|max:20',
-            'bank_name' => 'required|string|max:80',
-            'bank_account_no' => 'required|string|min:6|max:40',
-            'bank_account_name' => 'required|string|max:120',
-            'cccd_front' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'cccd_back' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'bank_account_proof' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'admin_review_consent' => 'accepted',
-        ]);
+        // Chuẩn hóa alias các trường đầu vào theo chuẩn đặc tả FEAT_09_KYC
+        $fileFront = $request->file('cccd_front') ?? $request->file('front_image') ?? $request->file('file_front');
+        $fileBack = $request->file('cccd_back') ?? $request->file('back_image') ?? $request->file('file_back');
+        $fileProof = $request->file('bank_account_proof') ?? $request->file('holding_image');
 
-        DB::transaction(function () use ($request, $validated, $user, $tenant) {
+        $data = $request->all();
+        $data['cccd_number'] = $request->input('cccd_number') ?? $request->input('id_card_number');
+        $data['cccd_front'] = $fileFront;
+        $data['cccd_back'] = $fileBack;
+        $data['bank_account_proof'] = $fileProof;
+
+        $rules = [
+            'cccd_number' => ['required', 'regex:/^[0-9]{12}$/'],
+            'cccd_front' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+            'cccd_back' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+            'bank_account_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+            'bank_name' => ['nullable', 'string', 'max:80'],
+            'bank_account_no' => ['nullable', 'string', 'min:6', 'max:40'],
+            'bank_account_name' => ['nullable', 'string', 'max:120'],
+            'admin_review_consent' => ['nullable'],
+        ];
+
+        $messages = [
+            'cccd_number.required' => 'Vui lòng nhập số Căn cước công dân của chủ cơ sở.', // ERR_09_01
+            'cccd_number.regex' => 'Số Căn cước công dân phải gồm chính xác 12 chữ số.', // ERR_09_02
+            'cccd_front.required' => 'Vui lòng tải lên hình ảnh chụp mặt trước Căn cước công dân.', // ERR_09_03
+            'cccd_front.file' => 'Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.', // ERR_09_05
+            'cccd_front.mimes' => 'Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.', // ERR_09_05
+            'cccd_front.max' => 'Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).', // ERR_09_06
+            'cccd_back.required' => 'Vui lòng tải lên hình ảnh chụp mặt sau Căn cước công dân.', // ERR_09_04
+            'cccd_back.file' => 'Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.', // ERR_09_05
+            'cccd_back.mimes' => 'Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.', // ERR_09_05
+            'cccd_back.max' => 'Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).', // ERR_09_06
+            'bank_account_proof.mimes' => 'Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.', // ERR_09_05
+            'bank_account_proof.max' => 'Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).', // ERR_09_06
+        ];
+
+        $validated = Validator::make($data, $rules, $messages)->validate();
+
+        $verification = null;
+
+        DB::transaction(function () use ($request, $validated, $user, $tenant, $fileFront, $fileBack, $fileProof, &$verification) {
             LandlordVerificationRequest::where('tenant_id', $tenant->id)
                 ->where('type', 'kyc')
                 ->where('status', 'pending')
@@ -59,11 +101,11 @@ class LandlordVerificationController extends Controller
             ]);
 
             $directory = 'landlord-verifications/' . $tenant->id;
-            $documents = [
-                'cccd_front' => $request->file('cccd_front'),
-                'cccd_back' => $request->file('cccd_back'),
-                'bank_account_proof' => $request->file('bank_account_proof'),
-            ];
+            $documents = array_filter([
+                'cccd_front' => $fileFront,
+                'cccd_back' => $fileBack,
+                'bank_account_proof' => $fileProof,
+            ]);
 
             foreach ($documents as $type => $file) {
                 $payload = $this->documents->store($file, $directory, $type);
@@ -74,18 +116,90 @@ class LandlordVerificationController extends Controller
                 $verification->documents()->create($payload);
             }
 
-            $tenant->update([
+            $updateData = [
                 'verification_status' => 'kyc_pending',
                 'onboarding_step' => max((int) $tenant->onboarding_step, 2),
-                'bank_name' => $validated['bank_name'],
-                'bank_account_no' => $validated['bank_account_no'],
-                'bank_account_name' => mb_strtoupper($validated['bank_account_name']),
-            ]);
+            ];
+
+            if (!empty($validated['bank_name'])) {
+                $updateData['bank_name'] = $validated['bank_name'];
+            }
+            if (!empty($validated['bank_account_no'])) {
+                $updateData['bank_account_no'] = $validated['bank_account_no'];
+            }
+            if (!empty($validated['bank_account_name'])) {
+                $updateData['bank_account_name'] = mb_strtoupper($validated['bank_account_name']);
+            }
+
+            $tenant->update($updateData);
         });
+
+        $successMsg = 'Hồ sơ xác minh KYC đã được gửi thành công! Vui lòng chờ Admin duyệt.'; // ERR_09_07
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'data' => [
+                    'verification_id' => $verification?->id,
+                    'status' => 'kyc_pending',
+                ],
+            ]);
+        }
 
         return redirect()
             ->route('smartroom.admin')
-            ->with('success', 'Đã gửi hồ sơ xác minh nhận tiền. SmartRoom sẽ kiểm tra và phản hồi sớm.');
+            ->with('success', $successMsg);
+    }
+
+    public function status(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+        $tenant = $user->tenant_id ? Tenant::find($user->tenant_id) : null;
+
+        $latestKyc = $tenant ? LandlordVerificationRequest::where('tenant_id', $tenant->id)
+            ->where('type', 'kyc')
+            ->latest('id')
+            ->first() : null;
+
+        $latestPremium = $tenant ? LandlordVerificationRequest::where('tenant_id', $tenant->id)
+            ->where('type', 'premium')
+            ->latest('id')
+            ->first() : null;
+
+        $data = [
+            'tenant_id' => $tenant?->id,
+            'verification_status' => $tenant?->verification_status ?? 'unverified',
+            'listing_badge' => $tenant?->listing_badge,
+            'current_request' => $latestKyc ? [
+                'id' => $latestKyc->id,
+                'type' => $latestKyc->type,
+                'status' => $latestKyc->status,
+                'created_at' => $latestKyc->created_at?->toISOString(),
+                'reviewed_at' => $latestKyc->reviewed_at?->toISOString(),
+                'reject_reason' => $latestKyc->reject_reason,
+            ] : null,
+            'premium_request' => $latestPremium ? [
+                'id' => $latestPremium->id,
+                'type' => $latestPremium->type,
+                'status' => $latestPremium->status,
+                'created_at' => $latestPremium->created_at?->toISOString(),
+                'reviewed_at' => $latestPremium->reviewed_at?->toISOString(),
+                'reject_reason' => $latestPremium->reject_reason,
+            ] : null,
+        ];
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        }
+
+        return redirect()->route('smartroom.admin')->with('kyc_status', $data);
     }
 
     public function submitPremium(Request $request)
