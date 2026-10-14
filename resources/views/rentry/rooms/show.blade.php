@@ -631,20 +631,22 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('renty.contact_request.store') }}" method="POST" class="space-y-3">
+                    <form action="{{ route('renty.contact_request.store') }}" method="POST" id="formContactRequest" novalidate class="space-y-3">
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                         <div>
-                            <input type="text" name="name" id="customer_name" required value="{{ $defaultName }}" placeholder="Họ và tên của bạn *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            @if($errors->has('name') || $errors->has('customer_name'))
-                                <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('name') ?: $errors->first('customer_name') }}</p>
-                            @endif
+                            <input type="text" name="name" id="customer_name" value="{{ $defaultName }}" placeholder="Họ và tên của bạn *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <p id="err_customer_name" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('name') || $errors->has('customer_name') ? '' : 'hidden' }}">
+                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                <span>{{ $errors->first('name') ?: $errors->first('customer_name') ?: 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.' }}</span>
+                            </p>
                         </div>
                         <div>
-                            <input type="tel" name="phone" id="customer_phone" required value="{{ $defaultPhone }}" placeholder="Số điện thoại liên hệ *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            @if($errors->has('phone') || $errors->has('customer_phone'))
-                                <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('phone') ?: $errors->first('customer_phone') }}</p>
-                            @endif
+                            <input type="tel" name="phone" id="customer_phone" value="{{ $defaultPhone }}" placeholder="Số điện thoại liên hệ *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <p id="err_customer_phone" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('phone') || $errors->has('customer_phone') ? '' : 'hidden' }}">
+                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                <span>{{ $errors->first('phone') ?: $errors->first('customer_phone') ?: 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.' }}</span>
+                            </p>
                         </div>
                         <div>
                             <input type="datetime-local" 
@@ -654,11 +656,12 @@
                                    min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
                                    onclick="this.showPicker ? this.showPicker() : null"
                                    style="color-scheme: dark;" 
-                                   class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
+                                   class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
                                    {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            @if($errors->has('appointment_time'))
-                                <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('appointment_time') }}</p>
-                            @endif
+                            <p id="err_appointment_time" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('appointment_time') ? '' : 'hidden' }}">
+                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                <span>{{ $errors->first('appointment_time') ?: 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.' }}</span>
+                            </p>
                         </div>
                         <div>
                             <textarea name="message" id="note" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
@@ -1285,6 +1288,91 @@
                     document.getElementById('err_report_reason')?.classList.add('hidden');
                 }
             });
+
+            // FEAT_07_CONTACT: Validation giao diện bôi đỏ viền & thông báo lỗi chuẩn Table 61
+            const formContact = document.getElementById('formContactRequest');
+            if (formContact) {
+                const inputName = document.getElementById('customer_name');
+                const inputPhone = document.getElementById('customer_phone');
+                const inputTime = document.getElementById('appointment_time');
+
+                const errName = document.getElementById('err_customer_name');
+                const errPhone = document.getElementById('err_customer_phone');
+                const errTime = document.getElementById('err_appointment_time');
+
+                function showFieldError(input, errorEl, msg) {
+                    if (!input) return;
+                    input.classList.remove('border-slate-800');
+                    input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
+                    if (errorEl) {
+                        errorEl.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px]"></i> <span>${msg}</span>`;
+                        errorEl.classList.remove('hidden');
+                    }
+                }
+
+                function clearFieldError(input, errorEl) {
+                    if (!input) return;
+                    input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
+                    input.classList.add('border-slate-800');
+                    if (errorEl) {
+                        errorEl.classList.add('hidden');
+                    }
+                }
+
+                inputName?.addEventListener('input', () => clearFieldError(inputName, errName));
+                inputPhone?.addEventListener('input', () => clearFieldError(inputPhone, errPhone));
+                inputTime?.addEventListener('input', () => clearFieldError(inputTime, errTime));
+                inputTime?.addEventListener('change', () => clearFieldError(inputTime, errTime));
+
+                formContact.addEventListener('submit', function(e) {
+                    let hasErr = false;
+
+                    // 1. Khách để trống họ và tên (ERR_07_01)
+                    const nameVal = (inputName?.value || '').trim();
+                    if (!nameVal) {
+                        showFieldError(inputName, errName, 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.');
+                        if (!hasErr) inputName?.focus();
+                        hasErr = true;
+                    } else {
+                        clearFieldError(inputName, errName);
+                    }
+
+                    // 2. Khách để trống số điện thoại (ERR_07_02 & ERR_07_03)
+                    const phoneVal = (inputPhone?.value || '').trim();
+                    const cleanPhone = phoneVal.replace(/[^0-9]/g, '');
+                    if (!phoneVal) {
+                        showFieldError(inputPhone, errPhone, 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.');
+                        if (!hasErr) inputPhone?.focus();
+                        hasErr = true;
+                    } else if (cleanPhone.length !== 10 || !/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
+                        showFieldError(inputPhone, errPhone, 'Số điện thoại liên hệ phải có chính xác 10 chữ số.');
+                        if (!hasErr) inputPhone?.focus();
+                        hasErr = true;
+                    } else {
+                        clearFieldError(inputPhone, errPhone);
+                    }
+
+                    // 3. Chọn ngày hẹn trong quá khứ (ERR_07_04)
+                    const timeVal = inputTime?.value;
+                    if (timeVal) {
+                        const selectedDate = new Date(timeVal);
+                        const now = new Date();
+                        if (selectedDate <= now) {
+                            showFieldError(inputTime, errTime, 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.');
+                            if (!hasErr) inputTime?.focus();
+                            hasErr = true;
+                        } else {
+                            clearFieldError(inputTime, errTime);
+                        }
+                    }
+
+                    if (hasErr) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+            }
         }
     </script>
     @if(session('success') && str_contains(session('success'), 'Gửi yêu cầu hẹn xem phòng thành công'))
