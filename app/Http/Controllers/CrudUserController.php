@@ -34,7 +34,7 @@ class CrudUserController extends Controller
                 $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
                 $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
-                $user->canAccessLandlordDashboard() => route('smartroom.admin'),
+                $user->canAccessLandlordDashboard() => route('admin.dashboard'),
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),
             };
@@ -84,7 +84,7 @@ class CrudUserController extends Controller
                 $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
                 $user->isAdmin() => route('user.list'),
                 $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
-                $user->canAccessLandlordDashboard() => route('smartroom.admin'),
+                $user->canAccessLandlordDashboard() => route('admin.dashboard'),
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),
             };
