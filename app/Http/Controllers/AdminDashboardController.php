@@ -1832,9 +1832,22 @@ class AdminDashboardController extends Controller
             return redirect()->back()->withErrors(['phone' => $errorMsg, 'customer_phone' => $errorMsg])->withInput();
         }
 
-        // 4. Chọn ngày hẹn trong quá khứ (ERR_07_04)
+        // 4. Kiểm tra bắt buộc chọn ngày hẹn xem phòng & không được là ngày trong quá khứ (ERR_07_04)
         $parsedAppointmentTime = null;
-        if (!empty($appointmentTime)) {
+        if (array_key_exists('appointment_time', $request->all()) || $request->exists('appointment_time')) {
+            if (empty($appointmentTime)) {
+                $errorMsg = 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.';
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'ERR_07_04',
+                        'message' => $errorMsg,
+                        'errors' => ['appointment_time' => [$errorMsg]],
+                    ], 422);
+                }
+                return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
+            }
+
             try {
                 $parsedAppointmentTime = \Carbon\Carbon::parse($appointmentTime);
                 if ($parsedAppointmentTime->isPast()) {
@@ -1850,7 +1863,16 @@ class AdminDashboardController extends Controller
                     return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
                 }
             } catch (\Exception $e) {
-                // Invalid datetime
+                $errorMsg = 'Định dạng ngày hẹn xem phòng không hợp lệ.';
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'ERR_07_04',
+                        'message' => $errorMsg,
+                        'errors' => ['appointment_time' => [$errorMsg]],
+                    ], 422);
+                }
+                return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
             }
         }
 

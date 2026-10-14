@@ -133,6 +133,23 @@ class ContactRequestFeature07Test extends TestCase
         ]);
     }
 
+    public function test_err_07_04_rejects_empty_appointment_time(): void
+    {
+        $response = $this->postJson(route('api.renty.contact_requests.store'), [
+            'room_id' => $this->room->id,
+            'customer_name' => 'Nguyễn Văn B',
+            'customer_phone' => '0987654321',
+            'appointment_time' => '',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+            'error_code' => 'ERR_07_04',
+            'message' => 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.',
+        ]);
+    }
+
     public function test_err_07_04_rejects_appointment_time_in_the_past(): void
     {
         $pastTime = Carbon::now()->subDays(1)->format('Y-m-d H:i:s');

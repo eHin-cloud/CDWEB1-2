@@ -660,7 +660,7 @@
                                    {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             <p id="err_appointment_time" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('appointment_time') ? '' : 'hidden' }}">
                                 <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                <span>{{ $errors->first('appointment_time') ?: 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.' }}</span>
+                                <span>{{ $errors->first('appointment_time') ?: 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.' }}</span>
                             </p>
                         </div>
                         <div>
@@ -1288,91 +1288,95 @@
                     document.getElementById('err_report_reason')?.classList.add('hidden');
                 }
             });
+        }
 
-            // FEAT_07_CONTACT: Validation giao diện bôi đỏ viền & thông báo lỗi chuẩn Table 61
-            const formContact = document.getElementById('formContactRequest');
-            if (formContact) {
-                const inputName = document.getElementById('customer_name');
-                const inputPhone = document.getElementById('customer_phone');
-                const inputTime = document.getElementById('appointment_time');
+        // FEAT_07_CONTACT: Validation giao diện bôi đỏ viền & thông báo lỗi chuẩn Table 61
+        const formContact = document.getElementById('formContactRequest');
+        if (formContact) {
+            const inputName = document.getElementById('customer_name');
+            const inputPhone = document.getElementById('customer_phone');
+            const inputTime = document.getElementById('appointment_time');
 
-                const errName = document.getElementById('err_customer_name');
-                const errPhone = document.getElementById('err_customer_phone');
-                const errTime = document.getElementById('err_appointment_time');
+            const errName = document.getElementById('err_customer_name');
+            const errPhone = document.getElementById('err_customer_phone');
+            const errTime = document.getElementById('err_appointment_time');
 
-                function showFieldError(input, errorEl, msg) {
-                    if (!input) return;
-                    input.classList.remove('border-slate-800');
-                    input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
-                    if (errorEl) {
-                        errorEl.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px]"></i> <span>${msg}</span>`;
-                        errorEl.classList.remove('hidden');
-                    }
+            function showFieldError(input, errorEl, msg) {
+                if (!input) return;
+                input.classList.remove('border-slate-800');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
+                if (errorEl) {
+                    errorEl.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px]"></i> <span>${msg}</span>`;
+                    errorEl.classList.remove('hidden');
                 }
-
-                function clearFieldError(input, errorEl) {
-                    if (!input) return;
-                    input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
-                    input.classList.add('border-slate-800');
-                    if (errorEl) {
-                        errorEl.classList.add('hidden');
-                    }
-                }
-
-                inputName?.addEventListener('input', () => clearFieldError(inputName, errName));
-                inputPhone?.addEventListener('input', () => clearFieldError(inputPhone, errPhone));
-                inputTime?.addEventListener('input', () => clearFieldError(inputTime, errTime));
-                inputTime?.addEventListener('change', () => clearFieldError(inputTime, errTime));
-
-                formContact.addEventListener('submit', function(e) {
-                    let hasErr = false;
-
-                    // 1. Khách để trống họ và tên (ERR_07_01)
-                    const nameVal = (inputName?.value || '').trim();
-                    if (!nameVal) {
-                        showFieldError(inputName, errName, 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.');
-                        if (!hasErr) inputName?.focus();
-                        hasErr = true;
-                    } else {
-                        clearFieldError(inputName, errName);
-                    }
-
-                    // 2. Khách để trống số điện thoại (ERR_07_02 & ERR_07_03)
-                    const phoneVal = (inputPhone?.value || '').trim();
-                    const cleanPhone = phoneVal.replace(/[^0-9]/g, '');
-                    if (!phoneVal) {
-                        showFieldError(inputPhone, errPhone, 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.');
-                        if (!hasErr) inputPhone?.focus();
-                        hasErr = true;
-                    } else if (cleanPhone.length !== 10 || !/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
-                        showFieldError(inputPhone, errPhone, 'Số điện thoại liên hệ phải có chính xác 10 chữ số.');
-                        if (!hasErr) inputPhone?.focus();
-                        hasErr = true;
-                    } else {
-                        clearFieldError(inputPhone, errPhone);
-                    }
-
-                    // 3. Chọn ngày hẹn trong quá khứ (ERR_07_04)
-                    const timeVal = inputTime?.value;
-                    if (timeVal) {
-                        const selectedDate = new Date(timeVal);
-                        const now = new Date();
-                        if (selectedDate <= now) {
-                            showFieldError(inputTime, errTime, 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.');
-                            if (!hasErr) inputTime?.focus();
-                            hasErr = true;
-                        } else {
-                            clearFieldError(inputTime, errTime);
-                        }
-                    }
-
-                    if (hasErr) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                    }
-                });
             }
+
+            function clearFieldError(input, errorEl) {
+                if (!input) return;
+                input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
+                input.classList.add('border-slate-800');
+                if (errorEl) {
+                    errorEl.classList.add('hidden');
+                }
+            }
+
+            inputName?.addEventListener('input', () => clearFieldError(inputName, errName));
+            inputPhone?.addEventListener('input', () => clearFieldError(inputPhone, errPhone));
+            inputTime?.addEventListener('input', () => clearFieldError(inputTime, errTime));
+            inputTime?.addEventListener('change', () => clearFieldError(inputTime, errTime));
+
+            formContact.addEventListener('submit', function(e) {
+                let hasErr = false;
+
+                // 1. Khách để trống họ và tên (ERR_07_01)
+                const nameVal = (inputName?.value || '').trim();
+                if (!nameVal) {
+                    showFieldError(inputName, errName, 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.');
+                    if (!hasErr) inputName?.focus();
+                    hasErr = true;
+                } else {
+                    clearFieldError(inputName, errName);
+                }
+
+                // 2. Khách để trống số điện thoại (ERR_07_02 & ERR_07_03)
+                const phoneVal = (inputPhone?.value || '').trim();
+                const cleanPhone = phoneVal.replace(/[^0-9]/g, '');
+                if (!phoneVal) {
+                    showFieldError(inputPhone, errPhone, 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.');
+                    if (!hasErr) inputPhone?.focus();
+                    hasErr = true;
+                } else if (cleanPhone.length !== 10 || !/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
+                    showFieldError(inputPhone, errPhone, 'Số điện thoại liên hệ phải có chính xác 10 chữ số.');
+                    if (!hasErr) inputPhone?.focus();
+                    hasErr = true;
+                } else {
+                    clearFieldError(inputPhone, errPhone);
+                }
+
+                // 3. Kiểm tra bắt buộc chọn ngày hẹn xem phòng & không ở quá khứ (ERR_07_04)
+                const timeVal = (inputTime?.value || '').trim();
+                if (!timeVal) {
+                    showFieldError(inputTime, errTime, 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.');
+                    if (!hasErr) inputTime?.focus();
+                    hasErr = true;
+                } else {
+                    const selectedDate = new Date(timeVal);
+                    const now = new Date();
+                    if (selectedDate <= now) {
+                        showFieldError(inputTime, errTime, 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.');
+                        if (!hasErr) inputTime?.focus();
+                        hasErr = true;
+                    } else {
+                        clearFieldError(inputTime, errTime);
+                    }
+                }
+
+                if (hasErr) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
         }
     </script>
     @if(session('success') && str_contains(session('success'), 'Gửi yêu cầu hẹn xem phòng thành công'))
