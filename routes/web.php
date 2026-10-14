@@ -199,7 +199,11 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/tickets/{id}/status', [AdminDashboardController::class, 'updateTicketStatus'])->name('smartroom.admin.tickets.status');
     Route::get('/smartroom/admin/tickets', [AdminDashboardController::class, 'ticketsIndex'])->name('smartroom.admin.tickets.index');
     Route::get('/smartroom/admin/tickets/poll', [AdminDashboardController::class, 'pollTickets'])->name('smartroom.admin.tickets.poll');
+    Route::get('/smartroom/admin/profile', [AdminDashboardController::class, 'profileView'])->name('smartroom.admin.profile');
     Route::post('/smartroom/admin/profile', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update');
+    Route::post('/smartroom/admin/profile/update', [AdminDashboardController::class, 'updateProfile'])->name('smartroom.admin.profile.update_post');
+    Route::post('/smartroom/admin/profile/upload-avatar', [AdminDashboardController::class, 'uploadAvatar'])->name('smartroom.admin.profile.upload_avatar');
+    Route::post('/api/upload-avatar', [AdminDashboardController::class, 'uploadAvatar'])->name('api.upload_avatar');
 
     Route::middleware('role:landlord')->group(function () {
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');

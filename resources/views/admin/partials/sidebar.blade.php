@@ -318,15 +318,22 @@
 
     <!-- Sidebar Footer (Cố định ở đáy) -->
     <div class="sidebar-footer p-3 border-t border-slate-900 shrink-0 bg-[#0d121f]">
-        <div class="sidebar-user flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800/60">
-            <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-indigo-900/80 to-violet-900/80 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300 text-xs shrink-0 shadow-sm">
-                {{ $userInitials ?: 'AD' }}
+        <a href="javascript:void(0)" onclick="if(typeof switchTab==='function'){switchTab('profile-section')}else{window.location.href='{{ route('smartroom.admin', ['tab' => 'profile-section']) }}'}" class="sidebar-user flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800/60 hover:border-indigo-500/40 transition-colors group cursor-pointer" title="Xem hồ sơ & cài đặt tài khoản">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-indigo-900/80 to-violet-900/80 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300 text-xs shrink-0 shadow-sm overflow-hidden">
+                @if(!empty($user?->avatar))
+                    <img src="{{ $user->avatar_url }}" alt="{{ $userName }}" class="header-avatar-img w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                    <span class="hidden w-full h-full items-center justify-center">{{ $userInitials ?: 'AD' }}</span>
+                @else
+                    <img src="" alt="{{ $userName }}" class="header-avatar-img hidden w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform">
+                    <span class="header-avatar-fallback w-full h-full flex items-center justify-center">{{ $userInitials ?: 'AD' }}</span>
+                @endif
             </div>
-            <div class="sidebar-profile overflow-hidden min-w-0">
-                <h4 class="text-xs font-bold text-slate-200 truncate leading-snug">{{ $userName ?: 'Quản Trị Viên' }}</h4>
+            <div class="sidebar-profile overflow-hidden min-w-0 flex-1">
+                <h4 class="text-xs font-bold text-slate-200 group-hover:text-indigo-300 transition-colors truncate leading-snug">{{ $userName ?: 'Quản Trị Viên' }}</h4>
                 <p class="text-[10px] text-slate-400 truncate leading-tight">{{ $userRoleLabel }}</p>
             </div>
-        </div>
+            <i class="fa-solid fa-angle-right text-[10px] text-slate-600 group-hover:text-indigo-400 transition-colors shrink-0"></i>
+        </a>
         <a href="{{ route('signout') }}" class="sidebar-logout mt-2 w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-rose-400 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/25 transition-all duration-200">
             <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i> <span>Đăng Xuất (Thoát Admin)</span>
         </a>

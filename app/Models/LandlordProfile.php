@@ -34,6 +34,7 @@ class LandlordProfile extends Model
         'verification_method',
         'property_name',
         'property_address',
+        'avatar',
         'status',
         'verification_status',
         'reject_reason',
@@ -64,5 +65,16 @@ class LandlordProfile extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function getAvatarUrlAttribute(): string
+    {
+        if (!empty($this->avatar)) {
+            if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+                return $this->avatar;
+            }
+            return '/storage/' . ltrim($this->avatar, '/');
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name ?? 'Landlord') . '&background=4f46e5&color=fff';
     }
 }
