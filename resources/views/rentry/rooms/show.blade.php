@@ -542,8 +542,12 @@
                 <!-- Landlord Card: Thông tin chủ nhà (Spec UI STT 3 - landlord_info) -->
                 <section id="landlord_info" name="landlord_info" data-field-name="landlord_info" class="tilt-element p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-sm">
                     <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-extrabold text-lg shrink-0 shadow-inner">
-                            <i class="fa-solid fa-user-tie"></i>
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-extrabold text-lg shrink-0 shadow-inner overflow-hidden">
+                            @if(!empty($room['landlord_avatar']))
+                                <img src="{{ $room['landlord_avatar'] }}" alt="{{ $room['landlord_name'] }}" class="w-full h-full object-cover">
+                            @else
+                                <i class="fa-solid fa-user-tie"></i>
+                            @endif
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
@@ -552,6 +556,12 @@
                                     <i class="fa-solid fa-circle-check text-[8px]"></i> KYC
                                 </span>
                             </div>
+                            @if(!empty($room['tenant_name']) && $room['tenant_name'] !== $room['landlord_name'])
+                                <p class="text-[10px] text-slate-400 truncate mt-0.5 flex items-center gap-1">
+                                    <i class="fa-solid fa-building text-[9px] text-indigo-400"></i>
+                                    <span>{{ $room['tenant_name'] }}</span>
+                                </p>
+                            @endif
                             <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
                                 <i class="fa-solid fa-phone text-[10px] text-emerald-400"></i>
                                 <span id="landlord-phone">{{ $room['landlord_phone'] ?? '0396519196' }}</span>

@@ -347,7 +347,7 @@ Route::post('/renty/contact-requests', [AdminDashboardController::class, 'storeC
 
 $rentyRooms = function ($filterEmpty = true) {
     $user = auth()->user();
-    $query = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews']);
+    $query = \App\Models\Room::with(['building', 'tenant.users', 'residents', 'reviews']);
 
     // Nếu người dùng đăng nhập là chủ trọ hoặc quản lý có tenant_id (và không phải Superadmin),
     // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó
@@ -512,6 +512,10 @@ $rentyRooms = function ($filterEmpty = true) {
             ];
         })->all();
         
+        $landlordUser = $tenant?->users?->firstWhere('role', 'landlord') 
+            ?? $tenant?->users?->firstWhere('role_id', 1)
+            ?? $tenant?->users?->first();
+
         return [
             'id' => $room->id,
             'tenant_id' => $room->tenant_id,
@@ -553,8 +557,10 @@ $rentyRooms = function ($filterEmpty = true) {
             'listing_badge' => $listingBadge,
             'trust_badge' => $trustBadge,
             'boost_score' => (int) ($tenant->boost_score ?? 0),
-            'landlord_name' => $tenant?->name ?? 'Chủ nhà trọ Renty',
-            'landlord_phone' => $tenant?->phone ?? '0396519196',
+            'tenant_name' => $tenant?->name,
+            'landlord_name' => $landlordUser?->name ?? $tenant?->name ?? 'Chủ nhà trọ Renty',
+            'landlord_phone' => $landlordUser?->phone ?? $tenant?->phone ?? '0396519196',
+            'landlord_avatar' => $landlordUser?->avatar_url ?? null,
             'reviews' => $reviewsList
         ];
     });
