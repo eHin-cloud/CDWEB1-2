@@ -576,10 +576,7 @@
                     
                     @php
                         $currentUser = Auth::user();
-                        $isRoomOwner = $currentUser && (
-                            ($currentUser->canAccessLandlordDashboard() && $currentUser->tenant_id && $currentUser->tenant_id == ($room['tenant_id'] ?? null))
-                            || $currentUser->isAdmin()
-                        );
+                        $isRoomOwner = $currentUser && $currentUser->canAccessLandlordDashboard() && $currentUser->tenant_id && $currentUser->tenant_id == ($room['tenant_id'] ?? null);
                         $defaultName = old('name', old('customer_name', (!$isRoomOwner && $currentUser && !$currentUser->canAccessLandlordDashboard()) ? $currentUser->name : ''));
                         $defaultPhone = old('phone', old('customer_phone', (!$isRoomOwner && $currentUser && !$currentUser->canAccessLandlordDashboard()) ? $currentUser->phone : ''));
                     @endphp
