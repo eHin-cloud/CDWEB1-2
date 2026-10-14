@@ -28,6 +28,7 @@
             }
         }
     </script>
+    @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
 
     <style>
         body {
@@ -95,6 +96,60 @@
         .toast-success { border-color: rgba(16, 185, 129, 0.5); background: rgba(6, 44, 31, 0.95); }
         .toast-error { border-color: rgba(244, 63, 94, 0.5); background: rgba(54, 10, 20, 0.95); }
         .toast-info { border-color: rgba(99, 102, 241, 0.5); background: rgba(20, 25, 60, 0.95); }
+
+        /* ===== LIGHT MODE STYLING CHO XÁC THỰC OTP KHÁCH THUÊ ===== */
+        html.theme-light body, body.theme-light {
+            background-color: #f1f5f9 !important;
+            background-image: none !important;
+            color: #0f172a !important;
+        }
+        html.theme-light header .text-white, body.theme-light header .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .theme-toggle-button, body.theme-light .theme-toggle-button {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.theme-light .glass-card, body.theme-light .glass-card {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.1) !important;
+            color: #0f172a !important;
+        }
+        html.theme-light h1.text-white, body.theme-light h1.text-white,
+        html.theme-light .glass-card .text-white, body.theme-light .glass-card .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .text-slate-400, body.theme-light .text-slate-400 {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .text-slate-500, body.theme-light .text-slate-500 {
+            color: #334155 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .text-slate-300, body.theme-light .text-slate-300 {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .otp-box, body.theme-light .otp-box {
+            background: #ffffff !important;
+            border: 2px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05) !important;
+        }
+        html.theme-light .otp-box:focus, body.theme-light .otp-box:focus {
+            border-color: #059669 !important;
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15) !important;
+        }
+        html.theme-light .otp-box::placeholder, body.theme-light .otp-box::placeholder {
+            color: #94a3b8 !important;
+            opacity: 0.6 !important;
+        }
+        html.theme-light .ambient-glow {
+            opacity: 0.15 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
@@ -118,6 +173,9 @@
         </a>
 
         <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
+                <i class="fa-solid fa-moon" data-theme-icon></i>
+            </button>
             <a href="{{ route('renty.user') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition-all">
                 <i class="fa-solid fa-compass text-slate-400"></i> Khám Phá Renty
             </a>
@@ -362,7 +420,7 @@
             card.innerHTML = `
                 <i class="fa-solid ${icon} mt-0.5 text-base shrink-0"></i>
                 <div class="flex-grow">
-                    <p class="text-xs font-medium text-slate-200 leading-relaxed">${message}</p>
+                    <p class="text-xs font-medium leading-relaxed toast-message" style="color: #e2e8f0 !important;">${message}</p>
                 </div>
             `;
             container.appendChild(card);

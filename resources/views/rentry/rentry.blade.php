@@ -412,6 +412,29 @@
 
     @include('header.header')
 
+    @if(session('error'))
+        <div class="container mx-auto px-6 pt-4 max-w-6xl">
+            <div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-between gap-3 animate-shake shadow-lg">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-circle-exclamation text-rose-400 text-base shrink-0"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-rose-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+    @endif
+    @if(session('success'))
+        <div class="container mx-auto px-6 pt-4 max-w-6xl">
+            <div class="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-between gap-3 animate-fade-in shadow-lg">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-base shrink-0"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+    @endif
+
     <!-- HERO BENTO GRID & ADVANCED FILTERS -->
     <section id="renty-hero-section" class="container mx-auto px-6 pt-8 pb-8 max-w-6xl relative z-10 overflow-hidden rounded-3xl">
         <!-- Ambient floating particles background -->
@@ -444,15 +467,45 @@
                         </a>
                     </div>
                     
-                    <!-- Integrated Search Bar -->
-                    <div class="relative w-full max-w-2xl mb-4 group/search">
+                    <!-- Integrated Search Bar (FEAT_04_LANDING - STT 1: search_box) -->
+                    <div class="relative w-full max-w-2xl mb-2 group/search" id="hero-search-wrapper">
+                        <label for="hero-search-input" class="sr-only">Khu vực tìm kiếm</label>
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
-                        <div class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
+                        <form onsubmit="submitHeroSearch(event)" class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md transition-all" id="hero-search-box-container">
                             <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
-                            <input type="text" id="hero-search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" class="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-250 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" placeholder="Tìm kiếm theo địa chỉ, khu vực, trường học hoặc tiện ích...">
-                            <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-3 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
+                            <input 
+                                type="text" 
+                                id="hero-search-input" 
+                                name="search_box" 
+                                data-field-name="search_box"
+                                oninput="handleSearchInput(event)" 
+                                onkeyup="handleSearchInput(event)" 
+                                class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" 
+                                placeholder="Nhập quận, huyện, tên đường..."
+                            >
+                            <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-2 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
+                            <button type="submit" id="btn-hero-search-submit" class="mr-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" title="Tìm kiếm">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                <span class="hidden sm:inline">Tìm</span>
+                            </button>
+                        </form>
+
+                        <!-- Thông báo lỗi khi bấm tìm kiếm mà từ khóa rỗng [ERR_04_01] -->
+                        <div id="search-empty-error" class="hidden mt-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-center justify-between gap-2 animate-shake">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-circle-exclamation text-amber-400 shrink-0"></i>
+                                <span id="search-empty-error-text">Vui lòng nhập khu vực, tên đường hoặc trường đại học cần tìm phòng.</span>
+                            </div>
+                        </div>
+
+                        <!-- Thông báo lỗi từ khóa chứa ký tự không hợp lệ [ERR_04_02] -->
+                        <div id="search-invalid-error" class="hidden mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-center justify-between gap-2 animate-shake">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-400 shrink-0"></i>
+                                <span id="search-invalid-error-text">Từ khóa tìm kiếm chứa ký tự không hợp lệ. Hệ thống đã tự động làm sạch.</span>
+                            </div>
                         </div>
 
                         <!-- AI / Smart Search Spell Correction (Did You Mean) Banner -->
@@ -463,6 +516,31 @@
                             </div>
                             <button type="button" onclick="closeSuggestion()" class="text-emerald-400 hover:text-white text-xs px-1 shrink-0">
                                 <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Filter Chips: Tag nhanh (FEAT_04_LANDING - STT 3: tags) -->
+                        <div class="flex items-center gap-1.5 flex-wrap mt-3" id="hero-quick-tags" name="tags" data-field-name="tags">
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mr-0.5 flex items-center gap-1">
+                                <i class="fa-solid fa-tags text-teal-400 text-[10px]"></i> Tag nhanh:
+                            </span>
+                            <button type="button" onclick="applyQuickTag('Gần ĐH Quốc Gia')" class="quick-filter-tag px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer">
+                                🎓 Gần ĐH Quốc Gia
+                            </button>
+                            <button type="button" onclick="applyQuickTag('Studio')" class="quick-filter-tag px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer">
+                                🏢 Studio
+                            </button>
+                            <button type="button" onclick="applyQuickTag('Giờ tự do')" class="quick-filter-tag px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer">
+                                🕒 Giờ tự do
+                            </button>
+                            <button type="button" onclick="applyQuickTag('Cầu Giấy')" class="quick-filter-tag px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer">
+                                📍 Cầu Giấy
+                            </button>
+                            <button type="button" onclick="applyQuickTag('Bách Khoa')" class="quick-filter-tag px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer">
+                                🏛️ Bách Khoa
+                            </button>
+                            <button type="button" onclick="applyQuickTag('Thủ Đức')" class="quick-filter-tag px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer">
+                                📍 Thủ Đức
                             </button>
                         </div>
                     </div>
@@ -702,7 +780,7 @@
             <!-- Toast Thông báo Tọa độ ngoài phạm vi [ERR_05_03] -->
             <div id="gm-coord-error-toast" class="hidden absolute top-24 left-1/2 -translate-x-1/2 z-[2000] px-4 py-2 rounded-2xl bg-slate-950/95 border-2 border-rose-500 text-rose-200 text-xs font-bold shadow-2xl flex items-center gap-2.5 transition-all animate-bounce">
                 <i class="fa-solid fa-circle-exclamation text-rose-400 text-base"></i>
-                <span>[ERR_05_03] Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.</span>
+                <span>Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.</span>
             </div>
 
             <!-- Banner Lỗi Tiles Server [ERR_05_04] -->
@@ -713,7 +791,6 @@
                     </span>
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Mã lỗi: ERR_05_04</span>
                             <span class="text-xs font-extrabold text-white">Lỗi kết nối dịch vụ bản đồ số</span>
                         </div>
                         <div class="text-[11px] text-rose-200 mt-0.5">Không thể tải lớp bản đồ số (Tiles Server timeout).</div>
@@ -1003,15 +1080,32 @@
             </button>
         </div>
 
-        <!-- SMART SEARCH EMPTY STATE (ERR_21_04) -->
+        <!-- NETWORK DISCONNECT ERROR BANNER (FEAT_04_LANDING - ERR_04_04) -->
+        <div id="renty-network-error-banner" class="hidden mb-6 p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-xs text-rose-200 flex items-center justify-between gap-4 backdrop-blur-md animate-shake shadow-xl">
+            <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm shrink-0">
+                    <i class="fa-solid fa-wifi"></i>
+                </span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <strong class="text-white text-xs">Mất kết nối máy chủ dữ liệu phòng</strong>
+                    </div>
+                    <p class="text-[11px] text-rose-300 mt-0.5">Không thể nạp danh sách phòng lúc này. Vui lòng kiểm tra lại kết nối.</p>
+                </div>
+            </div>
+            <button type="button" onclick="window.location.reload()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-rotate-right"></i> Bấm để tải lại
+            </button>
+        </div>
+
+        <!-- SMART SEARCH EMPTY STATE (FEAT_04_LANDING - ERR_04_03) -->
         <div id="smart-search-empty-state" class="hidden mb-16 py-16 px-4 text-center rounded-3xl bg-slate-900/30 border border-slate-800/60 backdrop-blur-md">
             <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl shadow-xl">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
-            <h3 class="text-base font-bold text-slate-200 mb-1" id="smart-search-empty-title">Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.</h3>
-            <p class="text-[11px] text-rose-400 font-bold mb-2 tracking-wide flex items-center justify-center gap-1.5" id="smart-search-empty-code">
-                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                <span id="smart-search-empty-code-text">Lỗi: Không tìm thấy kết quả phù hợp (ERR_21_04)</span>
+            <h3 class="text-base font-bold text-slate-200 mb-1" id="smart-search-empty-title">Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.</h3>
+            <p class="text-[11px] text-slate-400 font-medium mb-3 tracking-wide flex items-center justify-center gap-1.5" id="smart-search-empty-code">
+                <span id="smart-search-empty-code-text">Không tìm thấy kết quả phù hợp với yêu cầu tìm kiếm</span>
             </p>
             <!-- Gợi ý từ gõ sai ngay trong khung báo lỗi Empty State -->
             <div id="smart-search-empty-did-you-mean" class="hidden mb-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 inline-flex items-center justify-center gap-2 max-w-md mx-auto animate-fade-in">
@@ -1022,12 +1116,18 @@
                 </button>
             </div>
             <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
-            <button type="button" onclick="resetAllFilters()" id="btnResetFilterEmpty" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2">
-                <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
-            </button>
+            <div class="flex items-center justify-center gap-3">
+                <button type="button" onclick="handleExploreClick(event)" id="btnExploreEmpty" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/25 inline-flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-compass"></i> Khám phá
+                </button>
+                <button type="button" onclick="resetAllFilters()" id="btnResetFilterEmpty" class="px-4 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition-all inline-flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+                </button>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16" id="rooms-grid">
+        <!-- Card Grid: Danh Sách Phòng (FEAT_04_LANDING - STT 2: room_cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16" id="rooms-grid" name="room_cards" data-field-name="room_cards">
             @foreach($rooms as $room)
                 @include('rentry.partials.room_card', ['room' => $room])
             @endforeach
@@ -1712,8 +1812,78 @@
         </div>
     </div>
 
-    <!-- Sync Hero Search Input with Navbar Search Input -->
+    <!-- FEAT_04_LANDING: Script tìm kiếm, Filter Chips và Xử lý Lỗi chuẩn spec -->
     <script>
+        window.submitHeroSearch = function(event) {
+            if (event) event.preventDefault();
+            const heroInput = document.getElementById('hero-search-input');
+            const boxContainer = document.getElementById('hero-search-box-container');
+            const errEmpty = document.getElementById('search-empty-error');
+            const errInvalid = document.getElementById('search-invalid-error');
+            const val = heroInput ? heroInput.value.trim() : '';
+
+            if (!val) {
+                // ERR_04_01: Bấm tìm kiếm khi từ khóa rỗng -> Viền sáng ô tìm kiếm và hiển thị gợi ý
+                if (boxContainer) {
+                    boxContainer.classList.add('border-amber-400', 'ring-2', 'ring-amber-400/40');
+                }
+                if (errEmpty) errEmpty.classList.remove('hidden');
+                if (errInvalid) errInvalid.classList.add('hidden');
+                if (typeof openRentySearchSuggestions === 'function') openRentySearchSuggestions();
+                if (heroInput) heroInput.focus();
+                return;
+            }
+
+            if (errEmpty) errEmpty.classList.add('hidden');
+            if (boxContainer) {
+                boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+            }
+
+            // ERR_04_02: Nhập từ khóa chứa mã độc/ký tự lạ -> Tự động làm sạch
+            if (/[<>{}\$*&^%`~;]/.test(val)) {
+                const cleaned = val.replace(/[<>{}\$*&^%`~;]/g, '').trim();
+                if (heroInput) heroInput.value = cleaned;
+                const navbarInput = document.getElementById('search-input');
+                if (navbarInput) navbarInput.value = cleaned;
+                if (errInvalid) errInvalid.classList.remove('hidden');
+                setTimeout(() => {
+                    if (errInvalid) errInvalid.classList.add('hidden');
+                }, 5000);
+            } else {
+                if (errInvalid) errInvalid.classList.add('hidden');
+            }
+
+            if (typeof filterItems === 'function') {
+                filterItems({ resetPage: true });
+            }
+        };
+
+        window.applyQuickTag = function(tag) {
+            const heroInput = document.getElementById('hero-search-input');
+            const navInput = document.getElementById('search-input');
+            if (heroInput) heroInput.value = tag;
+            if (navInput) navInput.value = tag;
+            
+            const errEmpty = document.getElementById('search-empty-error');
+            if (errEmpty) errEmpty.classList.add('hidden');
+            const boxContainer = document.getElementById('hero-search-box-container');
+            if (boxContainer) boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+
+            if (typeof filterItems === 'function') {
+                filterItems({ resetPage: true });
+            }
+        };
+
+        // Lắng nghe trạng thái mất kết nối mạng (ERR_04_04)
+        window.addEventListener('offline', () => {
+            const banner = document.getElementById('renty-network-error-banner');
+            if (banner) banner.classList.remove('hidden');
+        });
+        window.addEventListener('online', () => {
+            const banner = document.getElementById('renty-network-error-banner');
+            if (banner) banner.classList.add('hidden');
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const navbarInput = document.getElementById('search-input');
             const heroInput = document.getElementById('hero-search-input');
@@ -1727,10 +1897,14 @@
             if (navbarInput && heroInput) {
                 navbarInput.addEventListener('input', () => {
                     syncInputs(navbarInput, heroInput);
+                    const errEmpty = document.getElementById('search-empty-error');
+                    if (errEmpty && navbarInput.value.trim() !== '') errEmpty.classList.add('hidden');
                 });
                 
                 heroInput.addEventListener('input', () => {
                     syncInputs(heroInput, navbarInput);
+                    const errEmpty = document.getElementById('search-empty-error');
+                    if (errEmpty && heroInput.value.trim() !== '') errEmpty.classList.add('hidden');
                     if (typeof filterItems === 'function') {
                         filterItems();
                     }
@@ -1740,7 +1914,6 @@
                     syncInputs(navbarInput, heroInput);
                 });
 
-                // Periodic check for search suggestion updates
                 setInterval(() => {
                     if (navbarInput.value !== heroInput.value) {
                         syncInputs(navbarInput, heroInput);
@@ -2001,7 +2174,6 @@
                     <i class="fa-solid fa-location-crosshairs"></i>
                 </span>
                 <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Mã lỗi: ERR_05_01</span>
                     <h3 class="text-base font-black text-white mt-1">Yêu cầu quyền truy cập vị trí</h3>
                 </div>
             </div>

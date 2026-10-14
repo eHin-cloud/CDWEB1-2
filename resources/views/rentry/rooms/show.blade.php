@@ -176,8 +176,16 @@
         <section class="mb-8">
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div>
-                    <!-- Trust badges row -->
+                    <!-- Trust badges row & Trạng thái phòng -->
                     <div class="flex flex-wrap items-center gap-2 mb-3">
+                        @if(($room['status'] ?? 'empty') !== 'empty')
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-700/80 border border-slate-600 text-[10px] font-black text-slate-200 uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-lock text-[9px] text-slate-400"></i>
+                                <span>ĐÃ THUÊ</span>
+                            </span>
+                        @else
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-extrabold text-emerald-300 uppercase tracking-widest">CÒN TRỐNG</span>
+                        @endif
                         <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-extrabold text-emerald-300 uppercase tracking-widest">{{ $room['media_source_label'] }}</span>
                         <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[9px] font-extrabold text-slate-300 uppercase tracking-widest">Phòng {{ $room['room_number'] }}</span>
                         <span class="px-2.5 py-1 rounded-lg border text-[9px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 shadow-sm {{ $room['trust_badge']['class'] }}">
@@ -192,12 +200,21 @@
                     </p>
                 </div>
                 <div class="text-left md:text-right shrink-0">
-                    <div class="text-3xl md:text-4xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.1)]">{{ number_format($room['price'], 0, ',', '.') }}đ</div>
-                    <div class="text-[11px] font-bold text-slate-500 mt-1.5">/ tháng · {{ $room['rating'] }} ⭐ · {{ $reviewCount }} đánh giá</div>
-                    <button type="button" onclick="openReportModal()" class="mt-3.5 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-350 hover:text-rose-200 text-xs font-bold transition-colors active:scale-95">
-                        <i class="fa-solid fa-flag text-[10px]"></i>
-                        <span>Báo cáo tin đăng</span>
-                    </button>
+                    <div id="lbl_price" name="lbl_price" data-field-name="lbl_price" class="text-3xl md:text-4xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.1)]">
+                        {{ number_format($room['price'], 0, ',', '.') }} đ/tháng
+                    </div>
+                    <div class="text-[11px] font-bold text-slate-500 mt-1.5">Giá thuê niêm yết · {{ $room['rating'] }} ⭐ · {{ $reviewCount }} đánh giá</div>
+                    <div class="mt-3.5 flex items-center gap-2 justify-start md:justify-end flex-wrap">
+                        <!-- Nút sao chép liên kết phòng (ERR_06_04) -->
+                        <button type="button" id="btn-copy-room-link" onclick="copyRoomLink()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-share-nodes text-[11px] text-emerald-400"></i>
+                            <span>Chia sẻ phòng</span>
+                        </button>
+                        <button type="button" onclick="openReportModal()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-350 hover:text-rose-200 text-xs font-bold transition-colors active:scale-95">
+                            <i class="fa-solid fa-flag text-[10px]"></i>
+                            <span>Báo cáo tin</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -205,15 +222,15 @@
         <!-- Main Workspace: Left content, Right sticky cards -->
         <section class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
             <div class="space-y-6">
-                <!-- Bento Gallery Grid (Airbnb Style) -->
-                <div class="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/50">
+                <!-- Bento Gallery Grid (Airbnb Style - img_slider) -->
+                <div id="img_slider" name="img_slider" data-field-name="img_slider" class="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/50">
                     @php
                         $imgCount = count($images);
                     @endphp
                     
                     <!-- Ảnh chính tràn toàn bộ khung -->
                     <button type="button" onclick="openZoomWithIndex(activeImageIndex)" class="tilt-element relative block w-full h-[320px] md:h-[480px] rounded-xl overflow-hidden group text-left">
-                        <img id="main-image" src="{{ $images[0]['url'] ?? $room['cover_image'] }}" alt="{{ $images[0]['label'] ?? 'Ảnh phòng' }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.015]" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80';">
+                        <img id="main-image" src="{{ $images[0]['url'] ?? $room['cover_image'] }}" alt="{{ $images[0]['label'] ?? 'Ảnh phòng' }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.015]" onerror="handleImageError(this)">
                         <span class="media-overlay-label absolute left-4 bottom-4 z-10">
                             <i class="fa-solid fa-camera text-emerald-300 mr-1.5"></i><span id="main-image-label">{{ $images[0]['label'] ?? 'View toàn phòng' }}</span>
                         </span>
@@ -240,7 +257,7 @@
                 <div class="flex gap-2.5 overflow-x-auto py-1.5 px-0.5 custom-scroll">
                     @foreach($images as $index => $image)
                         <button type="button" onclick="selectImage({{ $index }})" title="{{ $image['label'] }}" class="thumb-button shrink-0 relative w-28 h-20 rounded-xl overflow-hidden border {{ $index === 0 ? 'border-emerald-400' : 'border-slate-800' }} hover:border-emerald-500/70 bg-slate-950 transition-all">
-                            <img src="{{ $image['url'] }}" alt="{{ $image['label'] }}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80';">
+                            <img src="{{ $image['url'] }}" alt="{{ $image['label'] }}" class="w-full h-full object-cover" loading="lazy" onerror="handleImageError(this)">
                         </button>
                     @endforeach
                 </div>
@@ -544,20 +561,57 @@
                     </div>
                 </section>
 
-                <!-- Liên hệ & Hẹn lịch xem trọ -->
+                <!-- Landlord Card: Thông tin chủ nhà (Spec UI STT 3 - landlord_info) -->
+                <section id="landlord_info" name="landlord_info" data-field-name="landlord_info" class="tilt-element p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-sm">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-extrabold text-lg shrink-0 shadow-inner">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xs font-extrabold text-slate-100 truncate" id="landlord-name">{{ $room['landlord_name'] ?? 'Chủ nhà trọ Renty' }}</h3>
+                                <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-300 border border-sky-500/25 shrink-0 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-[8px]"></i> KYC
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-phone text-[10px] text-emerald-400"></i>
+                                <span id="landlord-phone">{{ $room['landlord_phone'] ?? '0396519196' }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Liên hệ & Hẹn lịch xem trọ (Spec UI STT 4 - Action Buttons: btnBooking) -->
                 <section class="tilt-element p-6 rounded-2xl bg-slate-900/30 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                     <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-500/30 to-transparent"></div>
                     
                     <h2 class="text-sm font-extrabold text-slate-100 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-phone-volume text-teal-400"></i> Liên hệ xem phòng
+                        <i class="fa-solid fa-phone-volume text-teal-400"></i> Hẹn xem phòng / Liên hệ
                     </h2>
                     
+                    @if(($room['status'] ?? 'empty') !== 'empty')
+                        <!-- Thông báo phòng đã có người thuê (ERR_06_02) -->
+                        <div class="mb-4 p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-300 space-y-1">
+                            <div class="flex items-center gap-2 text-rose-400 font-extrabold">
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Phòng đã có người thuê</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">
+                                Phòng lưu trú này hiện đã có người thuê, tạm ngừng nhận đăng ký.
+                            </p>
+                        </div>
+                    @endif
+
                     <div class="flex gap-2.5 mb-4">
-                        <a href="tel:0396519196" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/15 text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
+                        <a href="{{ (($room['status'] ?? 'empty') === 'empty') ? 'tel:' . ($room['landlord_phone'] ?? '0396519196') : 'javascript:void(0)' }}" 
+                           class="flex-1 py-2.5 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/15' : 'bg-slate-800 opacity-50 cursor-not-allowed' }} text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
                             <i class="fa-solid fa-phone"></i>
                             <span>Gọi điện</span>
                         </a>
-                        <a href="https://zalo.me/0396519196" target="_blank" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-600/15 text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
+                        <a href="{{ (($room['status'] ?? 'empty') === 'empty') ? 'https://zalo.me/' . ($room['landlord_phone'] ?? '0396519196') : 'javascript:void(0)' }}" 
+                           target="{{ (($room['status'] ?? 'empty') === 'empty') ? '_blank' : '_self' }}" 
+                           class="flex-1 py-2.5 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-600/15' : 'bg-slate-800 opacity-50 cursor-not-allowed' }} text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
                             <i class="fa-solid fa-comments"></i>
                             <span>Nhắn Zalo</span>
                         </a>
@@ -567,16 +621,18 @@
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                         <div>
-                            <input type="text" name="name" required value="{{ Auth::user()->name ?? '' }}" placeholder="Họ tên của bạn" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors">
+                            <input type="text" name="name" required value="{{ Auth::user()->name ?? '' }}" placeholder="Họ tên của bạn" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                         </div>
                         <div>
-                            <input type="tel" name="phone" required value="{{ Auth::user()->phone ?? '' }}" placeholder="Số điện thoại liên hệ" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors">
+                            <input type="tel" name="phone" required value="{{ Auth::user()->phone ?? '' }}" placeholder="Số điện thoại liên hệ" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                         </div>
                         <div>
-                            <textarea name="message" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none"></textarea>
+                            <textarea name="message" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}></textarea>
                         </div>
-                        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 transition-all active:scale-[0.98] mt-1.5">
-                            Gửi yêu cầu tư vấn
+                        <button type="submit" id="btnBooking" name="btnBooking" data-field-name="btnBooking" 
+                            class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 cursor-pointer shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
+                            {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            {{ (($room['status'] ?? 'empty') === 'empty') ? 'Hẹn xem phòng / Liên hệ' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
                         </button>
                     </form>
                 </section>
@@ -943,7 +999,7 @@
             });
         }
 
-        // Toast thông báo
+        // Toast thông báo (Chỉ hiển thị tên lỗi/thông báo theo user rule)
         function showToast(message, isSuccess = true, code = '') {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -958,13 +1014,55 @@
                     <i class="fa-solid ${isSuccess ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'} text-lg"></i>
                     <span>${message}</span>
                 </div>
-                ${code ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded ${isSuccess ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${code}</span>` : ''}
             `;
             container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
+        }
+
+        // Bấm sao chép liên kết phòng (ERR_06_04)
+        function copyRoomLink() {
+            const currentUrl = window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showToast('Đã sao chép liên kết chia sẻ phòng vào bộ nhớ tạm!', true);
+                }).catch(() => {
+                    fallbackCopyUrl(currentUrl);
+                });
+            } else {
+                fallbackCopyUrl(currentUrl);
+            }
+        }
+
+        function fallbackCopyUrl(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Đã sao chép liên kết chia sẻ phòng vào bộ nhớ tạm!', true);
+            } catch (err) {
+                showToast('Không thể sao chép liên kết. Bạn có thể sao chép trực tiếp từ thanh địa chỉ.', false);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Lỗi tải ảnh trong thư viện Gallery -> Tự động nạp ảnh thế mạng (Placeholder Image) mặc định (ERR_06_03)
+        let hasShownImageErrorToast = false;
+        function handleImageError(img) {
+            if (!img) return;
+            img.onerror = null;
+            img.src = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80';
+            if (!hasShownImageErrorToast) {
+                hasShownImageErrorToast = true;
+                showToast('Không thể tải một số ảnh độ phân giải cao của phòng. Đã sử dụng ảnh thay thế.', false);
+            }
         }
 
         // Xử lý gửi Form Đánh giá phòng (Review)

@@ -306,6 +306,103 @@
             transform: translateY(0);
             pointer-events: auto;
         }
+
+        /* ===== LIGHT MODE STYLING CHO ĐĂNG KÝ CHỦ TRỌ ===== */
+        html.theme-light body, body.theme-light {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light header .text-white, body.theme-light header .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .theme-toggle-button, body.theme-light .theme-toggle-button {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.theme-light .glass-panel, body.theme-light .glass-panel {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.1) !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .glass-panel-subtle, body.theme-light .glass-panel-subtle {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.05) !important;
+            color: #0f172a !important;
+        }
+        html.theme-light h1.text-white, body.theme-light h1.text-white,
+        html.theme-light h2.text-white, body.theme-light h2.text-white,
+        html.theme-light h4.text-white, body.theme-light h4.text-white,
+        html.theme-light .glass-panel-subtle .text-white, body.theme-light .glass-panel-subtle .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .text-slate-400, body.theme-light .text-slate-400 {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .text-slate-500, body.theme-light .text-slate-500 {
+            color: #334155 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .text-slate-300, body.theme-light .text-slate-300 {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .onboarding-input, body.theme-light .onboarding-input,
+        html.theme-light .onboarding-textarea, body.theme-light .onboarding-textarea {
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            font-weight: 600 !important;
+        }
+        html.theme-light .onboarding-input:hover, body.theme-light .onboarding-input:hover,
+        html.theme-light .onboarding-textarea:hover, body.theme-light .onboarding-textarea:hover {
+            border-color: #94a3b8 !important;
+            background: #f8fafc !important;
+        }
+        html.theme-light .onboarding-input:focus, body.theme-light .onboarding-input:focus,
+        html.theme-light .onboarding-textarea:focus, body.theme-light .onboarding-textarea:focus {
+            border-color: #4f46e5 !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+        }
+        html.theme-light .onboarding-input::placeholder, body.theme-light .onboarding-input::placeholder,
+        html.theme-light .onboarding-textarea::placeholder, body.theme-light .onboarding-textarea::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        html.theme-light .form-input-icon, body.theme-light .form-input-icon {
+            color: #64748b !important;
+        }
+        html.theme-light .verification-option, body.theme-light .verification-option {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light .verification-option:hover, body.theme-light .verification-option:hover {
+            border-color: #94a3b8 !important;
+        }
+        html.theme-light .verification-option span.text-white, body.theme-light .verification-option span.text-white {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .bg-slate-900\/60, body.theme-light .bg-slate-900\/60 {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light .border-slate-800, body.theme-light .border-slate-800 {
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .auth-pwd-toggle, body.theme-light .auth-pwd-toggle {
+            color: #64748b !important;
+        }
+        html.theme-light .auth-pwd-toggle:hover, body.theme-light .auth-pwd-toggle:hover {
+            color: #0f172a !important;
+        }
+        html.theme-light .ambient-mesh-1, html.theme-light .ambient-mesh-2 {
+            opacity: 0.3 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
@@ -329,6 +426,9 @@
         </a>
 
         <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
+                <i class="fa-solid fa-moon" data-theme-icon></i>
+            </button>
             <a href="{{ route('renty.user') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition-all">
                 <i class="fa-solid fa-compass text-slate-400"></i> Khám Phá Renty
             </a>
@@ -768,9 +868,9 @@
             toast.innerHTML = `
                 <i class="fa-solid ${iconClass} text-lg mt-0.5"></i>
                 <div class="flex-grow">
-                    <p class="text-xs font-semibold text-slate-200 leading-snug">${message}</p>
+                    <p class="text-xs font-semibold leading-snug toast-message" style="color: #e2e8f0 !important;">${message}</p>
                 </div>
-                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white text-xs">
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white text-xs" style="color: #94a3b8;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             `;

@@ -49,6 +49,241 @@
         .email-hint-transition{transition:opacity .25s ease,max-height .25s ease,transform .25s ease,margin .25s ease;overflow:hidden}
         .email-hint-hidden{opacity:0;max-height:0;margin-top:0!important;transform:translateY(-4px);pointer-events:none}
         .email-hint-visible{opacity:1;max-height:48px;margin-top:.375rem!important;transform:translateY(0);pointer-events:auto}
+
+        /* ===== LIGHT MODE STYLING CHO ĐĂNG NHẬP & ĐĂNG KÝ ===== */
+        html.theme-light body, body.theme-light {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .auth-card-modern, body.theme-light .auth-card-modern,
+        html.theme-light .login-card-upgraded, body.theme-light .login-card-upgraded,
+        html.theme-light .register-card-upgraded, body.theme-light .register-card-upgraded {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12) !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .auth-card-modern h2, body.theme-light .auth-card-modern h2,
+        html.theme-light .register-card-header h1, body.theme-light .register-card-header h1,
+        html.theme-light .auth-card-modern .text-white, body.theme-light .auth-card-modern .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .auth-card-modern .text-slate-400, body.theme-light .auth-card-modern .text-slate-400,
+        html.theme-light .auth-card-modern .text-slate-500, body.theme-light .auth-card-modern .text-slate-500,
+        html.theme-light .register-card-header p, body.theme-light .register-card-header p {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .auth-tabs-nav, body.theme-light .auth-tabs-nav {
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        html.theme-light .auth-tab-btn, body.theme-light .auth-tab-btn {
+            color: #475569 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .auth-tab-btn:hover, body.theme-light .auth-tab-btn:hover {
+            color: #0f172a !important;
+            background: rgba(15, 23, 42, 0.05) !important;
+        }
+        html.theme-light .auth-tab-btn.active, body.theme-light .auth-tab-btn.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3) !important;
+        }
+        html.theme-light .auth-input-group label, body.theme-light .auth-input-group label,
+        html.theme-light .register-field label, body.theme-light .register-field label {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .auth-input-field, body.theme-light .auth-input-field,
+        html.theme-light .login-input-control, body.theme-light .login-input-control {
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+        }
+        html.theme-light .auth-input-field:hover, body.theme-light .auth-input-field:hover,
+        html.theme-light .login-input-control:hover, body.theme-light .login-input-control:hover {
+            border-color: #94a3b8 !important;
+            background: #f8fafc !important;
+        }
+        html.theme-light .auth-input-field:focus, body.theme-light .auth-input-field:focus,
+        html.theme-light .login-input-control:focus, body.theme-light .login-input-control:focus {
+            border-color: #4f46e5 !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+        }
+        html.theme-light .auth-input-field::placeholder, body.theme-light .auth-input-field::placeholder,
+        html.theme-light .login-input-control::placeholder, body.theme-light .login-input-control::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+        }
+        html.theme-light .auth-input-icon, body.theme-light .auth-input-icon {
+            color: #64748b !important;
+        }
+        html.theme-light .auth-pwd-toggle, body.theme-light .auth-pwd-toggle {
+            color: #64748b !important;
+        }
+        html.theme-light .auth-pwd-toggle:hover, body.theme-light .auth-pwd-toggle:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+        }
+        html.theme-light .verification-pill, body.theme-light .verification-pill {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light .verification-pill:hover, body.theme-light .verification-pill:hover {
+            border-color: #94a3b8 !important;
+        }
+        html.theme-light .verification-pill span.text-white, body.theme-light .verification-pill span.text-white {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .auth-checkbox-label, body.theme-light .auth-checkbox-label {
+            color: #334155 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light #footer-switch-to-signup, body.theme-light #footer-switch-to-signup,
+        html.theme-light #footer-switch-to-signin, body.theme-light #footer-switch-to-signin {
+            color: #334155 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .login-register-link, body.theme-light .login-register-link {
+            background: #eef2ff !important;
+            border: 1px solid #c7d2fe !important;
+            color: #3730a3 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .login-register-link:hover, body.theme-light .login-register-link:hover {
+            background: #e0e7ff !important;
+            color: #312e81 !important;
+        }
+        html.theme-light .login-visual-panel, body.theme-light .login-visual-panel {
+            background: rgba(255, 255, 255, 0.75) !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light .login-visual-copy h1, body.theme-light .login-visual-copy h1 {
+            color: #0f172a !important;
+        }
+        html.theme-light .login-visual-copy p, body.theme-light .login-visual-copy p {
+            color: #334155 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .login-visual-stats, body.theme-light .login-visual-stats {
+            background: transparent !important;
+            border: none !important;
+        }
+        html.theme-light .login-visual-stats span, body.theme-light .login-visual-stats span {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+            color: #475569 !important;
+        }
+        html.theme-light .login-visual-stats strong, body.theme-light .login-visual-stats strong {
+            color: #0f172a !important;
+        }
+        html.theme-light .login-3d-controls-panel, body.theme-light .login-3d-controls-panel {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .login-3d-controls-panel span, body.theme-light .login-3d-controls-panel span {
+            color: #334155 !important;
+        }
+        html.theme-light .login-3d-controls-panel button.bg-slate-900, body.theme-light .login-3d-controls-panel button.bg-slate-900 {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.theme-light .login-3d-controls-panel button.bg-slate-900:hover, body.theme-light .login-3d-controls-panel button.bg-slate-900:hover {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .login-3d-controls-panel .border-white\/10, body.theme-light .login-3d-controls-panel .border-white\/10 {
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .login-3d-controls-panel span.text-slate-500, body.theme-light .login-3d-controls-panel span.text-slate-500 {
+            color: #334155 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .auth-card-modern a[onclick*="showToast"], body.theme-light .auth-card-modern a[onclick*="showToast"] {
+            color: #4f46e5 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light #footer-switch-to-signup button, body.theme-light #footer-switch-to-signup button,
+        html.theme-light #footer-switch-to-signin button, body.theme-light #footer-switch-to-signin button {
+            color: #4338ca !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light #form-signup-guest p.text-slate-500, body.theme-light #form-signup-guest p.text-slate-500 {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .auth-input-group span.text-slate-500, body.theme-light .auth-input-group span.text-slate-500 {
+            color: #475569 !important;
+            font-weight: 600 !important;
+        }
+        html.theme-light #signup-pwd-status, body.theme-light #signup-pwd-status {
+            color: #475569 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .login-brand-smart, body.theme-light .login-brand-smart {
+            color: #0f172a !important;
+        }
+        html.theme-light .login-brand-renty, body.theme-light .login-brand-renty {
+            color: #4f46e5 !important;
+        }
+        html.theme-light .theme-toggle-button, body.theme-light .theme-toggle-button {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+        }
+
+        /* Toast Card: Luôn hiển thị chữ sáng rõ nét, không bị màu đen trên nền đen */
+        .toast-card {
+            background: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6) !important;
+        }
+        .toast-card h4, html.theme-light .toast-card h4, body.theme-light .toast-card h4 {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
+        .toast-card p, html.theme-light .toast-card p, body.theme-light .toast-card p,
+        .toast-card .toast-message, html.theme-light .toast-card .toast-message {
+            color: #e2e8f0 !important;
+            font-weight: 500 !important;
+            opacity: 1 !important;
+        }
+        .toast-card button, html.theme-light .toast-card button, body.theme-light .toast-card button {
+            color: #94a3b8 !important;
+        }
+        .toast-card button:hover, html.theme-light .toast-card button:hover, body.theme-light .toast-card button:hover {
+            color: #ffffff !important;
+        }
+
+        /* Banner lỗi đăng nhập trong Light Mode */
+        html.theme-light .login-error-banner, body.theme-light .login-error-banner {
+            background: #fff1f2 !important;
+            border: 1px solid #fecdd3 !important;
+        }
+        html.theme-light .login-error-banner i, body.theme-light .login-error-banner i {
+            color: #e11d48 !important;
+        }
+        html.theme-light .login-error-banner p.font-bold, body.theme-light .login-error-banner p.font-bold {
+            color: #881337 !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light .login-error-banner .login-error-banner-desc, body.theme-light .login-error-banner .login-error-banner-desc {
+            color: #be123c !important;
+            font-weight: 600 !important;
+        }
+        html.theme-light #login-error-message, body.theme-light #login-error-message {
+            color: #e11d48 !important;
+            font-weight: 600 !important;
+        }
     </style>
 </head>
 <body class="bg-[#0b0f19] text-slate-100 min-h-screen {{ $isAdminPage ? 'overflow-hidden font-sans' : 'flex flex-col justify-between overflow-x-hidden' }} selection:bg-indigo-500 selection:text-white">
@@ -587,11 +822,11 @@
                             <!-- PANE 1: SIGN IN FORM -->
                             <div id="auth-panel-signin" class="auth-tab-pane active" role="tabpanel">
                                 @if(session('error'))
-                                    <div class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3 mb-4 shadow-lg shadow-rose-500/5">
+                                    <div class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-xs flex items-start gap-3 mb-4 shadow-lg shadow-rose-500/5 login-error-banner">
                                         <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base mt-0.5 shrink-0"></i>
                                         <div class="flex-grow">
                                             <p class="font-bold text-rose-200">Đăng nhập không thành công!</p>
-                                            <p class="text-[11px] text-rose-300/90 mt-0.5 leading-relaxed">{{ session('error') }}</p>
+                                            <p class="text-[11px] text-rose-300 mt-0.5 leading-relaxed login-error-banner-desc">{{ session('error') }}</p>
                                         </div>
                                     </div>
                                 @endif
@@ -606,31 +841,53 @@
                                     </div>
                                 @endif
 
-                                <form action="{{ route('user.authUser') }}" method="POST" class="space-y-4">
+                                <form id="form-signin" action="{{ route('user.authUser') }}" method="POST" class="space-y-4" onsubmit="return handleSigninSubmit(event)">
                                     @csrf
                                     <div class="auth-input-group">
-                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-login">Tên đăng nhập, Số điện thoại hoặc Email</label>
+                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-login">
+                                             Số điện thoại hoặc Email <span class="text-rose-400 font-bold">*</span>
+                                        </label>
                                         <div class="relative">
                                             <i class="fa-solid fa-user-check auth-input-icon"></i>
-                                            <input type="text" name="login" id="signin-login" required class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" placeholder="Nhập tên đăng nhập, số điện thoại hoặc email" value="{{ old('login') }}">
+                                            <input type="text" 
+                                                   name="login" 
+                                                   id="signin-login" 
+                                                   class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" 
+                                                   placeholder="0901234567 hoặc user@gmail.com" 
+                                                   value="{{ old('login') }}"
+                                                   oninput="clearSigninError('signin-login')"
+                                                   onblur="validateSigninLoginBlur(this)">
                                         </div>
+                                        <p id="signin-login-error" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                            <span id="signin-login-error-text">Vui lòng nhập tài khoản đăng nhập</span>
+                                        </p>
                                     </div>
 
                                     <div class="auth-input-group">
-                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-password">Mật khẩu</label>
+                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-password">
+                                            Mật khẩu <span class="text-rose-400 font-bold">*</span>
+                                        </label>
                                         <div class="relative">
                                             <i class="fa-solid fa-lock auth-input-icon"></i>
-                                            <input type="password" name="password" id="signin-password" required class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" placeholder="••••••••">
+                                            <input type="password" 
+                                                   name="password" 
+                                                   id="signin-password" 
+                                                   class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" 
+                                                   placeholder="••••••••"
+                                                   oninput="clearSigninError('signin-password')"
+                                                   onblur="validateSigninPasswordBlur(this)">
                                             <button type="button" onclick="togglePasswordVisibility('signin-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu" aria-label="Hiện / Ẩn mật khẩu">
                                                 <i class="fa-solid fa-eye-slash"></i>
                                             </button>
                                         </div>
+                                        <p id="signin-password-error" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                            <span id="signin-password-error-text">Vui lòng nhập mật khẩu</span>
+                                        </p>
                                         @if(session('error'))
-                                            <p class="text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5" id="login-error-message">
-                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                                @if(session('error_code'))
-                                                    <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono text-[10px]">{{ session('error_code') }}</span>
-                                                @endif
+                                            <p class="text-[11px] text-rose-500 font-semibold mt-1.5 flex items-center gap-1.5" id="login-error-message">
+                                                <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
                                                 <span>{{ session('error') }}</span>
                                             </p>
                                         @endif
@@ -641,14 +898,15 @@
                                             <input type="checkbox" name="remember" id="signin-remember" checked>
                                             <span>Ghi nhớ đăng nhập</span>
                                         </label>
-                                        <a href="#" onclick="showToast('Vui lòng liên hệ Admin qua hotline để cấp lại quyền truy cập.', 'info'); return false;" class="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+                                        <a href="{{ route('password.forgot') }}" class="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
                                             Quên mật khẩu?
                                         </a>
                                     </div>
 
-                                    <button type="submit" class="login-submit-button w-full py-3 px-4 rounded-xl text-white font-bold text-sm transform active:scale-95 transition-all duration-200 shadow-lg shadow-indigo-500/25 mt-2 flex items-center justify-center gap-2">
-                                        <span>Đăng Nhập Hệ Thống</span>
-                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    <button type="submit" id="btn-submit-signin" class="login-submit-button w-full py-3 px-4 rounded-xl text-white font-bold text-sm transform active:scale-95 transition-all duration-200 shadow-lg shadow-indigo-500/25 mt-2 flex items-center justify-center gap-2">
+                                        <i id="signin-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                                        <span id="btn-submit-signin-text">Đăng Nhập</span>
+                                        <i id="signin-arrow-icon" class="fa-solid fa-arrow-right text-xs"></i>
                                     </button>
                                 </form>
                             </div>
@@ -1104,10 +1362,10 @@
                     <i class="fa-solid ${icon} text-sm"></i>
                 </div>
                 <div class="flex-grow min-w-0">
-                    <h4 class="font-extrabold text-white text-xs tracking-wide">${title}</h4>
-                    <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">${message}</p>
+                    <h4 class="font-extrabold text-white text-xs tracking-wide" style="color: #ffffff !important;">${title}</h4>
+                    <p class="text-[11px] mt-0.5 leading-relaxed toast-message" style="color: #e2e8f0 !important; font-weight: 500;">${message}</p>
                 </div>
-                <button type="button" onclick="this.closest('.toast-card').remove()" class="text-slate-500 hover:text-white transition-colors shrink-0 p-1">
+                <button type="button" onclick="this.closest('.toast-card').remove()" class="text-slate-400 hover:text-white transition-colors shrink-0 p-1" style="color: #94a3b8;">
                     <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
             `;
@@ -1215,6 +1473,118 @@
                 status.textContent = 'Độ mạnh: Rất tốt';
                 status.className = 'text-[10px] font-bold text-emerald-400 uppercase tracking-wider';
             }
+        }
+
+        // =========================================================
+        // FEAT_01_AUTH: SIGN IN CLIENT-SIDE VALIDATION & FEEDBACK
+        // =========================================================
+        function clearSigninError(fieldId) {
+            const input = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + '-error');
+            const serverErr = document.getElementById('login-error-message');
+            if (input) {
+                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
+            }
+            if (errEl) {
+                errEl.classList.add('hidden');
+            }
+            if (serverErr) {
+                serverErr.classList.add('hidden');
+            }
+        }
+
+        function validateSigninLoginBlur(input) {
+            const val = input.value.trim();
+            const errEl = document.getElementById('signin-login-error');
+            const errText = document.getElementById('signin-login-error-text');
+            if (!val) {
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                if (errText) errText.textContent = 'Vui lòng nhập tài khoản đăng nhập';
+                if (errEl) errEl.classList.remove('hidden');
+                return false;
+            }
+            clearSigninError('signin-login');
+            return true;
+        }
+
+        function validateSigninPasswordBlur(input) {
+            const val = input.value;
+            const errEl = document.getElementById('signin-password-error');
+            const errText = document.getElementById('signin-password-error-text');
+            if (!val) {
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                if (errText) errText.textContent = 'Vui lòng nhập mật khẩu';
+                if (errEl) errEl.classList.remove('hidden');
+                return false;
+            }
+            if (val.length < 6) {
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                if (errText) errText.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự.';
+                if (errEl) errEl.classList.remove('hidden');
+                return false;
+            }
+            clearSigninError('signin-password');
+            return true;
+        }
+
+        function handleSigninSubmit(e) {
+            const loginInput = document.getElementById('signin-login');
+            const passwordInput = document.getElementById('signin-password');
+            const loginVal = loginInput ? loginInput.value.trim() : '';
+            const passwordVal = passwordInput ? passwordInput.value : '';
+
+            let hasError = false;
+
+            if (!loginVal) {
+                if (loginInput) {
+                    validateSigninLoginBlur(loginInput);
+                    if (!hasError) loginInput.focus();
+                }
+                hasError = true;
+            }
+
+            if (!passwordVal) {
+                if (passwordInput) {
+                    validateSigninPasswordBlur(passwordInput);
+                    if (!hasError) passwordInput.focus();
+                }
+                hasError = true;
+            } else if (passwordVal.length < 6) {
+                if (passwordInput) {
+                    validateSigninPasswordBlur(passwordInput);
+                    if (!hasError) passwordInput.focus();
+                }
+                hasError = true;
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                if (!loginVal && !passwordVal) {
+                    showToast('Vui lòng nhập tài khoản đăng nhập và mật khẩu.', 'error');
+                } else if (!loginVal) {
+                    showToast('Vui lòng nhập tài khoản đăng nhập', 'error');
+                } else if (!passwordVal) {
+                    showToast('Vui lòng nhập mật khẩu', 'error');
+                } else {
+                    showToast('Mật khẩu phải có tối thiểu 6 ký tự.', 'error');
+                }
+                return false;
+            }
+
+            // Hiển thị trạng thái spinner loading trên nút Đăng Nhập
+            const btn = document.getElementById('btn-submit-signin');
+            const spinner = document.getElementById('signin-spinner');
+            const btnText = document.getElementById('btn-submit-signin-text');
+            const arrowIcon = document.getElementById('signin-arrow-icon');
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-80', 'cursor-not-allowed');
+            }
+            if (spinner) spinner.classList.remove('hidden');
+            if (arrowIcon) arrowIcon.classList.add('hidden');
+            if (btnText) btnText.textContent = 'Đang đăng nhập...';
+
+            return true;
         }
 
         function appendTagToLike(tag) {

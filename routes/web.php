@@ -47,6 +47,8 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 Route::get('login', [CrudUserController::class, 'login'])->name('login');
 Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:30,1')->name('user.authUser');
 
+Route::get('register', [CrudUserController::class, 'createUser'])->name('register');
+Route::post('register', [CrudUserController::class, 'postUser'])->middleware('throttle:10,1')->name('register.post');
 Route::get('create', [CrudUserController::class, 'createUser'])->name('user.createUser');
 Route::post('create', [CrudUserController::class, 'postUser'])->middleware('throttle:10,1')->name('user.postUser');
 Route::get('guest/verify', [CrudUserController::class, 'showVerifyOtp'])->name('guest.verify');
@@ -54,6 +56,12 @@ Route::post('guest/verify-otp', [CrudUserController::class, 'verifyGuestOtp'])->
 Route::post('guest/send-otp', [CrudUserController::class, 'sendGuestOtp'])->middleware('throttle:5,1')->name('guest.sendOtp');
 Route::get('tenant/onboarding/preferences', [CrudUserController::class, 'showPreferences'])->middleware('auth')->name('tenant.preferences');
 Route::post('tenant/onboarding/preferences', [CrudUserController::class, 'savePreferences'])->middleware('auth')->name('tenant.preferences.save');
+
+// FEAT_01_AUTH: Khôi phục mật khẩu qua Email OTP
+Route::get('forgot-password', [CrudUserController::class, 'showForgotPassword'])->name('password.forgot');
+Route::post('forgot-password/send-otp', [CrudUserController::class, 'sendForgotPasswordOtp'])->middleware('throttle:5,1')->name('password.sendOtp');
+Route::post('forgot-password/resend-otp', [CrudUserController::class, 'resendForgotPasswordOtp'])->middleware('throttle:5,1')->name('password.resendOtp');
+Route::post('forgot-password/reset', [CrudUserController::class, 'resetPasswordWithOtp'])->middleware('throttle:10,1')->name('password.resetWithOtp');
 
 Route::get('landlord/register', [LandlordOnboardingController::class, 'create'])->name('landlord.register');
 Route::post('landlord/register', [LandlordOnboardingController::class, 'store'])->middleware('throttle:10,1')->name('landlord.register.store');
@@ -332,7 +340,7 @@ Route::post('/smartroom/contract/{id}/send-otp', [AdminDashboardController::clas
 Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::class, 'signLessorContract'])->name('smartroom.contract.lessor_sign');
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
 
-$rentyRooms = function () {
+$rentyRooms = function ($filterEmpty = true) {
     $user = auth()->user();
     $query = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews']);
 
@@ -341,6 +349,14 @@ $rentyRooms = function () {
     if ($user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin()) {
         if (!request()->boolean('all_tenants')) {
             $query->where('tenant_id', $user->tenant_id);
+        }
+    }
+
+    // FEAT_04_LANDING: Chỉ hiển thị các tin đăng phòng còn đang 'Trống' (empty) trên sàn công khai khi $filterEmpty = true
+    if ($filterEmpty) {
+        $statusFilter = request()->input('status', 'empty');
+        if ($statusFilter !== 'all') {
+            $query->where('status', 'empty');
         }
     }
 
@@ -531,6 +547,8 @@ $rentyRooms = function () {
             'listing_badge' => $listingBadge,
             'trust_badge' => $trustBadge,
             'boost_score' => (int) ($tenant->boost_score ?? 0),
+            'landlord_name' => $tenant?->name ?? 'Chủ nhà trọ Renty',
+            'landlord_phone' => $tenant?->phone ?? '0396519196',
             'reviews' => $reviewsList
         ];
     });
@@ -586,6 +604,13 @@ $rentyPage = function () use ($rentyRooms) {
 
 Route::get('/renty', $rentyPage)->name('renty.user');
 Route::get('/renty/search', $rentyPage)->name('renty.search');
+Route::get('/renty/map', function () use ($rentyPage) {
+    request()->merge(['view' => 'map']);
+    return $rentyPage();
+})->name('renty.map');
+Route::get('/map', function () {
+    return redirect()->route('renty.map');
+})->name('map.redirect');
 Route::get('/search', function () {
     return redirect()->route('renty.search');
 })->name('search.redirect');
@@ -599,9 +624,31 @@ Route::get('/renty/room/{id}/3d', function ($id) {
 })->name('renty.room.detail.3d');
 
 Route::get('/renty/room/{id}', function ($id) use ($rentyRooms) {
-    $room = $rentyRooms()->firstWhere('id', (int) $id);
+    // Validate ID phòng theo regex ^[0-9]+$ (Spec FEAT_06_ROOM_DETAIL)
+    if (!ctype_digit((string) $id) || (int) $id <= 0) {
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_06_01',
+                'message' => 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.'
+            ], 404);
+        }
+        return redirect()->route('renty.user')->with('error', 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.');
+    }
 
-    abort_if(!$room, 404, 'Không tìm thấy phòng trọ.');
+    // Lấy chi tiết phòng (kể cả phòng đã thuê để hiển thị trạng thái ĐÃ THUÊ - ERR_06_02)
+    $room = $rentyRooms(false)->firstWhere('id', (int) $id);
+
+    if (!$room) {
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_06_01',
+                'message' => 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.'
+            ], 404);
+        }
+        return redirect()->route('renty.user')->with('error', 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.');
+    }
 
     return view('rentry.rooms.show', [
         'room' => $room,

@@ -25,10 +25,13 @@ use App\Http\Controllers\Api\RoomAlertController;
 */
 
 // ==========================================
-// 1. PUBLIC ROUTES (Khách vãng lai & Tìm trọ)
+// 1. PUBLIC ROUTES (Khách vãng lai & Tìm trọ - FEAT_01_AUTH)
 // ==========================================
-Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/auth/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:5,1');
+Route::post('/auth/password/forgot', [AuthController::class, 'forgotPasswordSendOtp'])->middleware('throttle:5,1');
+Route::post('/auth/password/reset', [AuthController::class, 'forgotPasswordReset'])->middleware('throttle:10,1');
 Route::post('/auth/check-availability', [AuthController::class, 'checkAvailability']);
 Route::post('/webhooks/payments', [PaymentWebhookController::class, 'handleWebhook']);
 
@@ -39,6 +42,7 @@ Route::get('/renty/rooms/suggest', [SmartSearchController::class, 'suggestions']
 Route::get('/renty/rooms/autocomplete', [SmartSearchController::class, 'suggestions']);
 Route::get('/renty/rooms/map', [VisitorController::class, 'map']);
 Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
+Route::get('/renty/room/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);
 Route::post('/renty/rooms/compare', [VisitorController::class, 'compare'])->middleware('throttle:30,1');
 Route::post('/renty/rooms/compare-ai', [VisitorController::class, 'compareAi'])->middleware('throttle:30,1');

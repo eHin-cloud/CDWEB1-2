@@ -8,29 +8,53 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     // Đăng nhập
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string'
-        ]);
+        $loginId = trim((string) ($request->input('login_id') ?? $request->input('login') ?? $request->input('email') ?? $request->input('phone')));
+        $password = (string) $request->input('password');
 
-        $user = User::with(['roleRecord', 'tenant'])->where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (empty($loginId) || empty($password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email hoặc mật khẩu không chính xác'
-            ], 412);
+                'error_code' => 'ERR_01_01',
+                'message' => 'Vui lòng nhập tài khoản đăng nhập và mật khẩu.'
+            ], 422);
+        }
+
+        $user = null;
+
+        // 1. Tìm theo số điện thoại qua Blind Index
+        $phoneBlind = \App\Support\SensitiveData::blindIndex($loginId);
+        if ($phoneBlind) {
+            $user = User::with(['roleRecord', 'tenant'])->where('phone_blind_index', $phoneBlind)->first();
+        }
+
+        // 2. Tìm theo email hoặc username
+        if (!$user) {
+            $user = User::with(['roleRecord', 'tenant'])
+                ->where('email', $loginId)
+                ->orWhere('username', $loginId)
+                ->first();
+        }
+
+        if (!$user || !Hash::check($password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_01_01',
+                'message' => 'Thông tin tài khoản hoặc mật khẩu không chính xác.'
+            ], 422);
         }
 
         if ($user->status === 'locked') {
             return response()->json([
                 'success' => false,
+                'error_code' => 'ERR_01_13',
                 'message' => 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.'
             ], 403);
         }
@@ -40,7 +64,8 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Đăng nhập thành công',
+            'error_code' => 'ERR_01_12',
+            'message' => 'Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => [
@@ -227,4 +252,165 @@ class AuthController extends Controller
 
         return response()->json(['available' => true, 'message' => '']);
     }
+
+    /**
+     * POST /api/auth/otp/verify
+     * Xác thực mã OTP gửi về số điện thoại/email (FEAT_01_AUTH)
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'target' => 'required|string',
+            'otp' => 'required|string|size:6',
+            'type' => 'nullable|string',
+        ], [
+            'target.required' => 'Vui lòng cung cấp số điện thoại hoặc email nhận mã.',
+            'otp.required' => 'Mã xác thực OTP là bắt buộc.',
+            'otp.size' => 'Mã xác thực OTP phải gồm đúng 6 chữ số.',
+        ]);
+
+        $target = trim((string) $request->input('target'));
+        $otp = trim((string) $request->input('otp'));
+        $type = (string) $request->input('type', 'guest_register');
+
+        // Chuẩn hóa số điện thoại nếu là phone
+        if (preg_match('/^[0-9+]/', $target)) {
+            $norm = preg_replace('/\s+/', '', $target);
+            if (str_starts_with($norm, '+84')) {
+                $norm = '0' . substr($norm, 3);
+            }
+            $target = $norm;
+        }
+
+        $verifyRes = \App\Services\OtpService::verifyOtp($target, $type, $otp);
+
+        if (!$verifyRes['success']) {
+            $isExpired = str_contains($verifyRes['message'], 'hết hạn') || str_contains($verifyRes['message'], 'hết hiệu lực');
+            return response()->json([
+                'success' => false,
+                'error_code' => $isExpired ? 'ERR_01_11' : 'ERR_01_10',
+                'message' => $verifyRes['message'],
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'error_code' => 'ERR_01_12',
+            'message' => 'Xác thực mã OTP thành công!',
+        ]);
+    }
+
+    /**
+     * POST /api/auth/password/forgot
+     * Gửi mã OTP xác thực khôi phục mật khẩu qua Email (FEAT_01_AUTH)
+     */
+    public function forgotPasswordSendOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:150',
+        ], [
+            'email.required' => 'Vui lòng cung cấp địa chỉ email nhận mã.',
+            'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
+        ]);
+
+        $email = trim(strtolower($request->input('email')));
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Địa chỉ email này chưa được đăng ký trong hệ thống.',
+            ], 404);
+        }
+
+        if ($user->status === 'locked') {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_01_13',
+                'message' => 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.',
+            ], 403);
+        }
+
+        $otpRes = \App\Services\OtpService::generateOtp($user->email, 'forgot_password');
+        if (!$otpRes['success'] && !empty($otpRes['cooldown'])) {
+            return response()->json([
+                'success' => false,
+                'retry_after' => $otpRes['retry_after'] ?? 60,
+                'message' => $otpRes['message'],
+            ], 429);
+        }
+
+        $otp = $otpRes['code'];
+
+        try {
+            Mail::send('emails.forgot_password_otp', [
+                'otp' => $otp,
+                'fullName' => $user->name,
+                'email' => $user->email,
+            ], function ($msg) use ($user) {
+                $msg->to($user->email, $user->name)
+                    ->subject('SmartRoom & Renty - Mã OTP Khôi Phục Mật Khẩu');
+            });
+        } catch (\Exception $e) {
+            Log::error("Failed to send API forgot password email: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Mã OTP xác thực đã được gửi đến hộp thư {$user->email}.",
+            'retry_after' => $otpRes['retry_after'] ?? 60,
+            'expires_in' => $otpRes['expires_in'] ?? 300,
+        ]);
+    }
+
+    /**
+     * POST /api/auth/password/reset
+     * Xác thực mã OTP và đặt lại mật khẩu mới (FEAT_01_AUTH)
+     */
+    public function forgotPasswordReset(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:150',
+            'otp' => 'required|string|size:6',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'email.required' => 'Vui lòng cung cấp địa chỉ email.',
+            'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
+            'otp.required' => 'Mã xác thực OTP là bắt buộc.',
+            'otp.size' => 'Mã xác thực OTP phải gồm đúng 6 chữ số.',
+            'password.required' => 'Vui lòng nhập mật khẩu mới.',
+            'password.min' => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu không trùng khớp.',
+        ]);
+
+        $email = trim(strtolower($request->input('email')));
+        $otp = trim((string) $request->input('otp'));
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy tài khoản người dùng.',
+            ], 404);
+        }
+
+        $verifyRes = \App\Services\OtpService::verifyOtp($email, 'forgot_password', $otp);
+        if (!$verifyRes['success']) {
+            $isExpired = str_contains($verifyRes['message'], 'hết hạn') || str_contains($verifyRes['message'], 'hết hiệu lực');
+            return response()->json([
+                'success' => false,
+                'error_code' => $isExpired ? 'ERR_01_11' : 'ERR_01_10',
+                'message' => $verifyRes['message'],
+            ], 422);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay với mật khẩu mới.',
+        ]);
+    }
 }
+

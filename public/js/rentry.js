@@ -2022,11 +2022,11 @@ function filterItems(options = {}) {
         const q = (query || '').trim();
         if (emptyCodeTextEl) {
             if (q) {
-                emptyCodeTextEl.textContent = `Lỗi: Không tìm thấy kết quả phù hợp cho "${q}" (Mã: ERR_21_04)`;
-                if (emptyTitleEl) emptyTitleEl.textContent = `Không tìm thấy phòng nào khớp với "${q}".`;
+                emptyCodeTextEl.textContent = `Không tìm thấy kết quả phù hợp cho "${q}"`;
+                if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.';
             } else {
-                emptyCodeTextEl.textContent = 'Lỗi: Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn (Mã: ERR_21_04)';
-                if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
+                emptyCodeTextEl.textContent = 'Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn';
+                if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.';
             }
         }
 

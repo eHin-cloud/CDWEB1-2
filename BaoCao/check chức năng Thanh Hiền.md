@@ -29,20 +29,73 @@
 ### 1. Tính năng 01: Đăng ký & Đăng nhập hệ thống (Xác thực OTP & Mật khẩu) (`FEAT_01_AUTH`)
 * **Mã nguồn thực tế**:
   * Web Controller: `app/Http/Controllers/CrudUserController.php` (`login`, `authUser`, `createUser`, `postUser`, `showVerifyOtp`, `verifyGuestOtp`, `sendGuestOtp`)
-  * API Controller: `app/Http/Controllers/Api/AuthController.php` (`login`, `register`, `profile`, `logout`, `checkAvailability`)
+  * API Controller: `app/Http/Controllers/Api/AuthController.php` (`login`, `register`, `profile`, `logout`, `checkAvailability`, `verifyOtp`)
   * Onboarding Controller: `app/Http/Controllers/LandlordOnboardingController.php` (`create`, `store`, `showVerifyForm`, `sendOtp`, `verifyOtp`)
   * Services: `app/Services/OtpService.php`, `app/Support/SensitiveData.php`
-  * Models: `app/Models/User.php`, `app/Models/Role.php`, `app/Models/NotificationLog.php`
+  * Models: `app/Models/User.php`, `app/Models/Role.php`, `app/Models/NotificationLog.php`, `app/Models/OtpCode.php`
   * Routes:
-    * Web: `GET /login`, `POST /login`, `GET /create`, `POST /create`, `GET /guest/verify`, `POST /guest/verify-otp`, `POST /guest/send-otp`, `GET /landlord/register`, `POST /landlord/register`, `GET /signout`
-    * API: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/profile`, `POST /api/auth/logout`
-  * Views: `resources/views/login/login.blade.php`, `resources/views/landlord/register.blade.php`, `resources/views/guest/verify_otp.blade.php`
+    * Web: `GET /login`, `POST /login`, `GET /register`, `POST /register`, `GET /create`, `POST /create`, `GET /guest/verify`, `POST /guest/verify-otp`, `POST /guest/send-otp`, `GET /landlord/register`, `POST /landlord/register`, `GET /signout`
+    * API: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/otp/verify`, `GET /api/auth/profile`, `POST /api/auth/logout`, `POST /api/auth/check-availability`
+  * Views: `resources/views/login/login.blade.php`, `resources/views/landlord/register.blade.php`, `resources/views/login/guest_verify.blade.php`
+  * Tests: `tests/Feature/AuthFeature01Test.php`
 * **Đối soát với đặc tả**:
-  * ✅ Endpoints & Middleware: Cung cấp đầy đủ cả Web Route lẫn REST API `/api/auth/login`, `/api/auth/register`, áp dụng Rate Limiting `throttle:5,1` và `throttle:30,1` chống tấn công dò mật khẩu (Brute-force).
+  * ✅ Endpoints & Middleware: Cung cấp đầy đủ cả Web Route lẫn REST API `/api/auth/login`, `/api/auth/register`, `/api/auth/otp/verify`, áp dụng Rate Limiting `throttle:5,1`, `throttle:10,1` và `throttle:30,1` chống tấn công dò mật khẩu (Brute-force).
   * ✅ Điều hướng phân quyền thông minh: Sau khi đăng nhập thành công, tự động điều hướng đúng phân hệ: Khách thuê vào `/renty`, Chủ trọ vào `/smartroom/admin`, Cư dân vào `/smartroom/resident`, Superadmin vào `/dashboard` hoặc `/list`.
-  * ✅ Luồng xác thực OTP đa kênh: Hỗ trợ tạo và gửi mã xác thực OTP ngẫu nhiên 6 chữ số có thời hạn (TTL 5 phút) qua Email và SMS/Zalo, lưu vết kiểm toán vào bảng `notification_logs`.
+  * ✅ Luồng xác thực OTP đa kênh: Hỗ trợ tạo và gửi mã xác thực OTP ngẫu nhiên 6 chữ số có thời hạn (TTL 5 phút) qua Email và SMS/Zalo, lưu vết kiểm toán vào bảng `notification_logs` và `otp_codes`.
   * ✅ Bảo mật dữ liệu & HMAC Blind Index: Mật khẩu mã hóa chuẩn một chiều `bcrypt`/`Hash::make`; số điện thoại được mã hóa và đối soát bảo mật thông qua hàm Blind Index `SensitiveData::blindIndex($phone)` chống lộ dữ liệu nhạy cảm.
   * ✅ Kịch bản xử lý lỗi (`ERR_01_01` -> `ERR_01_12`): Xử lý trọn vẹn lỗi bỏ trống trường, SĐT sai định dạng regex `^(0[3|5|7|8|9])[0-9]{8}$`, mật khẩu dưới 6 ký tự, email không hợp lệ, tài khoản bị khóa `locked` (HTTP 403), mã OTP sai hoặc hết hạn.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Để trống thông tin đăng nhập (Tài khoản / Mật khẩu) | **`ERR_01_01`** | `Vui lòng nhập tài khoản đăng nhập` / `Vui lòng nhập mật khẩu` | Bôi đỏ viền các ô input và hiển thị dòng thông báo lỗi màu đỏ ngay bên dưới ô nhập liệu |
+| Để trống thông tin đăng ký tài khoản người dùng | **`ERR_01_02`** | `Vui lòng nhập tài khoản đăng nhập / Vui lòng nhập số điện thoại (bắt buộc)` | Bôi đỏ viền các ô input bắt buộc và hiển thị thông báo đỏ chi tiết dưới từng ô nhập liệu |
+| Tên đăng nhập dưới 3 ký tự | **`ERR_01_03`** | `Tài khoản đăng nhập tối thiểu 3 ký tự.` | Bôi đỏ viền ô input và báo lỗi dưới ô |
+| Tên đăng nhập đã được sử dụng | **`ERR_01_04`** | `Tài khoản đăng nhập này đã được sử dụng trong hệ thống.` | Bôi đỏ ô input, hiện icon chấm than đỏ |
+| Để trống mật khẩu | **`ERR_01_05`** | `Mật khẩu là bắt buộc.` | Bôi đỏ viền ô input Mật khẩu |
+| Mật khẩu dưới 6 ký tự | **`ERR_01_06`** | `Mật khẩu phải có tối thiểu 6 ký tự.` | Bôi đỏ viền ô input Mật khẩu |
+| Để trống số điện thoại | **`ERR_01_07`** | `Vui lòng nhập số điện thoại (bắt buộc).` | Bôi đỏ viền ô input Số điện thoại |
+| Số điện thoại không đúng 10 số | **`ERR_01_08`** | `Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (ví dụ: 0988123456).` | Bôi đỏ ô input Số điện thoại |
+| Số điện thoại đã tồn tại | **`ERR_01_09`** | `Số điện thoại này đã được đăng ký tài khoản trong hệ thống.` | Bôi đỏ ô input Số điện thoại, hiện thông báo trùng |
+| Nhập sai mã OTP | **`ERR_01_10`** | `Mã xác thực OTP không chính xác. Bạn còn lại X lần thử.` | Bôi đỏ 6 ô nhập mã OTP, hiệu ứng rung lắc (shake animation) |
+| Mã OTP đã hết hạn (quá 5 phút) | **`ERR_01_11`** | `Mã xác thực OTP đã hết hiệu lực (quá 5 phút). Vui lòng bấm Gửi lại mã.` | Bôi đỏ ô OTP, hiển thị nút Gửi lại mã OTP |
+| Đăng nhập / Đăng ký thành công | **`ERR_01_12`** | `Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.` | Hiển thị thông báo Toast màu xanh lá (Success) và chuyển hướng |
+
+#### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
+* **Hình 1.1: Giao diện Form Đăng nhập hệ thống chuẩn**
+  * *Mô tả chức năng*: Màn hình tiếp nhận thông tin người dùng truy cập hệ thống SmartRoom & Renty với các tùy chọn đăng nhập bằng SĐT, Email hoặc OTP.
+* **Hình 1.2: Giao diện bôi đỏ viền và hiển thị thông báo lỗi dưới ô nhập liệu khi để trống**
+  * *Mô tả chức năng*: Trạng thái kiểm tra dữ liệu đăng nhập. Khi người dùng bấm 'Đăng nhập' mà chưa nhập tài khoản/mật khẩu, hệ thống bôi đỏ viền ô và hiển thị cảnh báo đỏ trực tiếp.
+* **Hình 1.3: Giao diện thông báo lỗi khi nhập sai mật khẩu tài khoản**
+  * *Mô tả chức năng*: Hệ thống so khớp dữ liệu trong CSDL và phản hồi cảnh báo đỏ 'Thông tin tài khoản hoặc mật khẩu không chính xác.'
+* **Hình 1.4: Giao diện Form Đăng ký tài khoản người dùng (Khách thuê / Cư dân)**
+  * *Mô tả chức năng*: Dành cho khách thuê mới khởi tạo tài khoản trên hệ thống, cung cấp họ tên, số điện thoại, mật khẩu và xác nhận mật khẩu.
+* **Hình 1.5: Giao diện bôi đỏ viền và thông báo lỗi Form Đăng ký người dùng**
+  * *Mô tả chức năng*: Hiển thị thông báo đỏ kiểm tra tính hợp lệ khi người dùng để trống các trường bắt buộc lúc đăng ký khách thuê.
+* **Hình 1.6: Giao diện Form Đăng ký tài khoản dành riêng cho Đối tác Chủ trọ**
+  * *Mô tả chức năng*: Biểu mẫu đăng ký chuyên biệt cho chủ nhà trọ, bổ sung thông tin quy mô quản lý phòng trọ và khu vực kinh doanh.
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Input | `login_id` / `login` | Số điện thoại hoặc Email * | `0901234567 hoặc user@gmail.com` | Vị trí 1; viền xanh khi focus, viền đỏ kèm text cảnh báo đỏ khi lỗi |
+| **2** | Input (password) | `password` | Mật khẩu * | `••••••••` | Vị trí 2; kèm icon con mắt bật/tắt hiển thị mật khẩu |
+| **3** | Button | `btnSubmit` | `Đăng Nhập` | — | Nền xanh gradient Indigo-Blue, bo góc tròn 12px; hiển thị spinner khi đang tải |
+| **4** | Link | `lnkForgot` | `Quên mật khẩu?` | — | Căn phải dưới ô mật khẩu, dẫn sang hướng dẫn / quy trình xác thực OTP |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Để trống tất cả các trường rồi bấm Đăng nhập | Hiển thị lỗi đỏ 'Vui lòng nhập tài khoản đăng nhập' và 'Vui lòng nhập mật khẩu' kèm bôi đỏ viền ô | Kiểm tra Required (`ERR_01_01`) |
+| **2** | Nhập SĐT không hợp lệ: '012345' | Hiển thị lỗi đỏ 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0' | Kiểm tra Regex SĐT (`ERR_01_08`) |
+| **3** | Nhập mật khẩu 4 ký tự: '1234' | Hiển thị lỗi đỏ 'Mật khẩu phải có tối thiểu 6 ký tự.' kèm bôi đỏ viền ô Mật khẩu | Kiểm tra Min length (`ERR_01_06`) |
+| **4** | Nhập tài khoản đúng nhưng sai mật khẩu | Hiển thị thông báo đỏ 'Thông tin tài khoản hoặc mật khẩu không chính xác.' | Kiểm tra xác thực DB (`ERR_01_01`) |
+| **5** | Nhập đúng SĐT/Email và Mật khẩu đã đăng ký | Lưu session/token, thông báo 'Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.' và chuyển hướng theo phân quyền | Happy case (`ERR_01_12`) |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+* ☑ Bộ kiểm thử tự động `tests/Feature/AuthFeature01Test.php` thực thi đạt 100% (11/11 pass - bao gồm luồng Khôi phục mật khẩu qua Email OTP trọn vẹn cả Web & REST API).
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---
@@ -167,13 +220,43 @@
   * Web Routes: `routes/web.php` (Closure `$rentyRooms`, `$rentyPage`, `GET /renty`, `GET /renty/search`)
   * API Controller: `app/Http/Controllers/Api/VisitorController.php` (`index`, `filter`), `SmartSearchController.php`
   * Views: `resources/views/rentry/rentry.blade.php`, `resources/views/rentry/partials/room_card.blade.php`, `resources/views/header/header.blade.php`, `resources/views/footer/footer.blade.php`
-  * Assets: `resources/css/app.css`, `resources/js/app.js`
+  * Assets: `resources/css/app.css`, `resources/js/app.js`, `resources/js/rentry.js`, `public/js/rentry.js`
+  * Tests: `tests/Feature/LandingPageFeature04Test.php`
 * **Đối soát với đặc tả**:
   * ✅ Giao diện hiện đại & Thẩm mỹ cao cấp: Thiết kế Glassmorphism trong suốt sang trọng, hỗ trợ chế độ màu tối ưu, trình bày danh sách phòng dạng lưới Grid 2D trực quan.
   * ✅ Huy hiệu Tín nhiệm (Trust Badge): Tự động hiển thị huy hiệu "Tích xanh" / "Đã xác minh" cho các phòng trọ thuộc chủ cơ sở đã hoàn tất xét duyệt định danh KYC, tự động cộng điểm ưu tiên đề xuất `boost_score`.
   * ✅ Thuật toán cảnh báo giá thông minh: Tự động tính toán giá trung bình của các phòng cùng phân khúc diện tích trong khu vực lân cận; đưa ra huy hiệu cảnh báo "Giá thấp bất thường" (khi thấp hơn >= 25%) hoặc "Giá cao hơn mặt bằng" (khi cao hơn >= 25%) giúp người thuê phòng tránh bẫy lừa đảo.
   * ✅ Thanh thông báo thời gian thực: Tích hợp endpoint `/renty/notifications` hiển thị chuông thông báo cá nhân hóa theo từng vai trò (Khách vãng lai, Cư dân, Chủ trọ, Superadmin).
-  * ✅ Kịch bản xử lý lỗi (`ERR_04_01` -> `ERR_04_04`): Xử lý từ khóa tìm kiếm rỗng, làm sạch ký tự đặc biệt, hiển thị khung trạng thái trống (Empty State) thân thiện khi không tìm thấy kết quả.
+  * ✅ Kịch bản xử lý lỗi (`ERR_04_01` -> `ERR_04_04`): Xử lý từ khóa tìm kiếm rỗng, làm sạch ký tự đặc biệt, hiển thị khung trạng thái trống (Empty State) thân thiện khi không tìm thấy kết quả, cảnh báo mất kết nối mạng.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Bấm tìm kiếm khi từ khóa rỗng | **`ERR_04_01`** | `Vui lòng nhập khu vực, tên đường hoặc trường đại học cần tìm phòng.` | Viền sáng ô tìm kiếm và hiển thị danh sách từ khóa gợi ý |
+| Nhập từ khóa chứa mã độc/ký tự lạ | **`ERR_04_02`** | `Từ khóa tìm kiếm chứa ký tự không hợp lệ.` | Tự động làm sạch chuỗi tìm kiếm và hiển thị thông báo |
+| Không tìm thấy kết quả phù hợp | **`ERR_04_03`** | `Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.` | Hiển thị khung trạng thái trống (Empty State) kèm nút Khám phá |
+| Mất kết nối máy chủ dữ liệu phòng | **`ERR_04_04`** | `Không thể nạp danh sách phòng lúc này. Vui lòng kiểm tra lại kết nối.` | Hiển thị thông báo lỗi mạng kèm nút Bấm để tải lại |
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Search Bar | `search_box` | Khu vực tìm kiếm | `Nhập quận, huyện, tên đường...` | Trung tâm banner Hero; có nút tìm kiếm và clear nhanh |
+| **2** | Card Grid | `room_cards` | Danh sách phòng | — | Thẻ phòng gồm ảnh bìa carousel, giá tiền, địa chỉ, tag tiện ích, badge tích xanh |
+| **3** | Filter Chips | `tags` | Tag nhanh | `Gần ĐH Quốc Gia, Studio, Giờ tự do...` | Dưới thanh tìm kiếm; click nhanh để lọc |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Truy cập URL gốc `/` hoặc `/renty` | Trang chủ tải đầy đủ banner, thanh tìm kiếm `search_box`, tag nhanh `tags` và danh sách phòng `room_cards` | Kiểm tra render trang chủ |
+| **2** | Bấm vào thẻ phòng bất kỳ | Chuyển hướng chính xác đến trang Chi tiết phòng (Room Detail - `/renty/room/{id}`) | Kiểm tra Navigation |
+| **3** | Bấm nút Tìm khi ô tìm kiếm rỗng | Báo lỗi `ERR_04_01`: "Vui lòng nhập khu vực, tên đường hoặc trường đại học cần tìm phòng." kèm viền sáng ô | Kiểm tra Required Search |
+| **4** | Nhập từ khóa chứa mã độc `<script>` | Báo lỗi `ERR_04_02`: "Từ khóa tìm kiếm chứa ký tự không hợp lệ." và tự động làm sạch | Kiểm tra XSS Sanitize |
+| **5** | Lọc từ khóa không tồn tại | Báo lỗi `ERR_04_03`: "Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn." kèm nút Khám phá | Kiểm tra Empty State |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, Glassmorphism cao cấp thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (`ERR_04_01` -> `ERR_04_04`) xuất hiện đúng vị trí và hiệu ứng theo kịch bản.
+* ☑ Tin đăng hiển thị công khai mặc định chỉ lấy phòng còn trống (`empty`) và ưu tiên tin VIP KYC lên đầu.
+* ☑ Bộ kiểm thử tự động `tests/Feature/LandingPageFeature04Test.php` thực thi đạt 100% (5/5 pass).
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---
@@ -228,14 +311,46 @@
 * **Mã nguồn thực tế**:
   * Web Route: `routes/web.php` (`GET /renty/room/{id}`)
   * API Controller: `app/Http/Controllers/Api/VisitorController.php` (`reviews`, `reviewSummary`)
+  * Endpoints: `GET /renty/room/{id}`, `GET /api/renty/room/{id}/reviews`
   * Views: `resources/views/rentry/rooms/show.blade.php`, `resources/views/rentry/room_3d.blade.php`
   * Models: `app/Models/Room.php`, `app/Models/Building.php`, `app/Models/Review.php`, `app/Models/RoomReport.php`
+  * Tests: `tests/Feature/RoomDetailFeature06Test.php`
 * **Đối soát với đặc tả**:
   * ✅ Trình bày thông tin chuyên sâu: Thư viện ảnh chi tiết từng góc chụp (toàn cảnh, ban công, bếp, WC), diện tích, giá thuê, bảng giá điện - nước - dịch vụ minh bạch, tiện ích phòng khép kín.
-  * ✅ Đánh giá thực tế từ cư dân: Hiển thị danh sách đánh giá sao, bình luận từ những người đã từng thuê phòng tại cơ sở.
+  * ✅ Đánh giá thực tế từ cư dân: Hiển thị danh sách đánh giá sao, bình luận từ những người đã từng thuê phòng tại cơ sở qua API `/api/renty/room/{id}/reviews`.
   * ✅ Phân tích không gian & Vị trí: Mô tả cảnh quan xung quanh, độ thoáng mát của ban công/cửa sổ, khoảng cách ước tính tới các tiện ích dân sinh trọng điểm.
   * ✅ Tính năng mở rộng phong phú: Tích hợp phòng trải nghiệm ảo 3D/360° (`/renty/room/{id}/3d`), form báo cáo tin đăng vi phạm/sai giá (`POST /renty/room/{id}/report`), form gửi đánh giá thực tế (`POST /renty/room/{id}/review`).
-  * ✅ Kịch bản xử lý lỗi (`ERR_06_01` -> `ERR_06_04`): Xử lý phòng không tồn tại (trả mã HTTP 404), gắn nhãn phòng đã cho thuê, cơ chế nạp ảnh thế mạng (Fallback Placeholder) tự động khi ảnh gốc bị lỗi.
+  * ✅ Kịch bản xử lý lỗi (`ERR_06_01` -> `ERR_06_04`): Xử lý phòng không tồn tại (chuyển hướng kèm thông báo lỗi hoặc trả mã HTTP 404), gắn nhãn phòng đã cho thuê (`ĐÃ THUÊ`), cơ chế nạp ảnh thế mạng (Fallback Placeholder) tự động khi ảnh gốc bị lỗi, sao chép liên kết phòng vào clipboard.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Mã phòng trên URL không tồn tại | **`ERR_06_01`** | `Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.` | Chuyển hướng về trang danh sách phòng kèm thông báo lỗi (hoặc HTTP 404) |
+| Phòng đã có người thuê | **`ERR_06_02`** | `Phòng lưu trú này hiện đã có người thuê, tạm ngừng nhận đăng ký.` | Gắn nhãn huy hiệu ĐÃ THUÊ màu xám, vô hiệu hóa nút đặt phòng |
+| Lỗi tải ảnh trong thư viện Gallery | **`ERR_06_03`** | `Không thể tải một số ảnh độ phân giải cao của phòng. Đã sử dụng ảnh thay thế.` | Tự động nạp ảnh thế mạng (Placeholder Image) mặc định |
+| Bấm sao chép liên kết phòng | **`ERR_06_04`** | `Đã sao chép liên kết chia sẻ phòng vào bộ nhớ tạm!` | Hiển thị thông báo Toast xanh xác nhận |
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Gallery Carousel | `img_slider` | Thư viện ảnh | — | Hiển thị ảnh chất lượng cao kèm nút trượt |
+| **2** | Price Badge | `lbl_price` | Giá thuê niêm yết | 3.500.000 đ/tháng | Nổi bật màu xanh ngọc / cam |
+| **3** | Landlord Card | `landlord_info` | Thông tin chủ nhà | — | Tên chủ nhà, huy hiệu Tích xanh xác thực KYC, số điện thoại |
+| **4** | Action Buttons | `btnBooking` | Hẹn xem phòng / Liên hệ | — | Cố định ở chân trang hoặc thanh bên |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Truy cập với ID phòng hợp lệ `/renty/room/4` | Hiển thị chính xác ảnh, giá và thông số phòng 4 | Kiểm tra render chi tiết |
+| **2** | Truy cập với ID phòng không tồn tại `/renty/room/99999` | Trả mã HTTP 404 hoặc chuyển hướng với thông báo 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.' | Kiểm tra 404 / redirect handling (`ERR_06_01`) |
+| **3** | Truy cập phòng đã có người thuê (`occupied`) | Gắn nhãn 'ĐÃ THUÊ' và vô hiệu hóa nút đặt phòng `btnBooking` | Kiểm tra phòng đã thuê (`ERR_06_02`) |
+| **4** | Tải ảnh hỏng hoặc không tồn tại | Tự động đổi ảnh sang Placeholder và hiển thị Toast thông báo | Kiểm tra Fallback Image (`ERR_06_03`) |
+| **5** | Bấm nút Chia sẻ phòng | Sao chép liên kết URL vào clipboard và hiển thị Toast xanh thông báo | Kiểm tra Copy Link (`ERR_06_04`) |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và hiệu ứng theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+* ☑ Bộ kiểm thử tự động `tests/Feature/RoomDetailFeature06Test.php` thực thi đạt 100% (4/4 pass).
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---

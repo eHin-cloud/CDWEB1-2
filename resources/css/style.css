@@ -5645,6 +5645,246 @@ body.theme-light .renty-chatbot-mascot {
 }
 
 /* ==========================================================================
+   LIGHT MODE OVERRIDES FOR AUTH & ONBOARDING (ĐĂNG NHẬP, ĐĂNG KÝ, CHỦ TRỌ)
+   Khắc phục toàn bộ tình trạng chữ mờ, nền tối lẫn lộn khi ở chế độ Light
+   ========================================================================== */
+html.theme-light .auth-card-modern,
+body.theme-light .auth-card-modern,
+html.theme-light .login-card-upgraded,
+body.theme-light .login-card-upgraded {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.85) !important;
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.04) !important;
+    color: #0f172a !important;
+}
+
+html.theme-light .auth-card-modern h2,
+body.theme-light .auth-card-modern h2,
+html.theme-light .auth-card-modern .text-white,
+body.theme-light .auth-card-modern .text-white {
+    color: #0f172a !important;
+}
+
+html.theme-light .auth-card-modern .text-slate-400,
+body.theme-light .auth-card-modern .text-slate-400,
+html.theme-light .auth-card-modern .text-slate-500,
+body.theme-light .auth-card-modern .text-slate-500 {
+    color: #475569 !important;
+}
+
+html.theme-light .auth-tabs-nav,
+body.theme-light .auth-tabs-nav {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+html.theme-light .auth-tab-btn,
+body.theme-light .auth-tab-btn {
+    color: #475569 !important;
+    font-weight: 700 !important;
+}
+
+html.theme-light .auth-tab-btn:hover,
+body.theme-light .auth-tab-btn:hover {
+    color: #0f172a !important;
+    background: rgba(15, 23, 42, 0.05) !important;
+}
+
+html.theme-light .auth-tab-btn.active,
+body.theme-light .auth-tab-btn.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3) !important;
+}
+
+html.theme-light .auth-input-group label,
+body.theme-light .auth-input-group label {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+}
+
+html.theme-light .auth-input-field,
+body.theme-light .auth-input-field {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.theme-light .auth-input-field:hover,
+body.theme-light .auth-input-field:hover {
+    border-color: #94a3b8 !important;
+    background: #f8fafc !important;
+}
+
+html.theme-light .auth-input-field:focus,
+body.theme-light .auth-input-field:focus {
+    border-color: #4f46e5 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+html.theme-light .auth-input-field::placeholder,
+body.theme-light .auth-input-field::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+}
+
+html.theme-light .auth-input-icon,
+body.theme-light .auth-input-icon {
+    color: #64748b !important;
+}
+
+html.theme-light .auth-pwd-toggle,
+body.theme-light .auth-pwd-toggle {
+    color: #64748b !important;
+}
+html.theme-light .auth-pwd-toggle:hover,
+body.theme-light .auth-pwd-toggle:hover {
+    color: #0f172a !important;
+    background: #e2e8f0 !important;
+}
+
+html.theme-light .verification-pill,
+body.theme-light .verification-pill {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+html.theme-light .verification-pill:hover,
+body.theme-light .verification-pill:hover {
+    border-color: #94a3b8 !important;
+}
+html.theme-light .verification-pill span.text-white,
+body.theme-light .verification-pill span.text-white {
+    color: #0f172a !important;
+}
+
+html.theme-light .auth-checkbox-label,
+body.theme-light .auth-checkbox-label {
+    color: #334155 !important;
+    font-weight: 500 !important;
+}
+
+html.theme-light .login-visual-panel,
+body.theme-light .login-visual-panel {
+    background: rgba(255, 255, 255, 0.7) !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light .login-visual-copy h1,
+body.theme-light .login-visual-copy h1 {
+    color: #0f172a !important;
+}
+html.theme-light .login-visual-copy p,
+body.theme-light .login-visual-copy p {
+    color: #334155 !important;
+    font-weight: 500 !important;
+}
+html.theme-light .login-visual-stats,
+body.theme-light .login-visual-stats {
+    background: transparent !important;
+    border: none !important;
+}
+html.theme-light .login-visual-stats span,
+body.theme-light .login-visual-stats span {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+    color: #475569 !important;
+}
+html.theme-light .login-visual-stats strong,
+body.theme-light .login-visual-stats strong {
+    color: #0f172a !important;
+}
+html.theme-light .login-3d-controls-panel,
+body.theme-light .login-3d-controls-panel {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+html.theme-light .login-3d-controls-panel span,
+body.theme-light .login-3d-controls-panel span {
+    color: #334155 !important;
+}
+
+html.theme-light .login-register-link,
+body.theme-light .login-register-link {
+    background: #eef2ff !important;
+    border: 1px solid #c7d2fe !important;
+    color: #3730a3 !important;
+    font-weight: 700 !important;
+}
+html.theme-light .login-register-link:hover,
+body.theme-light .login-register-link:hover {
+    background: #e0e7ff !important;
+    color: #312e81 !important;
+}
+
+/* ==========================================================================
+   LANDLORD ONBOARDING LIGHT MODE (ĐĂNG KÝ CHỦ TRỌ)
+   ========================================================================== */
+html.theme-light .onboarding-input,
+body.theme-light .onboarding-input,
+html.theme-light .onboarding-textarea,
+body.theme-light .onboarding-textarea {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+html.theme-light .onboarding-input:hover,
+body.theme-light .onboarding-input:hover,
+html.theme-light .onboarding-textarea:hover,
+body.theme-light .onboarding-textarea:hover {
+    border-color: #94a3b8 !important;
+    background: #f8fafc !important;
+}
+html.theme-light .onboarding-input:focus,
+body.theme-light .onboarding-input:focus,
+html.theme-light .onboarding-textarea:focus,
+body.theme-light .onboarding-textarea:focus {
+    border-color: #4f46e5 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+html.theme-light .onboarding-input::placeholder,
+body.theme-light .onboarding-input::placeholder,
+html.theme-light .onboarding-textarea::placeholder,
+body.theme-light .onboarding-textarea::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+}
+html.theme-light .form-input-icon,
+body.theme-light .form-input-icon {
+    color: #64748b !important;
+}
+
+html.theme-light .verification-option,
+body.theme-light .verification-option {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+html.theme-light .verification-option span.text-white,
+body.theme-light .verification-option span.text-white {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+html.theme-light .chip-button,
+body.theme-light .chip-button {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+}
+html.theme-light .chip-button:hover,
+body.theme-light .chip-button:hover {
+    background: #e0e7ff !important;
+    border-color: #a5b4fc !important;
+    color: #3730a3 !important;
+}
+
+/* ==========================================================================
    SMARTROOM DUAL-TONE (DOUBLE MÀU) ACCENT SYSTEM
    Nền tảng chính là Light & Dark chuẩn.
    Điểm nhấn là 4 cặp màu kép thời thượng:
@@ -5850,3 +6090,110 @@ body.theme-light .renty-chatbot-mascot {
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 18px rgba(14, 165, 233, 0.35);
         }
     }
+
+/* ===== LIGHT MODE STYLING CHO AUTH & ONBOARDING & VERIFY ===== */
+html.theme-light .auth-card-modern, body.theme-light .auth-card-modern,
+html.theme-light .login-card-upgraded, body.theme-light .login-card-upgraded,
+html.theme-light .register-card-upgraded, body.theme-light .register-card-upgraded,
+html.theme-light .glass-panel, body.theme-light .glass-panel,
+html.theme-light .glass-panel-subtle, body.theme-light .glass-panel-subtle,
+html.theme-light .glass-card, body.theme-light .glass-card {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.1) !important;
+    color: #0f172a !important;
+}
+
+html.theme-light .onboarding-input, body.theme-light .onboarding-input,
+html.theme-light .onboarding-textarea, body.theme-light .onboarding-textarea,
+html.theme-light .auth-input-field, body.theme-light .auth-input-field,
+html.theme-light .login-input-control, body.theme-light .login-input-control {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.theme-light .onboarding-input:hover, body.theme-light .onboarding-input:hover,
+html.theme-light .onboarding-textarea:hover, body.theme-light .onboarding-textarea:hover,
+html.theme-light .auth-input-field:hover, body.theme-light .auth-input-field:hover,
+html.theme-light .login-input-control:hover, body.theme-light .login-input-control:hover {
+    border-color: #94a3b8 !important;
+    background: #f8fafc !important;
+}
+
+html.theme-light .onboarding-input:focus, body.theme-light .onboarding-input:focus,
+html.theme-light .onboarding-textarea:focus, body.theme-light .onboarding-textarea:focus,
+html.theme-light .auth-input-field:focus, body.theme-light .auth-input-field:focus,
+html.theme-light .login-input-control:focus, body.theme-light .login-input-control:focus {
+    border-color: #4f46e5 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+html.theme-light .onboarding-input::placeholder, body.theme-light .onboarding-input::placeholder,
+html.theme-light .onboarding-textarea::placeholder, body.theme-light .onboarding-textarea::placeholder,
+html.theme-light .auth-input-field::placeholder, body.theme-light .auth-input-field::placeholder,
+html.theme-light .login-input-control::placeholder, body.theme-light .login-input-control::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+}
+
+html.theme-light .otp-box, body.theme-light .otp-box {
+    background: #ffffff !important;
+    border: 2px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05) !important;
+}
+html.theme-light .otp-box:focus, body.theme-light .otp-box:focus {
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
+}
+html.theme-light .otp-box::placeholder, body.theme-light .otp-box::placeholder {
+    color: #94a3b8 !important;
+    opacity: 0.6 !important;
+}
+
+html.theme-light .form-input-icon, body.theme-light .form-input-icon,
+html.theme-light .auth-input-icon, body.theme-light .auth-input-icon {
+    color: #64748b !important;
+}
+
+html.theme-light .verification-option, body.theme-light .verification-option,
+html.theme-light .verification-pill, body.theme-light .verification-pill {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+html.theme-light .verification-option:hover, body.theme-light .verification-option:hover,
+html.theme-light .verification-pill:hover, body.theme-light .verification-pill:hover {
+    border-color: #94a3b8 !important;
+}
+html.theme-light .verification-option span.text-white, body.theme-light .verification-option span.text-white,
+html.theme-light .verification-pill span.text-white, body.theme-light .verification-pill span.text-white {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+/* Toast Card: Luôn hiển thị chữ sáng rõ nét, không bị màu đen trên nền đen */
+.toast-card {
+    background: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6) !important;
+}
+.toast-card h4, html.theme-light .toast-card h4, body.theme-light .toast-card h4 {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+.toast-card p, html.theme-light .toast-card p, body.theme-light .toast-card p,
+.toast-card .toast-message, html.theme-light .toast-card .toast-message {
+    color: #e2e8f0 !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+}
+.toast-card button, html.theme-light .toast-card button, body.theme-light .toast-card button {
+    color: #94a3b8 !important;
+}
+.toast-card button:hover, html.theme-light .toast-card button:hover, body.theme-light .toast-card button:hover {
+    color: #ffffff !important;
+}

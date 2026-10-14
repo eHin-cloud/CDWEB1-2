@@ -56,10 +56,13 @@ class CrudUserController extends Controller
         $request->validate([
             'login' => 'required',
             'password' => 'required',
+        ], [
+            'login.required' => 'Vui lòng nhập tài khoản đăng nhập',
+            'password.required' => 'Vui lòng nhập mật khẩu',
         ]);
 
-        $login = $request->input('login');
-        $password = $request->input('password');
+        $login = trim((string) $request->input('login'));
+        $password = (string) $request->input('password');
 
         $user = null;
 
@@ -78,6 +81,13 @@ class CrudUserController extends Controller
 
         // 3. Kiểm tra mật khẩu và đăng nhập
         if ($user && Hash::check($password, $user->password)) {
+            if ($user->status === 'locked') {
+                return redirect("login")
+                    ->withInput($request->only('login'))
+                    ->with('error_code', 'ERR_01_13')
+                    ->with('error', 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.');
+            }
+
             Auth::login($user, $request->filled('remember'));
             
             $defaultRoute = match (true) {
@@ -89,13 +99,13 @@ class CrudUserController extends Controller
                 default => route('renty.user'),
             };
             return redirect()->intended($defaultRoute)
-                ->with('success', 'Đăng nhập thành công! Chào mừng ' . ($user->name ?? 'bạn') . ' quay trở lại.');
+                ->with('success', 'Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.');
         }
 
         return redirect("login")
             ->withInput($request->only('login'))
-            ->with('error_code', 'ERR_27_01')
-            ->with('error', 'Thông tin phòng hoặc số điện thoại không chính xác trong hệ thống.');
+            ->with('error_code', 'ERR_01_01')
+            ->with('error', 'Thông tin tài khoản hoặc mật khẩu không chính xác.');
     }
 
     /**
@@ -734,5 +744,166 @@ class CrudUserController extends Controller
         Auth::logout();
 
         return Redirect('login');
+    }
+
+    /**
+     * FEAT_01_AUTH: Giao diện Quên Mật Khẩu qua OTP Email
+     */
+    public function showForgotPassword()
+    {
+        return view('login.forgot_password', [
+            'email' => session('forgot_pwd_email'),
+            'step' => session('forgot_pwd_step', 1),
+            'expiresAt' => session('forgot_pwd_expires'),
+        ]);
+    }
+
+    /**
+     * Gửi mã OTP xác thực khôi phục mật khẩu qua Email
+     */
+    public function sendForgotPasswordOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:150',
+        ], [
+            'email.required' => 'Vui lòng nhập địa chỉ email của bạn.',
+            'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
+        ]);
+
+        $email = trim(strtolower($request->email));
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return back()->withInput()->with('error', 'Địa chỉ email này chưa được đăng ký trong hệ thống.');
+        }
+
+        if ($user->status === 'locked') {
+            return back()->withInput()->with('error', 'Tài khoản này đang bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.');
+        }
+
+        $otp = sprintf('%06d', random_int(100000, 999999));
+        $expiresAt = now()->addMinutes(5)->timestamp;
+
+        session([
+            'forgot_pwd_email' => $user->email,
+            'forgot_pwd_otp' => $otp,
+            'forgot_pwd_expires' => $expiresAt,
+            'forgot_pwd_step' => 2,
+        ]);
+
+        try {
+            Mail::send('emails.forgot_password_otp', [
+                'otp' => $otp,
+                'fullName' => $user->name,
+                'email' => $user->email,
+            ], function ($msg) use ($user) {
+                $msg->to($user->email, $user->name)
+                    ->subject('SmartRoom & Renty - Mã OTP Khôi Phục Mật Khẩu');
+            });
+            Log::info("Forgot password OTP sent to: {$user->email}");
+        } catch (\Exception $e) {
+            Log::error("Failed to send forgot password email: " . $e->getMessage());
+        }
+
+        return redirect()->route('password.forgot')
+            ->with('success', "Mã xác thực OTP đã được gửi đến hộp thư {$user->email}. Vui lòng kiểm tra và nhập mã.");
+    }
+
+    /**
+     * Gửi lại mã OTP khôi phục mật khẩu
+     */
+    public function resendForgotPasswordOtp()
+    {
+        $email = session('forgot_pwd_email');
+        if (!$email) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Phiên làm việc đã hết hạn. Vui lòng thử lại.'], 400);
+            }
+            return redirect()->route('password.forgot')->with('error', 'Phiên làm việc đã hết hạn. Vui lòng thử lại.');
+        }
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy tài khoản.'], 404);
+            }
+            return redirect()->route('password.forgot')->with('error', 'Không tìm thấy tài khoản.');
+        }
+
+        $otp = sprintf('%06d', random_int(100000, 999999));
+        $expiresAt = now()->addMinutes(5)->timestamp;
+
+        session([
+            'forgot_pwd_otp' => $otp,
+            'forgot_pwd_expires' => $expiresAt,
+        ]);
+
+        try {
+            Mail::send('emails.forgot_password_otp', [
+                'otp' => $otp,
+                'fullName' => $user->name,
+                'email' => $user->email,
+            ], function ($msg) use ($user) {
+                $msg->to($user->email, $user->name)
+                    ->subject('SmartRoom & Renty - Mã OTP Khôi Phục Mật Khẩu (Gửi lại)');
+            });
+        } catch (\Exception $e) {
+            Log::error("Failed to resend forgot password email: " . $e->getMessage());
+        }
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Mã OTP mới đã được gửi lại vào email!']);
+        }
+
+        return redirect()->route('password.forgot')
+            ->with('success', 'Mã OTP mới đã được gửi lại vào email của bạn.');
+    }
+
+    /**
+     * Xác thực OTP và đặt lại mật khẩu mới
+     */
+    public function resetPasswordWithOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|digits:6',
+            'password' => 'required|min:6|confirmed',
+        ], [
+            'otp.required' => 'Vui lòng nhập mã OTP 6 chữ số.',
+            'otp.digits' => 'Mã xác thực OTP phải gồm đúng 6 chữ số.',
+            'password.required' => 'Vui lòng nhập mật khẩu mới.',
+            'password.min' => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu không trùng khớp.',
+        ]);
+
+        $email = session('forgot_pwd_email');
+        $storedOtp = session('forgot_pwd_otp');
+        $expires = session('forgot_pwd_expires');
+
+        if (!$email || !$storedOtp) {
+            return redirect()->route('password.forgot')
+                ->with('error', 'Phiên làm việc đã hết hạn. Vui lòng nhập lại email để nhận mã OTP mới.');
+        }
+
+        if (now()->timestamp > $expires) {
+            return back()->withInput()->with('error', 'Mã OTP đã hết hạn. Vui lòng bấm "Gửi lại mã OTP".');
+        }
+
+        if (trim($request->otp) !== (string)$storedOtp) {
+            return back()->withInput()->with('error', 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại.');
+        }
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return redirect()->route('password.forgot')->with('error', 'Không tìm thấy tài khoản người dùng.');
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Xóa session forgot password
+        session()->forget(['forgot_pwd_email', 'forgot_pwd_otp', 'forgot_pwd_expires', 'forgot_pwd_step']);
+
+        return redirect()->route('login')
+            ->with('success', 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay với mật khẩu mới.');
     }
 }

@@ -26,15 +26,19 @@ class OtpService
 
         // Kiểm tra Cooldown 60s
         if ($latest && !$force && $latest->last_sent_at) {
-            $secondsPassed = (int) now()->diffInSeconds($latest->last_sent_at);
-            if ($secondsPassed < self::COOLDOWN_SECONDS) {
-                $retryAfter = self::COOLDOWN_SECONDS - $secondsPassed;
-                return [
-                    'success' => false,
-                    'cooldown' => true,
-                    'retry_after' => $retryAfter,
-                    'message' => "Vui lòng đợi {$retryAfter} giây trước khi yêu cầu mã OTP mới."
-                ];
+            $lastSent = \Carbon\Carbon::parse($latest->last_sent_at);
+            $availableAt = $lastSent->copy()->addSeconds(self::COOLDOWN_SECONDS);
+
+            if (now()->isBefore($availableAt)) {
+                $retryAfter = (int) ceil(now()->diffInSeconds($availableAt));
+                if ($retryAfter > 0) {
+                    return [
+                        'success' => false,
+                        'cooldown' => true,
+                        'retry_after' => $retryAfter,
+                        'message' => "Vui lòng đợi {$retryAfter} giây trước khi yêu cầu mã OTP mới."
+                    ];
+                }
             }
         }
 

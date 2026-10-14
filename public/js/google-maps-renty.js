@@ -1217,7 +1217,7 @@ class GoogleMapsRenty {
             }
 
             if (countEl) {
-                countEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>[ERR_05_02] Không tìm thấy phòng trọ nào trong bán kính đã chọn (${(activeRadius/1000).toFixed(1)} km quanh ${cleanLabel})</span> <button type="button" onclick="clearMapSearchInput()" class="ml-2 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all cursor-pointer"><i class="fa-solid fa-rotate-left mr-1"></i>Thoát ra</button>`;
+                countEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Không tìm thấy phòng trọ nào trong bán kính đã chọn (${(activeRadius/1000).toFixed(1)} km quanh ${cleanLabel})</span> <button type="button" onclick="clearMapSearchInput()" class="ml-2 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all cursor-pointer"><i class="fa-solid fa-rotate-left mr-1"></i>Thoát ra</button>`;
             }
 
             if (roomsGrid) {
@@ -1228,7 +1228,6 @@ class GoogleMapsRenty {
                     <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-2xl mb-3 shadow-lg">
                         <i class="fa-solid fa-location-crosshairs"></i>
                     </div>
-                    <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Mã lỗi: ERR_05_02</span>
                     <h4 class="text-white font-black text-base mt-2 mb-1.5">Không tìm thấy phòng trọ nào trong bán kính đã chọn.</h4>
                     <p class="text-slate-300 text-xs mb-4 max-w-md mx-auto leading-relaxed">
                         Vòng quét bán kính <span class="text-rose-400 font-bold">${(activeRadius/1000).toFixed(1)} km</span> quanh <span class="text-white font-bold">"${cleanLabel}"</span> hiện không có phòng trọ phù hợp. Bạn hãy tăng bán kính quét hoặc xem toàn bộ phòng.

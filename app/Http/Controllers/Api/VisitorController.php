@@ -12,10 +12,47 @@ use Illuminate\Support\Facades\Cache;
 
 class VisitorController extends Controller
 {
-    // Tìm kiếm và lọc nâng cao phòng trọ
+    // FEAT_04_LANDING: Lấy danh sách phòng công khai hiển thị trên trang chủ
     public function index(Request $request)
     {
-        $query = Room::with(['building', 'reviews']);
+        $query = Room::with(['building', 'tenant', 'reviews']);
+
+        // Bộ lọc theo từ khóa tìm kiếm (keyword: quận, khu vực, tên đường, trường ĐH...)
+        $sanitizedKeyword = false;
+        if ($request->filled('keyword')) {
+            $rawKeyword = (string) $request->keyword;
+            $cleaned = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $rawKeyword);
+            $cleaned = strip_tags($cleaned);
+            $cleaned = preg_replace('/[<>{}\$*&^%`~;]/', '', $cleaned);
+            $cleaned = trim($cleaned);
+
+            if ($cleaned !== trim($rawKeyword)) {
+                $sanitizedKeyword = true;
+                $keyword = $cleaned;
+            } else {
+                $keyword = trim($rawKeyword);
+            }
+
+            if (!empty($keyword)) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('room_number', 'like', "%{$keyword}%")
+                      ->orWhere('description', 'like', "%{$keyword}%")
+                      ->orWhereHas('building', function ($b) use ($keyword) {
+                          $b->where('name', 'like', "%{$keyword}%")
+                            ->orWhere('address', 'like', "%{$keyword}%")
+                            ->orWhere('description', 'like', "%{$keyword}%");
+                      });
+                });
+            }
+        }
+
+        // Bộ lọc theo Tỉnh / Thành phố (city: Hồ Chí Minh, Hà Nội, Đà Nẵng...)
+        if ($request->filled('city')) {
+            $city = trim((string) $request->city);
+            $query->whereHas('building', function ($b) use ($city) {
+                $b->where('address', 'like', "%{$city}%");
+            });
+        }
 
         // Bộ lọc theo Building
         if ($request->has('building_id')) {
@@ -43,13 +80,13 @@ class VisitorController extends Controller
             $query->where('area', '<=', $request->area_max);
         }
 
-        // Bộ lọc trạng thái (mặc định chỉ tìm phòng trống nếu không được chỉ định)
+        // Bộ lọc trạng thái: Mặc định chỉ hiển thị phòng còn đang 'Trống' (empty)
         $status = $request->input('status', 'empty');
         if ($status !== 'all') {
             $query->where('status', $status);
         }
 
-        // Bộ lọc tiện ích (amenities) - ví dụ: ['gác lửng', 'cho nuôi thú cưng']
+        // Bộ lọc tiện ích (amenities)
         if ($request->has('amenities')) {
             $amenities = $request->amenities;
             if (is_string($amenities)) {
@@ -64,9 +101,18 @@ class VisitorController extends Controller
 
         $rooms = $query->get();
 
+        // Ưu tiên tin VIP có tích xanh KYC và boost_score lên đầu trang
+        $rooms = $rooms->sortByDesc(function ($room) {
+            return (int) ($room->tenant?->boost_score ?? 0);
+        })->values();
+
         // Mapped dữ liệu để trả về đẹp mắt cho frontend
         $result = $rooms->map(function ($room) {
             $ratingAvg = $room->reviews->avg('rating') ?: 0;
+            $tenant = $room->tenant;
+            $listingBadge = $tenant?->listing_badge ?? 'unverified';
+            $isVerified = in_array($listingBadge, ['verified', 'premium_verified']);
+
             return [
                 'id' => $room->id,
                 'room_number' => $room->room_number,
@@ -76,21 +122,37 @@ class VisitorController extends Controller
                 'area' => $room->area,
                 'amenities' => $room->amenities,
                 'description' => $room->description,
+                'boost_score' => (int) ($tenant?->boost_score ?? 0),
+                'trust_badge' => [
+                    'is_verified' => $isVerified,
+                    'badge' => $listingBadge,
+                    'label' => $isVerified ? 'Tích xanh' : 'Chưa xác minh'
+                ],
                 'building' => [
-                    'id' => $room->building->id,
-                    'name' => $room->building->name,
-                    'address' => $room->building->address,
+                    'id' => $room->building?->id,
+                    'name' => $room->building?->name,
+                    'address' => $room->building?->address,
                 ],
                 'rating_avg' => round($ratingAvg, 1),
                 'reviews_count' => $room->reviews->count()
             ];
         });
 
-        return response()->json([
+        $resData = [
             'success' => true,
             'count' => $result->count(),
             'rooms' => $result
-        ]);
+        ];
+
+        if ($sanitizedKeyword) {
+            $resData['warning'] = 'Từ khóa tìm kiếm chứa ký tự không hợp lệ và đã được tự động làm sạch.';
+            $resData['error_code'] = 'ERR_04_02';
+        } elseif ($result->isEmpty() && $request->filled('keyword')) {
+            $resData['error_code'] = 'ERR_04_03';
+            $resData['message'] = 'Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.';
+        }
+
+        return response()->json($resData);
     }
 
     /**
@@ -352,7 +414,8 @@ class VisitorController extends Controller
         if (!$room) {
             return response()->json([
                 'success' => false,
-                'message' => 'Phòng không tồn tại'
+                'error_code' => 'ERR_06_01',
+                'message' => 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.'
             ], 404);
         }
 
