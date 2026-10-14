@@ -65,7 +65,7 @@ if exist .env (
 )
 
 :: Cau hinh lenh Docker Compose voi file trong thu muc docker
-set "DOCKER_COMPOSE_CMD=docker compose -f "%~dp0docker\docker-compose.yml""
+set "DOCKER_COMPOSE_CMD=docker compose -p cdweb1-2 -f "%~dp0docker\docker-compose.yml""
 
 :MENU
 :TAB_MENU

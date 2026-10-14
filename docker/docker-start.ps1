@@ -1,4 +1,4 @@
 $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-docker compose -f "$scriptDir\docker-compose.yml" up --build
+docker compose -p cdweb1-2 -f "$scriptDir\docker-compose.yml" up --build

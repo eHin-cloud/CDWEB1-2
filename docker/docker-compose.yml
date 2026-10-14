@@ -1,3 +1,5 @@
+name: cdweb1-2
+
 services:
   app:
     build:
