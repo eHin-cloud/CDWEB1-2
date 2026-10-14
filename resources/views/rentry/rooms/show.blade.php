@@ -606,85 +606,82 @@
                     @endphp
 
                     @if($isRoomOwner)
-                        <!-- Thông báo Chế độ xem trước dành riêng cho Chủ sở hữu phòng -->
-                        <div class="mb-4 p-4 rounded-2xl bg-indigo-950/50 border border-indigo-500/30 text-xs text-slate-300 space-y-2.5 animate-fade-in shadow-inner">
+                        <!-- Thông báo Chế độ Quản lý dành riêng cho Chủ sở hữu phòng -->
+                        <div class="p-5 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-xl">
                             <div class="flex items-center justify-between">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-extrabold uppercase text-[10px] tracking-wider border border-indigo-500/30">
                                     <i class="fa-solid fa-crown text-[10px] text-amber-400"></i> Bạn là chủ phòng này
                                 </span>
-                                <span class="text-[10px] text-slate-400 font-medium">Chế độ xem trước</span>
+                                <span class="text-[10px] text-slate-400 font-medium">Bảng điều khiển</span>
                             </div>
-                            <p class="text-slate-300 text-[11px] leading-relaxed">
-                                Đang xem tin với tư cách Chủ trọ (<span class="text-indigo-200 font-bold">{{ $currentUser->name }}</span>). Khách tìm phòng trên Renty sẽ liên hệ qua form này.
+                            <p class="text-slate-300 text-xs leading-relaxed">
+                                Bạn đang xem tin đăng phòng của chính mình với tư cách <span class="text-indigo-200 font-bold">{{ $currentUser->name }}</span>. Khách thuê khi xem phòng sẽ thấy bảng nhập liệu để hẹn lịch xem thực tế.
                             </p>
-                            <div class="pt-2 border-t border-indigo-500/20 flex flex-col gap-2">
-                                <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 text-xs">
-                                    <i class="fa-solid fa-clipboard-list"></i> Xem danh sách khách đặt lịch
-                                </a>
-                                <a href="{{ route('admin.rooms.edit', $room['id']) }}" class="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700 text-xs">
+                            <div class="pt-2 border-t border-indigo-500/20 flex flex-col gap-2.5">
+                                <a href="{{ route('admin.rooms.edit', $room['id']) }}" class="w-full py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 active:scale-95 text-xs">
                                     <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa phòng này
                                 </a>
+                                <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
+                                    <i class="fa-solid fa-clipboard-list text-indigo-400"></i> Xem danh sách khách đặt lịch
+                                </a>
                             </div>
-                            <p class="text-[10px] text-slate-400 text-center italic pt-1">
-                                <i class="fa-solid fa-flask text-[9px] mr-1"></i> Form bên dưới để bạn gửi thử nghiệm:
-                            </p>
                         </div>
+                    @else
+                        <form action="{{ route('renty.contact_request.store') }}" method="POST" id="formContactRequest" novalidate class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="room_id" value="{{ $room['id'] }}">
+                            <div>
+                                <label for="customer_name" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Họ và tên của bạn <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="text" name="name" id="customer_name" value="{{ $defaultName }}" placeholder="Nguyễn Văn B" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                <p id="err_customer_name" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('name') || $errors->has('customer_name') ? '' : 'hidden' }}">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                    <span>{{ $errors->first('name') ?: $errors->first('customer_name') ?: 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="customer_phone" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Số điện thoại liên hệ <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="tel" name="phone" id="customer_phone" value="{{ $defaultPhone }}" placeholder="0987654321" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                <p id="err_customer_phone" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('phone') || $errors->has('customer_phone') ? '' : 'hidden' }}">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                    <span>{{ $errors->first('phone') ?: $errors->first('customer_phone') ?: 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="appointment_time" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Ngày & Giờ xem phòng <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="datetime-local" 
+                                       name="appointment_time" 
+                                       id="appointment_time" 
+                                       value="{{ old('appointment_time') }}" 
+                                       min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
+                                       onclick="this.showPicker ? this.showPicker() : null"
+                                       style="color-scheme: dark;" 
+                                       placeholder="Chọn ngày giờ..."
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
+                                       {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                <p id="err_appointment_time" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('appointment_time') ? '' : 'hidden' }}">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                    <span>{{ $errors->first('appointment_time') ?: 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="note" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Lời nhắn / Ghi chú <span class="text-slate-500 font-normal text-[10px]">(Tối đa 255 ký tự)</span>
+                                </label>
+                                <textarea name="message" id="note" rows="2.5" maxlength="255" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
+                            </div>
+                            <button type="submit" id="btnSubmitRequest" name="btnBooking" data-field-name="btnBooking" 
+                                class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 cursor-pointer shadow-lg shadow-blue-600/25 hover:shadow-blue-600/35' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
+                                {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                {{ (($room['status'] ?? 'empty') === 'empty') ? 'Gửi yêu cầu hẹn xem' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
+                            </button>
+                        </form>
                     @endif
-
-                    <form action="{{ route('renty.contact_request.store') }}" method="POST" id="formContactRequest" novalidate class="space-y-3">
-                        @csrf
-                        <input type="hidden" name="room_id" value="{{ $room['id'] }}">
-                        <div>
-                            <label for="customer_name" class="block text-[11px] font-bold text-slate-300 mb-1">
-                                Họ và tên của bạn <span class="text-rose-500">*</span>
-                            </label>
-                            <input type="text" name="name" id="customer_name" value="{{ $defaultName }}" placeholder="Nguyễn Văn B" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            <p id="err_customer_name" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('name') || $errors->has('customer_name') ? '' : 'hidden' }}">
-                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                <span>{{ $errors->first('name') ?: $errors->first('customer_name') ?: 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.' }}</span>
-                            </p>
-                        </div>
-                        <div>
-                            <label for="customer_phone" class="block text-[11px] font-bold text-slate-300 mb-1">
-                                Số điện thoại liên hệ <span class="text-rose-500">*</span>
-                            </label>
-                            <input type="tel" name="phone" id="customer_phone" value="{{ $defaultPhone }}" placeholder="0987654321" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            <p id="err_customer_phone" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('phone') || $errors->has('customer_phone') ? '' : 'hidden' }}">
-                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                <span>{{ $errors->first('phone') ?: $errors->first('customer_phone') ?: 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.' }}</span>
-                            </p>
-                        </div>
-                        <div>
-                            <label for="appointment_time" class="block text-[11px] font-bold text-slate-300 mb-1">
-                                Ngày & Giờ xem phòng <span class="text-rose-500">*</span>
-                            </label>
-                            <input type="datetime-local" 
-                                   name="appointment_time" 
-                                   id="appointment_time" 
-                                   value="{{ old('appointment_time') }}" 
-                                   min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
-                                   onclick="this.showPicker ? this.showPicker() : null"
-                                   style="color-scheme: dark;" 
-                                   placeholder="Chọn ngày giờ..."
-                                   class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
-                                   {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            <p id="err_appointment_time" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('appointment_time') ? '' : 'hidden' }}">
-                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                <span>{{ $errors->first('appointment_time') ?: 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.' }}</span>
-                            </p>
-                        </div>
-                        <div>
-                            <label for="note" class="block text-[11px] font-bold text-slate-300 mb-1">
-                                Lời nhắn / Ghi chú <span class="text-slate-500 font-normal text-[10px]">(Tối đa 255 ký tự)</span>
-                            </label>
-                            <textarea name="message" id="note" rows="2.5" maxlength="255" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
-                        </div>
-                        <button type="submit" id="btnSubmitRequest" name="btnBooking" data-field-name="btnBooking" 
-                            class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 cursor-pointer shadow-lg shadow-blue-600/25 hover:shadow-blue-600/35' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
-                            {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            {{ (($room['status'] ?? 'empty') === 'empty') ? 'Gửi yêu cầu hẹn xem' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
-                        </button>
-                    </form>
                 </section>
             </aside>
         </section>
