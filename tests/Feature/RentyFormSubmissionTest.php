@@ -114,7 +114,8 @@ class RentyFormSubmissionTest extends TestCase
 
     public function test_submit_review(): void
     {
-        $response = $this->from('/renty/room/' . $this->room->id)
+        $response = $this->actingAs($this->user)
+            ->from('/renty/room/' . $this->room->id)
             ->post(route('renty.room.review.store', $this->room->id), [
                 'author_name' => 'Reviewer Name',
                 'rating' => 5,

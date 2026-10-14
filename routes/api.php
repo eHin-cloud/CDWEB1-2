@@ -56,6 +56,10 @@ Route::post('/renty/room-alerts', [RoomAlertController::class, 'store'])->middle
 Route::get('/renty/room-alerts/my', [RoomAlertController::class, 'myAlerts'])->middleware('auth:api')->name('api.renty.room_alerts.my');
 Route::delete('/renty/room-alerts/{id}', [RoomAlertController::class, 'destroy'])->middleware('auth:api')->name('api.renty.room_alerts.destroy');
 
+// FEAT_07_CONTACT: Tiếp nhận & Quản lý yêu cầu hẹn xem phòng
+Route::post('/renty/contact-requests', [\App\Http\Controllers\AdminDashboardController::class, 'storeContactRequest'])->middleware('throttle:15,1')->name('api.renty.contact_requests.store');
+Route::post('/renty/contact-request', [\App\Http\Controllers\AdminDashboardController::class, 'storeContactRequest'])->middleware('throttle:15,1');
+
 // IoT Smart Metering Ingestion & Realtime Telemetry APIs
 Route::post('/v1/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);
 Route::post('/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);

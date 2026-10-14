@@ -284,6 +284,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/contract/{id}/decline-renewal', [AdminDashboardController::class, 'declineRenewal'])->name('smartroom.admin.contract.decline_renewal');
 
     // Contact Requests Management
+    Route::get('/smartroom/admin/contact-requests', [AdminDashboardController::class, 'contactRequestsIndex'])->name('smartroom.admin.contact_requests');
     Route::post('/smartroom/admin/contact-request/{id}/status', [AdminDashboardController::class, 'updateContactRequestStatus'])->name('smartroom.admin.contact_request.status');
     Route::delete('/smartroom/admin/contact-request/{id}', [AdminDashboardController::class, 'deleteContactRequest'])->middleware('role:landlord')->name('smartroom.admin.contact_request.delete');
 
@@ -349,10 +350,11 @@ Route::post('/smartroom/contract/{id}/sign', [AdminDashboardController::class, '
 Route::post('/smartroom/contract/{id}/send-otp', [AdminDashboardController::class, 'sendOtpForContract'])->name('smartroom.contract.send_otp');
 Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::class, 'signLessorContract'])->name('smartroom.contract.lessor_sign');
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
+Route::post('/renty/contact-requests', [AdminDashboardController::class, 'storeContactRequest']);
 
 $rentyRooms = function ($filterEmpty = true) {
     $user = auth()->user();
-    $query = \App\Models\Room::with(['building', 'tenant', 'residents', 'reviews']);
+    $query = \App\Models\Room::with(['building', 'tenant.users', 'residents', 'reviews']);
 
     // Nếu người dùng đăng nhập là chủ trọ hoặc quản lý có tenant_id (và không phải Superadmin),
     // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó
@@ -517,8 +519,13 @@ $rentyRooms = function ($filterEmpty = true) {
             ];
         })->all();
         
+        $landlordUser = $tenant?->users?->firstWhere('role', 'landlord') 
+            ?? $tenant?->users?->firstWhere('role_id', 1)
+            ?? $tenant?->users?->first();
+
         return [
             'id' => $room->id,
+            'tenant_id' => $room->tenant_id,
             'room_number' => $room->room_number,
             'price' => $room->price,
             'status' => $room->status,
@@ -557,8 +564,10 @@ $rentyRooms = function ($filterEmpty = true) {
             'listing_badge' => $listingBadge,
             'trust_badge' => $trustBadge,
             'boost_score' => (int) ($tenant->boost_score ?? 0),
-            'landlord_name' => $tenant?->name ?? 'Chủ nhà trọ Renty',
-            'landlord_phone' => $tenant?->phone ?? '0396519196',
+            'tenant_name' => $tenant?->name,
+            'landlord_name' => $landlordUser?->name ?? $tenant?->name ?? 'Chủ nhà trọ Renty',
+            'landlord_phone' => $landlordUser?->phone ?? $tenant?->phone ?? '0396519196',
+            'landlord_avatar' => $landlordUser?->avatar_url ?? null,
             'reviews' => $reviewsList
         ];
     });

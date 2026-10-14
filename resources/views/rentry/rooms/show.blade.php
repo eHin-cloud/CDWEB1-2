@@ -542,8 +542,12 @@
                 <!-- Landlord Card: Thông tin chủ nhà (Spec UI STT 3 - landlord_info) -->
                 <section id="landlord_info" name="landlord_info" data-field-name="landlord_info" class="tilt-element p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-sm">
                     <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-extrabold text-lg shrink-0 shadow-inner">
-                            <i class="fa-solid fa-user-tie"></i>
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-extrabold text-lg shrink-0 shadow-inner overflow-hidden">
+                            @if(!empty($room['landlord_avatar']))
+                                <img src="{{ $room['landlord_avatar'] }}" alt="{{ $room['landlord_name'] }}" class="w-full h-full object-cover">
+                            @else
+                                <i class="fa-solid fa-user-tie"></i>
+                            @endif
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
@@ -552,6 +556,12 @@
                                     <i class="fa-solid fa-circle-check text-[8px]"></i> KYC
                                 </span>
                             </div>
+                            @if(!empty($room['tenant_name']) && $room['tenant_name'] !== $room['landlord_name'])
+                                <p class="text-[10px] text-slate-400 truncate mt-0.5 flex items-center gap-1">
+                                    <i class="fa-solid fa-building text-[9px] text-indigo-400"></i>
+                                    <span>{{ $room['tenant_name'] }}</span>
+                                </p>
+                            @endif
                             <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
                                 <i class="fa-solid fa-phone text-[10px] text-emerald-400"></i>
                                 <span id="landlord-phone">{{ $room['landlord_phone'] ?? '0396519196' }}</span>
@@ -564,55 +574,196 @@
                 <section class="tilt-element p-6 rounded-2xl bg-slate-900/30 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                     <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-500/30 to-transparent"></div>
                     
-                    <h2 class="text-sm font-extrabold text-slate-100 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-phone-volume text-teal-400"></i> Hẹn xem phòng / Liên hệ
-                    </h2>
-                    
-                    @if(($room['status'] ?? 'empty') !== 'empty')
-                        <!-- Thông báo phòng đã có người thuê (ERR_06_02) -->
-                        <div class="mb-4 p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-300 space-y-1">
-                            <div class="flex items-center gap-2 text-rose-400 font-extrabold">
-                                <i class="fa-solid fa-lock"></i>
-                                <span>Phòng đã có người thuê</span>
-                            </div>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">
-                                Phòng lưu trú này hiện đã có người thuê, tạm ngừng nhận đăng ký.
-                            </p>
-                        </div>
-                    @endif
+                    @php
+                        $currentUser = Auth::user();
+                        $isSuperAdmin = $currentUser && $currentUser->isAdmin();
+                        $isRoomOwner = $currentUser && $currentUser->canAccessLandlordDashboard() && $currentUser->tenant_id && $currentUser->tenant_id == ($room['tenant_id'] ?? null);
+                        $defaultName = old('name', old('customer_name', (!$isRoomOwner && !$isSuperAdmin && $currentUser && !$currentUser->canAccessLandlordDashboard()) ? $currentUser->name : ''));
+                        $defaultPhone = old('phone', old('customer_phone', (!$isRoomOwner && !$isSuperAdmin && $currentUser && !$currentUser->canAccessLandlordDashboard()) ? $currentUser->phone : ''));
+                    @endphp
 
-                    <div class="flex gap-2.5 mb-4">
-                        <a href="{{ (($room['status'] ?? 'empty') === 'empty') ? 'tel:' . ($room['landlord_phone'] ?? '0396519196') : 'javascript:void(0)' }}" 
-                           class="flex-1 py-2.5 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/15' : 'bg-slate-800 opacity-50 cursor-not-allowed' }} text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
-                            <i class="fa-solid fa-phone"></i>
-                            <span>Gọi điện</span>
-                        </a>
-                        <a href="{{ (($room['status'] ?? 'empty') === 'empty') ? 'https://zalo.me/' . ($room['landlord_phone'] ?? '0396519196') : 'javascript:void(0)' }}" 
-                           target="{{ (($room['status'] ?? 'empty') === 'empty') ? '_blank' : '_self' }}" 
-                           class="flex-1 py-2.5 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-600/15' : 'bg-slate-800 opacity-50 cursor-not-allowed' }} text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
-                            <i class="fa-solid fa-comments"></i>
-                            <span>Nhắn Zalo</span>
-                        </a>
-                    </div>
-                    
-                    <form action="{{ route('renty.contact_request.store') }}" method="POST" class="space-y-3">
-                        @csrf
-                        <input type="hidden" name="room_id" value="{{ $room['id'] }}">
-                        <div>
-                            <input type="text" name="name" required value="{{ Auth::user()->name ?? '' }}" placeholder="Họ tên của bạn" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                    @if($isSuperAdmin)
+                        <!-- DÀNH RIÊNG CHO SUPERADMIN: Khung Kiểm Duyệt Quản Trị Viên Sàn -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-sm font-extrabold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-amber-400"></i> Quản trị viên sàn Renty
+                            </h2>
+                            <span class="text-[10px] text-amber-400 font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25">Superadmin</span>
                         </div>
-                        <div>
-                            <input type="tel" name="phone" required value="{{ Auth::user()->phone ?? '' }}" placeholder="Số điện thoại liên hệ" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+
+                        <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-950/30 via-slate-900/60 to-purple-950/30 border border-amber-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-2xl">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 font-extrabold uppercase text-[10px] tracking-wider border border-amber-500/30">
+                                    <i class="fa-solid fa-user-shield text-[10px] text-amber-400"></i> Chế độ kiểm duyệt
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-medium">Toàn sàn</span>
+                            </div>
+
+                            <p class="text-slate-300 text-xs leading-relaxed">
+                                Bạn đang xem tin đăng với tư cách <span class="text-amber-300 font-bold">{{ $currentUser->name }}</span> (Quản trị viên tối cao).
+                            </p>
+
+                            <!-- Đối soát thông tin phòng & chủ trọ -->
+                            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2 text-[11px]">
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span>Cơ sở sở hữu:</span>
+                                    <span class="text-slate-200 font-bold truncate max-w-[150px]">{{ $room['tenant_name'] ?? 'Hệ thống SmartRoom' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span>Mã cơ sở (Tenant ID):</span>
+                                    <span class="text-amber-400 font-mono font-bold">#{{ $room['tenant_id'] ?? 'N/A' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span>Chủ trọ phụ trách:</span>
+                                    <span class="text-slate-200 font-semibold">{{ $room['landlord_name'] ?? 'Chủ nhà trọ' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span>Hotline liên hệ:</span>
+                                    <span class="text-emerald-400 font-mono font-semibold">{{ $room['landlord_phone'] ?? '0396519196' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Nút chức năng dành cho Superadmin -->
+                            <div class="pt-2 border-t border-amber-500/20 flex flex-col gap-2">
+                                <a href="{{ route('user.list') }}" class="w-full py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-600/20 active:scale-95 text-xs">
+                                    <i class="fa-solid fa-users-gear"></i> Quản lý tài khoản sàn
+                                </a>
+                                <a href="{{ route('admin.verifications.index') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
+                                    <i class="fa-solid fa-id-card-clip text-amber-400"></i> Xét duyệt KYC chủ trọ
+                                </a>
+                                <button type="button" onclick="document.getElementById('superadmin-guest-preview')?.classList.toggle('hidden');" class="w-full py-2 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-center flex items-center justify-center gap-1.5 transition-all border border-slate-800 text-[11px] cursor-pointer">
+                                    <i class="fa-solid fa-eye text-[10px]"></i> Bật / Tắt mô phỏng Khách thuê
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <textarea name="message" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}></textarea>
+
+                        <!-- Khối xem thử dành cho Superadmin khi bấm toggle -->
+                        <div id="superadmin-guest-preview" class="hidden mt-4 p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800 space-y-3">
+                            <p class="text-[10px] text-amber-400/80 italic text-center">Giao diện tương tác mà Khách thuê nhìn thấy:</p>
+                            <div class="flex gap-2 mb-2">
+                                <span class="flex-1 py-2 rounded-xl bg-emerald-600/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-1 border border-emerald-500/30">
+                                    <i class="fa-solid fa-phone"></i> Gọi điện
+                                </span>
+                                <span class="flex-1 py-2 rounded-xl bg-blue-600/40 text-blue-300 text-xs font-bold text-center flex items-center justify-center gap-1 border border-blue-500/30">
+                                    <i class="fa-solid fa-comments"></i> Nhắn Zalo
+                                </span>
+                            </div>
                         </div>
-                        <button type="submit" id="btnBooking" name="btnBooking" data-field-name="btnBooking" 
-                            class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 cursor-pointer shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
-                            {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            {{ (($room['status'] ?? 'empty') === 'empty') ? 'Hẹn xem phòng / Liên hệ' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
-                        </button>
-                    </form>
+                    @elseif($isRoomOwner)
+                        <!-- Dành riêng cho Chủ trọ sở hữu phòng này -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-sm font-extrabold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-crown text-amber-400"></i> Quản lý phòng của bạn
+                            </h2>
+                            <span class="text-[10px] text-indigo-400 font-semibold px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">Chủ sở hữu</span>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-xl">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-extrabold uppercase text-[10px] tracking-wider border border-indigo-500/30">
+                                    <i class="fa-solid fa-user-check text-[10px] text-amber-400"></i> Bạn là chủ phòng này
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-medium">Bảng điều khiển</span>
+                            </div>
+                            <p class="text-slate-300 text-xs leading-relaxed">
+                                Bạn đang xem tin đăng phòng của chính mình với tư cách <span class="text-indigo-200 font-bold">{{ $currentUser->name }}</span>. Khách tìm phòng trên Renty sẽ liên hệ qua form này khi họ truy cập.
+                            </p>
+                            <div class="pt-2 border-t border-indigo-500/20 flex flex-col gap-2.5">
+                                <a href="{{ route('admin.rooms.edit', $room['id']) }}" class="w-full py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 active:scale-95 text-xs">
+                                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa phòng này
+                                </a>
+                                <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
+                                    <i class="fa-solid fa-clipboard-list text-indigo-400"></i> Xem danh sách khách đặt lịch
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <!-- Dành cho Khách thuê / Người xem bên ngoài -->
+                        <h2 class="text-sm font-extrabold text-slate-100 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-phone-volume text-teal-400"></i> Hẹn xem phòng / Liên hệ
+                        </h2>
+                        
+                        @if(($room['status'] ?? 'empty') !== 'empty')
+                            <!-- Thông báo phòng đã có người thuê (ERR_06_02) -->
+                            <div class="mb-4 p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-300 space-y-1">
+                                <div class="flex items-center gap-2 text-rose-400 font-extrabold">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <span>Phòng đã có người thuê</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-relaxed">
+                                    Phòng lưu trú này hiện đã có người thuê, tạm ngừng nhận đăng ký.
+                                </p>
+                            </div>
+                        @endif
+
+                        <div class="flex gap-2.5 mb-4">
+                            <a href="{{ (($room['status'] ?? 'empty') === 'empty') ? 'tel:' . ($room['landlord_phone'] ?? '0396519196') : 'javascript:void(0)' }}" 
+                               class="flex-1 py-2.5 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/15' : 'bg-slate-800 opacity-50 cursor-not-allowed' }} text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
+                                <i class="fa-solid fa-phone"></i>
+                                <span>Gọi điện</span>
+                            </a>
+                            <a href="{{ (($room['status'] ?? 'empty') === 'empty') ? 'https://zalo.me/' . ($room['landlord_phone'] ?? '0396519196') : 'javascript:void(0)' }}" 
+                               target="{{ (($room['status'] ?? 'empty') === 'empty') ? '_blank' : '_self' }}" 
+                               class="flex-1 py-2.5 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-600/15' : 'bg-slate-800 opacity-50 cursor-not-allowed' }} text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Nhắn Zalo</span>
+                            </a>
+                        </div>
+                        <form action="{{ route('renty.contact_request.store') }}" method="POST" id="formContactRequest" novalidate class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="room_id" value="{{ $room['id'] }}">
+                            <div>
+                                <label for="customer_name" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Họ và tên của bạn <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="text" name="name" id="customer_name" value="{{ $defaultName }}" placeholder="Nguyễn Văn B" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                <p id="err_customer_name" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('name') || $errors->has('customer_name') ? '' : 'hidden' }}">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                    <span>{{ $errors->first('name') ?: $errors->first('customer_name') ?: 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="customer_phone" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Số điện thoại liên hệ <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="tel" name="phone" id="customer_phone" value="{{ $defaultPhone }}" placeholder="0987654321" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                <p id="err_customer_phone" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('phone') || $errors->has('customer_phone') ? '' : 'hidden' }}">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                    <span>{{ $errors->first('phone') ?: $errors->first('customer_phone') ?: 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="appointment_time" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Ngày & Giờ xem phòng <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="datetime-local" 
+                                       name="appointment_time" 
+                                       id="appointment_time" 
+                                       value="{{ old('appointment_time') }}" 
+                                       min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
+                                       onclick="this.showPicker ? this.showPicker() : null"
+                                       style="color-scheme: dark;" 
+                                       placeholder="Chọn ngày giờ..."
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
+                                       {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                <p id="err_appointment_time" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('appointment_time') ? '' : 'hidden' }}">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                                    <span>{{ $errors->first('appointment_time') ?: 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="note" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                    Lời nhắn / Ghi chú <span class="text-slate-500 font-normal text-[10px]">(Tối đa 255 ký tự)</span>
+                                </label>
+                                <textarea name="message" id="note" rows="2.5" maxlength="255" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
+                            </div>
+                            <button type="submit" id="btnSubmitRequest" name="btnBooking" data-field-name="btnBooking" 
+                                class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 cursor-pointer shadow-lg shadow-blue-600/25 hover:shadow-blue-600/35' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
+                                {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                                {{ (($room['status'] ?? 'empty') === 'empty') ? 'Gửi yêu cầu hẹn xem' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
+                            </button>
+                        </form>
+                    @endif
                 </section>
             </aside>
         </section>
@@ -1230,6 +1381,128 @@
                 }
             });
         }
+
+        // FEAT_07_CONTACT: Validation giao diện bôi đỏ viền & thông báo lỗi chuẩn Table 61
+        const formContact = document.getElementById('formContactRequest');
+        if (formContact) {
+            const inputName = document.getElementById('customer_name');
+            const inputPhone = document.getElementById('customer_phone');
+            const inputTime = document.getElementById('appointment_time');
+
+            const errName = document.getElementById('err_customer_name');
+            const errPhone = document.getElementById('err_customer_phone');
+            const errTime = document.getElementById('err_appointment_time');
+
+            function showFieldError(input, errorEl, msg) {
+                if (!input) return;
+                input.classList.remove('border-slate-800');
+                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
+                if (errorEl) {
+                    errorEl.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px]"></i> <span>${msg}</span>`;
+                    errorEl.classList.remove('hidden');
+                }
+            }
+
+            function clearFieldError(input, errorEl) {
+                if (!input) return;
+                input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/30', 'bg-rose-950/20');
+                input.classList.add('border-slate-800');
+                if (errorEl) {
+                    errorEl.classList.add('hidden');
+                }
+            }
+
+            inputName?.addEventListener('input', () => clearFieldError(inputName, errName));
+            inputPhone?.addEventListener('input', () => clearFieldError(inputPhone, errPhone));
+            inputTime?.addEventListener('input', () => clearFieldError(inputTime, errTime));
+            inputTime?.addEventListener('change', () => clearFieldError(inputTime, errTime));
+
+            formContact.addEventListener('submit', function(e) {
+                let hasErr = false;
+
+                // 1. Khách để trống họ và tên (ERR_07_01)
+                const nameVal = (inputName?.value || '').trim();
+                if (!nameVal) {
+                    showFieldError(inputName, errName, 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.');
+                    if (!hasErr) inputName?.focus();
+                    hasErr = true;
+                } else if (nameVal.length < 2 || nameVal.length > 100) {
+                    showFieldError(inputName, errName, 'Họ và tên phải từ 2 đến 100 ký tự.');
+                    if (!hasErr) inputName?.focus();
+                    hasErr = true;
+                } else {
+                    clearFieldError(inputName, errName);
+                }
+
+                // 2. Khách để trống số điện thoại (ERR_07_02 & ERR_07_03)
+                const phoneVal = (inputPhone?.value || '').trim();
+                const cleanPhone = phoneVal.replace(/[^0-9]/g, '');
+                if (!phoneVal) {
+                    showFieldError(inputPhone, errPhone, 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.');
+                    if (!hasErr) inputPhone?.focus();
+                    hasErr = true;
+                } else if (cleanPhone.length !== 10 || !/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
+                    showFieldError(inputPhone, errPhone, 'Số điện thoại liên hệ phải có chính xác 10 chữ số.');
+                    if (!hasErr) inputPhone?.focus();
+                    hasErr = true;
+                } else {
+                    clearFieldError(inputPhone, errPhone);
+                }
+
+                // 3. Kiểm tra bắt buộc chọn ngày hẹn xem phòng & không ở quá khứ (ERR_07_04)
+                const timeVal = (inputTime?.value || '').trim();
+                if (!timeVal) {
+                    showFieldError(inputTime, errTime, 'Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.');
+                    if (!hasErr) inputTime?.focus();
+                    hasErr = true;
+                } else {
+                    const selectedDate = new Date(timeVal);
+                    const now = new Date();
+                    const hours = selectedDate.getHours();
+                    const minutes = selectedDate.getMinutes();
+
+                    if (selectedDate <= now) {
+                        showFieldError(inputTime, errTime, 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.');
+                        if (!hasErr) inputTime?.focus();
+                        hasErr = true;
+                    } else if (hours < 7 || hours > 21 || (hours === 21 && minutes > 0)) {
+                        showFieldError(inputTime, errTime, 'Thời gian hẹn xem phòng phải nằm trong khung giờ 07:00 - 21:00 hàng ngày.');
+                        if (!hasErr) inputTime?.focus();
+                        hasErr = true;
+                    } else {
+                        clearFieldError(inputTime, errTime);
+                    }
+                }
+
+                if (hasErr) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        }
     </script>
+    @if(session('success') && str_contains(session('success'), 'Gửi yêu cầu hẹn xem phòng thành công'))
+    <!-- Modal Popup Cảm Ơn & Xác Nhận Đặt Lịch (Table 61 - ERR_07_05) -->
+    <div id="contact-success-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="w-full max-w-md rounded-3xl bg-[#0a0f1d] border border-emerald-500/30 p-6 md:p-8 shadow-2xl text-center relative overflow-hidden">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-3xl mb-4 shadow-lg shadow-emerald-500/10 animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-extrabold uppercase tracking-widest mb-2">
+                ERR_07_05: Đặt lịch thành công
+            </span>
+            <h3 class="text-xl font-extrabold text-white mt-1">Đã gửi yêu cầu hẹn xem phòng!</h3>
+            <p class="text-xs text-slate-400 mt-2.5 leading-relaxed">
+                Cảm ơn bạn đã quan tâm. Chủ trọ đã nhận được thông tin và sẽ sớm gọi điện tư vấn, sắp xếp lịch đón bạn đến xem phòng thực tế.
+            </p>
+            <div class="mt-6 flex gap-3">
+                <button type="button" onclick="document.getElementById('contact-success-modal').remove()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-600/20 active:scale-95 cursor-pointer">
+                    Tôi đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </body>
 </html>
