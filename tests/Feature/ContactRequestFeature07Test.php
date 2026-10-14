@@ -323,6 +323,37 @@ class ContactRequestFeature07Test extends TestCase
         ]);
     }
 
+    public function test_name_length_and_operating_hours_validation(): void
+    {
+        // 1. Tên quá ngắn (< 2 ký tự)
+        $resShortName = $this->postJson(route('api.renty.contact_requests.store'), [
+            'room_id' => $this->room->id,
+            'customer_name' => 'A',
+            'customer_phone' => '0987654321',
+            'appointment_time' => Carbon::now()->addDays(1)->setHour(10)->format('Y-m-d H:i:s'),
+        ]);
+        $resShortName->assertStatus(422);
+        $resShortName->assertJson([
+            'success' => false,
+            'error_code' => 'ERR_07_01',
+            'message' => 'Họ và tên phải từ 2 đến 100 ký tự.',
+        ]);
+
+        // 2. Khung giờ ngoài 07:00 - 21:00 (ví dụ 23:00 đêm)
+        $resInvalidHour = $this->postJson(route('api.renty.contact_requests.store'), [
+            'room_id' => $this->room->id,
+            'customer_name' => 'Nguyễn Văn B',
+            'customer_phone' => '0987654321',
+            'appointment_time' => Carbon::now()->addDays(1)->setHour(23)->setMinute(0)->format('Y-m-d H:i:s'),
+        ]);
+        $resInvalidHour->assertStatus(422);
+        $resInvalidHour->assertJson([
+            'success' => false,
+            'error_code' => 'ERR_07_04',
+            'message' => 'Thời gian hẹn xem phòng phải nằm trong khung giờ 07:00 - 21:00 hàng ngày.',
+        ]);
+    }
+
     public function test_existing_renty_contact_request_route_compatibility(): void
     {
         $response = $this->from('/renty')->post(route('renty.contact_request.store'), [

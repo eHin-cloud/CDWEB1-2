@@ -635,20 +635,29 @@
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                         <div>
-                            <input type="text" name="name" id="customer_name" value="{{ $defaultName }}" placeholder="Họ và tên của bạn *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <label for="customer_name" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                Họ và tên của bạn <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" name="name" id="customer_name" value="{{ $defaultName }}" placeholder="Nguyễn Văn B" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             <p id="err_customer_name" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('name') || $errors->has('customer_name') ? '' : 'hidden' }}">
                                 <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
                                 <span>{{ $errors->first('name') ?: $errors->first('customer_name') ?: 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.' }}</span>
                             </p>
                         </div>
                         <div>
-                            <input type="tel" name="phone" id="customer_phone" value="{{ $defaultPhone }}" placeholder="Số điện thoại liên hệ *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <label for="customer_phone" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                Số điện thoại liên hệ <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="tel" name="phone" id="customer_phone" value="{{ $defaultPhone }}" placeholder="0987654321" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             <p id="err_customer_phone" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('phone') || $errors->has('customer_phone') ? '' : 'hidden' }}">
                                 <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
                                 <span>{{ $errors->first('phone') ?: $errors->first('customer_phone') ?: 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.' }}</span>
                             </p>
                         </div>
                         <div>
+                            <label for="appointment_time" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                Ngày & Giờ xem phòng <span class="text-rose-500">*</span>
+                            </label>
                             <input type="datetime-local" 
                                    name="appointment_time" 
                                    id="appointment_time" 
@@ -656,6 +665,7 @@
                                    min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
                                    onclick="this.showPicker ? this.showPicker() : null"
                                    style="color-scheme: dark;" 
+                                   placeholder="Chọn ngày giờ..."
                                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-950/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
                                    {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             <p id="err_appointment_time" class="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1.5 font-medium {{ $errors->has('appointment_time') ? '' : 'hidden' }}">
@@ -664,7 +674,10 @@
                             </p>
                         </div>
                         <div>
-                            <textarea name="message" id="note" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
+                            <label for="note" class="block text-[11px] font-bold text-slate-300 mb-1">
+                                Lời nhắn / Ghi chú <span class="text-slate-500 font-normal text-[10px]">(Tối đa 255 ký tự)</span>
+                            </label>
+                            <textarea name="message" id="note" rows="2.5" maxlength="255" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
                         </div>
                         <button type="submit" id="btnSubmitRequest" name="btnBooking" data-field-name="btnBooking" 
                             class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-blue-600 hover:bg-blue-500 cursor-pointer shadow-lg shadow-blue-600/25 hover:shadow-blue-600/35' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
@@ -1334,6 +1347,10 @@
                     showFieldError(inputName, errName, 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.');
                     if (!hasErr) inputName?.focus();
                     hasErr = true;
+                } else if (nameVal.length < 2 || nameVal.length > 100) {
+                    showFieldError(inputName, errName, 'Họ và tên phải từ 2 đến 100 ký tự.');
+                    if (!hasErr) inputName?.focus();
+                    hasErr = true;
                 } else {
                     clearFieldError(inputName, errName);
                 }
@@ -1362,8 +1379,15 @@
                 } else {
                     const selectedDate = new Date(timeVal);
                     const now = new Date();
+                    const hours = selectedDate.getHours();
+                    const minutes = selectedDate.getMinutes();
+
                     if (selectedDate <= now) {
                         showFieldError(inputTime, errTime, 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.');
+                        if (!hasErr) inputTime?.focus();
+                        hasErr = true;
+                    } else if (hours < 7 || hours > 21 || (hours === 21 && minutes > 0)) {
+                        showFieldError(inputTime, errTime, 'Thời gian hẹn xem phòng phải nằm trong khung giờ 07:00 - 21:00 hàng ngày.');
                         if (!hasErr) inputTime?.focus();
                         hasErr = true;
                     } else {

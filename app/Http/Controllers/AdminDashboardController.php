@@ -1803,6 +1803,20 @@ class AdminDashboardController extends Controller
             return redirect()->back()->withErrors(['name' => $errorMsg, 'customer_name' => $errorMsg])->withInput();
         }
 
+        // Ràng buộc 2 - 100 ký tự cho họ và tên
+        if (mb_strlen($name) < 2 || mb_strlen($name) > 100) {
+            $errorMsg = 'Họ và tên phải từ 2 đến 100 ký tự.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_07_01',
+                    'message' => $errorMsg,
+                    'errors' => ['name' => [$errorMsg], 'customer_name' => [$errorMsg]],
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['name' => $errorMsg, 'customer_name' => $errorMsg])->withInput();
+        }
+
         // 2. Khách để trống số điện thoại (ERR_07_02)
         if (empty($phone)) {
             $errorMsg = 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.';
@@ -1862,6 +1876,21 @@ class AdminDashboardController extends Controller
                     }
                     return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
                 }
+
+                $hour = (int) $parsedAppointmentTime->format('H');
+                $minute = (int) $parsedAppointmentTime->format('i');
+                if ($hour < 7 || $hour > 21 || ($hour === 21 && $minute > 0)) {
+                    $errorMsg = 'Thời gian hẹn xem phòng phải nằm trong khung giờ 07:00 - 21:00 hàng ngày.';
+                    if ($request->wantsJson() || $request->is('api/*')) {
+                        return response()->json([
+                            'success' => false,
+                            'error_code' => 'ERR_07_04',
+                            'message' => $errorMsg,
+                            'errors' => ['appointment_time' => [$errorMsg]],
+                        ], 422);
+                    }
+                    return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
+                }
             } catch (\Exception $e) {
                 $errorMsg = 'Định dạng ngày hẹn xem phòng không hợp lệ.';
                 if ($request->wantsJson() || $request->is('api/*')) {
@@ -1874,6 +1903,20 @@ class AdminDashboardController extends Controller
                 }
                 return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
             }
+        }
+
+        // Ràng buộc độ dài ghi chú / lời nhắn tối đa 255 ký tự
+        if (mb_strlen($message) > 255) {
+            $errorMsg = 'Lời nhắn / Ghi chú tối đa 255 ký tự.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_07_NOTE',
+                    'message' => $errorMsg,
+                    'errors' => ['message' => [$errorMsg], 'note' => [$errorMsg]],
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['message' => $errorMsg, 'note' => $errorMsg])->withInput();
         }
 
         // Chống spam: Mỗi số điện thoại không được gửi quá 3 yêu cầu hẹn trong vòng 10 phút
