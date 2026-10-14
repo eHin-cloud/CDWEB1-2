@@ -514,6 +514,7 @@ $rentyRooms = function ($filterEmpty = true) {
         
         return [
             'id' => $room->id,
+            'tenant_id' => $room->tenant_id,
             'room_number' => $room->room_number,
             'price' => $room->price,
             'status' => $room->status,

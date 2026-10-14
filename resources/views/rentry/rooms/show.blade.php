@@ -595,23 +595,67 @@
                         </a>
                     </div>
                     
+                    @php
+                        $currentUser = Auth::user();
+                        $isRoomOwner = $currentUser && (
+                            ($currentUser->canAccessLandlordDashboard() && $currentUser->tenant_id && $currentUser->tenant_id == ($room['tenant_id'] ?? null))
+                            || $currentUser->isAdmin()
+                        );
+                        $defaultName = old('name', old('customer_name', (!$isRoomOwner && $currentUser && !$currentUser->canAccessLandlordDashboard()) ? $currentUser->name : ''));
+                        $defaultPhone = old('phone', old('customer_phone', (!$isRoomOwner && $currentUser && !$currentUser->canAccessLandlordDashboard()) ? $currentUser->phone : ''));
+                    @endphp
+
+                    @if($isRoomOwner)
+                        <!-- Thông báo Chế độ xem trước dành riêng cho Chủ sở hữu phòng -->
+                        <div class="mb-4 p-4 rounded-2xl bg-indigo-950/50 border border-indigo-500/30 text-xs text-slate-300 space-y-2.5 animate-fade-in shadow-inner">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-extrabold uppercase text-[10px] tracking-wider border border-indigo-500/30">
+                                    <i class="fa-solid fa-crown text-[10px] text-amber-400"></i> Bạn là chủ phòng này
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-medium">Chế độ xem trước</span>
+                            </div>
+                            <p class="text-slate-300 text-[11px] leading-relaxed">
+                                Đang xem tin với tư cách Chủ trọ (<span class="text-indigo-200 font-bold">{{ $currentUser->name }}</span>). Khách tìm phòng trên Renty sẽ liên hệ qua form này.
+                            </p>
+                            <div class="pt-2 border-t border-indigo-500/20 flex flex-col gap-2">
+                                <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 text-xs">
+                                    <i class="fa-solid fa-clipboard-list"></i> Xem danh sách khách đặt lịch
+                                </a>
+                                <a href="{{ route('admin.rooms.edit', $room['id']) }}" class="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700 text-xs">
+                                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa phòng này
+                                </a>
+                            </div>
+                            <p class="text-[10px] text-slate-400 text-center italic pt-1">
+                                <i class="fa-solid fa-flask text-[9px] mr-1"></i> Form bên dưới để bạn gửi thử nghiệm:
+                            </p>
+                        </div>
+                    @endif
+
                     <form action="{{ route('renty.contact_request.store') }}" method="POST" class="space-y-3">
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                         <div>
-                            <input type="text" name="name" id="customer_name" required value="{{ old('name', old('customer_name', Auth::user()->name ?? '')) }}" placeholder="Họ và tên của bạn *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <input type="text" name="name" id="customer_name" required value="{{ $defaultName }}" placeholder="Họ và tên của bạn *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             @if($errors->has('name') || $errors->has('customer_name'))
                                 <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('name') ?: $errors->first('customer_name') }}</p>
                             @endif
                         </div>
                         <div>
-                            <input type="tel" name="phone" id="customer_phone" required value="{{ old('phone', old('customer_phone', Auth::user()->phone ?? '')) }}" placeholder="Số điện thoại liên hệ *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <input type="tel" name="phone" id="customer_phone" required value="{{ $defaultPhone }}" placeholder="Số điện thoại liên hệ *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             @if($errors->has('phone') || $errors->has('customer_phone'))
                                 <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('phone') ?: $errors->first('customer_phone') }}</p>
                             @endif
                         </div>
                         <div>
-                            <input type="datetime-local" name="appointment_time" id="appointment_time" value="{{ old('appointment_time') }}" placeholder="Chọn ngày giờ..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <input type="datetime-local" 
+                                   name="appointment_time" 
+                                   id="appointment_time" 
+                                   value="{{ old('appointment_time') }}" 
+                                   min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
+                                   onclick="this.showPicker ? this.showPicker() : null"
+                                   style="color-scheme: dark;" 
+                                   class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer" 
+                                   {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
                             @if($errors->has('appointment_time'))
                                 <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('appointment_time') }}</p>
                             @endif
