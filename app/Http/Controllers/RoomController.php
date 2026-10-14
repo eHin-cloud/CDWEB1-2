@@ -137,13 +137,16 @@ class RoomController extends Controller
                 ->first();
             $tenant = \App\Models\Tenant::find($tenantId);
 
+            $hasLegalDocs = !empty(trim((string) ($profile?->national_id ?? '')))
+                || !empty(trim((string) ($profile?->business_license ?? '')));
+
             $isApproved = in_array($profile?->status, ['approved', 'verified'], true)
                 || in_array($profile?->verification_status, ['approved', 'verified', 'kyc_verified', 'premium_verified'], true)
                 || in_array($tenant?->verification_status ?? '', ['kyc_verified', 'premium_verified', 'premium_pending', 'verified'], true)
                 || in_array($tenant?->listing_badge ?? '', ['kyc_verified', 'premium_verified', 'verified'], true)
                 || \App\Models\LandlordVerificationRequest::where('tenant_id', $tenantId)->where('status', 'approved')->exists();
 
-            if (!$isApproved) {
+            if (!$hasLegalDocs || !$isApproved) {
                 return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
                     ->with('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
             }
@@ -190,13 +193,16 @@ class RoomController extends Controller
                 ->first();
             $tenant = \App\Models\Tenant::find($tenantId);
 
+            $hasLegalDocs = !empty(trim((string) ($profile?->national_id ?? '')))
+                || !empty(trim((string) ($profile?->business_license ?? '')));
+
             $isApproved = in_array($profile?->status, ['approved', 'verified'], true)
                 || in_array($profile?->verification_status, ['approved', 'verified', 'kyc_verified', 'premium_verified'], true)
                 || in_array($tenant?->verification_status ?? '', ['kyc_verified', 'premium_verified', 'premium_pending', 'verified'], true)
                 || in_array($tenant?->listing_badge ?? '', ['kyc_verified', 'premium_verified', 'verified'], true)
                 || \App\Models\LandlordVerificationRequest::where('tenant_id', $tenantId)->where('status', 'approved')->exists();
 
-            if (!$isApproved) {
+            if (!$hasLegalDocs || !$isApproved) {
                 return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
                     ->with('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
             }

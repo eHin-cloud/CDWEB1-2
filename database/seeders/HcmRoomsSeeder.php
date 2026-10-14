@@ -62,6 +62,8 @@ class HcmRoomsSeeder extends Seeder
                 'phone' => $landlord->phone,
                 'property_name' => $tenant->name,
                 'property_address' => 'Số 475A Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh',
+                'national_id' => '079095012345',
+                'business_license' => '0318999888',
                 'status' => 'verified',
                 'verification_status' => 'kyc_verified',
             ]

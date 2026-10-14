@@ -185,6 +185,8 @@ class FullDemoSeeder extends Seeder
         // 2. Tạo LandlordProfile tương ứng
         $profileStatus = $isVerified ? 'verified' : ($isPending ? 'pending' : 'unverified');
         $firstBuilding = $blueprint['buildings'][0] ?? null;
+        $demoCccd = $isVerified ? ('00109' . str_pad((string) ($tenantIndex + 1), 7, '0', STR_PAD_LEFT)) : null;
+        $demoMst = $isVerified ? ('010' . str_pad((string) ($tenantIndex + 1), 7, '0', STR_PAD_LEFT)) : null;
 
         LandlordProfile::updateOrCreate(
             ['user_id' => $landlord1->id],
@@ -194,6 +196,8 @@ class FullDemoSeeder extends Seeder
                 'phone' => $landlord1->phone,
                 'property_name' => $tenant->name,
                 'property_address' => $firstBuilding['address'] ?? 'Hà Nội',
+                'national_id' => $demoCccd,
+                'business_license' => $demoMst,
                 'status' => $profileStatus,
                 'verification_status' => $verificationStatus,
             ]

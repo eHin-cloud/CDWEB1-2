@@ -116,6 +116,9 @@ class SystemUsersSeeder extends Seeder
                 ]);
             }
 
+            $demoCccd = $isVer ? ('00109' . str_pad((string) $tenantId, 7, '0', STR_PAD_LEFT)) : null;
+            $demoMst = $isVer ? ('010' . str_pad((string) $tenantId, 7, '0', STR_PAD_LEFT)) : null;
+
             LandlordProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -124,6 +127,8 @@ class SystemUsersSeeder extends Seeder
                     'phone' => $l['phone'],
                     'property_name' => $tenants[$tenantId]->name ?? 'SmartRoom',
                     'property_address' => 'Hà Nội',
+                    'national_id' => $demoCccd,
+                    'business_license' => $demoMst,
                     'status' => $isVer ? 'verified' : ($l['status_note'] ?? 'pending'),
                     'verification_status' => $isVer ? 'kyc_verified' : ($l['status_note'] ?? 'pending'),
                 ]

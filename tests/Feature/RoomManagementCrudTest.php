@@ -520,6 +520,48 @@ class RoomManagementCrudTest extends TestCase
         $response->assertSessionHas('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
     }
 
+    public function test_landlord_without_legal_docs_is_redirected_to_profile_section_even_if_status_approved(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Khu Trọ Chưa Có CCCD',
+            'email' => 'nolaw@example.com',
+            'verification_status' => 'kyc_verified',
+        ]);
+        $landlordRole = Role::firstOrCreate(['slug' => 'landlord'], ['name' => 'Chủ trọ']);
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'role_id' => $landlordRole->id,
+            'name' => 'Chủ Trọ Trống CCCD',
+            'username' => 'chutro_nocccd',
+            'email' => 'chutro_nocccd@example.com',
+            'role' => 'landlord',
+            'password' => Hash::make('password'),
+        ]);
+        \App\Models\LandlordProfile::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'full_name' => 'Chủ Trọ Trống CCCD',
+            'phone' => '0987654321',
+            'property_name' => 'Khu Trọ Chưa Có CCCD',
+            'property_address' => 'Hà Nội',
+            'national_id' => null,
+            'business_license' => null,
+            'status' => 'approved',
+            'verification_status' => 'kyc_verified',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.rooms.create'));
+        $response->assertRedirect(route('smartroom.admin', ['tab' => 'profile-section']));
+        $response->assertSessionHas('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
+
+        $storeResponse = $this->actingAs($user)->post(route('admin.rooms.store'), [
+            'room_number' => 'P101',
+            'price' => 3000000,
+            'area' => 25,
+        ]);
+        $storeResponse->assertRedirect(route('smartroom.admin', ['tab' => 'profile-section']));
+    }
+
     public function test_can_delete_individual_images_from_room(): void
     {
         [$admin, $tenant, $building] = $this->setupTenantAdminAndBuilding();
