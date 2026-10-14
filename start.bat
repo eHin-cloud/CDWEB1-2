@@ -64,6 +64,9 @@ if exist .env (
     )
 )
 
+:: Cau hinh lenh Docker Compose voi file trong thu muc docker
+set "DOCKER_COMPOSE_CMD=docker compose -f "%~dp0docker\docker-compose.yml""
+
 :MENU
 :TAB_MENU
 cls
@@ -150,8 +153,8 @@ if not exist public\storage (
 :: 6. Khoi dong CSDL MySQL trong Docker (Port 3309)
 echo.
 echo    [1/3] Dang khoi dong CSDL MySQL trong Docker (Port 3309)...
-docker compose up -d mysql > nul 2>&1
-docker compose stop app > nul 2>&1
+!DOCKER_COMPOSE_CMD! up -d mysql > nul 2>&1
+!DOCKER_COMPOSE_CMD! stop app > nul 2>&1
 
 echo    [2/3] Dang kiem tra ket noi CSDL MySQL...
 powershell -Command "for ($i=0; $i -lt 15; $i++) { if (Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 }; Start-Sleep -Seconds 1 }; exit 1" > nul 2>&1
@@ -540,7 +543,9 @@ echo    ====================================================================
 echo.
 call :DOCKER_CHECK_DAEMON
 if not exist .env (
-    if exist .env.docker (
+    if exist "docker\.env.docker" (
+        copy "docker\.env.docker" .env >nul
+    ) else if exist .env.docker (
         copy .env.docker .env >nul
     ) else (
         copy .env.example .env >nul
@@ -548,7 +553,7 @@ if not exist .env (
     echo    [+] Da khoi tao .env cho Docker.
 )
 echo    [1/3] Dang khoi chay cac container (Background)...
-docker compose up -d
+!DOCKER_COMPOSE_CMD! up -d
 if %errorlevel% neq 0 (
     color 0c
     echo    [ LOI ] Khong the khoi chay Docker Compose. Hay kiem tra logs.
@@ -604,10 +609,12 @@ echo    [ DOCKER FOREGROUND ] CHAY DOCKER HIEN THI LOG TRUC TIEP
 echo    ====================================================================
 echo.
 call :DOCKER_CHECK_DAEMON
-if exist docker-start.ps1 (
+if exist "docker\docker-start.ps1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File ".\docker\docker-start.ps1"
+) else if exist docker-start.ps1 (
     powershell -NoProfile -ExecutionPolicy Bypass -File ".\docker-start.ps1"
 ) else (
-    docker compose up --build
+    !DOCKER_COMPOSE_CMD! up --build
 )
 echo.
 echo    [ INFO ] Docker Compose da dung hoac thoat.
@@ -623,7 +630,7 @@ echo    [ DOCKER LOGS ] THEO DOI NHAT KY HOAT DONG CONTAINER (Nhan Ctrl+C de tho
 echo    ====================================================================
 echo.
 call :DOCKER_CHECK_DAEMON
-docker compose logs -f
+!DOCKER_COMPOSE_CMD! logs -f
 pause
 goto DOCKER_RUN
 
@@ -640,8 +647,8 @@ set /p confirm_seed="   >> Ban co chac muon xoa va seed lai CSDL Docker? [y/n]: 
 if /i "!confirm_seed!" neq "y" goto DOCKER_RUN
 echo.
 echo    [ HANH DONG ] Dang chay artisan migrate:fresh --seed ben trong container app...
-docker compose exec -T app php artisan migrate:fresh --seed
-docker compose exec -T app php artisan optimize:clear
+!DOCKER_COMPOSE_CMD! exec -T app php artisan migrate:fresh --seed
+!DOCKER_COMPOSE_CMD! exec -T app php artisan optimize:clear
 echo.
 echo    [ OK ] Da migrate va seed CSDL Docker thanh cong!
 pause
@@ -653,7 +660,7 @@ color 0b
 echo.
 echo    [ HANH DONG ] Dang khoi dong lai cac containers Docker...
 call :DOCKER_CHECK_DAEMON
-docker compose restart
+!DOCKER_COMPOSE_CMD! restart
 echo    [ OK ] Da khoi dong lai cac containers thanh cong!
 pause
 goto DOCKER_RUN
@@ -667,7 +674,7 @@ echo    [ DOCKER STOP ] DUNG VA GIAI PHONG MOI TRUONG DOCKER COMPOSE
 echo    ====================================================================
 echo.
 call :DOCKER_CHECK_DAEMON
-docker compose down
+!DOCKER_COMPOSE_CMD! down
 echo.
 echo    [ OK ] Toan bo cac container SmartRoom da duoc dung va giai phong.
 pause

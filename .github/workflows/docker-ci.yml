@@ -6,17 +6,13 @@ on:
       - main
       - 'CI/CD'
     paths:
-      - 'Dockerfile'
       - 'docker/**'
-      - 'docker-compose.yml'
       - '.github/workflows/docker-ci.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'Dockerfile'
       - 'docker/**'
-      - 'docker-compose.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -35,14 +31,14 @@ jobs:
 
       - name: Kiểm tra cấu trúc file Dockerfile
         run: |
-          test -f Dockerfile || (echo "Lỗi: Không tìm thấy Dockerfile!" && exit 1)
+          test -f docker/Dockerfile || (echo "Lỗi: Không tìm thấy docker/Dockerfile!" && exit 1)
           test -f docker/entrypoint.sh || (echo "Lỗi: Không tìm thấy docker/entrypoint.sh!" && exit 1)
 
       - name: Build Docker Image thử nghiệm
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./docker/Dockerfile
           push: false
           tags: smartroom-app:ci-test
           load: true
