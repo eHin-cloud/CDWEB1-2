@@ -21,11 +21,11 @@ class CheckRole
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Khong co quyen truy cap.',
+                    'message' => 'Không có quyền truy cập.',
                 ], 403);
             }
 
-            return redirect()->route('login')->with('error', 'Ban can dang nhap de tiep tuc.');
+            return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để tiếp tục.');
         }
 
         if (in_array($user->roleSlug(), $roles, true) || ($user->isSuperAdmin() && in_array('admin', $roles, true))) {
@@ -46,13 +46,13 @@ class CheckRole
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ban khong co vai tro phu hop de thuc hien hanh dong nay.',
+                'message' => 'Bạn không có vai trò phù hợp để thực hiện hành động này.',
             ], 403);
         }
 
         return redirect()
             ->route($this->homeRouteFor($user))
-            ->with('error', 'Ban khong co quyen truy cap chuc nang nay.');
+            ->with('error', 'Bạn không có quyền truy cập chức năng này.');
     }
 
     private function homeRouteFor($user): string

@@ -769,8 +769,15 @@
             <section id="dashboard-section" class="tab-content space-y-8 animate-fade-in">
                 @php
                     $hasLegal = !empty($landlordProfile?->national_id) && !empty($landlordProfile?->business_license);
-                    $isApproved = ($landlordProfile?->status === 'approved') || (($tenant->verification_status ?? '') === 'kyc_verified');
-                    $isPending = ($landlordProfile?->status === 'pending_approval');
+                    $isApproved = in_array($landlordProfile?->status, ['approved', 'verified'], true)
+                        || in_array($landlordProfile?->verification_status, ['approved', 'verified', 'kyc_verified', 'premium_verified'], true)
+                        || in_array($tenant->verification_status ?? '', ['kyc_verified', 'premium_verified', 'premium_pending'], true)
+                        || in_array($tenant->listing_badge ?? '', ['kyc_verified', 'premium_verified', 'verified'], true)
+                        || (($kycRequest?->status ?? '') === 'approved')
+                        || (($premiumRequest?->status ?? '') === 'approved');
+                    $isPending = ($landlordProfile?->status === 'pending_approval')
+                        || (($kycRequest?->status ?? '') === 'pending')
+                        || (($tenant->verification_status ?? '') === 'kyc_pending');
                 @endphp
 
                 @if(!$isApproved)
@@ -3415,6 +3422,9 @@
             </div>
         </div>
     </div>
+
+    <!-- CELEBRATION MODAL FOR APPROVED VERIFICATION / TICH XANH -->
+    @include('admin.partials.celebration_modal')
 
     <!-- ADD CONTRACT MODAL (POPUP) -->
     <div id="add-contract-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-sm hidden flex items-center justify-center transition-opacity duration-300">

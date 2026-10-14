@@ -108,7 +108,15 @@ class ThuDucChatbotRoomsSeeder extends Seeder
                 'description' => $bData['description'],
             ]);
 
-            foreach ($bData['rooms'] as $rData) {
+            $defaultImages = [
+                'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+                'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
+                'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80',
+                'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80',
+            ];
+
+            foreach ($bData['rooms'] as $idx => $rData) {
+                $img = $defaultImages[$idx % count($defaultImages)];
                 Room::updateOrCreate(
                     [
                         'building_id' => $building->id,
@@ -123,6 +131,8 @@ class ThuDucChatbotRoomsSeeder extends Seeder
                         'area' => $rData['area'],
                         'amenities' => $rData['amenities'],
                         'description' => $rData['description'],
+                        'image' => $img,
+                        'images' => [$img, $defaultImages[($idx + 1) % count($defaultImages)]],
                         'version' => 1,
                     ]
                 );

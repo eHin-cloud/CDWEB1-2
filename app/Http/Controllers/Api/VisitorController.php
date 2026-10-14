@@ -437,7 +437,7 @@ class VisitorController extends Controller
         if (!$room) {
             return response()->json([
                 'success' => false,
-                'message' => 'Phong khong ton tai',
+                'message' => 'Phòng không tồn tại',
             ], 404);
         }
 

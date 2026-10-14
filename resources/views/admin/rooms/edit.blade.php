@@ -92,6 +92,9 @@
                 <form id="edit-room-form" action="{{ route('admin.rooms.update', $room->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
                     
+                    <!-- Container lưu trữ danh sách ảnh bị xóa -->
+                    <div id="deleted-images-container"></div>
+
                     <!-- OPTIMISTIC LOCKING: Trường ẩn version -->
                     <input type="hidden" name="version" value="{{ $room->version }}">
 
@@ -191,42 +194,98 @@
 
                     <!-- Hình ảnh và Video -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Quản lý hình ảnh -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hình Ảnh Minh Họa (Mỗi ảnh $\le$ 5MB, tối đa 10 ảnh)</label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Hình Ảnh Minh Họa (Mỗi ảnh ≤ 5MB, tối đa 10 ảnh)</label>
+                            </div>
                             <input type="file" name="images[]" id="images" accept="image/jpeg,image/png,image/webp" multiple
                                    class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none"
                                    onchange="previewImages(this)">
                             <span class="text-xs text-rose-400 mt-1 hidden" id="err-image"></span>
                             
-                            <!-- Hiển thị ảnh cũ hoặc preview ảnh mới, tự động cấu hình onerror placeholder -->
-                            <div class="mt-3" id="preview-box">
-                                <span class="block text-[10px] text-slate-500 mb-1">Hình ảnh hiện tại / Preview:</span>
+                            <!-- Hiển thị ảnh hiện tại -->
+                            <div class="mt-3" id="current-images-box">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="block text-[11px] font-semibold text-slate-400">Ảnh hiện tại của phòng:</span>
+                                    <span class="text-[10px] text-slate-500">Bấm icon thùng rác để xóa ảnh</span>
+                                </div>
                                 @php
                                     $roomImages = is_array($room->images) ? $room->images : [];
-                                    if ($room->image && !in_array($room->image, $roomImages)) {
+                                    if ($room->image && !in_array($room->image, $roomImages, true)) {
                                         array_unshift($roomImages, $room->image);
                                     }
+                                    $roomImages = array_values(array_filter($roomImages));
                                 @endphp
-                                <div id="preview-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div id="current-images-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     @forelse($roomImages as $roomImage)
-                                        <img src="{{ asset('storage/' . $roomImage) }}" class="h-24 w-full object-cover rounded-lg border border-slate-800"
-                                             onerror="this.onerror=null; this.src='https://placehold.co/100x80/0f172a/6366f1?text=Image+Broken';">
+                                        @php
+                                            $imgSrc = (str_starts_with($roomImage, 'http://') || str_starts_with($roomImage, 'https://'))
+                                                ? $roomImage
+                                                : asset('storage/' . ltrim($roomImage, '/'));
+                                        @endphp
+                                        <div class="relative group rounded-lg overflow-hidden border border-slate-800 bg-slate-950 aspect-video flex items-center justify-center transition-all duration-200" data-image-item data-image-path="{{ $roomImage }}">
+                                            <img src="{{ $imgSrc }}" class="h-full w-full object-cover"
+                                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80';">
+                                            <button type="button" 
+                                                    onclick="markImageDeleted(this, '{{ addslashes($roomImage) }}')" 
+                                                    class="absolute top-1.5 right-1.5 w-7 h-7 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 cursor-pointer z-10" 
+                                                    title="Xóa ảnh này">
+                                                <i class="fa-solid fa-trash-can text-xs"></i>
+                                            </button>
+                                        </div>
                                     @empty
-                                        <img src="https://placehold.co/100x80/0f172a/6366f1?text=No+Image" class="h-24 w-full object-cover rounded-lg border border-slate-800">
+                                        <div class="col-span-full py-4 text-center rounded-lg border border-dashed border-slate-800 text-slate-500 text-xs" id="no-current-images">
+                                            <i class="fa-regular fa-image text-lg mb-1 block"></i>
+                                            Chưa có ảnh nào được lưu cho phòng này.
+                                        </div>
                                     @endforelse
                                 </div>
                             </div>
+
+                            <!-- Khối xem trước ảnh mới tải lên -->
+                            <div class="mt-3 hidden" id="new-images-box">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="block text-[11px] font-semibold text-emerald-400"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Ảnh mới đã chọn (sẽ thêm vào khi lưu):</span>
+                                    <button type="button" onclick="clearNewImages()" class="text-[10px] text-rose-400 hover:text-rose-300 underline font-semibold cursor-pointer">Hủy chọn ảnh mới</button>
+                                </div>
+                                <div id="new-preview-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                            </div>
                         </div>
+
+                        <!-- Quản lý video -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Video Giới Thiệu Phòng (≤ 30MB)</label>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Video Giới Thiệu Phòng (≤ 30MB)</label>
                             <input type="file" name="video" id="video" accept="video/mp4,video/webm,video/quicktime"
                                    class="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none"
                                    onchange="previewVideo(this)">
                             <span class="text-xs text-rose-400 mt-1 hidden" id="err-video"></span>
+
+                            <!-- Hiển thị video hiện tại hoặc preview video mới -->
                             <div class="mt-3 {{ $room->video ? '' : 'hidden' }}" id="video-preview-box">
-                                <video id="preview-video" class="w-full max-h-64 rounded-lg border border-slate-800 bg-black" controls
+                                <div class="flex items-center justify-between mb-1.5" id="video-header-bar">
+                                    <span class="text-[11px] text-slate-400 font-semibold" id="video-status-label">
+                                        <i class="fa-solid fa-video mr-1 text-indigo-400"></i> Video giới thiệu phòng:
+                                    </span>
+                                    <button type="button" id="btn-delete-video" onclick="markVideoDeleted()"
+                                            class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-rose-500/30 cursor-pointer">
+                                        <i class="fa-solid fa-trash-can text-[11px]"></i> Xóa video này
+                                    </button>
+                                </div>
+
+                                <video id="preview-video" class="w-full max-h-60 rounded-lg border border-slate-800 bg-black" controls
                                        @if($room->video) src="{{ asset('storage/' . $room->video) }}" @endif></video>
+
+                                <!-- Cảnh báo khi người dùng bấm xóa video hiện tại -->
+                                <div id="video-deleted-alert" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between mt-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                        <span>Video sẽ bị gỡ bỏ khi bấm <strong>Lưu Thay Đổi</strong>.</span>
+                                    </div>
+                                    <button type="button" onclick="undoDeleteVideo()" class="text-indigo-400 underline font-bold hover:text-indigo-300 cursor-pointer">Hoàn tác</button>
+                                </div>
                             </div>
+                            <input type="hidden" name="delete_video" id="delete_video" value="0">
                         </div>
                     </div>
 
@@ -473,21 +532,71 @@
             return true;
         }
 
-        // Preview ảnh và validate file ảnh (ERR_03_08 & ERR_03_09)
+        // Quản lý xóa ảnh hiện tại
+        function markImageDeleted(btn, imagePath) {
+            if (!confirm('Bạn có chắc chắn muốn xóa ảnh này khỏi phòng trọ không?')) {
+                return;
+            }
+            const item = btn.closest('[data-image-item]');
+            if (item) {
+                item.style.transition = 'all 0.25s ease';
+                item.style.opacity = '0';
+                item.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    item.remove();
+                    const list = document.getElementById('current-images-list');
+                    if (list && list.querySelectorAll('[data-image-item]').length === 0) {
+                        list.innerHTML = `
+                            <div class="col-span-full py-4 text-center rounded-lg border border-dashed border-slate-800 text-slate-500 text-xs" id="no-current-images">
+                                <i class="fa-regular fa-image text-lg mb-1 block"></i>
+                                Đã xóa hết ảnh cũ. Hãy chọn ảnh mới ở trên nếu muốn bổ sung ảnh cho phòng.
+                            </div>
+                        `;
+                    }
+                }, 250);
+            }
+
+            const container = document.getElementById('deleted-images-container');
+            if (container) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'deleted_images[]';
+                input.value = imagePath;
+                container.appendChild(input);
+            }
+        }
+
+        // Hủy chọn các ảnh mới
+        function clearNewImages() {
+            const input = document.getElementById('images');
+            if (input) {
+                input.value = '';
+            }
+            const newBox = document.getElementById('new-images-box');
+            const newList = document.getElementById('new-preview-list');
+            if (newBox) newBox.classList.add('hidden');
+            if (newList) newList.innerHTML = '';
+        }
+
+        // Preview ảnh mới và validate file ảnh (ERR_03_08 & ERR_03_09)
         function previewImages(input) {
             const errSpan = document.getElementById('err-image');
-            const previewList = document.getElementById('preview-list');
+            const newBox = document.getElementById('new-images-box');
+            const newList = document.getElementById('new-preview-list');
             const files = Array.from(input.files || []);
 
             if (files.length === 0) {
+                if (newBox) newBox.classList.add('hidden');
+                if (newList) newList.innerHTML = '';
                 return;
             }
 
             if (files.length > 10) {
-                errSpan.textContent = 'Chỉ được chọn tối đa 10 hình ảnh.';
+                errSpan.textContent = 'Chỉ được chọn tối đa 10 hình ảnh mỗi lần.';
                 errSpan.classList.remove('hidden');
                 input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                 input.value = '';
+                if (newBox) newBox.classList.add('hidden');
                 return;
             }
 
@@ -495,10 +604,11 @@
             for (const file of files) {
                 // [ERR_03_08]: Tải tệp ảnh sai định dạng
                 if (!allowedTypes.includes(file.type)) {
-                    errSpan.textContent = 'Tệp ảnh phòng phải có định dạng hợp lệ (JPG, JPEG, PNG).';
+                    errSpan.textContent = 'Tệp ảnh phòng phải có định dạng hợp lệ (JPG, JPEG, PNG, WEBP).';
                     errSpan.classList.remove('hidden');
                     input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                     input.value = '';
+                    if (newBox) newBox.classList.add('hidden');
                     return;
                 }
 
@@ -508,24 +618,55 @@
                     errSpan.classList.remove('hidden');
                     input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                     input.value = '';
+                    if (newBox) newBox.classList.add('hidden');
                     return;
                 }
             }
 
             errSpan.classList.add('hidden');
             input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
-            previewList.innerHTML = '';
+            if (newList) newList.innerHTML = '';
+            if (newBox) newBox.classList.remove('hidden');
 
             files.forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'h-24 w-full object-cover rounded-lg border border-slate-800';
-                    previewList.appendChild(img);
+                    const wrap = document.createElement('div');
+                    wrap.className = 'relative rounded-lg overflow-hidden border border-emerald-500/40 bg-slate-950 aspect-video';
+                    wrap.innerHTML = `<img src="${e.target.result}" class="h-full w-full object-cover">`;
+                    newList.appendChild(wrap);
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        // Quản lý xóa và hoàn tác video hiện tại
+        function markVideoDeleted() {
+            const delInput = document.getElementById('delete_video');
+            const video = document.getElementById('preview-video');
+            const btnDel = document.getElementById('btn-delete-video');
+            const alertBox = document.getElementById('video-deleted-alert');
+            const statusLabel = document.getElementById('video-status-label');
+
+            if (delInput) delInput.value = '1';
+            if (video) video.classList.add('hidden');
+            if (btnDel) btnDel.classList.add('hidden');
+            if (alertBox) alertBox.classList.remove('hidden');
+            if (statusLabel) statusLabel.innerHTML = '<i class="fa-solid fa-video-slash mr-1 text-rose-400"></i> Video hiện tại (đã đánh dấu xóa):';
+        }
+
+        function undoDeleteVideo() {
+            const delInput = document.getElementById('delete_video');
+            const video = document.getElementById('preview-video');
+            const btnDel = document.getElementById('btn-delete-video');
+            const alertBox = document.getElementById('video-deleted-alert');
+            const statusLabel = document.getElementById('video-status-label');
+
+            if (delInput) delInput.value = '0';
+            if (video) video.classList.remove('hidden');
+            if (btnDel) btnDel.classList.remove('hidden');
+            if (alertBox) alertBox.classList.add('hidden');
+            if (statusLabel) statusLabel.innerHTML = '<i class="fa-solid fa-video mr-1 text-indigo-400"></i> Video giới thiệu phòng:';
         }
 
         function previewVideo(input) {
@@ -533,6 +674,10 @@
             const errSpan = document.getElementById('err-video');
             const previewBox = document.getElementById('video-preview-box');
             const previewVideo = document.getElementById('preview-video');
+            const delInput = document.getElementById('delete_video');
+            const btnDel = document.getElementById('btn-delete-video');
+            const alertBox = document.getElementById('video-deleted-alert');
+            const statusLabel = document.getElementById('video-status-label');
 
             if (!file) {
                 return;
@@ -554,7 +699,31 @@
             }
 
             errSpan.classList.add('hidden');
-            previewVideo.src = URL.createObjectURL(file);
+            if (delInput) delInput.value = '0';
+            if (alertBox) alertBox.classList.add('hidden');
+            if (previewVideo) {
+                previewVideo.src = URL.createObjectURL(file);
+                previewVideo.classList.remove('hidden');
+            }
+            if (btnDel) {
+                btnDel.classList.remove('hidden');
+                btnDel.innerHTML = '<i class="fa-solid fa-xmark text-xs"></i> Hủy video mới';
+                btnDel.onclick = function () {
+                    input.value = '';
+                    const origVideo = @json($room->video);
+                    if (origVideo) {
+                        previewVideo.src = "{{ asset('storage/' . $room->video) }}";
+                        btnDel.innerHTML = '<i class="fa-solid fa-trash-can text-[11px]"></i> Xóa video này';
+                        btnDel.onclick = markVideoDeleted;
+                        if (statusLabel) statusLabel.innerHTML = '<i class="fa-solid fa-video mr-1 text-indigo-400"></i> Video giới thiệu phòng:';
+                    } else {
+                        previewBox.classList.add('hidden');
+                    }
+                };
+            }
+            if (statusLabel) {
+                statusLabel.innerHTML = '<i class="fa-solid fa-video mr-1 text-emerald-400"></i> Video mới chuẩn bị tải lên:';
+            }
             previewBox.classList.remove('hidden');
         }
 

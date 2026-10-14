@@ -294,7 +294,7 @@ Route::middleware('auth:sanctum')->group(function () {
         if (!$tenantId) {
             return response()->json([
                 'success' => false,
-                'error' => 'Khong xac dinh duoc tenant hien tai.',
+                'error' => 'Không xác định được cơ sở (tenant) hiện tại.',
             ], 403);
         }
 
@@ -303,14 +303,14 @@ Route::middleware('auth:sanctum')->group(function () {
         if (!in_array(($tenant?->verification_status ?? 'unverified'), ['kyc_verified', 'premium_pending', 'premium_verified'], true)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Can hoan tat KYC truoc khi hien thi VietQR/chuyen khoan.',
+                'error' => 'Cần hoàn tất KYC trước khi hiển thị VietQR/chuyển khoản.',
             ], 403);
         }
 
         if (blank($tenant->bank_account_no) || blank($tenant->bank_account_name)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Tenant chua co thong tin tai khoan ngan hang hop le.',
+                'error' => 'Cơ sở (tenant) chưa có thông tin tài khoản ngân hàng hợp lệ.',
             ], 422);
         }
 
@@ -354,7 +354,7 @@ Route::middleware('auth:sanctum')->group(function () {
         if (!$tenantId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Khong xac dinh duoc tenant hien tai.',
+                'message' => 'Không xác định được cơ sở (tenant) hiện tại.',
             ], 403);
         }
 
@@ -363,14 +363,14 @@ Route::middleware('auth:sanctum')->group(function () {
         if (!in_array(($tenant?->verification_status ?? 'unverified'), ['kyc_verified', 'premium_pending', 'premium_verified'], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Can hoan tat KYC truoc khi tu dong gui nhac thanh toan kem VietQR/chuyen khoan.',
+                'message' => 'Cần hoàn tất KYC trước khi tự động gửi nhắc thanh toán kèm VietQR/chuyển khoản.',
             ], 403);
         }
 
         if (blank($tenant->bank_account_no) || blank($tenant->bank_account_name)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tenant chua co thong tin tai khoan ngan hang hop le.',
+                'message' => 'Cơ sở (tenant) chưa có thông tin tài khoản ngân hàng hợp lệ.',
             ], 422);
         }
 

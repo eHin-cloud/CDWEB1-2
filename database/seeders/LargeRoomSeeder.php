@@ -139,8 +139,11 @@ class LargeRoomSeeder extends Seeder
                         'area' => 20 + ($globalIndex % 35),
                         'amenities' => $amenitiesPool[$globalIndex % count($amenitiesPool)],
                         'description' => sprintf("Phòng %s hạng %s, tiện ích cao cấp.", $roomNumber, strtoupper($type)),
-                        'image' => null,
-                        'images' => null,
+                        'image' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+                        'images' => json_encode([
+                            'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+                            'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80'
+                        ]),
                         'video' => null,
                         'version' => 1,
                         'created_at' => $now,

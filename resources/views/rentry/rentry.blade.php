@@ -440,12 +440,12 @@
         <!-- Ambient floating particles background -->
         <canvas id="renty-ambient-particles" class="absolute inset-0 w-full h-full pointer-events-none z-0" style="mix-blend-mode: screen;"></canvas>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-            <!-- Bento Box 1: Main Search & Visual Filters (Col span 2) -->
-            <div class="lg:col-span-2 bg-gradient-to-br from-slate-900/40 to-slate-950/40 border border-slate-800/80 rounded-3xl p-6 md:p-8 backdrop-blur-md flex flex-col justify-between relative overflow-hidden group">
+            <!-- Bento Box 1: Main Search & Visual Filters (Col span 2) - Cho phép Dropdown nổi ra ngoài mà không bị cắt xén (overflow-visible z-20) -->
+            <div class="lg:col-span-2 bg-gradient-to-br from-slate-900/40 to-slate-950/40 border border-slate-800/80 rounded-3xl p-6 md:p-8 backdrop-blur-md flex flex-col justify-between relative overflow-visible z-20 group">
                 <!-- Decorative absolute glow inside card -->
                 <div class="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-emerald-500/10 blur-[80px] pointer-events-none"></div>
                 
-                <div class="relative z-10 w-full">
+                <div class="relative z-50 w-full">
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 mb-4">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         Review phòng trọ thực tế
@@ -455,42 +455,38 @@
                         Tìm Trọ Đúng Nghĩa - <br class="hidden md:inline"><span class="hero-title-accent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Xem Review Thật</span>
                     </h1>
                     
-                    <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-4 leading-relaxed">
+                    <p class="text-slate-400 text-xs md:text-sm max-w-xl mb-6 leading-relaxed">
                         Tránh bẫy "ảnh mạng một đằng thực tế một nẻo". Xem đánh giá điểm số chủ nhà, an ninh, điện nước trước khi cọc.
                     </p>
-
-                    <div class="flex items-center gap-3 mb-6">
-                        <a href="{{ route('renty.room.3d') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-lg shadow-blue-500/25 transition-all active:scale-95 border border-white/10">
-                            <i class="fa-solid fa-cube text-sky-300 animate-pulse text-sm"></i>
-                            <span>Khám Phá Mô Hình Phòng Trọ Ảo 3D (360° Tour)</span>
-                            <span class="px-2 py-0.5 rounded-full text-[9px] bg-white/20 uppercase font-bold tracking-wider">Hot</span>
-                        </a>
-                    </div>
                     
                     <!-- Integrated Search Bar (FEAT_04_LANDING - STT 1: search_box) -->
-                    <div class="relative w-full max-w-2xl mb-2 group/search" id="hero-search-wrapper">
+                    <div class="relative w-full max-w-2xl mb-2 group/search z-50" id="hero-search-wrapper">
                         <label for="hero-search-input" class="sr-only">Khu vực tìm kiếm</label>
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
-                        <form onsubmit="submitHeroSearch(event)" class="relative flex items-center bg-slate-950/80 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md transition-all" id="hero-search-box-container">
-                            <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
-                            <input 
-                                type="text" 
-                                id="hero-search-input" 
-                                name="search_box" 
-                                data-field-name="search_box"
-                                oninput="handleSearchInput(event)" 
-                                onkeyup="handleSearchInput(event)" 
-                                class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" 
-                                placeholder="Nhập quận, huyện, tên đường..."
-                            >
-                            <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-2 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                            <button type="submit" id="btn-hero-search-submit" class="mr-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" title="Tìm kiếm">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                                <span class="hidden sm:inline">Tìm</span>
-                            </button>
-                        </form>
+                        
+                        <!-- Wrapper định vị chuẩn cho Search Input -->
+                        <div class="relative w-full z-50">
+                            <form onsubmit="submitHeroSearch(event)" class="relative flex items-center bg-slate-950/90 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md transition-all" id="hero-search-box-container">
+                                <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
+                                <input 
+                                    type="text" 
+                                    id="hero-search-input" 
+                                    name="search_box" 
+                                    data-field-name="search_box"
+                                    oninput="handleSearchInput(event)" 
+                                    onkeyup="handleSearchInput(event)" 
+                                    class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" 
+                                    placeholder="Nhập quận, huyện, tên đường..."
+                                >
+                                <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-2 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="submit" id="btn-hero-search-submit" class="mr-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" title="Tìm kiếm">
+                                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                    <span class="hidden sm:inline">Tìm</span>
+                                </button>
+                            </form>
+                        </div>
 
                         <!-- Thông báo lỗi khi bấm tìm kiếm mà từ khóa rỗng [ERR_04_01] -->
                         <div id="search-empty-error" class="hidden mt-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-center justify-between gap-2 animate-shake">
@@ -546,8 +542,8 @@
                     </div>
                 </div>
 
-                <!-- Visual Filters Inner Row -->
-                <div class="relative z-10 pt-4 border-t border-slate-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <!-- Visual Filters Inner Row - Đặt z-0 để không bao giờ đè lên Dropdown Search -->
+                <div class="relative z-0 pt-4 border-t border-slate-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style="position: relative; z-index: 0;">
                     <div>
                         <span class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                             <i class="fa-solid fa-wand-magic-sparkles text-teal-400"></i>
@@ -556,26 +552,26 @@
                         <span class="block text-[9px] text-slate-500 mt-0.5">Click nhanh để lọc nhanh phòng trọ phù hợp</span>
                     </div>
                     
-                    <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                    <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto" style="position: relative; z-index: 0;">
                         <!-- Nuôi thú cưng -->
-                        <button type="button" id="vbtn-pets" onclick="toggleVisualFilter('pets')" class="vfilter-btn flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl transition-all duration-300 text-[10px] font-bold">
+                        <button type="button" id="vbtn-pets" onclick="toggleVisualFilter('pets')" class="vfilter-btn flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl transition-all duration-300 text-[10px] font-bold" style="position: relative; z-index: 0;">
                             <i class="fa-solid fa-cat text-teal-450"></i>
                             <span>Thú cưng</span>
                         </button>
                         
                         <!-- WC khép kín -->
-                        <button type="button" id="vbtn-wc" onclick="toggleVisualFilter('wc')" class="vfilter-btn flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl transition-all duration-300 text-[10px] font-bold">
+                        <button type="button" id="vbtn-wc" onclick="toggleVisualFilter('wc')" class="vfilter-btn flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl transition-all duration-300 text-[10px] font-bold" style="position: relative; z-index: 0;">
                             <i class="fa-solid fa-door-closed text-teal-450"></i>
                             <span>WC khép kín</span>
                         </button>
                         
                         <!-- Có ban công -->
-                        <button type="button" id="vbtn-balcony" onclick="toggleVisualFilter('balcony')" class="vfilter-btn flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl transition-all duration-300 text-[10px] font-bold">
+                        <button type="button" id="vbtn-balcony" onclick="toggleVisualFilter('balcony')" class="vfilter-btn flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl transition-all duration-300 text-[10px] font-bold" style="position: relative; z-index: 0;">
                             <i class="fa-solid fa-cloud-sun text-teal-450"></i>
                             <span>Có ban công</span>
                         </button>
 
-                        <button type="button" onclick="toggleFilterDrawer()" class="px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl text-[10px] font-extrabold flex items-center gap-1.5 transition-all">
+                        <button type="button" onclick="toggleFilterDrawer()" class="px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-slate-100 rounded-xl text-[10px] font-extrabold flex items-center gap-1.5 transition-all" style="position: relative; z-index: 0;">
                             <i class="fa-solid fa-sliders text-emerald-450"></i> Lọc nâng cao
                         </button>
                     </div>

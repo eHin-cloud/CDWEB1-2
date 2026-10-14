@@ -72,12 +72,13 @@ class AdminVerificationController extends Controller
                 'reviewed_at' => now(),
                 'default_document_access_revoked_at' => now(),
                 'reject_reason' => null,
+                'congratulated_at' => null,
             ]);
 
             $verification->documents()->update(['status' => 'approved']);
         });
 
-        return back()->with('success', 'Da duyet ho so xac minh.');
+        return back()->with('success', 'Đã duyệt hồ sơ xác minh.');
     }
 
     public function reject(Request $request, LandlordVerificationRequest $verification)
@@ -117,7 +118,7 @@ class AdminVerificationController extends Controller
             $verification->documents()->update(['status' => 'rejected']);
         });
 
-        return back()->with('success', 'Da tu choi ho so xac minh.');
+        return back()->with('success', 'Đã từ chối hồ sơ xác minh.');
     }
 
     public function auditLogs(Request $request)

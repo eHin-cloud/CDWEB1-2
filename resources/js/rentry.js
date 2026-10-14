@@ -2529,10 +2529,12 @@ function handleSearchInput(e) {
         return;
     }
 
-    // 2. Khi CÓ gõ chữ: mới hiển thị dropdown gợi ý
-    openRentySearchSuggestions();
+    // 2. Khi CÓ gõ chữ: chỉ hiển thị popup gợi ý trên Header nếu đang gõ trên Header
+    if (input && input.id === 'search-input') {
+        openRentySearchSuggestions();
+    }
 
-    // Kích hoạt tìm kiếm thông minh live với backend API
+    // Kích hoạt tìm kiếm thông minh live với backend API (did you mean, spell check)
     fetchLiveSmartSearch(trimmed);
 
     if (!document.getElementById('rooms-grid')) {
@@ -2775,6 +2777,65 @@ function initFilterFromUrl() {
 }
 window.initFilterFromUrl = initFilterFromUrl;
 
+function initSmartScrollSearchHeader() {
+    const searchPanel = document.getElementById('renty-search-panel');
+    if (!searchPanel) return;
+
+    // Chỉ áp dụng logic ẩn/hiện thông minh khi đang ở Trang chủ Renty (data-is-home="1")
+    if (searchPanel.getAttribute('data-is-home') !== '1') return;
+
+    const heroSearchBox = document.getElementById('hero-search-wrapper') || document.getElementById('hero-search-box-container');
+    const heroInput = document.getElementById('hero-search-input');
+    const navInput = document.getElementById('search-input');
+    const headerClearBtn = document.getElementById('header-search-clear-btn');
+    const heroClearBtn = document.getElementById('hero-search-clear-btn');
+
+    let isHeaderVisible = false;
+
+    const updateHeaderVisibility = () => {
+        let threshold = 320;
+        if (heroSearchBox) {
+            const rect = heroSearchBox.getBoundingClientRect();
+            threshold = rect.bottom + window.scrollY;
+        }
+
+        const currentScroll = window.scrollY || window.pageYOffset;
+
+        if (currentScroll > threshold - 60) {
+            if (!isHeaderVisible) {
+                isHeaderVisible = true;
+                searchPanel.classList.remove('opacity-0', 'invisible', 'pointer-events-none', '-translate-y-2');
+                searchPanel.classList.add('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
+
+                // Đồng bộ từ khóa từ Hero sang Header
+                if (heroInput && navInput && heroInput.value && !navInput.value) {
+                    navInput.value = heroInput.value;
+                    if (headerClearBtn) headerClearBtn.classList.remove('hidden');
+                }
+            }
+        } else {
+            if (isHeaderVisible) {
+                isHeaderVisible = false;
+                searchPanel.classList.add('opacity-0', 'invisible', 'pointer-events-none', '-translate-y-2');
+                searchPanel.classList.remove('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
+
+                // Đồng bộ từ khóa từ Header về Hero
+                if (navInput && heroInput && navInput.value && !heroInput.value) {
+                    heroInput.value = navInput.value;
+                    if (heroClearBtn) heroClearBtn.classList.remove('hidden');
+                }
+
+                // Đóng dropdown gợi ý trên Header nếu đang mở
+                document.getElementById('renty-search-suggestions')?.classList.add('hidden');
+            }
+        }
+    };
+
+    window.addEventListener('scroll', updateHeaderVisibility, { passive: true });
+    updateHeaderVisibility();
+}
+window.initSmartScrollSearchHeader = initSmartScrollSearchHeader;
+
 function initSearchListeners() {
     document.addEventListener('click', (event) => {
         const panel = document.getElementById('renty-search-panel');
@@ -2782,6 +2843,9 @@ function initSearchListeners() {
             blurRentySearch();
         }
     });
+
+    // Kích hoạt tính năng cuộn thông minh cho thanh tìm kiếm Header
+    initSmartScrollSearchHeader();
 
     // Tự động khôi phục bộ lọc từ URL param khi tải trang
     initFilterFromUrl();

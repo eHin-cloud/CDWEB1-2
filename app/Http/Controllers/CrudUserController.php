@@ -89,6 +89,30 @@ class CrudUserController extends Controller
             }
 
             Auth::login($user, $request->filled('remember'));
+
+            // Kiểm tra nếu chủ trọ có hồ sơ xác minh KYC / Tích xanh vừa được Admin duyệt
+            if ($user->canAccessLandlordDashboard() && $user->tenant_id) {
+                $pendingCongratulation = \App\Models\LandlordVerificationRequest::where('tenant_id', $user->tenant_id)
+                    ->where('status', 'approved')
+                    ->whereNull('congratulated_at')
+                    ->latest('reviewed_at')
+                    ->first();
+
+                if ($pendingCongratulation) {
+                    $pendingCongratulation->update(['congratulated_at' => now()]);
+                    $isPremium = $pendingCongratulation->type === 'premium';
+                    session()->flash('verification_congratulation', [
+                        'type' => $pendingCongratulation->type,
+                        'title' => $isPremium 
+                            ? 'Chúc mừng! Bạn đã đạt Huy hiệu Tích Xanh!' 
+                            : 'Chúc mừng! Hồ sơ KYC đã được phê duyệt thành công!',
+                        'badge' => $isPremium ? 'Tích xanh' : 'Đã xác minh KYC',
+                        'desc' => $isPremium
+                            ? 'Cơ sở lưu trú của bạn đã hoàn tất kiểm duyệt giấy tờ kinh doanh & an toàn PCCC, chính thức đạt danh hiệu Tích Xanh uy tín và được tăng điểm ưu tiên hiển thị tối đa trên toàn bộ hệ thống Renty!'
+                            : 'Hồ sơ định danh chủ trọ và tài khoản ngân hàng của bạn đã được kiểm duyệt thành công. Bạn đã có thể nhận tiền thuê phòng, kích hoạt thanh toán VietQR tự động và gắn huy hiệu Đã xác minh trên hệ thống!'
+                    ]);
+                }
+            }
             
             $defaultRoute = match (true) {
                 $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
@@ -710,7 +734,7 @@ class CrudUserController extends Controller
         ]);
 
         if (in_array($validated['role_slug'], ['unverified_landlord', 'landlord', 'manager', 'receptionist', 'housekeeper'], true) && empty($validated['tenant_id'])) {
-            return back()->with('error', 'Chu tro, quan ly hoac nhan vien van hanh phai duoc gan nha tro/tenant.');
+            return back()->with('error', 'Chủ trọ, quản lý hoặc nhân viên vận hành phải được gán nhà trọ/tenant.');
         }
 
         $role = Role::where('slug', $validated['role_slug'])->firstOrFail();
@@ -732,7 +756,7 @@ class CrudUserController extends Controller
         };
         $user->save();
 
-        return back()->with('success', 'Da cap nhat vai tro tai khoan.');
+        return back()->with('success', 'Đã cập nhật vai trò tài khoản.');
     }
 
     /**

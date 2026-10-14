@@ -29,6 +29,7 @@ class LandlordVerificationRequest extends Model
         'status',
         'reviewed_by',
         'reviewed_at',
+        'congratulated_at',
         'reject_reason',
     ];
 
@@ -38,6 +39,7 @@ class LandlordVerificationRequest extends Model
         'admin_review_consent_at' => 'datetime',
         'default_document_access_revoked_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'congratulated_at' => 'datetime',
     ];
 
     protected static function booted(): void

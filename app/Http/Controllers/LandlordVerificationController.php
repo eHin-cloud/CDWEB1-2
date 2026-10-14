@@ -24,7 +24,7 @@ class LandlordVerificationController extends Controller
         $tenant = Tenant::findOrFail($user->tenant_id);
 
         if (in_array($tenant->verification_status, self::PAYMENT_VERIFIED_STATUSES, true)) {
-            return back()->with('success', 'Ho so KYC cua ban da duoc xac minh.');
+            return back()->with('success', 'Hồ sơ KYC của bạn đã được xác minh.');
         }
 
         $validated = $request->validate([
@@ -85,7 +85,7 @@ class LandlordVerificationController extends Controller
 
         return redirect()
             ->route('smartroom.admin')
-            ->with('success', 'Da gui ho so xac minh nhan tien. SmartRoom se kiem tra va phan hoi som.');
+            ->with('success', 'Đã gửi hồ sơ xác minh nhận tiền. SmartRoom sẽ kiểm tra và phản hồi sớm.');
     }
 
     public function submitPremium(Request $request)
@@ -94,11 +94,11 @@ class LandlordVerificationController extends Controller
         $tenant = Tenant::findOrFail($user->tenant_id);
 
         if ($tenant->verification_status === 'premium_verified') {
-            return back()->with('success', 'Nha tro cua ban da co Tich xanh.');
+            return back()->with('success', 'Nhà trọ của bạn đã có Tích xanh.');
         }
 
         if (!in_array($tenant->verification_status, self::PAYMENT_VERIFIED_STATUSES, true)) {
-            return back()->with('error', 'Can hoan tat KYC nhan tien truoc khi gui ho so Tich xanh.');
+            return back()->with('error', 'Cần hoàn tất KYC nhận tiền trước khi gửi hồ sơ Tích xanh.');
         }
 
         $request->validate([
@@ -149,6 +149,6 @@ class LandlordVerificationController extends Controller
 
         return redirect()
             ->route('smartroom.admin')
-            ->with('success', 'Da gui ho so Tich xanh. SmartRoom se kiem tra giay to DKKD, PCCC va ANTT.');
+            ->with('success', 'Đã gửi hồ sơ Tích xanh. SmartRoom sẽ kiểm tra giấy tờ ĐKKD, PCCC và ANTT.');
     }
 }

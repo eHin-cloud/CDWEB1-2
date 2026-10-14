@@ -214,13 +214,9 @@
                             @forelse($rooms as $room)
                             <tr class="hover:bg-slate-900/40 transition-all">
                                 <td class="px-6 py-4">
-                                    <div class="w-14 h-10 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
-                                        @if($room->image)
-                                            <img src="{{ asset('storage/' . $room->image) }}" class="object-cover w-full h-full" 
-                                                 onerror="this.onerror=null; this.src='https://placehold.co/100x80/0f172a/6366f1?text=No+Image';">
-                                        @else
-                                            <img src="https://placehold.co/100x80/0f172a/6366f1?text=No+Image" class="object-cover w-full h-full">
-                                        @endif
+                                    <div class="w-14 h-10 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center shadow-inner">
+                                        <img src="{{ $room->thumbnail_url }}" alt="P. {{ $room->room_number }}" class="object-cover w-full h-full" 
+                                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80';">
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 font-bold text-slate-200">P. {{ $room->room_number }}</td>

@@ -24,7 +24,10 @@
         </div>
         
         <!-- Middle: Search Bar (Glassmorphism Renty search panel) -->
-        <div id="renty-search-panel" class="renty-search-panel flex-grow max-w-md mx-4 relative block">
+        @php
+            $isRentyHome = request()->routeIs('renty.user') || request()->is('renty');
+        @endphp
+        <div id="renty-search-panel" class="renty-search-panel flex-grow max-w-md mx-4 relative transition-all duration-300 transform {{ $isRentyHome ? 'opacity-0 invisible pointer-events-none -translate-y-2' : 'opacity-100 visible pointer-events-auto translate-y-0' }}" data-is-home="{{ $isRentyHome ? '1' : '0' }}">
             <div class="relative w-full renty-search-shell">
                 <div class="relative flex items-center w-full">
                     <i class="fa-solid fa-location-dot absolute left-3.5 text-slate-500 pointer-events-none text-xs z-10 renty-search-icon"></i>

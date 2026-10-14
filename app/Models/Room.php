@@ -72,7 +72,44 @@ class Room extends Model
         'status_label',
         'badge_class',
         'status_class',
+        'thumbnail_url',
     ];
+
+    public function getThumbnailUrlAttribute(): string
+    {
+        $primary = $this->image;
+        if (empty($primary) && !empty($this->images) && is_array($this->images)) {
+            $primary = $this->images[0] ?? null;
+        }
+
+        if (!empty($primary)) {
+            if (str_starts_with($primary, 'http://') || str_starts_with($primary, 'https://')) {
+                return $primary;
+            }
+            return asset('storage/' . ltrim($primary, '/'));
+        }
+
+        $fallbacks = [
+            'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1588153203274-4a392d28ed9f?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=800&q=80',
+        ];
+
+        $idx = abs((int) ($this->id ?? intval($this->room_number ?? 0))) % count($fallbacks);
+        return $fallbacks[$idx];
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        return $this->thumbnail_url;
+    }
 
     public function getStatusLabelAttribute(): string
     {

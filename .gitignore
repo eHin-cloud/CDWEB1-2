@@ -29,4 +29,5 @@ yarn-error.log
 /outputs/
 /tools/
 /dist/
-
+# Microsoft Office temporary files
+~$*

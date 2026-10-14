@@ -445,4 +445,190 @@ class RoomManagementCrudTest extends TestCase
         $responseUnique->assertStatus(200)
             ->assertJson(['exists' => false]);
     }
+
+    public function test_landlord_with_premium_verified_can_access_create_room(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Khu Trọ Premium',
+            'email' => 'premium@example.com',
+            'verification_status' => 'premium_verified',
+            'listing_badge' => 'premium_verified',
+        ]);
+        $landlordRole = Role::firstOrCreate(['slug' => 'landlord'], ['name' => 'Chủ trọ']);
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'role_id' => $landlordRole->id,
+            'name' => 'Chủ Trọ Tích Xanh',
+            'username' => 'chutro_premium',
+            'email' => 'chutro_premium@example.com',
+            'role' => 'landlord',
+            'password' => Hash::make('password'),
+        ]);
+        \App\Models\LandlordProfile::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'full_name' => 'Chủ Trọ Tích Xanh',
+            'phone' => '0912345678',
+            'property_name' => 'Khu Trọ Premium',
+            'property_address' => 'Hà Nội',
+            'status' => 'verified',
+            'verification_status' => 'kyc_verified',
+            'national_id' => '001203040506',
+            'business_license' => 'DKKD-998811',
+        ]);
+        Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Tòa Nhà X',
+            'address' => 'Hà Nội',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.rooms.create'));
+        $response->assertStatus(200);
+        $response->assertViewIs('admin.rooms.create');
+    }
+
+    public function test_unverified_landlord_is_redirected_to_profile_section(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Khu Trọ Mới',
+            'email' => 'unverified@example.com',
+            'verification_status' => 'unverified',
+        ]);
+        $landlordRole = Role::firstOrCreate(['slug' => 'landlord'], ['name' => 'Chủ trọ']);
+        $user = User::create([
+            'tenant_id' => $tenant->id,
+            'role_id' => $landlordRole->id,
+            'name' => 'Chủ Trọ Chưa Duyệt',
+            'username' => 'chutro_unverified',
+            'email' => 'chutro_unverified@example.com',
+            'role' => 'landlord',
+            'password' => Hash::make('password'),
+        ]);
+        \App\Models\LandlordProfile::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'full_name' => 'Chủ Trọ Chưa Duyệt',
+            'phone' => '0987654321',
+            'property_name' => 'Khu Trọ Mới',
+            'property_address' => 'Hà Nội',
+            'status' => 'pending',
+            'verification_status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.rooms.create'));
+        $response->assertRedirect(route('smartroom.admin', ['tab' => 'profile-section']));
+        $response->assertSessionHas('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
+    }
+
+    public function test_can_delete_individual_images_from_room(): void
+    {
+        [$admin, $tenant, $building] = $this->setupTenantAdminAndBuilding();
+        Storage::fake('public');
+
+        $img1 = 'rooms/img1.jpg';
+        $img2 = 'rooms/img2.jpg';
+        Storage::disk('public')->put($img1, 'fake content 1');
+        Storage::disk('public')->put($img2, 'fake content 2');
+
+        $room = Room::create([
+            'building_id' => $building->id,
+            'tenant_id' => $tenant->id,
+            'room_number' => 'P.501',
+            'floor' => 5,
+            'status' => 'empty',
+            'room_type' => 'deluxe',
+            'rental_type' => 'month',
+            'price' => 5000000,
+            'area' => 30,
+            'image' => $img1,
+            'images' => [$img1, $img2],
+            'version' => 1,
+        ]);
+
+        // Yêu cầu xóa $img1, chỉ giữ $img2
+        $response = $this->actingAs($admin)->post(route('admin.rooms.update', $room->id), [
+            'version' => 1,
+            'building_id' => $building->id,
+            'room_number' => 'P.501',
+            'floor' => 5,
+            'status' => 'empty',
+            'room_type' => 'deluxe',
+            'rental_type' => 'month',
+            'price' => 5000000,
+            'area' => 30,
+            'deleted_images' => [$img1],
+        ]);
+
+        $response->assertRedirect(route('admin.rooms.index'))
+            ->assertSessionHas('success');
+
+        $room->refresh();
+        $this->assertFalse(in_array($img1, $room->images ?? [], true));
+        $this->assertTrue(in_array($img2, $room->images ?? [], true));
+        $this->assertEquals($img2, $room->image);
+        Storage::disk('public')->assertMissing($img1);
+        Storage::disk('public')->assertExists($img2);
+    }
+
+    public function test_can_delete_and_replace_room_video(): void
+    {
+        [$admin, $tenant, $building] = $this->setupTenantAdminAndBuilding();
+        Storage::fake('public');
+
+        $videoPath = 'rooms/videos/sample.mp4';
+        Storage::disk('public')->put($videoPath, 'fake video content');
+
+        $room = Room::create([
+            'building_id' => $building->id,
+            'tenant_id' => $tenant->id,
+            'room_number' => 'P.502',
+            'floor' => 5,
+            'status' => 'empty',
+            'room_type' => 'vip',
+            'rental_type' => 'month',
+            'price' => 6000000,
+            'area' => 35,
+            'video' => $videoPath,
+            'version' => 1,
+        ]);
+
+        // 1. Kiểm tra xóa video hiện tại
+        $responseDel = $this->actingAs($admin)->post(route('admin.rooms.update', $room->id), [
+            'version' => 1,
+            'building_id' => $building->id,
+            'room_number' => 'P.502',
+            'floor' => 5,
+            'status' => 'empty',
+            'room_type' => 'vip',
+            'rental_type' => 'month',
+            'price' => 6000000,
+            'area' => 35,
+            'delete_video' => '1',
+        ]);
+
+        $responseDel->assertRedirect(route('admin.rooms.index'));
+        $room->refresh();
+        $this->assertNull($room->video);
+        Storage::disk('public')->assertMissing($videoPath);
+
+        // 2. Kiểm tra upload thay thế video mới
+        $newVideo = UploadedFile::fake()->create('new_tour.mp4', 10000, 'video/mp4');
+        $responseNew = $this->actingAs($admin)->post(route('admin.rooms.update', $room->id), [
+            'version' => $room->version,
+            'building_id' => $building->id,
+            'room_number' => 'P.502',
+            'floor' => 5,
+            'status' => 'empty',
+            'room_type' => 'vip',
+            'rental_type' => 'month',
+            'price' => 6000000,
+            'area' => 35,
+            'video' => $newVideo,
+        ]);
+
+        $responseNew->assertRedirect(route('admin.rooms.index'));
+        $room->refresh();
+        $this->assertNotNull($room->video);
+        Storage::disk('public')->assertExists($room->video);
+    }
 }

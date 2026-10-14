@@ -137,10 +137,13 @@ class RoomController extends Controller
                 ->first();
             $tenant = \App\Models\Tenant::find($tenantId);
 
-            $hasLegalInfo = !empty($profile?->national_id) && !empty($profile?->business_license);
-            $isApproved = ($profile?->status === 'approved') || (($tenant?->verification_status ?? '') === 'kyc_verified');
+            $isApproved = in_array($profile?->status, ['approved', 'verified'], true)
+                || in_array($profile?->verification_status, ['approved', 'verified', 'kyc_verified', 'premium_verified'], true)
+                || in_array($tenant?->verification_status ?? '', ['kyc_verified', 'premium_verified', 'premium_pending', 'verified'], true)
+                || in_array($tenant?->listing_badge ?? '', ['kyc_verified', 'premium_verified', 'verified'], true)
+                || \App\Models\LandlordVerificationRequest::where('tenant_id', $tenantId)->where('status', 'approved')->exists();
 
-            if (!$hasLegalInfo || !$isApproved) {
+            if (!$isApproved) {
                 return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
                     ->with('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
             }
@@ -187,10 +190,13 @@ class RoomController extends Controller
                 ->first();
             $tenant = \App\Models\Tenant::find($tenantId);
 
-            $hasLegalInfo = !empty($profile?->national_id) && !empty($profile?->business_license);
-            $isApproved = ($profile?->status === 'approved') || (($tenant?->verification_status ?? '') === 'kyc_verified');
+            $isApproved = in_array($profile?->status, ['approved', 'verified'], true)
+                || in_array($profile?->verification_status, ['approved', 'verified', 'kyc_verified', 'premium_verified'], true)
+                || in_array($tenant?->verification_status ?? '', ['kyc_verified', 'premium_verified', 'premium_pending', 'verified'], true)
+                || in_array($tenant?->listing_badge ?? '', ['kyc_verified', 'premium_verified', 'verified'], true)
+                || \App\Models\LandlordVerificationRequest::where('tenant_id', $tenantId)->where('status', 'approved')->exists();
 
-            if (!$hasLegalInfo || !$isApproved) {
+            if (!$isApproved) {
                 return redirect()->route('smartroom.admin', ['tab' => 'profile-section'])
                     ->with('warning', 'Bạn cần hoàn thiện hồ sơ (MST/CCCD) và chờ Admin duyệt trước khi đăng tin công khai.');
             }
@@ -467,20 +473,37 @@ class RoomController extends Controller
             'video.max' => 'Dung lượng video không được vượt quá 30MB.'
         ]);
 
-        // 6. Xử lý ảnh: Giữ nguyên ảnh cũ nếu không chọn ảnh mới (Update Persistence)
+        // 6. Xử lý ảnh: Hỗ trợ xóa từng ảnh cũ và thêm ảnh mới
         $imagePaths = $this->roomImages($room);
-        $imagePath = $room->image;
-        if ($request->hasFile('images')) {
-            $this->deleteRoomImages($room);
-            $imagePaths = $this->storeRoomImages($request);
-            $imagePath = $imagePaths[0] ?? null;
+
+        // 6.1. Xóa các ảnh được người dùng đánh dấu xóa
+        if ($request->has('deleted_images') && is_array($request->deleted_images)) {
+            foreach ($request->deleted_images as $delImg) {
+                if (in_array($delImg, $imagePaths, true)) {
+                    Storage::disk('public')->delete($delImg);
+                    $imagePaths = array_values(array_diff($imagePaths, [$delImg]));
+                }
+            }
         }
 
+        // 6.2. Thêm các ảnh mới được tải lên
+        if ($request->hasFile('images')) {
+            $newImages = $this->storeRoomImages($request);
+            $imagePaths = array_values(array_unique(array_merge($imagePaths, $newImages)));
+        }
+
+        $imagePath = $imagePaths[0] ?? null;
+
+        // 6.3. Xử lý Video: hỗ trợ xóa video cũ hoặc thay thế bằng video mới
         $videoPath = $room->video;
-        if ($request->hasFile('video')) {
+        if ($request->input('delete_video') == '1' || $request->hasFile('video')) {
             if ($room->video) {
                 Storage::disk('public')->delete($room->video);
             }
+            $videoPath = null;
+        }
+
+        if ($request->hasFile('video')) {
             $videoPath = $request->file('video')->store('rooms/videos', 'public');
         }
 

@@ -392,17 +392,17 @@ $rentyRooms = function ($filterEmpty = true) {
         $listingBadge = $tenant->listing_badge ?? 'unverified';
         $trustBadge = match ($listingBadge) {
             'verified', 'premium_verified' => [
-                'label' => 'Tich xanh',
+                'label' => 'Tích xanh',
                 'class' => 'bg-sky-500/10 text-sky-300 border-sky-500/25',
                 'icon' => 'fa-circle-check',
             ],
             'kyc_verified' => [
-                'label' => 'Da xac minh',
+                'label' => 'Đã xác minh',
                 'class' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25',
                 'icon' => 'fa-shield-halved',
             ],
             default => [
-                'label' => 'Chua xac minh',
+                'label' => 'Chưa xác minh',
                 'class' => 'bg-slate-950/75 text-slate-300 border-white/10',
                 'icon' => 'fa-circle-info',
             ],

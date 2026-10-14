@@ -97,7 +97,7 @@ class PaymentController extends Controller
             && in_array($validated['payment_method'], ['bank_transfer', 'vietqr'], true)
             && !$this->tenantCanReceiveOnlinePayments($this->currentTenantId())
         ) {
-            return back()->with('error', 'Can hoan tat KYC truoc khi ghi nhan thanh toan chuyen khoan/VietQR.');
+            return back()->with('error', 'Cần hoàn tất KYC trước khi ghi nhận thanh toán chuyển khoản/VietQR.');
         }
 
         $before = $payment->only(['status', 'payment_date', 'payment_method']);
@@ -352,7 +352,7 @@ class PaymentController extends Controller
 
         $fallbackTenantId = Tenant::query()->value('id');
         if (!$fallbackTenantId) {
-            abort(404, 'Khong tim thay tenant de hien thi thanh toan.');
+            abort(404, 'Không tìm thấy cơ sở (tenant) để hiển thị thanh toán.');
         }
 
         return (int) $fallbackTenantId;

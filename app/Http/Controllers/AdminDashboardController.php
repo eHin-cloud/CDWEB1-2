@@ -45,6 +45,30 @@ class AdminDashboardController extends Controller
             ->latest()
             ->first();
 
+        // Kiểm tra nếu có hồ sơ vừa được Admin duyệt mà chưa chúc mừng
+        if (!session()->has('verification_congratulation')) {
+            $pendingCongratulation = LandlordVerificationRequest::where('tenant_id', $tenantId)
+                ->where('status', 'approved')
+                ->whereNull('congratulated_at')
+                ->latest('reviewed_at')
+                ->first();
+
+            if ($pendingCongratulation) {
+                $pendingCongratulation->update(['congratulated_at' => now()]);
+                $isPremium = $pendingCongratulation->type === 'premium';
+                session()->flash('verification_congratulation', [
+                    'type' => $pendingCongratulation->type,
+                    'title' => $isPremium 
+                        ? 'Chúc mừng! Bạn đã đạt Huy hiệu Tích Xanh!' 
+                        : 'Chúc mừng! Hồ sơ KYC đã được phê duyệt thành công!',
+                    'badge' => $isPremium ? 'Tích xanh' : 'Đã xác minh KYC',
+                    'desc' => $isPremium
+                        ? 'Cơ sở lưu trú của bạn đã hoàn tất kiểm duyệt giấy tờ kinh doanh & an toàn PCCC, chính thức đạt danh hiệu Tích Xanh uy tín và được tăng điểm ưu tiên hiển thị tối đa trên toàn bộ hệ thống Renty!'
+                        : 'Hồ sơ định danh chủ trọ và tài khoản ngân hàng của bạn đã được kiểm duyệt thành công. Bạn đã có thể nhận tiền thuê phòng, kích hoạt thanh toán VietQR tự động và gắn huy hiệu Đã xác minh trên hệ thống!'
+                ]);
+            }
+        }
+
         // 1. Stats ribbon
         $totalRooms = Room::where('tenant_id', $tenantId)->count();
         $occupiedRooms = Room::where('tenant_id', $tenantId)->where('status', 'occupied')->count();
@@ -408,7 +432,7 @@ class AdminDashboardController extends Controller
         $fallbackTenantId = Tenant::where('email', 'contact@smartroom-caugiay.vn')->value('id')
             ?? Tenant::query()->orderBy('id')->value('id');
         if (!$fallbackTenantId) {
-            abort(404, 'Khong tim thay tenant.');
+            abort(404, 'Không tìm thấy cơ sở (tenant).');
         }
 
         return (int) $fallbackTenantId;
@@ -1255,7 +1279,7 @@ class AdminDashboardController extends Controller
 
         return redirect()
             ->route('smartroom.admin', ['tab' => 'dashboard-section'])
-            ->with('success', 'Da gui ' . $logs->where('status', 'sent')->count() . ' thong bao nhac hop dong sap het han.');
+            ->with('success', 'Đã gửi ' . $logs->where('status', 'sent')->count() . ' thông báo nhắc hợp đồng sắp hết hạn.');
     }
 
     public function notifyMaintenance(NotificationService $notificationService)
@@ -1264,7 +1288,7 @@ class AdminDashboardController extends Controller
 
         return redirect()
             ->route('smartroom.admin', ['tab' => 'dashboard-section'])
-            ->with('success', 'Da gui ' . $logs->where('status', 'sent')->count() . ' thong bao nhac bao tri thiet bi.');
+            ->with('success', 'Đã gửi ' . $logs->where('status', 'sent')->count() . ' thông báo nhắc bảo trì thiết bị.');
     }
 
     public function notifyAll(NotificationService $notificationService)
@@ -1279,7 +1303,7 @@ class AdminDashboardController extends Controller
 
         return redirect()
             ->route('smartroom.admin', ['tab' => 'dashboard-section'])
-            ->with('success', 'Da chay tat ca thong bao tu dong. So thong bao gui thanh cong: ' . $sentCount . '.');
+            ->with('success', 'Đã chạy tất cả thông báo tự động. Số thông báo gửi thành công: ' . $sentCount . '.');
     }
 
     public function storeContract(Request $request)
