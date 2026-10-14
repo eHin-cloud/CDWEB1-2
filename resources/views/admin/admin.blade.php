@@ -445,7 +445,7 @@
                     </form>
 
                     <script>
-                        // Gửi file ảnh vật lý lên máy chủ (Upload qua FormData) và nhận phản hồi JSON
+                        // Xem trước ảnh đại diện (Preview tạm thời trên giao diện, chỉ lưu khi bấm nút Lưu Thay Đổi)
                         function previewLandlordAvatar(input) {
                             const file = input.files[0];
                             const preview = document.getElementById('avatar-preview');
@@ -473,53 +473,12 @@
 
                             if (err) err.classList.add('hidden');
 
-                            // 1. Xem trước ảnh trên Client (FileReader)
+                            // Xem trước ảnh trên Client (FileReader) - CHƯA gửi lên máy chủ
                             const reader = new FileReader();
                             reader.onload = function(e) {
                                 if (preview) preview.src = e.target.result;
                             };
                             reader.readAsDataURL(file);
-
-                            // 2. Gửi file ảnh vật lý lên máy chủ bằng FormData
-                            const formData = new FormData();
-                            formData.append("avatar", file);
-
-                            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
-
-                            fetch("{{ route('smartroom.admin.profile.upload_avatar') }}", {
-                                method: "POST",
-                                headers: {
-                                    'X-CSRF-TOKEN': csrfToken,
-                                    'Accept': 'application/json'
-                                },
-                                body: formData // Trình duyệt tự động set header multipart/form-data
-                            })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.status === 'success') {
-                                    if (preview) preview.src = data.avatarUrl;
-                                    // Cập nhật cả avatar trên sidebar/header nếu có
-                                    const headerAvatar = document.querySelector('.header-avatar-img');
-                                    if (headerAvatar) {
-                                        headerAvatar.src = data.avatarUrl;
-                                        headerAvatar.classList.remove('hidden');
-                                        headerAvatar.style.display = 'block';
-                                        const fallback = document.querySelector('.header-avatar-fallback');
-                                        if (fallback) fallback.style.display = 'none';
-                                    }
-                                } else {
-                                    if (err) {
-                                        err.textContent = data.message || 'Lỗi khi tải ảnh lên máy chủ.';
-                                        err.classList.remove('hidden');
-                                    }
-                                }
-                            })
-                            .catch(() => {
-                                if (err) {
-                                    err.textContent = 'Không thể kết nối máy chủ để tải ảnh lên.';
-                                    err.classList.remove('hidden');
-                                }
-                            });
                         }
 
                         // Client-side Validation cho Form Hồ Sơ Chủ Trọ (FEAT_02_PROFILE)
