@@ -2646,6 +2646,7 @@
                                     <th class="px-6 py-4">Khách hàng</th>
                                     <th class="px-6 py-4">Số điện thoại</th>
                                     <th class="px-6 py-4">Phòng quan tâm</th>
+                                    <th class="px-6 py-4">Lịch hẹn xem</th>
                                     <th class="px-6 py-4">Lời nhắn</th>
                                     <th class="px-6 py-4">Ngày đăng ký</th>
                                     <th class="px-6 py-4">Trạng thái</th>
@@ -2661,6 +2662,16 @@
                                         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300">
                                             Phòng {{ $req->room->room_number }}
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-xs font-semibold">
+                                        @if($req->appointment_time)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                                                <i class="fa-regular fa-calendar-check text-[10px]"></i>
+                                                {{ \Carbon\Carbon::parse($req->appointment_time)->format('H:i d/m/Y') }}
+                                            </span>
+                                        @else
+                                            <span class="text-slate-500 italic">Tư vấn trực tiếp</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-xs max-w-xs truncate" title="{{ $req->message }}">
                                         {{ $req->message ?? '-' }}

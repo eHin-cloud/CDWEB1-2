@@ -599,18 +599,30 @@
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                         <div>
-                            <input type="text" name="name" required value="{{ Auth::user()->name ?? '' }}" placeholder="Họ tên của bạn" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <input type="text" name="name" id="customer_name" required value="{{ old('name', old('customer_name', Auth::user()->name ?? '')) }}" placeholder="Họ và tên của bạn *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('name') || $errors->has('customer_name') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            @if($errors->has('name') || $errors->has('customer_name'))
+                                <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('name') ?: $errors->first('customer_name') }}</p>
+                            @endif
                         </div>
                         <div>
-                            <input type="tel" name="phone" required value="{{ Auth::user()->phone ?? '' }}" placeholder="Số điện thoại liên hệ" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            <input type="tel" name="phone" id="customer_phone" required value="{{ old('phone', old('customer_phone', Auth::user()->phone ?? '')) }}" placeholder="Số điện thoại liên hệ *" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('phone') || $errors->has('customer_phone') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            @if($errors->has('phone') || $errors->has('customer_phone'))
+                                <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('phone') ?: $errors->first('customer_phone') }}</p>
+                            @endif
                         </div>
                         <div>
-                            <textarea name="message" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}></textarea>
+                            <input type="datetime-local" name="appointment_time" id="appointment_time" value="{{ old('appointment_time') }}" placeholder="Chọn ngày giờ..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border {{ $errors->has('appointment_time') ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-800' }} text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
+                            @if($errors->has('appointment_time'))
+                                <p class="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $errors->first('appointment_time') }}</p>
+                            @endif
                         </div>
-                        <button type="submit" id="btnBooking" name="btnBooking" data-field-name="btnBooking" 
+                        <div>
+                            <textarea name="message" id="note" rows="2.5" placeholder="Ghi chú thời gian muốn hẹn xem phòng..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none placeholder-slate-655 transition-colors resize-none" {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>{{ old('message', old('note')) }}</textarea>
+                        </div>
+                        <button type="submit" id="btnSubmitRequest" name="btnBooking" data-field-name="btnBooking" 
                             class="w-full py-3 rounded-xl {{ (($room['status'] ?? 'empty') === 'empty') ? 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 cursor-pointer shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' }} text-white text-xs font-extrabold uppercase tracking-wider transition-all active:scale-[0.98] mt-1.5"
                             {{ (($room['status'] ?? 'empty') !== 'empty') ? 'disabled' : '' }}>
-                            {{ (($room['status'] ?? 'empty') === 'empty') ? 'Hẹn xem phòng / Liên hệ' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
+                            {{ (($room['status'] ?? 'empty') === 'empty') ? 'Gửi yêu cầu hẹn xem' : 'Phòng Đã Thuê (Ngừng Nhận Đặt)' }}
                         </button>
                     </form>
                 </section>

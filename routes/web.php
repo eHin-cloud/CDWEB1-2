@@ -283,6 +283,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/smartroom/admin/contract/{id}/decline-renewal', [AdminDashboardController::class, 'declineRenewal'])->name('smartroom.admin.contract.decline_renewal');
 
     // Contact Requests Management
+    Route::get('/smartroom/admin/contact-requests', [AdminDashboardController::class, 'contactRequestsIndex'])->name('smartroom.admin.contact_requests');
     Route::post('/smartroom/admin/contact-request/{id}/status', [AdminDashboardController::class, 'updateContactRequestStatus'])->name('smartroom.admin.contact_request.status');
     Route::delete('/smartroom/admin/contact-request/{id}', [AdminDashboardController::class, 'deleteContactRequest'])->middleware('role:landlord')->name('smartroom.admin.contact_request.delete');
 
@@ -342,6 +343,7 @@ Route::post('/smartroom/contract/{id}/sign', [AdminDashboardController::class, '
 Route::post('/smartroom/contract/{id}/send-otp', [AdminDashboardController::class, 'sendOtpForContract'])->name('smartroom.contract.send_otp');
 Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::class, 'signLessorContract'])->name('smartroom.contract.lessor_sign');
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
+Route::post('/renty/contact-requests', [AdminDashboardController::class, 'storeContactRequest']);
 
 $rentyRooms = function ($filterEmpty = true) {
     $user = auth()->user();

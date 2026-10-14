@@ -1751,24 +1751,156 @@ class AdminDashboardController extends Controller
         return redirect()->route('smartroom.contract.sign_view', $id)->with('success', 'Bên cho thuê đã ký hợp đồng online thành công!');
     }
 
+    public function contactRequestsIndex(Request $request)
+    {
+        $user = Auth::user();
+        $tenantId = $user->tenant_id;
+
+        $query = \App\Models\ContactRequest::with('room');
+        if ($user->role !== 'admin') {
+            $query->whereHas('room', fn($q) => $q->where('tenant_id', $tenantId));
+        }
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            $requests = $query->latest()->get();
+            return response()->json([
+                'success' => true,
+                'data' => $requests,
+            ]);
+        }
+
+        return redirect()->route('smartroom.admin', ['tab' => 'contact-section']);
+    }
+
     public function storeContactRequest(Request $request)
     {
-        $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:50',
-            'message' => 'nullable|string',
+        $name = trim((string) ($request->input('customer_name') ?? $request->input('name') ?? ''));
+        $phone = trim((string) ($request->input('customer_phone') ?? $request->input('phone') ?? ''));
+        $message = trim((string) ($request->input('note') ?? $request->input('message') ?? ''));
+        $appointmentTime = $request->input('appointment_time');
+        $roomId = $request->input('room_id');
+
+        $request->merge([
+            'name' => $name,
+            'customer_name' => $name,
+            'phone' => $phone,
+            'customer_phone' => $phone,
+            'message' => $message,
+            'note' => $message,
         ]);
 
-        \App\Models\ContactRequest::create([
-            'room_id' => $request->room_id,
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'message' => $request->message,
+        // 1. Khách để trống họ và tên (ERR_07_01)
+        if (empty($name)) {
+            $errorMsg = 'Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_07_01',
+                    'message' => $errorMsg,
+                    'errors' => ['name' => [$errorMsg], 'customer_name' => [$errorMsg]],
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['name' => $errorMsg, 'customer_name' => $errorMsg])->withInput();
+        }
+
+        // 2. Khách để trống số điện thoại (ERR_07_02)
+        if (empty($phone)) {
+            $errorMsg = 'Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_07_02',
+                    'message' => $errorMsg,
+                    'errors' => ['phone' => [$errorMsg], 'customer_phone' => [$errorMsg]],
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['phone' => $errorMsg, 'customer_phone' => $errorMsg])->withInput();
+        }
+
+        // 3. Số điện thoại không đủ 10 số (ERR_07_03)
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        if (strlen($cleanPhone) !== 10 || (!preg_match('/^(0[3|5|7|8|9])[0-9]{8}$/', $cleanPhone) && !preg_match('/^[0-9]{10}$/', $cleanPhone))) {
+            $errorMsg = 'Số điện thoại liên hệ phải có chính xác 10 chữ số.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_07_03',
+                    'message' => $errorMsg,
+                    'errors' => ['phone' => [$errorMsg], 'customer_phone' => [$errorMsg]],
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['phone' => $errorMsg, 'customer_phone' => $errorMsg])->withInput();
+        }
+
+        // 4. Chọn ngày hẹn trong quá khứ (ERR_07_04)
+        $parsedAppointmentTime = null;
+        if (!empty($appointmentTime)) {
+            try {
+                $parsedAppointmentTime = \Carbon\Carbon::parse($appointmentTime);
+                if ($parsedAppointmentTime->isPast()) {
+                    $errorMsg = 'Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.';
+                    if ($request->wantsJson() || $request->is('api/*')) {
+                        return response()->json([
+                            'success' => false,
+                            'error_code' => 'ERR_07_04',
+                            'message' => $errorMsg,
+                            'errors' => ['appointment_time' => [$errorMsg]],
+                        ], 422);
+                    }
+                    return redirect()->back()->withErrors(['appointment_time' => $errorMsg])->withInput();
+                }
+            } catch (\Exception $e) {
+                // Invalid datetime
+            }
+        }
+
+        // Chống spam: Mỗi số điện thoại không được gửi quá 3 yêu cầu hẹn trong vòng 10 phút
+        $recentRequestsCount = \App\Models\ContactRequest::where('phone', $cleanPhone)
+            ->where('created_at', '>=', now()->subMinutes(10))
+            ->count();
+        if ($recentRequestsCount >= 3) {
+            $spamMsg = 'Bạn đã gửi quá nhiều yêu cầu hẹn trong thời gian ngắn. Vui lòng thử lại sau 10 phút.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_07_SPAM',
+                    'message' => $spamMsg,
+                ], 429);
+            }
+            return redirect()->back()->withErrors(['phone' => $spamMsg])->withInput();
+        }
+
+        if (!\App\Models\Room::where('id', $roomId)->exists()) {
+            $errorMsg = 'Phòng lưu trú này không tồn tại hoặc đã bị gỡ.';
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMsg,
+                ], 404);
+            }
+            return redirect()->back()->withErrors(['room_id' => $errorMsg])->withInput();
+        }
+
+        $contact = \App\Models\ContactRequest::create([
+            'room_id' => $roomId,
+            'name' => $name,
+            'phone' => $cleanPhone,
+            'appointment_time' => $parsedAppointmentTime,
+            'message' => $message ?: null,
             'status' => 'pending',
         ]);
 
-        return redirect()->back()->with('success', 'Đăng ký nhận tư vấn thành công! Chủ trọ sẽ sớm liên hệ lại với bạn.');
+        $successMsg = 'Gửi yêu cầu hẹn xem phòng thành công! Chủ trọ sẽ sớm liên hệ lại.';
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'error_code' => 'ERR_07_05',
+                'message' => $successMsg,
+                'data' => $contact,
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', $successMsg);
     }
 
     public function updateContactRequestStatus(Request $request, $id)
@@ -1791,7 +1923,17 @@ class AdminDashboardController extends Controller
             $contact->fresh()->only(['status'])
         );
 
-        return redirect()->route('smartroom.admin', ['tab' => 'contact-section'])->with('success', 'Cập nhật trạng thái yêu cầu tư vấn thành công!');
+        $successMsg = 'Đã cập nhật trạng thái yêu cầu tư vấn thành công.';
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'error_code' => 'ERR_07_06',
+                'message' => $successMsg,
+                'data' => $contact,
+            ]);
+        }
+
+        return redirect()->route('smartroom.admin', ['tab' => 'contact-section'])->with('success', $successMsg);
     }
 
     public function deleteContactRequest($id)

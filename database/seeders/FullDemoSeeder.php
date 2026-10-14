@@ -599,6 +599,7 @@ class FullDemoSeeder extends Seeder
                     ['room_id' => $room->id, 'phone' => '0555' . str_pad((string) ($tenantIndex * 100 + $index), 6, '0', STR_PAD_LEFT)],
                     [
                         'name' => 'Khách cần tư vấn ' . $room->room_number,
+                        'appointment_time' => Carbon::now()->addDays($index + 1)->setHour(9 + ($index % 8))->setMinute(0),
                         'message' => 'Tôi muốn xem phòng và hỏi về chi phí cọc.',
                         'status' => $index % 2 === 0 ? 'pending' : 'processed',
                     ]
