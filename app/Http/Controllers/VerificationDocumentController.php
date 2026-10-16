@@ -88,9 +88,15 @@ class VerificationDocumentController extends Controller
         return redirect()->away($url);
     }
 
-    public function stream(Request $request, LandlordVerificationDocument $document)
-    {
-        abort_unless($request->hasValidSignature(), 403);
+        if (!$request->hasValidSignature()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error_code' => 'ERR_10_03',
+                    'message' => 'Phiên xem ảnh tài liệu bảo mật đã hết hạn (Signed URL TTL 300s).',
+                ], 403);
+            }
+            abort(403, 'Phiên xem ảnh tài liệu bảo mật đã hết hạn (Signed URL TTL 300s).');
+        }
         abort_unless(Auth::check(), 403);
 
         if ($request->has('admin')) {

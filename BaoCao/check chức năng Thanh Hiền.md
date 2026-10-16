@@ -437,12 +437,15 @@
 
 ### 10. Tính năng 10: Kiểm duyệt hồ sơ chủ trọ & Cấp tích xanh (Admin Verification) (`FEAT_10_ADMIN_KYC`)
 * **Mã nguồn thực tế**:
-  * Controller: `app/Http/Controllers/AdminVerificationController.php` (`index`, `approve`, `reject`, `hasPasskey`, `auditLogs`, `analytics`), `VerificationDocumentController.php` (`show`, `unlock`, `stream`)
+  * Controller: `app/Http/Controllers/AdminVerificationController.php` (`index`, `pending`, `approve`, `reject`, `hasPasskey`, `auditLogs`, `analytics`), `VerificationDocumentController.php` (`show`, `unlock`, `stream`)
   * API Controller: `app/Http/Controllers/Api/SystemAdminController.php` (`getLandlords`, `verifyLandlord`)
-  * Models: `app/Models/LandlordVerificationRequest.php`, `app/Models/LandlordVerificationDocument.php`, `app/Models/Tenant.php`, `app/Models/User.php`
-  * Middleware: `role:admin`, `auth`, `signed`
+  * Models: `app/Models/LandlordVerificationRequest.php`, `app/Models/LandlordVerificationDocument.php`, `app/Models/Tenant.php`, `app/Models/User.php`, `app/Models/NotificationLog.php`
+  * Middleware: `role:admin`, `role:superadmin`, `auth`, `signed`
   * Routes:
     * Web:
+      * `GET /admin/kyc/pending` (Danh sách hồ sơ định danh chủ trọ đang chờ thẩm định)
+      * `POST /admin/kyc/{id}/approve` (Phê duyệt cấp huy hiệu Tích Xanh chứng nhận cơ sở an toàn)
+      * `POST /admin/kyc/{id}/reject` (Từ chối hồ sơ kèm lý do phản hồi chi tiết)
       * `GET /admin/verifications`
       * `POST /admin/verifications/{verification}/approve`
       * `POST /admin/verifications/{verification}/reject`
@@ -450,14 +453,50 @@
       * `POST /admin/verification-documents/{document}/unlock`
       * `GET /admin/verification-documents/{document}/stream`
     * API: `PATCH /api/admin/landlords/{id}/verify`, `POST /api/platform-admin/verification-documents/{document}/unlock`
-  * Views: `resources/views/admin/verifications/index.blade.php` (Bảng điều khiển thẩm định hồ sơ của Superadmin)
+  * Views: `resources/views/admin/verifications/index.blade.php` (Bảng điều khiển thẩm định hồ sơ Superadmin: bảng `tblKYC`, nút `btnApprove`, nút `btnReject`, Modal `reject_reason`)
+  * Tests: `tests/Feature/AdminKycVerificationFeature10Test.php` (100% 8/8 pass, 45 assertions)
 * **Đối soát với đặc tả**:
-  * ✅ Bảng điều khiển thẩm định hồ sơ tập trung: Dành riêng cho Superadmin với bảng thống kê số lượng hồ sơ (Tổng cộng, Chờ duyệt, Đã duyệt, Đã từ chối), phân trang và tìm kiếm nhanh.
-  * ✅ Cơ chế xem ảnh tài liệu an toàn tuyệt đối (Signed Route): Sử dụng đường dẫn có chữ ký số với thời gian sống giới hạn (TTL 300 giây) để xem tài liệu; tích hợp bảo mật mở khóa bằng khóa vân tay / phần cứng `Passkey WebAuthn (FIDO2)` trước khi giải mã dữ liệu nhạy cảm.
-  * ✅ Phê duyệt cấp chứng nhận (`approve`): Nâng cấp tự động vai trò chủ trọ từ `unverified_landlord` thành `landlord` chính thức, gắn huy hiệu `kyc_verified` hoặc `premium_verified`, tự động cộng điểm ưu tiên đề xuất `boost_score` lên tối thiểu 100 điểm trên sàn Renty.
-  * ✅ Từ chối hồ sơ kèm phản hồi chi tiết (`reject`): Bắt buộc Superadmin nhập lý do từ chối rõ ràng (`reject_reason` từ 10 đến 500 ký tự) để chủ trọ nắm rõ lý do và tiến hành bổ sung hồ sơ.
-  * ✅ Kịch bản xử lý lỗi (`ERR_10_01` -> `ERR_10_04`): Bắt buộc nhập lý do từ chối tối thiểu 10 ký tự, xử lý phiên xem ảnh hết hạn (HTTP 403), chặn phê duyệt lại các hồ sơ đã có kết quả.
-* **Kết luận**: **Chức năng đã giống với spec.**
+  * ✅ Endpoints & Phân quyền chặt chẽ: Cung cấp đầy đủ cả `GET /admin/kyc/pending`, `POST /admin/kyc/{id}/approve`, `POST /admin/kyc/{id}/reject` và các route tương thích `/admin/verifications`. Chặn toàn bộ khách hoặc chủ trọ truy cập trái phép bằng HTTP 403 Forbidden.
+  * ✅ Bảng điều khiển thẩm định hồ sơ tập trung (`tblKYC`): Bảng danh sách hồ sơ chờ duyệt gồm đầy đủ các cột: Chủ trọ, SĐT, Số CCCD (che mờ bảo mật), Ảnh đính kèm, Ngày nộp, Hành động (`btnApprove` nền Emerald, `btnReject` nền Rose).
+  * ✅ Cơ chế xem ảnh tài liệu an toàn tuyệt đối (Signed Route): Sử dụng đường dẫn có chữ ký số với thời gian sống giới hạn (TTL 300 giây) để đối soát CCCD 2 mặt; xử lý phiên xem ảnh hết hạn trả mã lỗi `ERR_10_03`; tích hợp mở khóa bằng khóa vân tay / phần cứng `Passkey WebAuthn (FIDO2)` trước khi giải mã dữ liệu nhạy cảm.
+  * ✅ Phê duyệt cấp chứng nhận (`btnApprove`): Tự động nâng cấp vai trò chủ trọ từ `unverified_landlord` thành `landlord` chính thức, gắn huy hiệu `kyc_verified` / `premium_verified` (Tích Xanh), cộng điểm ưu tiên `boost_score` tối thiểu 100 điểm trên Renty, gửi thông báo chúc mừng qua `notification_logs`, phản hồi thông điệp `ERR_10_04`.
+  * ✅ Từ chối hồ sơ kèm phản hồi chi tiết (`btnReject`): Mở Modal Popup nhập `reject_reason`, bắt buộc nhập tối thiểu 10 ký tự; bôi đỏ viền ô textarea và hiển thị cảnh báo đỏ trực tiếp dưới ô; tự động gửi mail/thông báo qua `notification_logs` để chủ trọ nắm rõ và nộp lại hồ sơ.
+  * ✅ Kịch bản xử lý lỗi (`ERR_10_01` -> `ERR_10_04`): Đầy đủ, chính xác theo bảng đặc tả.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Từ chối hồ sơ nhưng để trống lý do | **`ERR_10_01`** | `Vui lòng nhập lý do từ chối để chủ cơ sở nắm rõ thông tin bổ sung.` | Bôi đỏ viền ô textarea Lý do từ chối (`border-rose-500 ring-2 ring-rose-500/50`) |
+| Lý do từ chối quá ngắn (< 10 ký tự) | **`ERR_10_02`** | `Nội dung lý do từ chối phải có độ dài tối thiểu 10 ký tự.` | Bôi đỏ viền ô textarea Lý do từ chối |
+| Phiên xem tài liệu bảo mật hết hạn | **`ERR_10_03`** | `Phiên xem ảnh tài liệu bảo mật đã hết hạn (Signed URL TTL 300s).` | Báo lỗi HTTP 403, tự động làm mới chữ ký URL |
+| Phê duyệt cấp Tích Xanh thành công | **`ERR_10_04`** | `Đã phê duyệt hồ sơ KYC và cấp Tích Xanh uy tín cho cơ sở thành công!` | Đổi trạng thái sang Đã xác minh (Tích Xanh), hiện Toast xanh |
+
+#### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
+* **Hình 10.1: Bảng điều khiển Quản trị viên kiểm duyệt hồ sơ định danh KYC**
+  * *Mô tả chức năng*: Danh sách các tài liệu căn cước chủ nhà trọ nộp lên đang chờ ban quản trị phê duyệt, lọc theo thời gian và trạng thái (Table `tblKYC`).
+* **Hình 10.2: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi từ chối mà để trống lý do**
+  * *Mô tả chức năng*: Cảnh báo đỏ xuất hiện khi Admin chọn từ chối duyệt nhưng không giải thích nguyên nhân vào ô nhập liệu bắt buộc trong Modal Popup.
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Table | `tblKYC` | Danh sách hồ sơ chờ duyệt | — | Cột: Chủ trọ, SĐT, Số CCCD, Ảnh đính kèm, Ngày nộp, Hành động |
+| **2** | Button | `btnApprove` | `Phê duyệt & Cấp tích xanh` | — | Nền xanh lá cây Emerald (`bg-emerald-600 hover:bg-emerald-500`) |
+| **3** | Button | `btnReject` | `Từ chối hồ sơ` | — | Nền đỏ Rose (`bg-rose-600 hover:bg-rose-500`) |
+| **4** | Modal Input | `reject_reason` | `Lý do từ chối *` | `Nhập lý do ảnh mờ, sai số CCCD...` | Hiển thị trong hộp thoại từ chối Popup `#modalRejectKYC` |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Bấm 'Từ chối' rồi nhấn 'Xác nhận' ngay khi ô lý do còn trống | Báo lỗi đỏ 'Vui lòng nhập lý do từ chối để chủ cơ sở nắm rõ thông tin bổ sung.' kèm bôi đỏ viền ô | Kiểm tra Lý do bắt buộc (`ERR_10_01`) |
+| **2** | Nhập lý do 'Ảnh CCCD mặt sau bị mờ góc' và bấm Xác nhận | Cập nhật trạng thái 'Đã từ chối' và gửi mail cho chủ trọ qua `notification_logs` | Happy case Từ chối |
+| **3** | Bấm 'Phê duyệt' cho hồ sơ hợp lệ | Cập nhật hồ sơ sang 'Đã xác minh', cấp tích xanh thành công (`ERR_10_04`) | Happy case Phê duyệt |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+* ☑ Bộ kiểm thử tự động `tests/Feature/AdminKycVerificationFeature10Test.php` thực thi đạt 100% (8/8 pass, 45 assertions).
+
+* **Kết luận**: **Chức năng đã giống hoàn toàn với spec.**
 
 ---
 
