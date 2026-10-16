@@ -28,19 +28,26 @@ class CheckRole
             return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để tiếp tục.');
         }
 
-        if (in_array($user->roleSlug(), $roles, true) || ($user->isSuperAdmin() && in_array('admin', $roles, true))) {
+        $userRole = $user->roleSlug();
+        $isUserAdmin = $user->isAdmin() || in_array($userRole, ['admin', 'superadmin'], true) || in_array($user->role, ['admin', 'superadmin'], true);
+
+        if (in_array($userRole, $roles, true)) {
             return $next($request);
         }
 
-        if (in_array('superadmin', $roles, true)) {
+        if ($isUserAdmin && (in_array('admin', $roles, true) || in_array('superadmin', $roles, true))) {
+            return $next($request);
+        }
+
+        if (in_array('superadmin', $roles, true) || in_array('admin', $roles, true) || $request->is('admin/*') || $request->is('admin')) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Truy cập bị từ chối. Chỉ Superadmin mới có quyền truy cập.',
+                    'message' => 'Truy cập bị từ chối. Chỉ Quản trị viên mới có quyền truy cập.',
                 ], 403);
             }
 
-            abort(403, 'Truy cập bị từ chối. Chỉ Superadmin mới có quyền truy cập.');
+            abort(403, 'Truy cập bị từ chối. Chỉ Quản trị viên mới có quyền truy cập.');
         }
 
         if ($request->expectsJson()) {
