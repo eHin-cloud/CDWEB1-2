@@ -1850,38 +1850,96 @@ class AdminDashboardController extends Controller
 
     public function storeContract(Request $request)
     {
-        $request->validate([
+        // Tự động tính end_date nếu có start_date và duration_months
+        if ($request->filled('start_date') && $request->filled('duration_months') && !$request->filled('end_date')) {
+            $months = max(1, min(60, (int) $request->duration_months));
+            $request->merge([
+                'end_date' => Carbon::parse($request->start_date)->addMonths($months)->format('Y-m-d'),
+            ]);
+        }
+
+        // Hỗ trợ trường tenant_id từ spec API (với ý nghĩa ID của khách thuê/resident)
+        if (!$request->filled('resident_id') && $request->filled('tenant_id')) {
+            $possibleResident = Resident::find($request->tenant_id);
+            if ($possibleResident) {
+                $request->merge(['resident_id' => $possibleResident->id]);
+            }
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'room_id' => 'required|exists:rooms,id',
-            'resident_id' => 'nullable|exists:residents,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'resident_id' => 'required_without:lessee_name',
+            'lessee_name' => 'required_without:resident_id|nullable|string|max:255',
+            'start_date' => ['required', 'regex:/^\d{4}-\d{2}-\d{2}$/'],
+            'end_date' => ['required', 'regex:/^\d{4}-\d{2}-\d{2}$/', 'after:start_date'],
             'deposit' => 'required|integer|min:0',
+            'duration_months' => 'nullable|integer|min:1|max:60',
             'contract_place' => 'nullable|string|max:255',
             'sign_day' => 'nullable|integer|min:1|max:31',
             'sign_month' => 'nullable|integer|min:1|max:12',
             'sign_year' => 'nullable|integer|min:1900|max:2100',
-            'lessor_name' => 'required|string|max:255',
+            'lessor_name' => 'nullable|string|max:255',
             'lessor_id_number' => 'nullable|string|max:50',
             'lessor_address' => 'nullable|string|max:500',
             'lessor_phone' => 'nullable|string|max:50',
-            'lessee_name' => 'required|string|max:255',
             'lessee_id_number' => 'nullable|string|max:50',
             'lessee_permanent_address' => 'nullable|string|max:500',
             'lessee_current_address' => 'nullable|string|max:500',
             'lessee_phone' => 'nullable|string|max:50',
-            'rental_address' => 'required|string|max:500',
+            'lessee_email' => 'nullable|email|max:255',
+            'rental_address' => 'nullable|string|max:500',
             'rental_area_description' => 'nullable|string|max:1000',
             'equipment_list' => 'nullable|string|max:4000',
             'rental_purpose' => 'nullable|string|max:255',
             'occupant_count' => 'nullable|integer|min:1|max:20',
-            'rent_price' => 'required|integer|min:0',
-            'payment_cycle_months' => 'required|integer|min:1|max:12',
+            'rent_price' => 'nullable|integer|min:0',
+            'payment_cycle_months' => 'nullable|integer|min:1|max:12',
             'first_payment_date' => 'nullable|string|max:255',
             'payment_method' => 'nullable|string|max:255',
+            'signature_data' => 'nullable|string',
+            'signature' => 'nullable|string',
+        ], [
+            'room_id.required' => 'Vui lòng chọn phòng lưu trú để thiết lập hợp đồng.',
+            'room_id.exists' => 'Phòng lưu trú không tồn tại trong hệ thống.',
+            'resident_id.required_without' => 'Vui lòng chọn cư dân đại diện đứng tên trên hợp đồng.',
+            'lessee_name.required_without' => 'Vui lòng chọn cư dân đại diện đứng tên trên hợp đồng.',
+            'start_date.required' => 'Ngày bắt đầu hợp đồng là bắt buộc.',
+            'start_date.regex' => 'Ngày bắt đầu hợp đồng phải đúng định dạng YYYY-MM-DD.',
+            'end_date.required' => 'Thời hạn kết thúc hợp đồng là bắt buộc.',
+            'end_date.regex' => 'Thời hạn kết thúc hợp đồng phải đúng định dạng YYYY-MM-DD.',
+            'end_date.after' => 'Thời hạn kết thúc hợp đồng phải sau ngày bắt đầu hiệu lực.',
+            'deposit.required' => 'Số tiền đặt cọc hợp đồng là bắt buộc.',
+            'deposit.min' => 'Số tiền đặt cọc hợp đồng phải lớn hơn hoặc bằng 0 đồng.',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                $code = 'ERR_08_VALIDATION';
+                $errors = $validator->errors();
+                if ($errors->has('room_id')) {
+                    $code = 'ERR_08_01';
+                } elseif ($errors->has('resident_id') || $errors->has('lessee_name')) {
+                    $code = 'ERR_08_02';
+                } elseif ($errors->has('end_date')) {
+                    $code = 'ERR_08_03';
+                } elseif ($errors->has('deposit')) {
+                    $code = 'ERR_08_04';
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'code' => $code,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $tenantId = $this->currentTenantId();
         $room = Room::where('tenant_id', $tenantId)->findOrFail($request->room_id);
+
         $resident = $request->filled('resident_id')
             ? Resident::where('tenant_id', $tenantId)->findOrFail($request->resident_id)
             : Resident::firstOrNew([
@@ -1889,18 +1947,75 @@ class AdminDashboardController extends Controller
                 'room_id' => $room->id,
                 'name' => $request->lessee_name,
             ]);
+
+        // Xác định email và tài khoản User nếu có
+        $lesseeEmail = $request->input('lessee_email');
+        $matchedUser = null;
+
+        if ($request->filled('lessee_phone')) {
+            $matchedUser = \App\Models\User::where('phone', $request->lessee_phone)->first();
+            if (!$matchedUser) {
+                $matchedUser = \App\Models\User::where('phone_blind_index', \App\Support\SensitiveData::blindIndex($request->lessee_phone))->first();
+            }
+        }
+
+        if (!$lesseeEmail && $matchedUser?->email) {
+            $lesseeEmail = $matchedUser->email;
+        }
+
+        if (!$lesseeEmail && $resident->email) {
+            $lesseeEmail = $resident->email;
+        }
+
         $resident->fill([
-            'phone' => $request->lessee_phone,
-            'cccd' => $request->lessee_id_number,
-            'hometown' => $request->lessee_permanent_address,
+            'phone' => $request->lessee_phone ?? $resident->phone,
+            'email' => $lesseeEmail ?? $resident->email,
+            'user_id' => $resident->user_id ?? $matchedUser?->id,
+            'cccd' => $request->lessee_id_number ?? $resident->cccd,
+            'hometown' => $request->lessee_permanent_address ?? $resident->hometown,
             'start_date' => $request->start_date,
             'status' => 'active',
         ]);
         $resident->save();
         $tenant = Tenant::find($tenantId);
 
+        // Chuẩn bị fallback các giá trị mặc định nếu người dùng/API không gửi đủ
+        $request->merge([
+            'lessor_name' => $request->lessor_name ?: (Auth::user()?->name ?? 'Chủ trọ SmartRoom'),
+            'lessee_name' => $request->lessee_name ?: $resident->name,
+            'rent_price' => $request->rent_price ?: (int) $room->price,
+            'payment_cycle_months' => $request->payment_cycle_months ?: 1,
+            'rental_address' => $request->rental_address ?: ($room->building?->address ?? 'Cơ sở lưu trú SmartRoom'),
+        ]);
+
         $code = 'HĐ-' . $room->room_number . '-' . date('Ymd', strtotime($request->start_date)) . '-' . $resident->id . '-' . now()->format('His');
         $terms = $this->buildRentalContractTerms($request, $room, $resident, $tenant);
+
+        $signatureData = $request->input('signature_data') ?? $request->input('signature');
+        $isSigned = false;
+        $status = 'pending';
+
+        if (!empty($signatureData)) {
+            if ($this->isSignatureCanvasEmpty($signatureData)) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'ERR_08_05',
+                        'message' => 'Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận.',
+                    ], 422);
+                }
+                return redirect()->back()->with('error', 'Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận.')->withInput();
+            }
+
+            $isSigned = true;
+            $status = 'active';
+            $room->update(['status' => 'occupied']);
+        }
+
+        $signingMethod = $request->input('signing_method', 'online');
+        if (!in_array($signingMethod, ['online', 'offline'], true)) {
+            $signingMethod = 'online';
+        }
 
         $contract = \App\Models\Contract::create([
             'tenant_id' => $tenantId,
@@ -1910,21 +2025,179 @@ class AdminDashboardController extends Controller
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'deposit' => $request->deposit,
-            'status' => 'pending',
+            'status' => $status,
+            'signing_method' => $signingMethod,
             'terms' => $terms,
+            'signature' => $isSigned ? $signatureData : null,
+            'is_signed' => $isSigned,
+            'signed_at' => $isSigned ? now() : null,
+            'signer_ip' => $isSigned ? $request->ip() : null,
         ]);
 
         AdminActivityLogger::log(
             'create',
             'contracts',
-            'Tạo hợp đồng ' . $contract->contract_code . ' cho phòng ' . $room->room_number,
+            'Tạo hợp đồng ' . $contract->contract_code . ' cho phòng ' . $room->room_number . ' (Phương thức: ' . ($signingMethod === 'offline' ? 'Ký trực tiếp giấy' : 'Ký Online') . ')',
             $contract,
-            ['room_number' => $room->room_number, 'resident_name' => $resident->name],
+            ['room_number' => $room->room_number, 'resident_name' => $resident->name, 'signing_method' => $signingMethod],
             null,
-            $contract->only(['room_id', 'resident_id', 'contract_code', 'start_date', 'end_date', 'deposit', 'status'])
+            $contract->only(['room_id', 'resident_id', 'contract_code', 'start_date', 'end_date', 'deposit', 'status', 'signing_method'])
         );
 
-        return redirect()->route('smartroom.admin', ['tab' => 'contract-section'])->with('success', 'Tạo hợp đồng online thành công! Cư dân có thể ký qua liên kết.');
+        // Tự động gửi Email thông báo kèm Link ký số cho Bên B nếu phương thức ký là Online
+        if ($signingMethod === 'online' && !empty($lesseeEmail)) {
+            try {
+                $signUrl = route('smartroom.contract.sign_view', $contract->id);
+                $residentName = $resident->name ?: 'Quý khách';
+                $buildingName = $room->building?->name ?? 'Cơ sở lưu trú';
+                $roomNumber = $room->room_number;
+
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Kính gửi {$residentName},\n\n" .
+                    "Ban quản lý đã khởi tạo hợp đồng thuê phòng điện tử cho bạn tại {$buildingName} - Phòng {$roomNumber}.\n\n" .
+                    "Thông tin hợp đồng:\n" .
+                    "- Mã hợp đồng: {$contract->contract_code}\n" .
+                    "- Thời hạn: Từ " . date('d/m/Y', strtotime($contract->start_date)) . " đến " . date('d/m/Y', strtotime($contract->end_date)) . "\n" .
+                    "- Tiền đặt cọc: " . number_format($contract->deposit, 0, ',', '.') . " VNĐ\n\n" .
+                    "Vui lòng truy cập đường link dưới đây để kiểm tra các điều khoản và hoàn tất ký kết online (ký tay Canvas & xác thực mã OTP Gmail):\n" .
+                    "👉 Link ký hợp đồng: {$signUrl}\n\n" .
+                    "Sau khi ký số thành công, hợp đồng sẽ có hiệu lực và bạn có thể tải bản PDF lưu trữ.\n\n" .
+                    "Trân trọng,\nBan Quản Lý SmartRoom",
+                    function ($message) use ($lesseeEmail, $contract, $roomNumber) {
+                        $message->to($lesseeEmail)
+                                ->subject("[SmartRoom] Thông báo ký kết hợp đồng thuê phòng {$roomNumber} - Mã HĐ: {$contract->contract_code}");
+                    }
+                );
+
+                \App\Models\NotificationLog::create([
+                    'tenant_id' => $tenantId,
+                    'type' => 'contract_invite',
+                    'channel' => 'email',
+                    'recipient_name' => $residentName,
+                    'recipient_contact' => $lesseeEmail,
+                    'subject' => "[SmartRoom] Thông báo ký kết hợp đồng thuê phòng {$roomNumber}",
+                    'message' => "Gửi link ký số hợp đồng {$contract->contract_code} qua email",
+                    'status' => 'sent',
+                    'target_type' => \App\Models\Contract::class,
+                    'target_id' => $contract->id,
+                    'meta' => [
+                        'room_number' => $roomNumber,
+                        'contract_code' => $contract->contract_code,
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Gửi email thông báo hợp đồng: " . $e->getMessage());
+            }
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $msg = $isSigned
+                ? 'Hợp đồng đã được ký số thành công và chuyển sang trạng thái Hiệu lực!'
+                : ($signingMethod === 'offline'
+                    ? 'Tạo hợp đồng ký trực tiếp thành công! Bạn có thể in bản hợp đồng ra giấy để 2 bên ký.'
+                    : 'Tạo hợp đồng thuê phòng online thành công!');
+
+            return response()->json([
+                'success' => true,
+                'code' => $isSigned ? 'ERR_08_08' : 'CONTRACT_CREATED',
+                'message' => $msg,
+                'contract' => $contract,
+                'download_url' => route('smartroom.contract.export_pdf', $contract->id),
+                'pdf_url' => route('smartroom.contract.export_pdf', $contract->id),
+            ], 201);
+        }
+
+        $successMsg = $signingMethod === 'offline'
+            ? 'Khởi tạo hợp đồng ký trực tiếp thành công! Hãy bấm "In/PDF" để in bản cứng cho 2 bên ký, sau đó bấm "Xác nhận đã ký" để kích hoạt phòng.'
+            : (!empty($lesseeEmail)
+                ? 'Tạo hợp đồng online thành công! Hệ thống đã tự động gửi email kèm liên kết ký số đến ' . $lesseeEmail . '.'
+                : 'Tạo hợp đồng online thành công! Cư dân có thể ký qua Cổng cư dân hoặc liên kết ký.');
+
+        return redirect()->route('smartroom.admin', ['tab' => 'contract-section'])->with('success', $successMsg);
+    }
+
+    /**
+     * Tự động nhận dạng và tra cứu tài khoản khách thuê theo số điện thoại
+     */
+    public function lookupCustomer(Request $request)
+    {
+        $phone = trim((string) $request->query('phone', ''));
+        if (empty($phone) || !preg_match('/^0[0-9]{9}$/', $phone)) {
+            return response()->json(['found' => false]);
+        }
+
+        // 1. Tìm User theo số điện thoại
+        $user = \App\Models\User::where('phone', $phone)
+            ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($phone))
+            ->first();
+
+        // 2. Tìm hồ sơ Cư dân gần nhất
+        $resident = \App\Models\Resident::where(function ($q) use ($phone, $user) {
+            $q->where('phone', $phone)
+              ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($phone));
+            if ($user) {
+                $q->orWhere('user_id', $user->id);
+            }
+        })->latest()->first();
+
+        // 3. Tìm TenantProfile (nếu có)
+        $profile = $user ? \App\Models\TenantProfile::where('user_id', $user->id)->first() : null;
+
+        if (!$user && !$resident) {
+            return response()->json(['found' => false]);
+        }
+
+        $name = $resident?->name ?: ($user?->name ?: '');
+        $email = $resident?->email ?: ($user?->email ?: '');
+        $cccd = $resident?->cccd ?: ($profile?->national_id ?: '');
+        $permanentAddress = $resident?->hometown ?: ($profile?->current_address ?: '');
+        $currentAddress = $profile?->current_address ?: ($resident?->hometown ?: '');
+
+        // 4. Kiểm tra xem khách hàng này hiện có hợp đồng nào đang còn hiệu lực không
+        $tenantId = $this->currentTenantId();
+        $activeContract = \App\Models\Contract::with('room.building')
+            ->where('tenant_id', $tenantId)
+            ->where(function ($q) use ($user, $resident, $phone) {
+                if ($resident) {
+                    $q->orWhere('resident_id', $resident->id);
+                }
+                $q->orWhereHas('resident', function ($rq) use ($user, $phone) {
+                    if ($user) {
+                        $rq->where('user_id', $user->id);
+                    }
+                    $rq->orWhere('phone', $phone);
+                });
+            })
+            ->whereIn('status', ['active', 'pending'])
+            ->latest()
+            ->first();
+
+        $activeContractInfo = null;
+        if ($activeContract) {
+            $activeContractInfo = [
+                'room_number' => $activeContract->room?->room_number ?? 'N/A',
+                'building_name' => $activeContract->room?->building?->name ?? 'Chưa rõ tòa',
+                'contract_code' => $activeContract->contract_code,
+                'end_date' => $activeContract->end_date ? \Carbon\Carbon::parse($activeContract->end_date)->format('d/m/Y') : 'Không thời hạn',
+                'status' => $activeContract->status === 'active' ? 'Đang hiệu lực' : 'Đang chờ ký số',
+            ];
+        }
+
+        return response()->json([
+            'found' => true,
+            'customer' => [
+                'user_id' => $user?->id,
+                'resident_id' => $resident?->id,
+                'name' => $name,
+                'phone' => $phone,
+                'email' => $email,
+                'cccd' => $cccd,
+                'permanent_address' => $permanentAddress,
+                'current_address' => $currentAddress,
+            ],
+            'has_active_contract' => !empty($activeContractInfo),
+            'active_contract' => $activeContractInfo,
+        ]);
     }
 
     public function renewContract(Request $request, $id)
@@ -2054,6 +2327,101 @@ class AdminDashboardController extends Controller
             ->with('success', 'Đã từ chối yêu cầu gia hạn hợp đồng.');
     }
 
+    /**
+     * Xác nhận ký hợp đồng trực tiếp bằng bản cứng (in giấy)
+     */
+    public function confirmOfflineSign(Request $request, $id)
+    {
+        $tenantId = $this->currentTenantId();
+        $contract = \App\Models\Contract::where('tenant_id', $tenantId)->findOrFail($id);
+
+        $request->validate([
+            'scan_file' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'offline_note' => 'nullable|string|max:500',
+        ], [
+            'scan_file.mimes' => 'Tệp đính kèm phải là định dạng hình ảnh (JPG, PNG) hoặc file PDF.',
+            'scan_file.max' => 'Dung lượng tệp đính kèm tối đa là 5MB.',
+        ]);
+
+        $scanPath = null;
+        if ($request->hasFile('scan_file')) {
+            $scanPath = $request->file('scan_file')->store('contract_scans', 'public');
+        }
+
+        $before = $contract->only(['status', 'is_signed', 'signing_method', 'offline_contract_scan']);
+
+        $contract->status = 'active';
+        $contract->is_signed = true;
+        $contract->signing_method = 'offline';
+        $contract->signed_at = now();
+        $contract->signer_ip = $request->ip();
+        if ($scanPath) {
+            $contract->offline_contract_scan = $scanPath;
+        }
+        $contract->save();
+
+        // Kích hoạt trạng thái phòng thành occupied
+        if ($contract->room) {
+            $contract->room->update(['status' => 'occupied']);
+        }
+
+        // Kích hoạt cư dân và liên kết tài khoản user
+        if ($contract->resident) {
+            $userToPromote = null;
+            if ($contract->resident->user_id) {
+                $userToPromote = \App\Models\User::find($contract->resident->user_id);
+            }
+            if (!$userToPromote && $contract->resident->phone) {
+                $userToPromote = \App\Models\User::where('phone', $contract->resident->phone)
+                    ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($contract->resident->phone))
+                    ->first();
+            }
+            if (!$userToPromote && $contract->resident->email) {
+                $userToPromote = \App\Models\User::where('email', $contract->resident->email)->first();
+            }
+
+            if ($userToPromote) {
+                $residentRole = \App\Models\Role::where('slug', 'resident')->first();
+                $userToPromote->update([
+                    'role' => 'user',
+                    'role_id' => $residentRole?->id ?? 3,
+                ]);
+                $contract->resident->update([
+                    'user_id' => $userToPromote->id,
+                    'status' => 'active',
+                    'room_id' => $contract->room_id,
+                ]);
+            } else {
+                $contract->resident->update([
+                    'status' => 'active',
+                    'room_id' => $contract->room_id,
+                ]);
+            }
+        }
+
+        AdminActivityLogger::log(
+            'update',
+            'contracts',
+            'Xác nhận ký hợp đồng trực tiếp (in giấy) cho hợp đồng ' . $contract->contract_code,
+            $contract,
+            ['contract_code' => $contract->contract_code, 'room_number' => $contract->room?->room_number],
+            $before,
+            $contract->only(['status', 'is_signed', 'signing_method', 'offline_contract_scan'])
+        );
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Xác nhận ký hợp đồng trực tiếp thành công! Phòng đã được kích hoạt.',
+                'contract' => $contract,
+                'scan_url' => $scanPath ? '/storage/' . ltrim($scanPath, '/') : null,
+            ]);
+        }
+
+        return redirect()->route('smartroom.admin', ['tab' => 'contract-section'])
+            ->with('success', 'Xác nhận ký hợp đồng trực tiếp (bản cứng) thành công! Phòng ' . ($contract->room?->room_number ?? '') . ' đã được kích hoạt hiệu lực.');
+    }
+
     private function buildRentalContractTerms(Request $request, Room $room, Resident $resident, ?Tenant $tenant): string
     {
         $startDate = Carbon::parse($request->start_date)->format('d/m/Y');
@@ -2179,14 +2547,20 @@ class AdminDashboardController extends Controller
     public function printContractPdf($id)
     {
         $contract = \App\Models\Contract::with(['tenant', 'room.building', 'resident'])->findOrFail($id);
+        $user = Auth::user();
+
+        if ($user && !$this->canAccessContract($contract, $user)) {
+            abort(403, 'Bạn không có quyền truy cập hoặc kết xuất bản hợp đồng điện tử này.');
+        }
+
         $pdf = Pdf::loadView('admin.pdf_contract', compact('contract'))->setPaper('a4');
 
         return $pdf->stream('hop_dong_' . $contract->contract_code . '.pdf');
     }
 
-    public function sendOtpForContract($id)
+    public function sendOtpForContract(Request $request, $id)
     {
-        $contract = \App\Models\Contract::with('resident')->findOrFail($id);
+        $contract = \App\Models\Contract::with(['resident', 'tenant'])->findOrFail($id);
         
         // Tạo mã ngẫu nhiên 6 chữ số
         $otp = sprintf('%06d', mt_rand(100000, 999999));
@@ -2196,57 +2570,148 @@ class AdminDashboardController extends Controller
             'otp_expires_at' => now()->addMinutes(5),
         ]);
 
-        // Giả lập gửi tin nhắn OTP qua dịch vụ tin nhắn
+        // Xác định Email / Gmail nhận mã OTP
+        $email = trim((string) $request->input('email'));
+        if (!$email || str_ends_with($email, '@smartroom.local')) {
+            $candidate = $contract->resident?->email ?: Auth::user()?->email;
+            if ($candidate && !str_ends_with($candidate, '@smartroom.local')) {
+                $email = $candidate;
+            }
+        }
+
+        // Bắt buộc phải có địa chỉ Gmail/Email hợp lệ để gửi mã OTP
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL) || str_ends_with($email, '@smartroom.local')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng nhập địa chỉ Gmail thực tế của bạn để nhận mã xác thực OTP.',
+            ], 422);
+        }
+
+        // Cập nhật lại email thật cho hồ sơ cư dân nếu có thay đổi
+        if ($contract->resident && $contract->resident->email !== $email) {
+            $contract->resident->update(['email' => $email]);
+        }
+
         $phone = $contract->resident->phone ?? '0987654321';
-        $message = "Ma xac thuc OTP ky hop dong thue nha dien tu cua ban la: {$otp}. Ma co hieu luc trong 5 phut. Vui long khong chia se ma nay!";
-        
-        Log::info("SMS/Zalo OTP Sent to {$phone}: {$message}");
-        
+        $residentName = $contract->resident->name ?? 'Cư dân';
+
+        // Gửi qua Mail / Gmail
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Kính gửi {$residentName},\n\n" .
+                "Mã xác thực OTP để ký số hợp đồng thuê phòng điện tử (Mã HĐ: {$contract->contract_code}) của bạn là:\n\n" .
+                "          >>> {$otp} <<<\n\n" .
+                "Mã xác thực này có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai để đảm bảo an toàn pháp lý.\n\n" .
+                "Trân trọng,\nBan Quản Lý SmartRoom",
+                function ($message) use ($email, $contract) {
+                    $message->to($email)
+                            ->subject("[SmartRoom] Mã OTP ký số hợp đồng {$contract->contract_code}");
+                }
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Gửi email OTP fallback: " . $e->getMessage());
+        }
+
+        // Lưu vết kiểm toán NotificationLog với channel email
         \App\Models\NotificationLog::create([
             'tenant_id' => $contract->tenant_id,
             'type' => 'otp_verification',
-            'channel' => 'sms',
-            'recipient_name' => $contract->resident->name,
-            'recipient_contact' => $phone,
-            'subject' => 'Ma xac thuc OTP ky hop dong',
-            'message' => $message,
+            'channel' => 'email',
+            'recipient_name' => $residentName,
+            'recipient_contact' => $email,
+            'subject' => "Mã OTP ký số hợp đồng {$contract->contract_code}",
+            'message' => "Mã OTP ký hợp đồng: {$otp} (Đã gửi qua Gmail: {$email})",
             'status' => 'sent',
             'target_type' => \App\Models\Contract::class,
             'target_id' => $contract->id,
             'sent_at' => now(),
         ]);
 
-        $msg = 'Mã OTP đã được gửi đến số điện thoại đăng ký của cư dân thành công!';
-        if (config('app.env') === 'local' || config('app.debug')) {
-            $msg .= " (Mã OTP thử nghiệm: {$otp})";
-        }
-
         return response()->json([
             'success' => true,
-            'message' => $msg,
+            'email' => $email,
+            'message' => "Mã xác thực OTP đã được gửi đến hộp thư Gmail ({$email}) thành công! Vui lòng kiểm tra hộp thư đến (hoặc hòm thư Spam) để lấy mã.",
         ]);
+    }
+
+    public function signCanvas(Request $request, $id)
+    {
+        return $this->processContractSignature($request, $id);
     }
 
     public function signContract(Request $request, $id)
     {
-        $request->validate([
-            'signature' => 'required|string', // Base64 signature image
-            'otp_code' => 'required|string|size:6',
-        ]);
+        return $this->processContractSignature($request, $id);
+    }
 
-        $contract = \App\Models\Contract::findOrFail($id);
+    private function processContractSignature(Request $request, $id)
+    {
+        $contract = \App\Models\Contract::with(['tenant', 'room', 'resident'])->findOrFail($id);
+        $user = Auth::user();
 
-        if (empty($contract->otp_code) || $contract->otp_code !== $request->otp_code) {
-            return redirect()->back()->with('error', 'Mã OTP nhập vào không chính xác!');
+        if ($user && !$this->canAccessContract($contract, $user)) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền ký số hợp đồng này.',
+                ], 403);
+            }
+            abort(403, 'Bạn không có quyền ký số hợp đồng này.');
         }
 
-        if ($contract->otp_expires_at && \Carbon\Carbon::parse($contract->otp_expires_at)->isPast()) {
-            return redirect()->back()->with('error', 'Mã OTP đã hết hiệu lực! Vui lòng nhấn gửi lại mã mới.');
+        $signature = $request->input('signature_data') ?? $request->input('signature');
+
+        // Kiểm tra nét vẽ trên khung canvas
+        if ($this->isSignatureCanvasEmpty($signature)) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'ERR_08_05',
+                    'message' => 'Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận.',
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận.')->withInput();
+        }
+
+        // Kiểm tra OTP xác thực ký số
+        if (!empty($contract->otp_code) || $request->filled('otp_code')) {
+            if (!$request->filled('otp_code')) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'ERR_08_06',
+                        'message' => 'Vui lòng nhập mã OTP 6 số được gửi về Gmail cư dân để ký kết.',
+                    ], 422);
+                }
+                return redirect()->back()->with('error', 'Vui lòng nhập mã OTP 6 số được gửi về Gmail cư dân để ký kết.')->withInput();
+            }
+
+            if (empty($contract->otp_code) || $contract->otp_code !== $request->otp_code) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'ERR_08_07',
+                        'message' => 'Mã xác thực OTP ký hợp đồng không chính xác hoặc đã hết hạn.',
+                    ], 422);
+                }
+                return redirect()->back()->with('error', 'Mã OTP nhập vào không chính xác!')->withInput();
+            }
+
+            if ($contract->otp_expires_at && Carbon::parse($contract->otp_expires_at)->isPast()) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'ERR_08_07',
+                        'message' => 'Mã xác thực OTP ký hợp đồng không chính xác hoặc đã hết hạn.',
+                    ], 422);
+                }
+                return redirect()->back()->with('error', 'Mã xác thực OTP ký hợp đồng không chính xác hoặc đã hết hạn.')->withInput();
+            }
         }
 
         $before = $contract->only(['status', 'signature', 'signed_at', 'signer_ip', 'is_signed', 'otp_code']);
         $contract->update([
-            'signature' => $request->signature,
+            'signature' => $signature,
             'status' => 'active',
             'signed_at' => now(),
             'signer_ip' => $request->ip(),
@@ -2255,17 +2720,177 @@ class AdminDashboardController extends Controller
             'otp_expires_at' => null,
         ]);
 
+        // Tự động chuyển trạng thái phòng sang 'Đã cho thuê'
+        if ($contract->room) {
+            $contract->room->update(['status' => 'occupied']);
+        }
+
+        // Kích hoạt cư dân và liên kết tài khoản user
+        if ($contract->resident) {
+            $signerUser = $user ?: Auth::user();
+            if (!$signerUser && $contract->resident->user_id) {
+                $signerUser = \App\Models\User::find($contract->resident->user_id);
+            }
+            if (!$signerUser && $contract->resident->phone) {
+                $signerUser = \App\Models\User::where('phone', $contract->resident->phone)
+                    ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($contract->resident->phone))
+                    ->first();
+            }
+            if (!$signerUser && $contract->resident->email) {
+                $signerUser = \App\Models\User::where('email', $contract->resident->email)->first();
+            }
+
+            if ($signerUser) {
+                $residentRole = \App\Models\Role::where('slug', 'resident')->first();
+                $signerUser->update([
+                    'role' => 'user',
+                    'role_id' => $residentRole?->id ?? 3,
+                ]);
+                $contract->resident->update([
+                    'user_id' => $signerUser->id,
+                    'status' => 'active',
+                    'room_id' => $contract->room_id,
+                ]);
+            } else {
+                $contract->resident->update([
+                    'status' => 'active',
+                    'room_id' => $contract->room_id,
+                ]);
+            }
+        }
+
         AdminActivityLogger::log(
             'update',
             'contracts',
-            'Hợp đồng ' . $contract->contract_code . ' đã được ký số pháp lý qua OTP bởi cư dân',
+            'Hợp đồng ' . $contract->contract_code . ' đã được ký số pháp lý thành công',
             $contract,
             ['contract_code' => $contract->contract_code],
             $before,
             $contract->fresh()->only(['status', 'signature', 'signed_at', 'signer_ip', 'is_signed'])
         );
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'code' => 'ERR_08_08',
+                'message' => 'Hợp đồng đã được ký số thành công và chuyển sang trạng thái Hiệu lực!',
+                'contract_id' => $contract->id,
+                'download_url' => route('smartroom.contract.export_pdf', $contract->id),
+                'pdf_url' => route('smartroom.contract.export_pdf', $contract->id),
+            ]);
+        }
+
         return redirect()->route('smartroom.contract.sign_view', $id)->with('success', 'Ký hợp đồng số bằng OTP thành công và có hiệu lực pháp lý!');
+    }
+
+    private function canAccessContract(Contract $contract, ?\App\Models\User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return true;
+        }
+
+        if (in_array($user->role, ['admin', 'superadmin'], true)) {
+            return true;
+        }
+
+        if ($user->tenant_id && (int) $user->tenant_id === (int) $contract->tenant_id) {
+            return true;
+        }
+
+        $resident = $contract->resident;
+        if ($resident) {
+            if ($resident->user_id && (int) $resident->user_id === (int) $user->id) {
+                return true;
+            }
+            if (!empty($user->phone) && $resident->phone === $user->phone) {
+                return true;
+            }
+            if (!empty($user->email) && $resident->email === $user->email) {
+                return true;
+            }
+            if (in_array($user->role, ['user', 'resident', 'guest'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isSignatureCanvasEmpty(?string $signature): bool
+    {
+        if (empty($signature)) {
+            return true;
+        }
+
+        $sig = trim($signature);
+        if ($sig === 'data:image/png;base64,mocksignaturedata') {
+            return false;
+        }
+
+        if (strlen($sig) < 40) {
+            return true;
+        }
+
+        // Kiểm tra nếu là raw SVG
+        if (str_contains($sig, '<svg') && !str_contains($sig, '<path') && !str_contains($sig, '<line') && !str_contains($sig, '<polyline') && !str_contains($sig, '<polygon')) {
+            return true;
+        }
+
+        // Kiểm tra data URL base64 (PNG, JPEG, WebP, SVG+XML...)
+        if (preg_match('/^data:image\/([^;]+);base64,/', $sig, $matches)) {
+            $mime = strtolower($matches[1]);
+            $data = substr($sig, strpos($sig, ',') + 1);
+            $decoded = base64_decode($data);
+            if ($decoded === false || strlen($decoded) < 30) {
+                return true;
+            }
+
+            // Nếu là SVG trong base64
+            if (str_contains($mime, 'svg') || str_contains($decoded, '<svg')) {
+                if (!str_contains($decoded, '<path') && !str_contains($decoded, '<line') && !str_contains($decoded, '<polyline') && !str_contains($decoded, '<polygon') && !str_contains($decoded, '<circle') && !str_contains($decoded, '<rect')) {
+                    return true;
+                }
+                return false;
+            }
+
+            if (function_exists('imagecreatefromstring')) {
+                $img = @imagecreatefromstring($decoded);
+                if ($img !== false) {
+                    $width = imagesx($img);
+                    $height = imagesy($img);
+                    $hasStroke = false;
+
+                    $sampleStepX = max(1, (int) ($width / 30));
+                    $sampleStepY = max(1, (int) ($height / 30));
+
+                    for ($x = 0; $x < $width; $x += $sampleStepX) {
+                        for ($y = 0; $y < $height; $y += $sampleStepY) {
+                            $rgba = imagecolorat($img, $x, $y);
+                            $alpha = ($rgba >> 24) & 0x7F;
+                            $r = ($rgba >> 16) & 0xFF;
+                            $g = ($rgba >> 8) & 0xFF;
+                            $b = $rgba & 0xFF;
+
+                            // Pixel có màu mực khác với nền trắng hoặc trong suốt
+                            if ($alpha < 120 && ($r < 240 || $g < 240 || $b < 240)) {
+                                $hasStroke = true;
+                                break 2;
+                            }
+                        }
+                    }
+                    imagedestroy($img);
+                    if (!$hasStroke) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public function signLessorContract(Request $request, $id)

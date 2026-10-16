@@ -199,7 +199,37 @@ class User extends Authenticatable implements WebAuthnAuthenticatable
 
     public function isResident(): bool
     {
-        return $this->roleSlug() === 'resident';
+        if ($this->roleSlug() === 'resident') {
+            return true;
+        }
+
+        // Tự động nhận diện nếu user đã có hồ sơ cư dân active
+        if ($this->resident()->where('status', 'active')->exists()) {
+            return true;
+        }
+
+        // Tự động nhận diện nếu user có hợp đồng thuê phòng active
+        if (\App\Models\Contract::whereHas('resident', fn($q) => $q->where('user_id', $this->id))->where('status', 'active')->exists()) {
+            return true;
+        }
+
+        // Hoặc có hợp đồng active gắn với SĐT / Email của user
+        if ($this->phone || $this->email) {
+            $hasContract = \App\Models\Contract::where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereHas('resident', function ($rq) {
+                        if ($this->phone) $rq->where('phone', $this->phone);
+                        if ($this->email) $rq->orWhere('email', $this->email);
+                    });
+                })
+                ->exists();
+
+            if ($hasContract) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isGuest(): bool

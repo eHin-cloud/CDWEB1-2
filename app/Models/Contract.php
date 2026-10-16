@@ -16,6 +16,8 @@ class Contract extends Model
         'end_date',
         'deposit',
         'status',
+        'signing_method',
+        'offline_contract_scan',
         'terms',
         'signature',
         'lessor_signature',

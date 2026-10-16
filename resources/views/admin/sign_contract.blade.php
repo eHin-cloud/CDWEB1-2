@@ -65,6 +65,21 @@
         .signature-preview-img {
             mix-blend-mode: multiply;
         }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes pulse-red-border {
+            0%, 100% { border-color: rgba(244, 63, 94, 0.4); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+            50% { border-color: rgba(244, 63, 94, 1); box-shadow: 0 0 0 6px rgba(244, 63, 94, 0.3); }
+        }
+        .pulse-red-border {
+            animation: pulse-red-border 0.8s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen py-12 px-4 bg-grid relative flex flex-col items-center justify-center">
@@ -192,11 +207,15 @@
             </div>
 
             <!-- Document terms viewer -->
+            <!-- Document terms viewer (STT 1: contract_preview) -->
             <div class="space-y-3 mb-8">
-                <label class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-file-invoice text-indigo-400"></i> Nội dung điều khoản chi tiết
+                <label class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-indigo-400"></i> Bản xem trước hợp đồng
+                    </span>
+                    <span class="text-[11px] text-slate-500 font-normal">Văn bản mẫu chuẩn Bộ Xây dựng</span>
                 </label>
-                <div class="bg-slate-950/80 border border-slate-900 rounded-2xl p-6 h-96 overflow-y-auto text-sm text-slate-300 whitespace-pre-wrap leading-relaxed custom-scroll">
+                <div id="contract_preview" class="bg-slate-950/80 border border-slate-900 rounded-2xl p-6 h-96 overflow-y-auto text-sm text-slate-300 whitespace-pre-wrap leading-relaxed custom-scroll">
 {{ $contract->terms }}
                 </div>
             </div>
@@ -222,30 +241,41 @@
                             <i class="fa-solid fa-shield-halved text-emerald-400 animate-pulse"></i> 
                             Bên thuê đã ký vào lúc: {{ $contract->updated_at->format('H:i d/m/Y') }}
                         </p>
+                        <div class="pt-3 flex flex-wrap items-center justify-center gap-3">
+                            <a href="{{ route('smartroom.resident.portal') }}" class="h-11 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-2 hover:-translate-y-0.5">
+                                <i class="fa-solid fa-house-user text-sm"></i>
+                                <span>Vào Cổng Cư Dân (Dashboard Thuê)</span>
+                            </a>
+                            <a href="{{ route('smartroom.contract.export_pdf', $contract->id) }}" target="_blank" class="h-11 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 hover:-translate-y-0.5">
+                                <i class="fa-solid fa-file-pdf text-rose-300 text-sm"></i>
+                                <span>Tải tệp PDF hợp đồng</span>
+                            </a>
+                        </div>
                     </div>
                 @elseif($showTenantSignaturePad)
-                    <form id="sign-form" action="{{ route('smartroom.contract.sign', $contract->id) }}" method="POST" class="space-y-6">
+                    <form id="sign-form" action="{{ route('smartroom.contract.sign_canvas', $contract->id) }}" method="POST" class="space-y-6">
                         @csrf
                         <input type="hidden" name="signature" id="signature-input">
+                        <input type="hidden" name="signature_data" id="signature-data-input">
 
                         <div class="space-y-3">
                             <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                                    <i class="fa-solid fa-signature text-indigo-400"></i> Vẽ chữ ký điện tử của bạn
-                                </span>
+                                <label class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-signature text-indigo-400"></i> Khung ký tên điện tử *
+                                </label>
                                 <button type="button" onclick="clearSignature()" class="text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 transition-all bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/10">
-                                    <i class="fa-solid fa-eraser"></i> Xóa vẽ lại
+                                    <i class="fa-solid fa-eraser"></i> Xóa chữ ký
                                 </button>
                             </div>
                             
-                            <!-- Drawing Pad Canvas with interactive helpers -->
-                            <div class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden relative group" style="height: 220px;">
+                            <!-- Drawing Pad Canvas with dashed borders (STT 2: signature_pad) -->
+                            <div id="signature_pad_container" class="bg-slate-50 border-2 border-dashed border-slate-300 hover:border-indigo-400 transition-all rounded-2xl overflow-hidden relative group" style="height: 220px;">
                                 <!-- Sign baseline guide line -->
                                 <div class="absolute bottom-12 left-8 right-8 h-[1px] border-b border-dashed border-slate-300 pointer-events-none"></div>
                                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 uppercase tracking-widest font-bold pointer-events-none select-none">
-                                    Vẽ chữ ký của bạn vào khung này (Nét bút màu tối)
+                                    Vẽ chữ ký tay của bạn vào khung này (Nét bút màu tối)
                                 </div>
-                                <canvas id="signature-pad" class="w-full h-full cursor-crosshair z-10 relative"></canvas>
+                                <canvas id="signature_pad" class="w-full h-full cursor-crosshair z-10 relative"></canvas>
                             </div>
                         </div>
 
@@ -253,25 +283,48 @@
                         <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-2xl space-y-4">
                             <div class="flex items-center justify-between">
                                 <label class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                                    <i class="fa-solid fa-key text-indigo-400"></i> Xác thực chữ ký bằng OTP
+                                    <i class="fa-solid fa-envelope text-indigo-400"></i> Xác thực chữ ký bằng OTP Gmail
                                 </label>
-                                <button type="button" id="btn-send-otp" onclick="sendOtp()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5 transition-all bg-indigo-500/5 hover:bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/10">
-                                    <i class="fa-solid fa-paper-plane"></i> Gửi mã OTP qua SMS/Zalo
+                                <button type="button" id="btn-send-otp" onclick="sendOtp()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5 transition-all bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-xl border border-indigo-500/20">
+                                    <i class="fa-solid fa-paper-plane"></i> Gửi mã OTP qua Gmail
                                 </button>
                             </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 mb-1.5 block">
+                                    <i class="fa-regular fa-envelope text-slate-400 mr-1"></i> Địa chỉ Gmail nhận mã xác thực:
+                                </label>
+                                @php
+                                    $defaultEmail = $contract->resident->email ?? (Auth::user()->email ?? '');
+                                    if (str_ends_with($defaultEmail, '@smartroom.local')) {
+                                        $defaultEmail = '';
+                                    }
+                                @endphp
+                                <input type="email" id="otp-email-input" value="{{ $defaultEmail }}" placeholder="Nhập địa chỉ Gmail của bạn để nhận mã OTP (VD: tenban@gmail.com)"
+                                    class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all font-mono">
+                                <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-info text-indigo-400"></i> Mã xác thực OTP sẽ được gửi trực tiếp vào hộp thư Gmail này.
+                                </p>
+                            </div>
                             <div class="relative">
+                                <label class="text-[11px] font-semibold text-slate-400 mb-1.5 block">
+                                    <i class="fa-solid fa-shield-halved text-slate-400 mr-1"></i> Mã xác thực OTP (6 chữ số):
+                                </label>
                                 <input type="text" name="otp_code" id="otp-input" placeholder="Nhập mã OTP 6 chữ số" required maxlength="6"
                                     class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-3 px-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all text-center tracking-[0.5em] font-mono font-bold">
                             </div>
-                            <p id="otp-status" class="text-[11px] text-slate-500 text-center hidden flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-circle-check text-emerald-400"></i> Mã OTP đã được gửi thành công!
-                            </p>
+                            <div id="otp-status-container" class="hidden space-y-2">
+                                <p id="otp-status" class="text-xs text-emerald-400 text-center flex items-center justify-center gap-1.5 font-medium py-1">
+                                    <i class="fa-solid fa-circle-check"></i> <span id="otp-status-text">Mã xác thực OTP đã được gửi đến hộp thư Gmail thành công!</span>
+                                </p>
+                            </div>
                         </div>
 
+                        <!-- STT 3: btnSignContract -->
                         <div class="pt-4">
-                            <button type="submit" onclick="submitSignature(event)" class="w-full py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-500/40 transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5">
-                                <i class="fa-solid fa-pen-nib text-sm"></i>
-                                <span>Bên thuê xác nhận ký hợp đồng</span>
+                            <button type="submit" id="btnSignContract" name="btnSignContract" onclick="submitSignature(event)" class="w-full py-4 px-6 rounded-2xl bg-[#0f244a] hover:bg-[#15356c] border border-blue-500/30 font-bold text-white shadow-xl shadow-blue-950/50 hover:shadow-indigo-500/40 transition-all duration-300 flex items-center justify-center gap-2.5 hover:-translate-y-0.5">
+                                <i class="fa-solid fa-pen-nib text-sm text-blue-300"></i>
+                                <i class="fa-solid fa-file-pdf text-sm text-rose-400"></i>
+                                <span>Ký và Xuất hợp đồng PDF</span>
                             </button>
                         </div>
                     </form>
@@ -491,7 +544,7 @@
             };
         })();
 
-        const canvas = document.getElementById('signature-pad');
+        const canvas = document.getElementById('signature_pad') || document.getElementById('signature-pad');
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
 
@@ -561,34 +614,80 @@
             const isCanvasEmpty = !buffer.some(color => color !== 0);
 
             if (isCanvasEmpty) {
-                alert('Vui lòng vẽ chữ ký của bạn trước khi xác nhận ký kết!');
+                const wrapper = document.getElementById('signature_pad_container') || canvas.parentElement;
+                wrapper.classList.remove('pulse-red-border', 'animate-shake');
+                void wrapper.offsetWidth; // force reflow
+                wrapper.classList.add('pulse-red-border', 'animate-shake');
+                setTimeout(() => wrapper.classList.remove('pulse-red-border', 'animate-shake'), 2500);
+
+                alert('Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận.');
+                return;
+            }
+
+            const otpInp = document.getElementById('otp-input');
+            if (otpInp && !otpInp.value.trim()) {
+                otpInp.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                otpInp.focus();
+                alert('Vui lòng nhập mã OTP 6 số được gửi về SĐT cư dân để ký kết.');
                 return;
             }
 
             const dataURL = canvas.toDataURL('image/png');
             document.getElementById('signature-input').value = dataURL;
+            const sigDataInput = document.getElementById('signature-data-input');
+            if (sigDataInput) {
+                sigDataInput.value = dataURL;
+            }
             document.getElementById('sign-form').submit();
         }
 
         function sendOtp() {
             const btn = document.getElementById('btn-send-otp');
-            const status = document.getElementById('otp-status');
-            
+            const statusContainer = document.getElementById('otp-status-container');
+            const statusText = document.getElementById('otp-status-text');
+            const emailInput = document.getElementById('otp-email-input');
+            const email = emailInput ? emailInput.value.trim() : '';
+
+            if (!email) {
+                if (emailInput) {
+                    emailInput.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500');
+                    emailInput.focus();
+                }
+                alert('Vui lòng nhập địa chỉ Gmail của bạn để nhận mã xác thực OTP.');
+                return;
+            }
+
+            if (emailInput) {
+                emailInput.classList.remove('!border-rose-500', 'ring-2', 'ring-rose-500');
+            }
+
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang gửi...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang gửi mã đến Gmail...';
 
             fetch("{{ route('smartroom.contract.send_otp', $contract->id) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
+                },
+                body: JSON.stringify({ email: email })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    status.classList.remove('hidden');
+            .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+            .then(({ ok, data }) => {
+                if (ok && data.success) {
+                    if (statusContainer) statusContainer.classList.remove('hidden');
+                    if (statusText) {
+                        statusText.innerText = data.message || `Mã xác thực OTP đã được gửi đến Gmail (${data.email}) thành công!`;
+                    }
+                    if (typeof alert === 'function') {
+                        alert(data.message || `Mã xác thực OTP đã được gửi đến hộp thư Gmail (${data.email}) thành công! Vui lòng mở Gmail để xem mã.`);
+                    }
+
+                    const otpInput = document.getElementById('otp-input');
+                    if (otpInput) {
+                        otpInput.focus();
+                    }
+
                     let timeLeft = 60;
                     const interval = setInterval(() => {
                         timeLeft--;
@@ -601,16 +700,16 @@
                         }
                     }, 1000);
                 } else {
-                    alert('Lỗi: ' + (data.message || 'Không thể gửi mã OTP.'));
+                    alert('Lỗi: ' + (data.message || 'Không thể gửi mã OTP đến Gmail này. Vui lòng kiểm tra lại địa chỉ Gmail của bạn.'));
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi mã OTP qua SMS/Zalo';
+                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi mã OTP qua Gmail';
                 }
             })
             .catch(error => {
                 console.error(error);
-                alert('Có lỗi xảy ra khi gửi mã OTP!');
+                alert('Có lỗi xảy ra khi kết nối máy chủ gửi Gmail!');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi mã OTP qua SMS/Zalo';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi mã OTP qua Gmail';
             });
         }
     </script>

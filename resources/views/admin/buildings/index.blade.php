@@ -105,6 +105,12 @@
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
+            @if(session('warning'))
+                <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm font-semibold flex items-center gap-3 shadow-lg shadow-amber-500/5">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    <span>{{ session('warning') }}</span>
+                </div>
+            @endif
 
             <!-- STATS CARDS -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
