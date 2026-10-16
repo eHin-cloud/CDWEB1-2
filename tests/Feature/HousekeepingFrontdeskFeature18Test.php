@@ -766,4 +766,34 @@ class HousekeepingFrontdeskFeature18Test extends TestCase
                 'calculation' => ['room_amount', 'surcharge_amount', 'service_amount', 'deposit_amount', 'total_amount', 'breakdown'],
             ]);
     }
+
+    /**
+     * Test Bảng 128: Kiểm tra đầy đủ các thành phần UI buồng phòng trên giao diện matrix.blade.php.
+     */
+    public function test_ui_elements_render_correctly_table_128(): void
+    {
+        $response = $this->actingAs($this->receptionist)
+            ->get(route('smartroom.admin.housekeeping.matrix'));
+
+        $response->assertStatus(200);
+
+        // STT 1: btnStatusFilter (Lọc trạng thái phòng)
+        $response->assertSee('name="btnStatusFilter"', false);
+
+        // STT 2: gridHousekeeping (Sơ đồ buồng phòng)
+        $response->assertSee('id="gridHousekeeping"', false);
+
+        // STT 3: cboStaff (Nhân viên dọn phòng *)
+        $response->assertSee('id="cboStaff"', false);
+
+        // STT 4: cboPriority (Mức độ ưu tiên)
+        $response->assertSee('id="cboPriority"', false);
+
+        // STT 5: btnStartClean (Bắt đầu dọn phòng)
+        $response->assertSee('name="btnStartClean"', false);
+
+        // STT 6: btnInspectPass (Nghiệm thu phòng đạt chuẩn)
+        $response->assertSee('id="btnInspectPass"', false);
+    }
 }
+

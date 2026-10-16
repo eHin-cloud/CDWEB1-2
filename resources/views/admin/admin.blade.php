@@ -1343,21 +1343,104 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6">
-                        <div>
-                            <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                                <i class="fa-solid fa-comments text-emerald-400"></i> Trợ lý AI nhà trọ
-                            </h3>
-                            <p class="text-xs text-slate-500 mt-1">Hỏi bằng tiếng Việt, ví dụ: "Phòng nào chưa đóng tiền tháng này?" hoặc "Ai sắp hết hợp đồng?".</p>
+                    <!-- FEAT_14_AI_ASSISTANT_HUB: HỆ SINH THÁI TRỢ LÝ AI HỖ TRỢ TOÀN DIỆN -->
+                    <div id="ai-assistant-hub-container" class="glass-card rounded-3xl p-6 sm:p-7 border border-indigo-500/20 relative overflow-hidden">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-5 border-b border-slate-800/80 pb-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30">
+                                        FEAT_14 AI ASSISTANT HUB
+                                    </span>
+                                </div>
+                                <h3 class="text-lg font-black text-white mt-1 flex items-center gap-2.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                                    Trợ Lý AI Hỗ Trợ Toàn Diện
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Trung tâm điều phối Trợ lý AI dành riêng cho Chủ trọ: Cố vấn kinh doanh & Soạn bài SEO, Trợ lý Hỏi - Đáp & Tư vấn nghiệp vụ quản lý.</p>
+                            </div>
                         </div>
-                        <div class="mt-5 flex gap-2">
-                            <input id="ai-assistant-question" type="text" class="min-w-0 flex-1 px-4 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" placeholder="Nhập câu hỏi quản lý nhà trọ...">
-                            <button type="button" onclick="askAiAssistant(this)" class="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2">
-                                <i class="fa-solid fa-paper-plane"></i> Hỏi
+
+                        <!-- 1. Tab Selector (tabMode dành riêng cho Chủ trọ) -->
+                        <div class="flex flex-wrap items-center gap-2 mb-4 bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800/90 text-xs">
+                            <button type="button" onclick="switchAiHubMode('landlord_advisor', this)" class="ai-hub-tab-btn flex-1 min-w-[150px] py-2 px-3 rounded-xl font-bold bg-indigo-600 text-white transition-all flex items-center justify-center gap-2" data-mode="landlord_advisor">
+                                <i class="fa-solid fa-bullhorn text-amber-300"></i> Cố vấn & Viết bài SEO
+                            </button>
+                            <button type="button" onclick="switchAiHubMode('landlord_qa', this)" class="ai-hub-tab-btn flex-1 min-w-[150px] py-2 px-3 rounded-xl font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2" data-mode="landlord_qa">
+                                <i class="fa-solid fa-comments text-cyan-400"></i> Hỏi - Đáp & Trợ Lý Chủ Trọ
                             </button>
                         </div>
-                        <div id="ai-assistant-answer" class="mt-4 rounded-xl bg-slate-950/40 border border-slate-800 p-4 text-sm text-slate-300 leading-relaxed min-h-20">
-                            Trợ lý chỉ đọc dữ liệu thuộc tài khoản chủ trọ đang đăng nhập.
+
+                        <!-- 2. Controls & Prompt input (cboTone, txtPrompt) -->
+                        <div class="space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <label for="ai-hub-prompt" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-message text-indigo-400"></i> Câu hỏi / Yêu cầu <span class="text-rose-400">*</span>
+                                </label>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="text-slate-400 text-[11px] font-semibold">Văn phong:</span>
+                                    <select id="ai-hub-tone" class="bg-slate-900 border border-slate-800 text-slate-300 rounded-xl px-2.5 py-1 text-xs font-medium focus:outline-none focus:border-purple-500">
+                                        <option value="professional" selected>Chuyên nghiệp, thu hút</option>
+                                        <option value="friendly">Thân thiện, gần gũi</option>
+                                        <option value="urgent">Khẩn cấp, an toàn</option>
+                                        <option value="creative_seo">Sáng tạo Marketing SEO</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <textarea id="ai-hub-prompt" 
+                                          rows="3" 
+                                          placeholder="Bạn cần AI hỗ trợ điều gì? Nhập yêu cầu tại đây... (Nhấn Enter để gửi)" 
+                                          class="w-full px-4 py-3 rounded-2xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all resize-none"></textarea>
+                                <div id="ai-hub-prompt-error" class="hidden text-xs text-rose-400 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-exclamation text-xs"></i>
+                                    <span id="ai-hub-prompt-error-text"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <div class="flex items-center gap-2">
+                                    <span id="ai-hub-char-count" class="text-[11px] text-slate-500">0/2000 ký tự</span>
+                                    <span id="ai-hub-countdown-badge" class="hidden text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg animate-pulse">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> Đang chờ: <span id="ai-hub-countdown-seconds">30</span>s
+                                    </span>
+                                </div>
+
+                                <button type="button" 
+                                        id="btn-send-ai-hub" 
+                                        onclick="submitAiAssistantHub()" 
+                                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all">
+                                    <i class="fa-solid fa-bolt text-amber-300"></i>
+                                    <span>Gửi yêu cầu đến AI</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Response Area (responseBox) -->
+                        <div id="ai-hub-response-container" class="mt-5 pt-4 border-t border-slate-800/80">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-robot text-purple-400"></i> Phản hồi của Trợ lý AI
+                                </span>
+                                <div id="ai-hub-status-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded border"></div>
+                            </div>
+
+                            <div id="ai-hub-response-box" class="rounded-2xl bg-slate-950/60 border border-slate-800/80 p-4 text-sm text-slate-300 leading-relaxed min-h-[90px] whitespace-pre-line relative">
+                                <span class="text-slate-500 italic">Chọn tab tác vụ phía trên và nhập câu hỏi/yêu cầu để nhận hỗ trợ tức thời từ Trợ lý AI SmartRoom.</span>
+                            </div>
+
+                            <!-- 4. Quick Action Buttons (btnQuickAction) -->
+                            <div id="ai-hub-actions-bar" class="hidden flex flex-wrap items-center gap-2.5 mt-3 pt-2">
+                                <button type="button" id="btn-copy-ai-post" onclick="copyAiHubContent()" class="hidden px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-copy"></i> Sao chép bài viết marketing SEO
+                                </button>
+                                <button type="button" id="btn-booking-viewing" onclick="openBookingFromAi()" class="hidden px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-calendar-check"></i> Đặt lịch hẹn xem phòng
+                                </button>
+                                <button type="button" id="btn-view-emergency-ticket" onclick="openEmergencyTicketModal()" class="hidden px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-ticket"></i> Xem ticket bảo trì khẩn cấp
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1793,6 +1876,43 @@
                             <span>Bảo trì</span>
                         </div>
                     </div>
+                <!-- Floor filter toolbar (FEAT_13) -->
+                <div class="flex items-center gap-2 flex-wrap bg-slate-900/40 border border-slate-800/80 p-3 rounded-2xl">
+                    <span class="text-xs font-bold text-slate-400 flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-layer-group text-indigo-400"></i> Lọc Tầng:
+                    </span>
+                    <button type="button" data-floor-filter="all" onclick="filterByFloor('all', this)" class="floor-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white transition-all">
+                        Tất cả tầng
+                    </button>
+                    @php
+                        $existingFloors = $roomsByFloor->keys()->map(fn($f) => (int)$f)->filter(fn($f) => $f > 0)->sort()->values();
+                        $maxBuildingFloors = (int) ($buildings->max('total_floors') ?? ($existingFloors->max() ?? 1));
+                        $maxFloorNumber = max($maxBuildingFloors, $existingFloors->max() ?? 1);
+                        $floorList = range(1, max(1, $maxFloorNumber));
+                    @endphp
+                    @foreach($floorList as $fl)
+                        <button type="button" 
+                                data-floor-filter="{{ $fl }}" 
+                                onclick="filterByFloor('{{ $fl }}', this)" 
+                                class="floor-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all">
+                            Tầng {{ $fl }}
+                        </button>
+                    @endforeach
+                </div>
+
+                <!-- Empty state khi tầng được chọn không có phòng nào (ERR_13_03) -->
+                <div id="floor-empty-state" class="hidden p-12 text-center rounded-3xl bg-slate-900/40 border border-slate-800/80 space-y-3">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-2">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-slate-200">Tầng được chọn chưa có phòng nào được tạo.</h4>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto">Vui lòng chọn tầng khác trên bộ lọc hoặc tiến hành thêm phòng mới vào sơ đồ để hoàn tất cấu hình tòa nhà.</p>
+                    <div class="pt-2">
+                        <a href="{{ route('admin.rooms.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/30">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Cấu hình thêm phòng ngay</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Floors and room grid -->
@@ -1849,6 +1969,56 @@
                         </div>
                     </div>
                     @endforeach
+                </div>
+
+                <!-- HUY HIỆU MẤT KẾT NỐI SSE THỜI GIAN THỰC (ERR_13_01) -->
+                <div id="sse-reconnect-badge" class="hidden fixed top-20 right-6 z-50 items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-bold shadow-xl shadow-amber-500/10 backdrop-blur-md animate-pulse transition-all">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm"></i>
+                    <span id="sse-reconnect-text">Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...</span>
+                </div>
+
+                <!-- MODAL CẢNH BÁO XUNG ĐỘT NGHIỆP VỤ (ERR_13_02) -->
+                <div id="modal-conflict-warning" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden items-center justify-center p-4">
+                    <div class="w-full max-w-md bg-[#0a0f1d] border border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <h3 class="text-lg font-black text-white">Cảnh Báo Xung Đột Nghiệp Vụ</h3>
+                            <p id="modal-conflict-message" class="text-sm font-medium text-slate-300 leading-relaxed">
+                                Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.
+                            </p>
+                        </div>
+                        <div class="pt-3 flex justify-center">
+                            <button type="button" onclick="closeConflictModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all shadow-lg shadow-amber-600/30">
+                                Đã hiểu và Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL SỰ CỐ KHẨN CẤP AI (ERR_14_06) -->
+                <div id="modal-ai-emergency-ticket" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden items-center justify-center p-4">
+                    <div class="w-full max-w-md bg-[#13070a] border border-rose-500/50 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
+                        <div class="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 text-2xl mx-auto mb-1 animate-bounce">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                Ưu tiên xử lý khẩn cấp (Emergency)
+                            </span>
+                            <h3 class="text-lg font-black text-white">Cảnh Báo Sự Cố Kỹ Thuật Khẩn Cấp</h3>
+                            <p id="modal-ai-emergency-message" class="text-sm font-semibold text-rose-200 leading-relaxed">
+                                Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!
+                            </p>
+                            <p class="text-xs text-slate-400 mt-2">Đội ngũ kỹ thuật viên tòa nhà đang được điều động ưu tiên đến hiện trường. Vui lòng ngắt nguồn điện/khóa van nước an toàn.</p>
+                        </div>
+                        <div class="pt-3 flex justify-center gap-2">
+                            <button type="button" onclick="closeAiEmergencyModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30">
+                                Đã hiểu & Xác nhận
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ROOM DETAIL MODAL (CENTERED & FITS CONTENT) -->
@@ -1968,24 +2138,48 @@
                 <div class="glass-card rounded-2xl p-6">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h3 class="text-base font-bold text-slate-200">Chốt Điện Nước Cuối Tháng</h3>
-                            <p class="text-xs text-slate-500">Nhập chỉ số điện nước tháng 06/2026. Đơn giá: Điện 3.500đ/kWh, Nước 15.000đ/m3.</p>
+                            <h3 class="text-base font-bold text-slate-200">Chốt Điện Nước Cuối Tháng (FEAT_15_UTILITY_BULK)</h3>
+                            <p class="text-xs text-slate-500">Bảng ghi chỉ số điện nước định kỳ. Đơn giá: Điện 3.500đ/kWh, Nước 15.000đ/m3.</p>
+                            
+                            <!-- Month Selector (cboMonth) theo Bảng 110 -->
+                            <div class="mt-3 flex items-center gap-2.5 flex-wrap">
+                                <label for="cboMonth" class="text-xs font-bold text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
+                                    <i class="fa-solid fa-calendar-days text-indigo-400"></i> Kỳ ghi chỉ số:
+                                </label>
+                                <div class="relative">
+                                    <input type="month" 
+                                           id="cboMonth" 
+                                           name="billing_month" 
+                                           form="bulk-utility-form" 
+                                           value="{{ old('billing_month', \Carbon\Carbon::now()->format('Y-m')) }}" 
+                                           placeholder="Tháng 10/2026" 
+                                           class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all shadow-inner">
+                                </div>
+                                <span id="cboMonth-error" class="hidden text-rose-400 text-xs font-semibold items-center gap-1">
+                                    <i class="fa-solid fa-circle-exclamation"></i> Vui lòng chọn tháng tính cước hóa đơn điện nước.
+                                </span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <button type="button" onclick="openIotDashboardModal()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-tower-broadcast animate-pulse"></i> 📡 IoT Smart Metering (Realtime)
+                                <i class="fa-solid fa-tower-broadcast animate-pulse"></i> 📡 IoT Smart Metering
                             </button>
                             <button type="button" onclick="triggerIotAutoSync(this)" class="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-cyan-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-bolt-lightning"></i> ⚡ Chốt Số Tự Động Từ IoT
+                                <i class="fa-solid fa-bolt-lightning"></i> ⚡ Chốt IoT
                             </button>
                             <button type="button" onclick="triggerAutoRemind(this)" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-bell animate-bounce"></i> Nhắc Nợ Zalo Hàng Loạt
+                                <i class="fa-solid fa-bell"></i> Nhắc Zalo
                             </button>
                             <button type="button" onclick="openBulkOcrModal('electricity')" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-camera"></i> ⚡ AI Quét Hàng Loạt
+                                <i class="fa-solid fa-camera"></i> ⚡ AI Quét OCR
                             </button>
-                            <button type="submit" form="bulk-utility-form" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-check-double"></i> Lưu & Xuất Hóa Đơn
+                            <!-- Nút Tạo hóa đơn tháng theo Bảng 118 (Trigger) -->
+                            <button type="button" onclick="openInvoiceModal()" class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/30 transition-all flex items-center gap-2" title="Tính tiền phòng & xuất hóa đơn tự động (FEAT_17_BILLING)">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Tạo hóa đơn tháng
+                            </button>
+                            <!-- Nút Lưu toàn bộ chỉ số (btnSaveAll) nền xanh lá theo Bảng 110 -->
+                            <button type="submit" form="bulk-utility-form" id="btnSaveAll" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i> Lưu toàn bộ chỉ số
                             </button>
                         </div>
                     </div>
@@ -1993,15 +2187,16 @@
                     <div class="overflow-x-auto">
                         <form id="bulk-utility-form" action="{{ route('smartroom.admin.utility.bulk_store') }}" method="POST">
                             @csrf
-                            <table class="w-full text-left text-sm text-slate-300">
+                            <!-- Bảng ghi số tblUtility theo Bảng 110 -->
+                            <table id="tblUtility" class="w-full text-left text-sm text-slate-300">
                                 <thead class="text-xs text-slate-500 uppercase bg-slate-900/50 border-b border-slate-900">
                                     <tr>
-                                        <th class="px-6 py-4 font-bold">Phòng & Số SX Công Tơ</th>
-                                        <th class="px-6 py-4 font-bold">Điện cũ</th>
-                                        <th class="px-6 py-4 font-bold">Điện mới (kWh)</th>
-                                        <th class="px-6 py-4 font-bold">Nước cũ</th>
-                                        <th class="px-6 py-4 font-bold">Nước mới (m3)</th>
-                                        <th class="px-6 py-4 font-bold">Số lượng xài</th>
+                                        <th class="px-6 py-4 font-bold">Tên phòng</th>
+                                        <th class="px-6 py-4 font-bold">Số điện cũ</th>
+                                        <th class="px-6 py-4 font-bold">Số điện mới (*)</th>
+                                        <th class="px-6 py-4 font-bold">Số nước cũ</th>
+                                        <th class="px-6 py-4 font-bold">Số nước mới (*)</th>
+                                        <th class="px-6 py-4 font-bold">Tiêu thụ</th>
                                         <th class="px-6 py-4 font-bold">Thành tiền tạm tính</th>
                                         <th class="px-6 py-4 font-bold text-center">Hành động</th>
                                     </tr>
@@ -2099,6 +2294,9 @@
                                         <td class="px-6 py-4 text-indigo-400 font-bold text-xs" data-field="cost-total">0đ</td>
                                         <td class="px-6 py-4 text-center">
                                              <div class="flex items-center justify-center gap-2">
+                                                 <button type="button" onclick="openInvoiceModal('{{ $room->id }}', '{{ $room->room_number }}', '{{ $resident ? $resident->name : '' }}', '{{ $room->price }}')" class="px-2.5 py-1.5 bg-blue-900/30 hover:bg-blue-900 text-blue-300 hover:text-white rounded-lg text-xs font-bold border border-blue-800/40 transition-all flex items-center gap-1" title="Tạo hóa đơn & VietQR (FEAT_17_BILLING)">
+                                                     <i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn
+                                                 </button>
                                                  @if($room->status === 'overdue' && $latestBill && $latestBill->status !== 'paid')
                                                      <form action="{{ route('smartroom.admin.utility.pay', $latestBill->id) }}" method="POST" class="inline">
                                                          @csrf
@@ -2453,16 +2651,17 @@
                             <!-- Video Stream -->
                             <video id="ocr-camera-video" autoplay playsinline class="w-full h-56 object-cover hidden"></video>
 
-                            <!-- Image Preview -->
-                            <img id="ocr-image-preview" src="" alt="Meter Preview" class="w-full h-56 object-contain hidden">
+                            <!-- Image Preview (img_preview - Bảng 116) -->
+                            <img id="img_preview" src="" alt="Ảnh công tơ" class="w-full h-56 object-contain hidden">
+                            <img id="ocr-image-preview" src="" alt="Meter Preview" class="hidden">
 
                             <!-- Upload Zone -->
-                            <div id="ocr-upload-zone" onclick="document.getElementById('ocr-file-input').click()" class="p-8 text-center cursor-pointer hover:bg-slate-900/30 transition-all flex flex-col items-center justify-center gap-2 hidden w-full h-56">
+                            <div id="ocr-upload-zone" onclick="document.getElementById('camera_input').click()" class="p-8 text-center cursor-pointer hover:bg-slate-900/30 transition-all flex flex-col items-center justify-center gap-2 hidden w-full h-56 border-2 border-dashed border-slate-700/60 rounded-xl">
                                 <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
                                     <i class="fa-solid fa-image text-xl"></i>
                                 </div>
-                                <p class="text-xs font-bold text-slate-300">Bấm vào đây để chọn ảnh chụp công tơ</p>
-                                <p class="text-[10px] text-slate-500">Hỗ trợ định dạng JPG, PNG, WEBP (Tối đa 5MB)</p>
+                                <p class="text-xs font-bold text-slate-300">Chụp ảnh / Tải ảnh * (Bấm để chọn file)</p>
+                                <p class="text-[10px] text-slate-500">Hỗ trợ định dạng JPG, PNG, WEBP (Tối đa 10MB)</p>
                             </div>
 
                             <!-- Laser Scanning Animation -->
@@ -2483,8 +2682,15 @@
                             </div>
                         </div>
 
-                        <!-- Hidden Form Elements -->
+                        <!-- Cảnh báo lỗi OCR động (ERR_16_01, ERR_16_02, ERR_16_03) -->
+                        <div id="ocr-error-banner" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 flex items-center gap-2 animate-fade-in">
+                            <i class="fa-solid fa-circle-exclamation text-rose-500 shrink-0"></i>
+                            <span id="ocr-error-banner-text">Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.</span>
+                        </div>
+
+                        <!-- Hidden Form Elements: camera_input theo Bảng 116 -->
                         <canvas id="ocr-capture-canvas" class="hidden"></canvas>
+                        <input type="file" id="camera_input" name="meter_image" accept="image/*" class="hidden" onchange="handleOcrFileSelected(this)">
                         <input type="file" id="ocr-file-input" accept="image/*" class="hidden" onchange="handleOcrFileSelected(this)">
 
                         <!-- Intermediate Actions: Capture & Retake -->
@@ -2500,10 +2706,10 @@
                             </button>
                         </div>
 
-                        <!-- Result Display Box -->
+                        <!-- Result Display Box: ocr_result theo Bảng 116 -->
                         <div id="ocr-result-box" class="hidden p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30 space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Kết Quả Phân Tích</span>
+                                <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Số nhận diện được</span>
                                 <span id="ocr-confidence-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                     Độ tin cậy: 95%
                                 </span>
@@ -2511,7 +2717,8 @@
                             <div class="flex items-baseline justify-between">
                                 <span class="text-xs text-slate-500">Chỉ số công tơ đọc được:</span>
                                 <div class="flex items-baseline gap-1">
-                                    <span id="ocr-result-value" class="text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">0</span>
+                                    <input type="text" id="ocr_result" placeholder="VD: 14852" class="text-3xl font-extrabold text-emerald-400 font-mono tracking-tight bg-transparent border-0 focus:outline-none w-36 text-right" readonly value="0">
+                                    <span id="ocr-result-value" class="hidden">0</span>
                                     <span id="ocr-result-unit" class="text-xs font-bold text-slate-400">kWh</span>
                                 </div>
                             </div>
@@ -2521,14 +2728,15 @@
                             </div>
                         </div>
 
-                        <!-- Footer Actions -->
+                        <!-- Footer Actions: btnConfirmOCR nền xanh lá theo Bảng 116 -->
                         <div class="flex gap-2 pt-2 border-t border-slate-900">
                             <button type="button" onclick="closeMeterOcrModal()" class="w-1/3 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-bold transition-all">
                                 Đóng lại
                             </button>
-                            <button type="button" id="btn-ocr-apply" onclick="applyOcrResultToInput()" disabled class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
-                                <i class="fa-solid fa-check"></i> Áp Dụng Chỉ Số Vào Bảng
+                            <button type="button" id="btnConfirmOCR" onclick="applyOcrResultToInput()" disabled class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                                <i class="fa-solid fa-check"></i> Xác nhận áp dụng số
                             </button>
+                            <button type="button" id="btn-ocr-apply" onclick="applyOcrResultToInput()" class="hidden"></button>
                         </div>
                     </div>
                 </div>
@@ -2653,6 +2861,165 @@
                                 <i class="fa-solid fa-check-double"></i> Áp Dụng Tất Cả Vào Bảng Chốt Số
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- MODAL TÍNH TIỀN PHÒNG & XUẤT HÓA ĐƠN TỰ ĐỘNG (FEAT_17_BILLING - BẢNG 118 ĐẾN 123) -->
+                <div id="calculate-invoice-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto">
+                    <div class="relative w-full max-w-3xl bg-slate-900/95 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 my-8 text-slate-200">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/40">
+                                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-base font-bold text-slate-100">Tính Tiền Phòng & Xuất Hóa Đơn Tự Động (FEAT_17_BILLING)</h3>
+                                        <span id="invoice-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">Chờ tính toán</span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-0.5">Tự động tổng hợp chiết tính tiền phòng, điện nước tiêu thụ, phí phát sinh và tạo mã QR VietQR NAPAS247 chuẩn ngân hàng.</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="closeInvoiceModal()" class="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Cảnh báo lỗi theo Bảng 121 -->
+                        <!-- ERR_17_01: Phòng chưa có cư dân thuê đại diện (Cảnh báo vàng chặn xuất hóa đơn) -->
+                        <div id="invoice-err-17-01" class="hidden p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-3">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg"></i>
+                            <div>
+                                <strong class="block font-bold">Cảnh báo không thể lập hóa đơn:</strong>
+                                <span id="invoice-err-17-01-msg">Phòng này chưa có cư dân đại diện thuê, không thể sinh hóa đơn thu tiền.</span>
+                            </div>
+                        </div>
+
+                        <!-- ERR_17_02: Đơn giá dịch vụ bị trống hoặc bằng 0 (Bôi đỏ nhắc nhở) -->
+                        <div id="invoice-err-17-02" class="hidden p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold flex items-center gap-3">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400 text-lg"></i>
+                            <div>
+                                <strong class="block font-bold">Lỗi cấu hình bảng giá:</strong>
+                                <span id="invoice-err-17-02-msg">Đơn giá điện nước chưa được cấu hình trong bảng giá cơ sở.</span>
+                            </div>
+                        </div>
+
+                        <!-- Form nhập liệu theo Bảng 120 -->
+                        <form id="invoice-calculate-form" onsubmit="event.preventDefault(); submitPublishInvoice();" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- room_id: ID phòng hợp lệ -->
+                                <div>
+                                    <label for="invoice_room_id" class="block text-xs font-bold text-slate-300 mb-1.5">
+                                        Phòng tính tiền <span class="text-rose-400">*</span>
+                                    </label>
+                                    <select id="invoice_room_id" name="room_id" onchange="handleInvoiceRoomChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all">
+                                        <option value="">-- Chọn phòng cần lập hóa đơn --</option>
+                                        @foreach($utilityRooms as $room)
+                                            @php $res = $room->residents->first(); @endphp
+                                            <option value="{{ $room->id }}" data-room="{{ $room->room_number }}" data-price="{{ $room->price }}" data-resident="{{ $res ? $res->name : '' }}">
+                                                Phòng {{ $room->room_number }} - {{ $res ? $res->name : '(Chưa có cư dân)' }} ({{ number_format($room->price) }}đ)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- invoice_date: Ngày lập hóa đơn (YYYY-MM-DD) -->
+                                <div>
+                                    <label for="invoice_date" class="block text-xs font-bold text-slate-300 mb-1.5">
+                                        Ngày lập hóa đơn <span class="text-rose-400">*</span>
+                                    </label>
+                                    <input type="date" id="invoice_date" name="invoice_date" value="{{ date('Y-m-d') }}" onchange="calculateModalPreview()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all">
+                                </div>
+
+                                <!-- STT 2: due_date - DatePicker theo Bảng 122 -->
+                                <div>
+                                    <label for="due_date" class="block text-xs font-bold text-slate-300 mb-1.5">
+                                        Hạn thanh toán * <span class="text-slate-400 text-[10px] font-normal">(Sau ngày lập ít nhất 3 ngày)</span>
+                                    </label>
+                                    <input type="date" id="due_date" name="due_date" placeholder="Chọn ngày..." value="{{ \Carbon\Carbon::now()->addDays(5)->format('Y-m-d') }}" onchange="validateDueDateRange()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all">
+                                    <span id="due_date_error" class="hidden text-rose-400 text-[11px] font-semibold mt-1"></span>
+                                </div>
+
+                                <!-- other_fees: Phí phát sinh (nếu có) -->
+                                <div>
+                                    <label for="invoice_other_fees" class="block text-xs font-bold text-slate-300 mb-1.5">
+                                        Phí phát sinh (nếu có) <span class="text-slate-400 text-[10px] font-normal">(Đền bù, dọn thêm...)</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="number" id="invoice_other_fees" name="other_fees" value="0" min="0" step="1000" oninput="calculateModalPreview()" placeholder="0" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all pr-8">
+                                        <span class="absolute right-3 top-2 text-xs text-slate-500">đ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Đơn giá cấu hình kiểm tra ERR_17_02 -->
+                            <div class="grid grid-cols-2 gap-4 p-3 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                                <div>
+                                    <label for="invoice_electricity_price" class="block text-[11px] font-bold text-slate-400 mb-1">
+                                        ⚡ Đơn giá điện (đ/kWh)
+                                    </label>
+                                    <input type="number" id="invoice_electricity_price" name="electricity_price" value="3500" oninput="calculateModalPreview()" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none font-mono">
+                                </div>
+                                <div>
+                                    <label for="invoice_water_price" class="block text-[11px] font-bold text-slate-400 mb-1">
+                                        💧 Đơn giá nước (đ/m3)
+                                    </label>
+                                    <input type="number" id="invoice_water_price" name="water_price" value="15000" oninput="calculateModalPreview()" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none font-mono">
+                                </div>
+                            </div>
+
+                            <!-- STT 1: summary_card - Tổng tiền thanh toán (Chữ to nổi bật trên nền trắng theo Bảng 122) -->
+                            <div id="summary_card" class="p-5 rounded-2xl bg-white text-slate-900 shadow-xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
+                                <div>
+                                    <span class="text-xs uppercase font-extrabold tracking-wider text-slate-500">Tổng tiền thanh toán</span>
+                                    <div id="summary_card_amount" class="text-3xl md:text-4xl font-black text-blue-900 font-mono tracking-tight mt-0.5">
+                                        4.850.000 đ
+                                    </div>
+                                    <div class="text-[11px] text-slate-600 mt-1 font-medium flex items-center gap-2">
+                                        <span id="summary_room_tag" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">Phòng: 201</span>
+                                        <span id="summary_resident_tag">Cư dân: Nguyễn Văn A</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-xs text-slate-600 space-y-1 text-right font-medium">
+                                    <div>Tiền phòng: <strong id="summary_room_price" class="text-slate-900 font-mono">4.500.000 đ</strong></div>
+                                    <div>Điện + Nước: <strong id="summary_utility_price" class="text-slate-900 font-mono">200.000 đ</strong></div>
+                                    <div>Dịch vụ cố định + Phí thêm: <strong id="summary_extra_price" class="text-slate-900 font-mono">150.000 đ</strong></div>
+                                </div>
+                            </div>
+
+                            <!-- STT 3: qr_code - QR VietQR NAPAS247 theo Bảng 122 -->
+                            <div id="vietqr-preview-box" class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div class="flex items-center gap-4">
+                                    <!-- STT 3: qr_code -->
+                                    <img id="qr_code" src="https://img.vietqr.io/image/VCB-1051572297-compact.png?amount=4850000&addInfo=Thanh%20toan%20Phong%20201" alt="Mã thanh toán ngân hàng" class="w-32 h-32 object-contain rounded-xl p-1.5 bg-white border border-slate-200 shadow-md">
+                                    <div class="space-y-1">
+                                        <span class="text-[10px] uppercase font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full inline-block">VietQR NAPAS247 Động</span>
+                                        <h4 class="text-xs font-bold text-slate-200">Quét mã chuyển khoản ngân hàng</h4>
+                                        <p class="text-[11px] text-slate-400">Ngân hàng: <strong>Vietcombank (VCB)</strong></p>
+                                        <p class="text-[11px] text-slate-400">Số tài khoản: <strong class="font-mono text-slate-200">1051572297</strong></p>
+                                        <p class="text-[11px] text-slate-400">Chủ tài khoản: <strong>CHỦ TRỌ</strong></p>
+                                    </div>
+                                </div>
+                                <div class="text-right space-y-2">
+                                    <a id="btnDownloadInvoicePdf" href="javascript:void(0)" onclick="downloadInvoicePdfCurrent()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition-all inline-flex items-center gap-1.5">
+                                        <i class="fa-solid fa-file-pdf text-rose-400"></i> Xuất PDF
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions: STT 4: btnPublish theo Bảng 122 -->
+                            <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 gap-3">
+                                <button type="button" onclick="closeInvoiceModal()" class="py-2.5 px-5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-bold transition-all">
+                                    Hủy bỏ
+                                </button>
+                                <!-- STT 4: btnPublish nền xanh đậm theo Bảng 122 -->
+                                <button type="submit" id="btnPublish" class="flex-1 py-3 px-6 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-950/40">
+                                    <i class="fa-solid fa-paper-plane"></i> Phát hành hóa đơn
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </section>
@@ -4627,20 +4994,100 @@
         // Room filter state & functions
         let currentRoomFilter = 'all';
         let currentBuildingFilter = 'all';
+        let currentFloorFilter = 'all';
 
         function applyCurrentFilterToCard(card) {
             if (!card) return;
             const status = card.getAttribute('data-room-status') || '';
             const buildingId = card.getAttribute('data-building-id') || '';
+            const cardFloor = card.closest('.floor-group')?.getAttribute('data-floor') || '';
             const statusMatch = (currentRoomFilter === 'all' || currentRoomFilter === status);
             const buildingMatch = (currentBuildingFilter === 'all' || String(buildingId) === String(currentBuildingFilter));
+            const floorMatch = (currentFloorFilter === 'all' || String(cardFloor) === String(currentFloorFilter));
 
-            if (statusMatch && buildingMatch) {
+            if (statusMatch && buildingMatch && floorMatch) {
                 card.classList.remove('hidden');
                 card.style.display = '';
             } else {
                 card.classList.add('hidden');
                 card.style.display = 'none';
+            }
+        }
+
+        function refreshFloorGroupsVisibility() {
+            let totalVisibleRooms = 0;
+            const floorGroups = document.querySelectorAll('.floor-group');
+            
+            floorGroups.forEach(group => {
+                const floorVal = group.getAttribute('data-floor');
+                const floorMatches = (currentFloorFilter === 'all' || String(floorVal) === String(currentFloorFilter));
+                
+                if (!floorMatches) {
+                    group.classList.add('hidden');
+                    group.style.display = 'none';
+                } else {
+                    const visibleCards = Array.from(group.querySelectorAll('.room-card')).filter(c => !c.classList.contains('hidden') && c.style.display !== 'none');
+                    if (visibleCards.length === 0) {
+                        group.classList.add('hidden');
+                        group.style.display = 'none';
+                    } else {
+                        group.classList.remove('hidden');
+                        group.style.display = '';
+                        totalVisibleRooms += visibleCards.length;
+                    }
+                }
+            });
+
+            // ERR_13_03: Bộ lọc tầng không có phòng nào
+            const emptyState = document.getElementById('floor-empty-state');
+            if (emptyState) {
+                if (totalVisibleRooms === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.classList.add('hidden');
+                    emptyState.style.display = 'none';
+                }
+            }
+        }
+
+        function filterByFloor(floor, btn) {
+            currentFloorFilter = floor;
+            document.querySelectorAll('.floor-filter-btn').forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white');
+                b.classList.add('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                if (b.getAttribute('data-floor-filter') === String(floor)) {
+                    b.classList.remove('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                    b.classList.add('bg-indigo-600', 'text-white');
+                }
+            });
+
+            document.querySelectorAll('.room-card').forEach(card => {
+                applyCurrentFilterToCard(card);
+            });
+
+            refreshFloorGroupsVisibility();
+        }
+
+        function showConflictModal(message) {
+            const modal = document.getElementById('modal-conflict-warning');
+            const msgEl = document.getElementById('modal-conflict-message');
+            if (modal && msgEl) {
+                msgEl.textContent = message || 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            } else {
+                alert(message);
+            }
+        }
+
+        function closeConflictModal() {
+            const modal = document.getElementById('modal-conflict-warning');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
             }
         }
 
@@ -4685,6 +5132,8 @@
             document.querySelectorAll('.room-card').forEach(card => {
                 applyCurrentFilterToCard(card);
             });
+
+            refreshFloorGroupsVisibility();
         }
 
         function toggleAddContractModal(show) {
@@ -4888,6 +5337,8 @@
             document.querySelectorAll('.room-card').forEach(card => {
                 applyCurrentFilterToCard(card);
             });
+
+            refreshFloorGroupsVisibility();
         }
 
         function openRoomDetailById(roomId) {
@@ -5129,7 +5580,11 @@
                 }
 
                 if (!response.ok || !data.success) {
-                    alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
+                    if (response.status === 422 || data.error_code === 'ERR_13_02') {
+                        showConflictModal(data.message || 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.');
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
+                    }
                     return;
                 }
 
@@ -5200,44 +5655,57 @@
             }
         }
 
-        // Live calculation for electricity & water utility row with anomaly detection & validation
+        // Live calculation for electricity & water utility row with anomaly detection & validation (FEAT_15_UTILITY_BULK)
         function calculateRowCost(input) {
             const row = input.closest('tr');
+            if (!row) return;
             const roomPrice = parseInt(row.getAttribute('data-price')) || 0;
             
             const oldElecEl = row.querySelector('[data-field="old-elec"]');
             const oldWaterEl = row.querySelector('[data-field="old-water"]');
-            const oldElec = oldElecEl ? parseInt(oldElecEl.textContent) || 0 : 0;
-            const oldWater = oldWaterEl ? parseInt(oldWaterEl.textContent) || 0 : 0;
+            const oldElec = oldElecEl ? parseFloat(oldElecEl.textContent) || 0 : 0;
+            const oldWater = oldWaterEl ? parseFloat(oldWaterEl.textContent) || 0 : 0;
 
             const newElecInputEl = row.querySelector('.new-elec-input');
             const newWaterInputEl = row.querySelector('.new-water-input');
             const newElecVal = newElecInputEl ? newElecInputEl.value.trim() : '';
             const newWaterVal = newWaterInputEl ? newWaterInputEl.value.trim() : '';
 
-            const newElec = newElecVal !== '' ? parseInt(newElecVal) : oldElec;
-            const newWater = newWaterVal !== '' ? parseInt(newWaterVal) : oldWater;
+            // Regex kiểm tra số: ^[0-9]+(\.[0-9]{1,2})?$ (ERR_15_04)
+            const numRegex = /^[0-9]+(\.[0-9]{1,2})?$/;
 
-            // Kiểm tra số mới nhỏ hơn số cũ (Bảng 25)
             if (newElecInputEl) {
-                if (newElecVal !== '' && parseInt(newElecVal) < oldElec) {
-                    newElecInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
-                    newElecInputEl.title = 'Chỉ số mới không được nhỏ hơn chỉ số cũ tháng trước (' + oldElec + ' kWh)';
+                if (newElecVal !== '' && !numRegex.test(newElecVal)) {
+                    // ERR_15_04: Nhập ký tự chữ vào ô chỉ số
+                    newElecInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10', 'shake-error');
+                    newElecInputEl.title = 'Chỉ số công tơ điện nước chỉ được phép nhập số.';
+                } else if (newElecVal !== '' && parseFloat(newElecVal) < oldElec) {
+                    // ERR_15_02: Chỉ số điện mới nhỏ hơn điện cũ
+                    newElecInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10', 'shake-error');
+                    newElecInputEl.title = 'Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.';
                 } else {
-                    newElecInputEl.classList.remove('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
+                    newElecInputEl.classList.remove('border-rose-500', 'text-rose-400', 'bg-rose-500/10', 'shake-error');
                     newElecInputEl.removeAttribute('title');
                 }
             }
 
             if (newWaterInputEl) {
-                if (newWaterVal !== '' && parseInt(newWaterVal) < oldWater) {
-                    newWaterInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
-                    newWaterInputEl.title = 'Chỉ số mới không được nhỏ hơn chỉ số cũ tháng trước (' + oldWater + ' m3)';
+                if (newWaterVal !== '' && !numRegex.test(newWaterVal)) {
+                    // ERR_15_04: Nhập ký tự chữ vào ô chỉ số
+                    newWaterInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10', 'shake-error');
+                    newWaterInputEl.title = 'Chỉ số công tơ điện nước chỉ được phép nhập số.';
+                } else if (newWaterVal !== '' && parseFloat(newWaterVal) < oldWater) {
+                    // ERR_15_03: Chỉ số nước mới nhỏ hơn nước cũ
+                    newWaterInputEl.classList.add('border-rose-500', 'text-rose-400', 'bg-rose-500/10', 'shake-error');
+                    newWaterInputEl.title = 'Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.';
                 } else {
-                    newWaterInputEl.classList.remove('border-rose-500', 'text-rose-400', 'bg-rose-500/10');
+                    newWaterInputEl.classList.remove('border-rose-500', 'text-rose-400', 'bg-rose-500/10', 'shake-error');
                     newWaterInputEl.removeAttribute('title');
                 }
             }
+
+            const newElec = (newElecVal !== '' && numRegex.test(newElecVal)) ? parseFloat(newElecVal) : oldElec;
+            const newWater = (newWaterVal !== '' && numRegex.test(newWaterVal)) ? parseFloat(newWaterVal) : oldWater;
 
             let elecUsed = 0;
             let waterUsed = 0;
@@ -5250,7 +5718,7 @@
             if (usedElecEl) usedElecEl.textContent = elecUsed;
             if (usedWaterEl) usedWaterEl.textContent = waterUsed;
 
-            // Phát hiện tiêu thụ tăng đột biến bất thường (Bảng 25 Kịch bản lỗi)
+            // Phát hiện tiêu thụ tăng đột biến bất thường
             const abnormalElecWarn = row.querySelector('.abnormal-elec-warning');
             const abnormalWaterWarn = row.querySelector('.abnormal-water-warning');
             if (abnormalElecWarn) {
@@ -5272,10 +5740,10 @@
                 }
             }
 
-            // Compute costs
+            // Tính tiền
             const elecCost = elecUsed * 3500;
             const waterCost = waterUsed * 15000;
-            const serviceCost = 150000; // default service fee
+            const serviceCost = 150000;
             const total = roomPrice + elecCost + waterCost + serviceCost;
 
             const totalEl = row.querySelector('[data-field="cost-total"]');
@@ -5284,21 +5752,59 @@
 
         function saveSingleUtility(roomId, btn) {
             const row = btn.closest('tr');
+            if (!row) return;
             const newElecInput = row.querySelector('.new-elec-input');
             const newWaterInput = row.querySelector('.new-water-input');
-            const newElecVal = newElecInput.value;
-            const newWaterVal = newWaterInput.value;
+            const newElecVal = newElecInput ? newElecInput.value.trim() : '';
+            const newWaterVal = newWaterInput ? newWaterInput.value.trim() : '';
             
-            const oldElec = parseInt(row.querySelector('[data-field="old-elec"]').textContent);
-            const oldWater = parseInt(row.querySelector('[data-field="old-water"]').textContent);
+            const oldElecEl = row.querySelector('[data-field="old-elec"]');
+            const oldWaterEl = row.querySelector('[data-field="old-water"]');
+            const oldElec = oldElecEl ? parseFloat(oldElecEl.textContent) || 0 : 0;
+            const oldWater = oldWaterEl ? parseFloat(oldWaterEl.textContent) || 0 : 0;
             
+            const numRegex = /^[0-9]+(\.[0-9]{1,2})?$/;
+
             if (!newElecVal || !newWaterVal) {
-                alert('Vui lòng nhập đầy đủ số điện và nước mới!');
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast('Vui lòng nhập đầy đủ số điện và nước mới!', 'error', 'Thiếu dữ liệu');
+                } else {
+                    alert('Vui lòng nhập đầy đủ số điện và nước mới!');
+                }
+                return;
+            }
+
+            // ERR_15_04: Nhập ký tự chữ vào ô chỉ số
+            if (!numRegex.test(newElecVal) || !numRegex.test(newWaterVal)) {
+                if (newElecInput && !numRegex.test(newElecVal)) newElecInput.classList.add('border-rose-500', 'shake-error');
+                if (newWaterInput && !numRegex.test(newWaterVal)) newWaterInput.classList.add('border-rose-500', 'shake-error');
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast('Chỉ số công tơ điện nước chỉ được phép nhập số.', 'error', 'Mã lỗi: ERR_15_04');
+                } else {
+                    alert('Chỉ số công tơ điện nước chỉ được phép nhập số.');
+                }
                 return;
             }
             
-            if (parseInt(newElecVal) < oldElec || parseInt(newWaterVal) < oldWater) {
-                alert('Số mới không được nhỏ hơn số cũ!');
+            // ERR_15_02: Chỉ số điện mới nhỏ hơn điện cũ
+            if (parseFloat(newElecVal) < oldElec) {
+                if (newElecInput) newElecInput.classList.add('border-rose-500', 'shake-error');
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast('Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.', 'error', 'Mã lỗi: ERR_15_02');
+                } else {
+                    alert('Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.');
+                }
+                return;
+            }
+
+            // ERR_15_03: Chỉ số nước mới nhỏ hơn nước cũ
+            if (parseFloat(newWaterVal) < oldWater) {
+                if (newWaterInput) newWaterInput.classList.add('border-rose-500', 'shake-error');
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast('Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.', 'error', 'Mã lỗi: ERR_15_03');
+                } else {
+                    alert('Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.');
+                }
                 return;
             }
             
@@ -5329,10 +5835,127 @@
             waterInp.name = 'new_water';
             waterInp.value = newWaterVal;
             form.appendChild(waterInp);
+
+            const cboMonth = document.getElementById('cboMonth');
+            if (cboMonth && cboMonth.value) {
+                const monthInp = document.createElement('input');
+                monthInp.type = 'hidden';
+                monthInp.name = 'billing_month';
+                monthInp.value = cboMonth.value;
+                form.appendChild(monthInp);
+            }
             
             document.body.appendChild(form);
             form.submit();
         }
+
+        // Tự động kiểm tra và xác thực form Chốt Điện Nước Hàng Loạt (FEAT_15_UTILITY_BULK)
+        document.addEventListener('DOMContentLoaded', function() {
+            const bulkForm = document.getElementById('bulk-utility-form');
+            if (bulkForm) {
+                bulkForm.addEventListener('submit', function(e) {
+                    const cboMonth = document.getElementById('cboMonth');
+                    const cboMonthErr = document.getElementById('cboMonth-error');
+
+                    // 1. ERR_15_01: Để trống tháng chốt cước
+                    if (!cboMonth || !cboMonth.value.trim()) {
+                        e.preventDefault();
+                        if (cboMonth) {
+                            cboMonth.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50', 'shake-error');
+                            cboMonth.focus();
+                        }
+                        if (cboMonthErr) cboMonthErr.classList.remove('hidden');
+                        if (typeof window.showAdminToast === 'function') {
+                            window.showAdminToast('Vui lòng chọn tháng tính cước hóa đơn điện nước.', 'error', 'Mã lỗi: ERR_15_01');
+                        } else {
+                            alert('Vui lòng chọn tháng tính cước hóa đơn điện nước.');
+                        }
+                        return false;
+                    } else {
+                        cboMonth.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/50', 'shake-error');
+                        if (cboMonthErr) cboMonthErr.classList.add('hidden');
+                    }
+
+                    const rows = document.querySelectorAll('#tblUtility tbody tr');
+                    const numRegex = /^[0-9]+(\.[0-9]{1,2})?$/;
+
+                    for (let row of rows) {
+                        const newElecInput = row.querySelector('.new-elec-input');
+                        const newWaterInput = row.querySelector('.new-water-input');
+                        const newElecVal = newElecInput ? newElecInput.value.trim() : '';
+                        const newWaterVal = newWaterInput ? newWaterInput.value.trim() : '';
+
+                        const oldElecEl = row.querySelector('[data-field="old-elec"]');
+                        const oldWaterEl = row.querySelector('[data-field="old-water"]');
+                        const oldElec = oldElecEl ? parseFloat(oldElecEl.textContent) || 0 : 0;
+                        const oldWater = oldWaterEl ? parseFloat(oldWaterEl.textContent) || 0 : 0;
+
+                        // 2. ERR_15_04: Nhập ký tự chữ vào ô chỉ số
+                        if ((newElecVal !== '' && !numRegex.test(newElecVal)) || (newWaterVal !== '' && !numRegex.test(newWaterVal))) {
+                            e.preventDefault();
+                            if (newElecVal !== '' && !numRegex.test(newElecVal) && newElecInput) {
+                                newElecInput.classList.add('border-rose-500', 'shake-error');
+                                newElecInput.focus();
+                            } else if (newWaterInput) {
+                                newWaterInput.classList.add('border-rose-500', 'shake-error');
+                                newWaterInput.focus();
+                            }
+                            if (typeof window.showAdminToast === 'function') {
+                                window.showAdminToast('Chỉ số công tơ điện nước chỉ được phép nhập số.', 'error', 'Mã lỗi: ERR_15_04');
+                            } else {
+                                alert('Chỉ số công tơ điện nước chỉ được phép nhập số.');
+                            }
+                            return false;
+                        }
+
+                        // 3. ERR_15_02: Chỉ số điện mới nhỏ hơn điện cũ
+                        if (newElecVal !== '' && parseFloat(newElecVal) < oldElec) {
+                            e.preventDefault();
+                            if (newElecInput) {
+                                newElecInput.classList.add('border-rose-500', 'shake-error');
+                                newElecInput.focus();
+                            }
+                            if (typeof window.showAdminToast === 'function') {
+                                window.showAdminToast('Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.', 'error', 'Mã lỗi: ERR_15_02');
+                            } else {
+                                alert('Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.');
+                            }
+                            return false;
+                        }
+
+                        // 4. ERR_15_03: Chỉ số nước mới nhỏ hơn nước cũ
+                        if (newWaterVal !== '' && parseFloat(newWaterVal) < oldWater) {
+                            e.preventDefault();
+                            if (newWaterInput) {
+                                newWaterInput.classList.add('border-rose-500', 'shake-error');
+                                newWaterInput.focus();
+                            }
+                            if (typeof window.showAdminToast === 'function') {
+                                window.showAdminToast('Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.', 'error', 'Mã lỗi: ERR_15_03');
+                            } else {
+                                alert('Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.');
+                            }
+                            return false;
+                        }
+                    }
+                });
+            }
+
+            // Chặn nhập ký tự chữ vào ô chỉ số điện nước (ERR_15_04)
+            document.querySelectorAll('.new-elec-input, .new-water-input').forEach(function(input) {
+                input.addEventListener('keypress', function(e) {
+                    // Cho phép các phím điều khiển, số 0-9 và dấu chấm
+                    if (e.key && !/[\d.]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key)) {
+                        e.preventDefault();
+                        input.classList.add('border-rose-500', 'shake-error');
+                        setTimeout(() => input.classList.remove('shake-error'), 500);
+                        if (typeof window.showAdminToast === 'function') {
+                            window.showAdminToast('Chỉ số công tơ điện nước chỉ được phép nhập số.', 'warning', 'Mã lỗi: ERR_15_04');
+                        }
+                    }
+                });
+            });
+        });
 
         // =======================================================
         // 2. AI VISION OCR CAMERA QUÉT CÔNG TƠ ĐIỆN NƯỚC (GEMINI AI)
@@ -5572,7 +6195,29 @@
             const resultBox = document.getElementById('ocr-result-box');
             const btnAnalyze = document.getElementById('btn-ocr-analyze');
             const btnApply = document.getElementById('btn-ocr-apply');
+            const btnConfirm = document.getElementById('btnConfirmOCR');
             const fallbackHint = document.getElementById('ocr-fallback-hint');
+            const errBanner = document.getElementById('ocr-error-banner');
+            const errBannerText = document.getElementById('ocr-error-banner-text');
+            const uploadZone = document.getElementById('ocr-upload-zone');
+
+            if (errBanner) errBanner.classList.add('hidden');
+            if (uploadZone) uploadZone.classList.remove('border-rose-500', 'shake-error');
+
+            // ERR_16_01: Chưa chọn tệp ảnh công tơ
+            if (!meterOcrState.capturedBase64) {
+                if (uploadZone) uploadZone.classList.add('border-rose-500', 'shake-error');
+                if (errBanner && errBannerText) {
+                    errBannerText.textContent = 'Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.';
+                    errBanner.classList.remove('hidden');
+                }
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast('Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.', 'error', 'Mã lỗi: ERR_16_01');
+                } else {
+                    alert('Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.');
+                }
+                return;
+            }
 
             loadingOverlay.classList.remove('hidden');
             loadingOverlay.classList.add('flex');
@@ -5591,37 +6236,61 @@
                     },
                     body: JSON.stringify({
                         image: meterOcrState.capturedBase64,
+                        meter_image: meterOcrState.capturedBase64,
                         type: meterOcrState.type
                     })
                 });
 
                 const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const errCode = data.error_code || 'ERR_16_02';
+                    const errMsg = data.message || 'Không thể nhận diện chỉ số từ ảnh. Vui lòng chụp rõ nét hơn hoặc nhập tay!';
+                    if (errBanner && errBannerText) {
+                        errBannerText.textContent = errMsg;
+                        errBanner.classList.remove('hidden');
+                    }
+                    if (errCode === 'ERR_16_01' && uploadZone) {
+                        uploadZone.classList.add('border-rose-500', 'shake-error');
+                    }
+                    if (typeof window.showAdminToast === 'function') {
+                        window.showAdminToast(errMsg, 'error', `Mã lỗi: ${errCode}`);
+                    } else {
+                        alert(errMsg);
+                    }
+                    return;
+                }
+
                 if (data.success && data.result) {
                     const result = data.result;
                     meterOcrState.recognizedValue = result.value;
 
-                    document.getElementById('ocr-result-value').textContent = result.value.toLocaleString();
+                    const ocrResInp = document.getElementById('ocr_result');
+                    if (ocrResInp) ocrResInp.value = (result.value !== null ? result.value : 0);
+                    const ocrResVal = document.getElementById('ocr-result-value');
+                    if (ocrResVal) ocrResVal.textContent = (result.value !== null ? result.value.toLocaleString() : '0');
                     
                     const confPercent = Math.round((result.confidence || 0.95) * 100);
                     const confBadge = document.getElementById('ocr-confidence-badge');
-                    confBadge.textContent = 'Độ tin cậy: ' + confPercent + '%';
+                    if (confBadge) confBadge.textContent = 'Độ tin cậy: ' + confPercent + '%';
 
                     if (confPercent >= 85) {
-                        confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                        if (confBadge) confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
                     } else if (confPercent >= 60) {
-                        confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20';
-                        fallbackHint.classList.remove('hidden');
+                        if (confBadge) confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                        if (fallbackHint) fallbackHint.classList.remove('hidden');
                     } else {
-                        confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-400 border border-rose-500/20';
-                        fallbackHint.classList.remove('hidden');
+                        if (confBadge) confBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                        if (fallbackHint) fallbackHint.classList.remove('hidden');
                     }
 
                     if (!result.used_ai) {
-                        fallbackHint.classList.remove('hidden');
+                        if (fallbackHint) fallbackHint.classList.remove('hidden');
                     }
 
                     resultBox.classList.remove('hidden');
-                    btnApply.disabled = false;
+                    if (btnConfirm) btnConfirm.disabled = false;
+                    if (btnApply) btnApply.disabled = false;
                 } else {
                     alert('Không thể nhận diện chỉ số từ ảnh. Vui lòng chụp rõ nét hơn hoặc nhập tay!');
                 }
@@ -5641,11 +6310,15 @@
                 meterOcrState.targetInput.value = meterOcrState.recognizedValue;
                 calculateRowCost(meterOcrState.targetInput);
                 
-                // Hiệu ứng nháy xanh xác nhận ô vừa được điền
-                meterOcrState.targetInput.classList.add('ring-2', 'ring-emerald-500');
+                // Hiệu ứng nháy xanh xác nhận ô vừa được điền (ERR_16_04)
+                meterOcrState.targetInput.classList.add('border-emerald-500', 'ring-2', 'ring-emerald-500');
                 setTimeout(() => {
-                    meterOcrState.targetInput.classList.remove('ring-2', 'ring-emerald-500');
-                }, 1500);
+                    meterOcrState.targetInput.classList.remove('border-emerald-500', 'ring-2', 'ring-emerald-500');
+                }, 2000);
+
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast('Đã nhận diện thành công chỉ số công tơ và tự khớp vào phòng!', 'success', 'Mã: ERR_16_04');
+                }
 
                 closeMeterOcrModal();
             }
@@ -5997,6 +6670,263 @@
                 }, false);
             }
         });
+
+        // =======================================================
+        // 2.2 FEAT_17_BILLING: TÍNH TIỀN PHÒNG & XUẤT HÓA ĐƠN TỰ ĐỘNG (BẢNG 118 - 123)
+        // =======================================================
+        let currentInvoiceBillId = null;
+
+        function openInvoiceModal(roomId = '', roomNumber = '', residentName = '', price = '') {
+            const modal = document.getElementById('calculate-invoice-modal');
+            if (!modal) return;
+
+            // Reset trạng thái lỗi
+            document.getElementById('invoice-err-17-01')?.classList.add('hidden');
+            document.getElementById('invoice-err-17-02')?.classList.add('hidden');
+            const errDueDate = document.getElementById('due_date_error');
+            if (errDueDate) {
+                errDueDate.textContent = '';
+                errDueDate.classList.add('hidden');
+            }
+            document.getElementById('due_date')?.classList.remove('border-rose-500');
+
+            const roomSelect = document.getElementById('invoice_room_id');
+            if (roomSelect) {
+                if (roomId) {
+                    roomSelect.value = roomId;
+                } else if (!roomSelect.value && roomSelect.options.length > 1) {
+                    roomSelect.selectedIndex = 1;
+                }
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+
+            calculateModalPreview();
+        }
+
+        function closeInvoiceModal() {
+            const modal = document.getElementById('calculate-invoice-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function handleInvoiceRoomChange(roomId) {
+            calculateModalPreview();
+        }
+
+        function validateDueDateRange() {
+            const invoiceDateVal = document.getElementById('invoice_date')?.value;
+            const dueDateVal = document.getElementById('due_date')?.value;
+            const errEl = document.getElementById('due_date_error');
+            const dueDateInput = document.getElementById('due_date');
+
+            if (!dueDateVal) {
+                if (errEl) {
+                    errEl.textContent = 'Vui lòng chọn hạn chót thanh toán';
+                    errEl.classList.remove('hidden');
+                }
+                dueDateInput?.classList.add('border-rose-500');
+                return false;
+            }
+
+            if (invoiceDateVal && dueDateVal < invoiceDateVal) {
+                if (errEl) {
+                    errEl.textContent = 'Hạn thanh toán không được trước ngày lập hóa đơn';
+                    errEl.classList.remove('hidden');
+                }
+                dueDateInput?.classList.add('border-rose-500');
+                return false;
+            }
+
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.classList.add('hidden');
+            }
+            dueDateInput?.classList.remove('border-rose-500');
+            return true;
+        }
+
+        function calculateModalPreview() {
+            const roomSelect = document.getElementById('invoice_room_id');
+            if (!roomSelect || !roomSelect.value) return;
+
+            const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+            const roomPrice = parseInt(selectedOption?.getAttribute('data-price')) || 4500000;
+            const roomNumber = selectedOption?.getAttribute('data-room') || '---';
+            const residentName = selectedOption?.getAttribute('data-resident') || '';
+
+            // Kiểm tra nếu phòng chưa có cư dân (ERR_17_01)
+            const err1701 = document.getElementById('invoice-err-17-01');
+            if (!residentName) {
+                if (err1701) err1701.classList.remove('hidden');
+            } else {
+                if (err1701) err1701.classList.add('hidden');
+            }
+
+            const elecPrice = parseInt(document.getElementById('invoice_electricity_price')?.value) || 0;
+            const waterPrice = parseInt(document.getElementById('invoice_water_price')?.value) || 0;
+            const otherFees = parseInt(document.getElementById('invoice_other_fees')?.value) || 0;
+
+            // Kiểm tra ERR_17_02
+            const err1702 = document.getElementById('invoice-err-17-02');
+            if (elecPrice <= 0 || waterPrice <= 0) {
+                if (err1702) err1702.classList.remove('hidden');
+            } else {
+                if (err1702) err1702.classList.add('hidden');
+            }
+
+            // Lấy tiêu thụ từ dòng bảng chốt số nếu có
+            const tr = document.querySelector(`tr[data-room-id="${roomSelect.value}"]`);
+            let elecUsed = 0;
+            let waterUsed = 0;
+            if (tr) {
+                const oldElec = parseInt(tr.querySelector('[data-field="old-elec"]')?.textContent) || 0;
+                const newElec = parseInt(tr.querySelector('.new-elec-input')?.value) || oldElec;
+                elecUsed = Math.max(0, newElec - oldElec);
+
+                const oldWater = parseInt(tr.querySelector('[data-field="old-water"]')?.textContent) || 0;
+                const newWater = parseInt(tr.querySelector('.new-water-input')?.value) || oldWater;
+                waterUsed = Math.max(0, newWater - oldWater);
+            }
+
+            const elecCost = elecUsed * elecPrice;
+            const waterCost = waterUsed * waterPrice;
+            const serviceCost = 150000;
+            const totalAmount = roomPrice + elecCost + waterCost + serviceCost + otherFees;
+
+            // Hiển thị summary_card theo Bảng 122 STT 1
+            const cardAmount = document.getElementById('summary_card_amount');
+            if (cardAmount) cardAmount.textContent = new Intl.NumberFormat('vi-VN').format(totalAmount) + ' đ';
+
+            const summaryRoomTag = document.getElementById('summary_room_tag');
+            if (summaryRoomTag) summaryRoomTag.textContent = 'Phòng: ' + roomNumber;
+
+            const summaryResTag = document.getElementById('summary_resident_tag');
+            if (summaryResTag) summaryResTag.textContent = residentName ? 'Cư dân: ' + residentName : '(Chưa có cư dân)';
+
+            const elRoomPrice = document.getElementById('summary_room_price');
+            if (elRoomPrice) elRoomPrice.textContent = new Intl.NumberFormat('vi-VN').format(roomPrice) + ' đ';
+
+            const elUtilPrice = document.getElementById('summary_utility_price');
+            if (elUtilPrice) elUtilPrice.textContent = new Intl.NumberFormat('vi-VN').format(elecCost + waterCost) + ' đ';
+
+            const elExtraPrice = document.getElementById('summary_extra_price');
+            if (elExtraPrice) elExtraPrice.textContent = new Intl.NumberFormat('vi-VN').format(serviceCost + otherFees) + ' đ';
+
+            // Cập nhật ảnh qr_code (STT 3)
+            const qrImg = document.getElementById('qr_code');
+            const addInfo = encodeURIComponent('Thanh toan Phong ' + roomNumber);
+            if (qrImg) {
+                qrImg.src = `https://img.vietqr.io/image/VCB-1051572297-compact.png?amount=${totalAmount}&addInfo=${addInfo}`;
+            }
+        }
+
+        async function submitPublishInvoice() {
+            if (!validateDueDateRange()) return;
+
+            const roomId = document.getElementById('invoice_room_id')?.value;
+            const invoiceDate = document.getElementById('invoice_date')?.value;
+            const dueDate = document.getElementById('due_date')?.value;
+            const elecPrice = document.getElementById('invoice_electricity_price')?.value;
+            const waterPrice = document.getElementById('invoice_water_price')?.value;
+            const otherFees = document.getElementById('invoice_other_fees')?.value;
+
+            const btnPublish = document.getElementById('btnPublish');
+            if (btnPublish) {
+                btnPublish.disabled = true;
+                btnPublish.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tính toán và phát hành...';
+            }
+
+            try {
+                const response = await fetch("{{ route('smartroom.admin.utility.calculate') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        room_id: roomId,
+                        invoice_date: invoiceDate,
+                        due_date: dueDate,
+                        electricity_price: elecPrice,
+                        water_price: waterPrice,
+                        other_fees: otherFees
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (data.error_code === 'ERR_17_01') {
+                        const err1701 = document.getElementById('invoice-err-17-01');
+                        if (err1701) {
+                            err1701.classList.remove('hidden');
+                            document.getElementById('invoice-err-17-01-msg').textContent = data.message;
+                        }
+                    } else if (data.error_code === 'ERR_17_02') {
+                        const err1702 = document.getElementById('invoice-err-17-02');
+                        if (err1702) {
+                            err1702.classList.remove('hidden');
+                            document.getElementById('invoice-err-17-02-msg').textContent = data.message;
+                        }
+                    } else if (data.error_code === 'ERR_17_DATE_REQUIRED' || data.error_code === 'ERR_17_DATE_RANGE') {
+                        const errEl = document.getElementById('due_date_error');
+                        if (errEl) {
+                            errEl.textContent = data.message;
+                            errEl.classList.remove('hidden');
+                        }
+                        document.getElementById('due_date')?.classList.add('border-rose-500');
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi tính hóa đơn!');
+                    }
+                    return;
+                }
+
+                // ERR_17_03: Thành công
+                currentInvoiceBillId = data.bill?.id || data.data?.bill_id;
+                const statusBadge = document.getElementById('invoice-status-badge');
+                if (statusBadge) {
+                    statusBadge.textContent = 'Chờ thanh toán';
+                    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                }
+
+                const qrImg = document.getElementById('qr_code');
+                if (qrImg && data.data?.vietqr_url) {
+                    qrImg.src = data.data.vietqr_url;
+                }
+
+                // Cập nhật trạng thái dòng phòng trên bảng chốt số sang overdue/chờ thanh toán
+                const tr = document.querySelector(`tr[data-room-id="${roomId}"]`);
+                if (tr) {
+                    const statusDot = tr.querySelector('.rounded-full');
+                    if (statusDot) {
+                        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+                    }
+                }
+
+                alert(`🎉 ${data.message}\nTổng tiền: ${data.data?.formatted_total}\nTrạng thái: Chờ thanh toán`);
+            } catch (err) {
+                console.error('Invoice Calculation Error:', err);
+                alert('Có lỗi mạng hoặc máy chủ. Vui lòng thử lại!');
+            } finally {
+                if (btnPublish) {
+                    btnPublish.disabled = false;
+                    btnPublish.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Phát hành hóa đơn';
+                }
+            }
+        }
+
+        function downloadInvoicePdfCurrent() {
+            const roomId = document.getElementById('invoice_room_id')?.value;
+            const targetId = currentInvoiceBillId || roomId || 1;
+            window.open(`/smartroom/admin/utility/${targetId}/invoice-pdf`, '_blank');
+        }
 
         // =======================================================
         // 3. IOT SMART METERING & REALTIME MONITORING (LORAWAN / ESP32 / MODBUS)
@@ -7886,58 +8816,341 @@
             });
         }
 
-        function askAiAssistant(btn) {
-            const input = document.getElementById('ai-assistant-question');
-            const target = document.getElementById('ai-assistant-answer');
-            const question = input.value.trim();
+        // ==========================================
+        // FEAT_14_AI_ASSISTANT_HUB JAVASCRIPT LOGIC
+        // ==========================================
+        let currentAiHubMode = 'landlord_advisor';
+        let aiHubCountdownTimer = null;
+        let lastAiHubGeneratedContent = '';
 
-            if (question.length < 3) {
-                target.innerHTML = '<span class="text-amber-400">Vui lòng nhập câu hỏi rõ hơn.</span>';
+        function switchAiHubMode(mode, btn) {
+            currentAiHubMode = mode;
+            document.querySelectorAll('.ai-hub-tab-btn').forEach(b => {
+                b.className = 'ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2';
+            });
+            if (btn) {
+                btn.className = 'ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-bold bg-indigo-600 text-white transition-all flex items-center justify-center gap-2';
+            }
+
+            const promptEl = document.getElementById('ai-hub-prompt');
+            const toneSelect = document.getElementById('ai-hub-tone');
+            if (promptEl) {
+                clearAiHubPromptError();
+                if (mode === 'landlord_advisor') {
+                    promptEl.placeholder = 'Nhập yêu cầu viết bài marketing SEO hoặc câu hỏi kinh doanh (ví dụ: "Soạn bài đăng phòng 101 chuẩn SEO")...';
+                    if (toneSelect) toneSelect.value = 'professional';
+                } else if (mode === 'landlord_qa') {
+                    promptEl.placeholder = 'Đặt bất kỳ câu hỏi nào về nghiệp vụ quản lý phòng trọ, pháp lý, tính toán điện nước, xử lý hợp đồng... (ví dụ: "Quy trình đăng ký tạm trú cho khách thuê?")...';
+                    if (toneSelect) toneSelect.value = 'professional';
+                } else if (mode === 'room_finder') {
+                    promptEl.placeholder = 'Nhập nhu cầu tìm phòng (ví dụ: "Tìm phòng khép kín dưới 4 triệu gần đại học có máy giặt")...';
+                    if (toneSelect) toneSelect.value = 'friendly';
+                } else if (mode === 'tenant_incident') {
+                    promptEl.placeholder = 'Mô tả sự cố kỹ thuật phòng bạn (ví dụ: "Chập điện bốc khói khét ở ổ cắm gần tủ lạnh")...';
+                    if (toneSelect) toneSelect.value = 'urgent';
+                }
+            }
+        }
+
+        function clearAiHubPromptError() {
+            const promptEl = document.getElementById('ai-hub-prompt');
+            const errBox = document.getElementById('ai-hub-prompt-error');
+            const errText = document.getElementById('ai-hub-prompt-error-text');
+            if (promptEl) {
+                promptEl.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/40', 'shake-error');
+            }
+            if (errBox) errBox.classList.add('hidden');
+            if (errText) errText.textContent = '';
+        }
+
+        function showAiHubPromptError(message, shake = false) {
+            const promptEl = document.getElementById('ai-hub-prompt');
+            const errBox = document.getElementById('ai-hub-prompt-error');
+            const errText = document.getElementById('ai-hub-prompt-error-text');
+            if (promptEl) {
+                promptEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40');
+                if (shake) {
+                    promptEl.classList.remove('shake-error');
+                    void promptEl.offsetWidth;
+                    promptEl.classList.add('shake-error');
+                }
+                promptEl.focus();
+            }
+            if (errBox && errText) {
+                errText.textContent = message;
+                errBox.classList.remove('hidden');
+            }
+        }
+
+        function showAiHubToast(title, subtitle, type = 'success') {
+            let container = document.getElementById('realtime-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'realtime-toast-container';
+                container.className = 'fixed top-20 right-8 z-50 flex flex-col gap-3 pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const isWarning = type === 'warning';
+            const iconBg = isWarning ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400';
+            const icon = isWarning ? 'fa-triangle-exclamation' : 'fa-circle-check';
+            const borderColor = isWarning ? 'border-amber-500/40' : 'border-emerald-500/40';
+            const tagLabel = isWarning ? 'Cảnh báo Trợ lý AI (ERR_14_03)' : 'Thông báo AI (ERR_14_05)';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 border ${borderColor} text-slate-100 shadow-2xl backdrop-blur-md text-xs font-semibold animate-slide-in transition-all duration-300`;
+            toast.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-sm shrink-0">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div class="min-w-[180px]">
+                    <div class="text-[10px] ${isWarning ? 'text-amber-400' : 'text-emerald-400'} font-bold uppercase tracking-wider">${tagLabel}</div>
+                    <div class="text-slate-100 font-bold mt-0.5">${title}</div>
+                    ${subtitle ? `<div class="text-[11px] text-slate-400 mt-0.5 leading-snug">${subtitle}</div>` : ''}
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-8');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        function startAiHubCountdown(seconds = 30) {
+            const btn = document.getElementById('btn-send-ai-hub');
+            const badge = document.getElementById('ai-hub-countdown-badge');
+            const secSpan = document.getElementById('ai-hub-countdown-seconds');
+
+            if (aiHubCountdownTimer) clearInterval(aiHubCountdownTimer);
+            if (btn) btn.disabled = true;
+            if (badge) badge.classList.remove('hidden');
+
+            let remaining = seconds;
+            if (secSpan) secSpan.textContent = remaining;
+
+            aiHubCountdownTimer = setInterval(() => {
+                remaining--;
+                if (secSpan) secSpan.textContent = remaining;
+                if (remaining <= 0) {
+                    clearInterval(aiHubCountdownTimer);
+                    if (btn) btn.disabled = false;
+                    if (badge) badge.classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        async function submitAiAssistantHub() {
+            clearAiHubPromptError();
+            const promptInput = document.getElementById('ai-hub-prompt');
+            const toneSelect = document.getElementById('ai-hub-tone');
+            const sendBtn = document.getElementById('btn-send-ai-hub');
+            const responseBox = document.getElementById('ai-hub-response-box');
+            const statusBadge = document.getElementById('ai-hub-status-badge');
+            const actionsBar = document.getElementById('ai-hub-actions-bar');
+            const btnCopy = document.getElementById('btn-copy-ai-post');
+            const btnBooking = document.getElementById('btn-booking-viewing');
+            const btnEmergency = document.getElementById('btn-view-emergency-ticket');
+
+            const prompt = promptInput ? promptInput.value.trim() : '';
+
+            // 1. Kiểm tra để trống (ERR_14_01)
+            if (!prompt) {
+                showAiHubPromptError('Vui lòng nhập câu hỏi hoặc yêu cầu cần trợ lý AI hỗ trợ.', true);
                 return;
             }
 
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang hỏi...';
-            target.innerHTML = '<span class="text-slate-500">Trợ lý đang đọc dữ liệu nhà trọ...</span>';
+            // 2. Kiểm tra dưới 5 ký tự (ERR_14_02)
+            if (prompt.length < 5) {
+                showAiHubPromptError('Nội dung yêu cầu quá ngắn (tối thiểu 5 ký tự) để AI có đủ ngữ cảnh xử lý.', false);
+                return;
+            }
 
-            fetch("{{ route('smartroom.admin.ai.assistant') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken()
-                },
-                body: JSON.stringify({ question })
-            })
-            .then(res => res.json())
-            .then(data => {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
+            const originalBtnHtml = sendBtn ? sendBtn.innerHTML : '';
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang xử lý...';
+            }
 
-                if (!data.success) {
-                    target.innerHTML = '<span class="text-rose-400">Không thể hỏi trợ lý AI.</span>';
+            if (responseBox) {
+                responseBox.innerHTML = '<div class="flex items-center gap-2 text-purple-400 py-3"><i class="fa-solid fa-circle-notch animate-spin text-sm"></i> <span>Trợ lý AI đang tư duy và phân tích dữ liệu...</span></div>';
+            }
+            if (actionsBar) actionsBar.classList.add('hidden');
+
+            try {
+                const res = await fetch("{{ route('smartroom.admin.ai.assistant_hub') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken()
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        agent_mode: currentAiHubMode,
+                        tone: toneSelect ? toneSelect.value : 'professional',
+                    })
+                });
+
+                // 4. Xử lý Vượt quá tần suất truy vấn (ERR_14_04: HTTP 429)
+                if (res.status === 429) {
+                    const errData = await res.json().catch(() => ({}));
+                    showAiHubPromptError(errData.message || 'Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!', false);
+                    startAiHubCountdown(errData.retry_after || 30);
+                    if (responseBox) {
+                        responseBox.innerHTML = `<span class="text-amber-400 font-semibold">${errData.message || 'Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!'}</span>`;
+                    }
                     return;
                 }
 
-                const answer = data.answer;
-                const badge = answer.used_ai
-                    ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">AI</span>'
-                    : '<span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Fallback</span>';
+                // 1 & 2: Xử lý validation từ backend (422)
+                if (res.status === 422) {
+                    const errData = await res.json().catch(() => ({}));
+                    showAiHubPromptError(errData.message || 'Dữ liệu yêu cầu không hợp lệ.', errData.error_code === 'ERR_14_01');
+                    if (responseBox) {
+                        responseBox.innerHTML = `<span class="text-rose-400">${errData.message || 'Dữ liệu không hợp lệ.'}</span>`;
+                    }
+                    return;
+                }
 
-                target.innerHTML = `
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="whitespace-pre-line">${escapeHtml(answer.answer || '')}</div>
-                        ${badge}
-                    </div>
-                `;
-            })
-            .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-                target.innerHTML = '<span class="text-rose-400">Không thể kết nối trợ lý AI.</span>';
-                console.error(err);
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    if (responseBox) responseBox.innerHTML = `<span class="text-rose-400">${data.message || 'Không thể nhận phản hồi từ AI.'}</span>`;
+                    return;
+                }
+
+                lastAiHubGeneratedContent = data.response || '';
+
+                if (responseBox) {
+                    responseBox.textContent = data.response || '';
+                }
+
+                if (statusBadge) {
+                    statusBadge.classList.remove('hidden');
+                    if (data.is_fallback) {
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-500/10 text-amber-400 border-amber-500/20';
+                        statusBadge.textContent = 'Kho tri thức dự phòng (Fallback 6s)';
+                        showAiHubToast('Kích hoạt kho tri thức dự phòng', data.warning_message || 'Kết nối máy chủ AI quá thời gian chờ (6s), tự động kích hoạt câu trả lời từ kho tri thức dự phòng.', 'warning');
+                    } else {
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                        statusBadge.textContent = 'Google Gemini AI';
+                    }
+                }
+
+                // 6. Xử lý Sự cố khẩn cấp (ERR_14_06)
+                if (data.is_emergency) {
+                    openAiEmergencyModal(data.message || 'Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!');
+                    if (btnEmergency) btnEmergency.classList.remove('hidden');
+                } else if (btnEmergency) {
+                    btnEmergency.classList.add('hidden');
+                }
+
+                if (actionsBar) actionsBar.classList.remove('hidden');
+                if (btnCopy) {
+                    if (currentAiHubMode === 'landlord_advisor' || currentAiHubMode === 'landlord_qa' || data.quick_action === 'copy_content') {
+                        btnCopy.classList.remove('hidden');
+                    } else {
+                        btnCopy.classList.add('hidden');
+                    }
+                }
+                if (btnBooking) {
+                    if (currentAiHubMode === 'room_finder' || data.quick_action === 'book_viewing') {
+                        btnBooking.classList.remove('hidden');
+                    } else {
+                        btnBooking.classList.add('hidden');
+                    }
+                }
+
+            } catch (err) {
+                console.error('Lỗi gọi AI Assistant Hub:', err);
+                if (responseBox) responseBox.innerHTML = '<span class="text-rose-400">Lỗi kết nối đến máy chủ AI. Vui lòng thử lại sau giây lát!</span>';
+            } finally {
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+
+        // ERR_14_05: Sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm
+        function copyAiHubContent() {
+            if (!lastAiHubGeneratedContent) {
+                const box = document.getElementById('ai-hub-response-box');
+                lastAiHubGeneratedContent = box ? box.textContent : '';
+            }
+
+            if (!lastAiHubGeneratedContent) return;
+
+            navigator.clipboard.writeText(lastAiHubGeneratedContent).then(() => {
+                showAiHubToast(
+                    'Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!',
+                    '',
+                    'success'
+                );
+            }).catch(() => {
+                const tempArea = document.createElement('textarea');
+                tempArea.value = lastAiHubGeneratedContent;
+                document.body.appendChild(tempArea);
+                tempArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempArea);
+
+                showAiHubToast(
+                    'Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!',
+                    '',
+                    'success'
+                );
             });
         }
+
+        function openAiEmergencyModal(message) {
+            const modal = document.getElementById('modal-ai-emergency-ticket');
+            const msgEl = document.getElementById('modal-ai-emergency-message');
+            if (modal) {
+                if (msgEl && message) msgEl.textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeAiEmergencyModal() {
+            const modal = document.getElementById('modal-ai-emergency-ticket');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openBookingFromAi() {
+            window.location.href = "{{ route('smartroom.admin.contact_requests') }}";
+        }
+
+        function openEmergencyTicketModal() {
+            window.location.href = "{{ route('smartroom.admin.tickets.index') }}";
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const promptInput = document.getElementById('ai-hub-prompt');
+            const charCount = document.getElementById('ai-hub-char-count');
+
+            if (promptInput) {
+                promptInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        submitAiAssistantHub();
+                    }
+                });
+
+                promptInput.addEventListener('input', function () {
+                    clearAiHubPromptError();
+                    if (charCount) {
+                        charCount.textContent = `${this.value.length}/2000 ký tự`;
+                    }
+                });
+            }
+        });
 
         function generateContractTermsWithAi(btn) {
             const roomId = document.getElementById('contract-room-id')?.value;
@@ -8841,7 +10054,61 @@
             }
         }
 
+        let matrixEventSource = null;
+        function showSseWarning() {
+            const badge = document.getElementById('sse-reconnect-badge');
+            if (badge) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            }
+        }
+
+        function hideSseWarning() {
+            const badge = document.getElementById('sse-reconnect-badge');
+            if (badge) {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        function connectMatrixSSE() {
+            if (typeof EventSource === 'undefined') return;
+            try {
+                if (matrixEventSource) {
+                    matrixEventSource.close();
+                }
+                matrixEventSource = new EventSource("{{ route('admin.rooms.matrix.stream') }}");
+                matrixEventSource.onopen = function () {
+                    hideSseWarning();
+                };
+                matrixEventSource.addEventListener('room-updated', function (e) {
+                    hideSseWarning();
+                    try {
+                        const roomData = JSON.parse(e.data);
+                        if (roomData && roomData.id) {
+                            applyRoomCardUpdate(roomData);
+                        }
+                    } catch (err) {
+                        console.error('SSE room-updated parse error:', err);
+                    }
+                });
+                matrixEventSource.onerror = function () {
+                    showSseWarning();
+                };
+            } catch (err) {
+                showSseWarning();
+            }
+        }
+
         function initRoomMatrixRealtime() {
+            // 0. Khởi tạo luồng SSE thời gian thực (FEAT_13)
+            connectMatrixSSE();
+            window.addEventListener('offline', showSseWarning);
+            window.addEventListener('online', () => {
+                connectMatrixSSE();
+                hideSseWarning();
+            });
+
             // 1. Kết nối Laravel Echo + Reverb (WebSocket)
             if (window.Echo) {
                 try {
@@ -8869,14 +10136,17 @@
                 try {
                     const res = await fetch("{{ route('admin.rooms.matrix.poll') }}?since=" + lastEventTimestamp);
                     if (res.ok) {
+                        hideSseWarning();
                         const json = await res.json();
                         if (json.has_update && json.event) {
                             lastEventTimestamp = json.event.updated_at;
                             applyRoomCardUpdate(json.event);
                         }
+                    } else {
+                        showSseWarning();
                     }
                 } catch (e) {
-                    // im lặng
+                    showSseWarning();
                 }
             }, 25000);
         }

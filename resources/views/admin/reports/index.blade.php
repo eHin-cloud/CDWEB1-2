@@ -53,6 +53,26 @@
         </header>
 
         <main class="p-8 flex-grow overflow-y-auto space-y-6">
+            @if(session('success'))
+                <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-start gap-3">
+                    <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                    <div>
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
                 <div class="panel glass-card rounded-2xl p-5">
                     <div class="text-xs font-bold text-slate-500 uppercase">Tổng thiết bị</div>
@@ -91,6 +111,11 @@
                                 <i class="fa-solid fa-calculator text-emerald-400"></i> Sổ Quỹ Thu Chi & Báo Cáo Lợi Nhuận
                             </h2>
                             <p class="text-xs text-slate-500 mt-1">Tổng quan về dòng tiền thực tế thu được từ tiền thuê phòng và các khoản chi phí vận hành.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('admin.reports.export_excel', ['billing_month' => $billingMonth]) }}" id="btnExportExcel" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all">
+                                <i class="fa-solid fa-file-excel"></i> Xuất Excel
+                            </a>
                         </div>
                     </div>
 
@@ -131,7 +156,7 @@
                                 @forelse($transactions as $tx)
                                     <tr class="hover:bg-slate-900/40 transition-all">
                                         <td class="px-4 py-3 text-xs text-slate-400">
-                                            {{ $tx->transaction_date->format('d/m/Y') }}
+                                            {{ $tx->transaction_date ? $tx->transaction_date->format('d/m/Y') : '' }}
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
@@ -155,49 +180,71 @@
                     </div>
                 </div>
 
-                <!-- Add Transaction Form -->
+                <!-- Add Transaction Form (Bảng 134) -->
                 <div class="panel glass-card rounded-2xl p-6 xl:col-span-1 space-y-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                            <i class="fa-solid fa-plus-circle text-indigo-400"></i> Ghi Nhận Thu Chi Thủ Công
+                            <i class="fa-solid fa-plus-circle text-indigo-400"></i> Ghi Nhận Thu Chi Sổ Quỹ
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Ghi nhận các chi phí phát sinh ngoài hóa đơn (tiền sửa đồ, mua sắm đồ mới, v.v.).</p>
+                        <p class="text-xs text-slate-500 mt-1">Ghi nhận các chi phí phát sinh ngoài hóa đơn (tiền sửa đồ, mua sắm đồ mới, thu phí dịch vụ...).</p>
                     </div>
 
                     <form action="{{ route('admin.reports.transaction.store') }}" method="POST" class="space-y-4">
                         @csrf
                         <div>
-                            <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Loại giao dịch</label>
-                            <select name="type" required class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                                <option value="income">Khoản thu (Income)</option>
-                                <option value="expense">Khoản chi (Expense)</option>
+                            <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-2">Loại giao dịch (Thu / Chi)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-emerald-500/50 cursor-pointer">
+                                    <input type="radio" id="rdoType" name="type" value="income" checked class="text-emerald-500 focus:ring-emerald-500">
+                                    <span class="text-xs font-semibold text-emerald-400">Khoản thu (+)</span>
+                                </label>
+                                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-rose-500/50 cursor-pointer">
+                                    <input type="radio" id="rdoTypeExpense" name="type" value="expense" class="text-rose-500 focus:ring-rose-500">
+                                    <span class="text-xs font-semibold text-rose-400">Khoản chi (-)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="amount" class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Số tiền (VNĐ) <span class="text-rose-400">*</span></label>
+                            <input type="number" id="amount" name="amount" value="{{ old('amount') }}" placeholder="Nhập số tiền giao dịch..." class="w-full bg-slate-950/80 border @error('amount') border-rose-500 ring-1 ring-rose-500 @else border-slate-800 @enderror rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            @error('amount')
+                                <p class="text-[11px] text-rose-400 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="category" class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Danh mục giao dịch <span class="text-rose-400">*</span></label>
+                            <select id="category" name="category" class="w-full bg-slate-950/80 border @error('category') border-rose-500 ring-1 ring-rose-500 @else border-slate-800 @enderror rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="">-- Chọn danh mục --</option>
+                                <option value="Tiền phòng" {{ old('category') === 'Tiền phòng' ? 'selected' : '' }}>Tiền phòng</option>
+                                <option value="Tiền điện" {{ old('category') === 'Tiền điện' ? 'selected' : '' }}>Tiền điện</option>
+                                <option value="Tiền nước" {{ old('category') === 'Tiền nước' ? 'selected' : '' }}>Tiền nước</option>
+                                <option value="Sửa chữa" {{ old('category') === 'Sửa chữa' ? 'selected' : '' }}>Sửa chữa</option>
+                                <option value="Vệ sinh" {{ old('category') === 'Vệ sinh' ? 'selected' : '' }}>Vệ sinh</option>
+                                <option value="Mua sắm đồ" {{ old('category') === 'Mua sắm đồ' ? 'selected' : '' }}>Mua sắm đồ</option>
+                                <option value="Khác" {{ old('category') === 'Khác' ? 'selected' : '' }}>Khác</option>
                             </select>
+                            @error('category')
+                                <p class="text-[11px] text-rose-400 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
+
                         <div>
-                            <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Số tiền (VNĐ)</label>
-                            <input type="number" name="amount" required min="1000" placeholder="e.g. 500000" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <label for="date" class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Ngày ghi nhận <span class="text-rose-400">*</span></label>
+                            <input type="date" id="date" name="date" value="{{ old('date', date('Y-m-d')) }}" class="w-full bg-slate-950/80 border @error('date') border-rose-500 ring-1 ring-rose-500 @else border-slate-800 @enderror rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                            @error('date')
+                                <p class="text-[11px] text-rose-400 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
+
                         <div>
-                            <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Danh mục</label>
-                            <input type="text" name="category" required placeholder="e.g. Sửa thiết bị, Nước nôi" list="tx-categories" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                            <datalist id="tx-categories">
-                                <option value="Tiền phòng">
-                                <option value="Sửa thiết bị">
-                                <option value="Điện nước">
-                                <option value="Mua sắm đồ">
-                                <option value="Khác">
-                            </datalist>
+                            <label for="note" class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Ghi chú / Diễn giải</label>
+                            <textarea id="note" name="note" rows="2" placeholder="Nhập ghi chú thêm nếu có..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">{{ old('note') }}</textarea>
                         </div>
-                        <div>
-                            <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Ngày giao dịch</label>
-                            <input type="date" name="transaction_date" required value="{{ date('Y-m-d') }}" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Mô tả chi tiết</label>
-                            <textarea name="description" rows="2" placeholder="Nhập ghi chú thêm..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
-                        </div>
-                        <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-xs text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-check"></i> Lưu Giao Dịch
+
+                        <button type="submit" id="btnSaveLedger" class="w-full py-3 rounded-xl bg-blue-700 hover:bg-blue-600 font-bold text-xs text-white shadow-lg shadow-blue-700/30 hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu Giao Dịch
                         </button>
                     </form>
                 </div>

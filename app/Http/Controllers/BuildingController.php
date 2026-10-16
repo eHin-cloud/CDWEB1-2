@@ -101,9 +101,11 @@ class BuildingController extends Controller
             'amenities' => 'nullable|array',
             'amenities.*' => 'string|max:100',
         ], [
-            'name.required' => 'Vui lòng nhập tên cơ sở lưu trú.',
-            'address.required' => 'Vui lòng nhập địa chỉ cơ sở.',
-            'total_floors.min' => 'Số tầng tối thiểu là 1.',
+            'name.required' => 'Tên cơ sở lưu trú không được để trống.',
+            'address.required' => 'Địa chỉ cơ sở lưu trú là bắt buộc.',
+            'total_floors.required' => 'Vui lòng nhập số tầng của tòa nhà.',
+            'total_floors.min' => 'Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.',
+            'total_floors.integer' => 'Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.',
             'image_file.image' => 'File tải lên phải là hình ảnh hợp lệ.',
             'image_file.max' => 'Ảnh không được vượt quá 5MB.',
         ]);
@@ -138,7 +140,7 @@ class BuildingController extends Controller
         );
 
         return redirect()->route('admin.buildings.index')
-            ->with('success', "Đã thêm cơ sở lưu trú \"{$building->name}\" thành công.");
+            ->with('success', 'Lưu thông tin cơ sở lưu trú thành công!');
     }
 
     /**
@@ -172,9 +174,11 @@ class BuildingController extends Controller
             'amenities' => 'nullable|array',
             'amenities.*' => 'string|max:100',
         ], [
-            'name.required' => 'Vui lòng nhập tên cơ sở lưu trú.',
-            'address.required' => 'Vui lòng nhập địa chỉ cơ sở.',
-            'total_floors.min' => 'Số tầng tối thiểu là 1.',
+            'name.required' => 'Tên cơ sở lưu trú không được để trống.',
+            'address.required' => 'Địa chỉ cơ sở lưu trú là bắt buộc.',
+            'total_floors.required' => 'Vui lòng nhập số tầng của tòa nhà.',
+            'total_floors.min' => 'Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.',
+            'total_floors.integer' => 'Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.',
         ]);
 
         $before = $building->only(['name', 'address', 'phone', 'total_floors', 'status']);
@@ -212,7 +216,7 @@ class BuildingController extends Controller
         );
 
         return redirect()->route('admin.buildings.index')
-            ->with('success', "Cập nhật cơ sở lưu trú \"{$building->name}\" thành công.");
+            ->with('success', 'Lưu thông tin cơ sở lưu trú thành công!');
     }
 
     /**
@@ -227,7 +231,7 @@ class BuildingController extends Controller
         $roomsCount = $building->rooms()->count();
         if ($roomsCount > 0) {
             return redirect()->route('admin.buildings.index')
-                ->with('error', "Không thể xóa cơ sở \"{$building->name}\" vì vẫn còn {$roomsCount} phòng trọ trực thuộc. Vui lòng chuyển hoặc xóa các phòng trước.");
+                ->with('error', 'Không thể xóa cơ sở lưu trú đang có phòng có cư dân thuê hoạt động.');
         }
 
         $before = $building->only(['name', 'address', 'phone']);

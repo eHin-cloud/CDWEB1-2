@@ -296,13 +296,15 @@
                                         <a href="{{ route('admin.buildings.edit', $b->id) }}" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition" title="Chỉnh sửa thông tin">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </a>
-                                        <form action="{{ route('admin.buildings.destroy', $b->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa cơ sở này không? Lưu ý: Cơ sở chỉ có thể xóa khi không còn phòng trọ trực thuộc.');" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold border border-rose-500/20 transition" title="Xóa cơ sở">
+                                        @if(($b->rooms_count ?? 0) > 0 || ($b->occupied_rooms_count ?? 0) > 0)
+                                            <button type="button" onclick="openBlockedModal('{{ addslashes($b->name) }}', {{ $b->rooms_count ?? 0 }}, {{ $b->occupied_rooms_count ?? 0 }})" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold border border-rose-500/20 transition" title="Xóa cơ sở">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
-                                        </form>
+                                        @else
+                                            <button type="button" onclick="openConfirmDeleteModal('{{ route('admin.buildings.destroy', $b->id) }}', '{{ addslashes($b->name) }}')" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold border border-rose-500/20 transition" title="Xóa cơ sở">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -318,5 +320,127 @@
 
         </main>
     </div>
+
+    <!-- ERR_11_06: Toast thông báo màu xanh lá nạp lại danh mục -->
+    @if(session('success'))
+        <div id="toast-success" class="fixed top-6 right-6 z-50 flex items-center gap-3.5 px-5 py-4 bg-[#0d1627]/95 border border-emerald-500/40 text-emerald-200 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-300">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <i class="fa-solid fa-circle-check text-base"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">ERR_11_06 • Thành công</div>
+                <div class="text-xs text-slate-100 font-semibold">{{ session('success') }}</div>
+            </div>
+            <button type="button" onclick="dismissToast()" class="ml-3 text-slate-400 hover:text-white transition" title="Đóng">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+    @endif
+
+    <!-- ERR_11_05: Modal cảnh báo lỗi chặn xóa dữ liệu -->
+    <div id="blockedDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm hidden" role="dialog" aria-modal="true">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-rose-500/40 shadow-2xl shadow-rose-950/40 relative">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-4 mx-auto">
+                <i class="fa-solid fa-ban text-2xl"></i>
+            </div>
+            <div class="text-center">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider mb-2">Mã lỗi: ERR_11_05</span>
+                <h3 class="text-base font-bold text-white mb-2">Chặn Thao Tác Xóa Cơ Sở</h3>
+                <p class="text-xs text-rose-300 font-medium mb-3">
+                    Không thể xóa cơ sở lưu trú đang có phòng có cư dân thuê hoạt động.
+                </p>
+                <div id="blockedModalDetail" class="text-xs text-slate-300 leading-relaxed bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 mb-5 text-left space-y-1">
+                    <p>• Cơ sở: <strong id="blockedBuildingName" class="text-white"></strong></p>
+                    <p>• Hiện còn <span id="blockedTotalRooms" class="font-bold text-amber-400">0</span> phòng (trong đó có <span id="blockedOccupiedRooms" class="font-bold text-emerald-400">0</span> phòng đang cho thuê).</p>
+                    <p class="text-[11px] text-slate-400 mt-2">Vui lòng điều chuyển cư dân và xóa hết toàn bộ các phòng trực thuộc trước khi xóa cơ sở này.</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center">
+                <button type="button" onclick="closeBlockedModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
+                    Đã hiểu và Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xác nhận xóa đối với cơ sở trống -->
+    <div id="confirmDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm hidden" role="dialog" aria-modal="true">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-slate-800 shadow-2xl relative">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 mx-auto">
+                <i class="fa-solid fa-trash-can text-xl"></i>
+            </div>
+            <div class="text-center mb-5">
+                <h3 class="text-base font-bold text-white mb-2">Xác nhận xóa cơ sở lưu trú</h3>
+                <p class="text-xs text-slate-400">
+                    Bạn có chắc chắn muốn xóa cơ sở <strong id="confirmDeleteBuildingName" class="text-slate-200"></strong> không? Cơ sở này hiện không còn phòng trực thuộc.
+                </p>
+            </div>
+            <form id="confirmDeleteForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeConfirmDeleteModal()" class="flex-1 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition">
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-600/25 transition">
+                        Xác nhận xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openBlockedModal(name, totalRooms, occupiedRooms) {
+            const nameEl = document.getElementById('blockedBuildingName');
+            const totalEl = document.getElementById('blockedTotalRooms');
+            const occupiedEl = document.getElementById('blockedOccupiedRooms');
+            if (nameEl) nameEl.textContent = name;
+            if (totalEl) totalEl.textContent = totalRooms;
+            if (occupiedEl) occupiedEl.textContent = occupiedRooms;
+
+            const modal = document.getElementById('blockedDeleteModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeBlockedModal() {
+            const modal = document.getElementById('blockedDeleteModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openConfirmDeleteModal(actionUrl, name) {
+            const form = document.getElementById('confirmDeleteForm');
+            const nameEl = document.getElementById('confirmDeleteBuildingName');
+            if (form) form.action = actionUrl;
+            if (nameEl) nameEl.textContent = name;
+
+            const modal = document.getElementById('confirmDeleteModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeConfirmDeleteModal() {
+            const modal = document.getElementById('confirmDeleteModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function dismissToast() {
+            const toast = document.getElementById('toast-success');
+            if (toast) {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
+        // Tự động tắt Toast sau 4 giây
+        document.addEventListener('DOMContentLoaded', function () {
+            const toast = document.getElementById('toast-success');
+            if (toast) {
+                setTimeout(dismissToast, 4000);
+            }
+            @if(session('error'))
+                openBlockedModal('Cơ sở đang thao tác', 1, 1);
+            @endif
+        });
+    </script>
 </body>
 </html>

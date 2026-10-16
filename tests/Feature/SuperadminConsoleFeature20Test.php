@@ -379,5 +379,41 @@ class SuperadminConsoleFeature20Test extends TestCase
         $this->superadmin->refresh();
         $this->assertEquals('active', $this->superadmin->status);
     }
+
+    /**
+     * Kiểm tra hiển thị đầy đủ các thành phần UI theo Bảng 140 và Bảng 138
+     */
+    public function test_ui_elements_render_correctly_table_140(): void
+    {
+        $response = $this->actingAs($this->superadmin)
+            ->get('/admin/dashboard');
+
+        $response->assertStatus(200);
+
+        // STT 1 (Bảng 140): kpi_cards (Metric Cards)
+        $response->assertSee('id="kpi_cards"', false);
+
+        // STT 2 (Bảng 140): tblUsers (User Table)
+        $response->assertSee('id="tblUsers"', false);
+
+        // STT 3 (Bảng 140): menuActions (Action Menu)
+        $response->assertSee('menuActions', false);
+
+        // STT 4 (Bảng 140): log_viewer (Audit Log)
+        $response->assertSee('id="log_viewer"', false);
+
+        // Bộ lọc tìm kiếm theo Bảng 138
+        $response->assertSee('id="search_user"', false);
+        $response->assertSee('id="role_filter"', false);
+        $response->assertSee('id="status_filter"', false);
+
+        // Modal phân quyền RBAC
+        $response->assertSee('id="modal-role"', false);
+        $response->assertSee('id="select-role-slug"', false);
+        $response->assertSee('id="btnUpdateRole"', false);
+
+        // Modal cảnh báo đỏ chặn tự khóa tài khoản (ERR_20_03)
+        $response->assertSee('id="modal-alert-self-lock"', false);
+    }
 }
 

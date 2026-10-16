@@ -480,29 +480,109 @@ class AdminDashboardController extends Controller
 
     public function aiOcrMeter(Request $request, AiManagementService $aiManagementService)
     {
-        $validated = $request->validate([
-            'image' => 'required|string', // chuỗi base64 của hình ảnh công tơ
-            'type' => 'required|string|in:electricity,water',
-        ]);
+        // 1. ERR_16_01: Chưa chọn tệp ảnh công tơ
+        $hasFile = $request->hasFile('meter_image') || $request->hasFile('image');
+        $rawImage = $request->input('meter_image') ?: $request->input('image');
 
-        $result = $aiManagementService->analyzeMeterImage($validated['image'], $validated['type']);
+        if (!$hasFile && empty($rawImage)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_16_01',
+                'message' => 'Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.',
+            ], 422);
+        }
 
+        $base64Image = '';
+        if ($hasFile) {
+            $file = $request->file('meter_image') ?: $request->file('image');
+            if (!$file->isValid() || $file->getSize() > 10 * 1024 * 1024) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_16_01',
+                    'message' => 'Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.',
+                ], 422);
+            }
+            $base64Image = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+        } else {
+            $base64Image = (string) $rawImage;
+        }
+
+        $type = in_array($request->input('type'), ['electricity', 'water']) ? $request->input('type') : 'electricity';
+
+        // 2. Phân tích ảnh với AI Vision OCR
+        $result = $aiManagementService->analyzeMeterImage($base64Image, $type);
+
+        // 3. ERR_16_03: Ảnh không phải mặt công tơ đo đếm
+        if (isset($result['is_meter']) && $result['is_meter'] === false) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_16_03',
+                'message' => 'Tệp tải lên không phải là ảnh công tơ đo đếm điện nước hợp lệ.',
+                'result' => $result,
+            ], 422);
+        }
+
+        // 4. ERR_16_02: Ảnh chụp quá mờ hoặc lóa sáng (Độ tin cậy < 85% theo P654)
+        $confidence = floatval($result['confidence'] ?? 0);
+        $quality = $result['quality'] ?? 'clear';
+        if ($confidence < 0.85 || $quality === 'blurry' || $quality === 'glared' || $result['value'] === null) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_16_02',
+                'confidence' => $confidence,
+                'message' => 'Ảnh chụp quá mờ hoặc lóa sáng, AI không nhận diện được chữ số rõ ràng.',
+                'result' => $result,
+            ], 422);
+        }
+
+        // 5. ERR_16_04: AI nhận diện chỉ số thành công
         return response()->json([
             'success' => true,
+            'code' => 'ERR_16_04',
+            'message' => 'Đã nhận diện thành công chỉ số công tơ và tự khớp vào phòng!',
+            'value' => $result['value'],
+            'serial_number' => $result['serial_number'] ?? null,
+            'confidence' => $confidence,
             'result' => $result,
         ]);
     }
 
     public function aiOcrMeterBulk(Request $request, AiManagementService $aiManagementService)
     {
-        $validated = $request->validate([
-            'images' => 'required|array|min:1|max:30',
-            'images.*' => 'required|string',
-            'type' => 'required|string|in:electricity,water',
-        ]);
+        // 1. ERR_16_01: Chưa chọn tệp ảnh công tơ
+        $hasFiles = $request->hasFile('images') || $request->hasFile('meter_images');
+        $rawImages = $request->input('images') ?: $request->input('meter_images');
+
+        if (!$hasFiles && (empty($rawImages) || !is_array($rawImages) || count($rawImages) === 0)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_16_01',
+                'message' => 'Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.',
+            ], 422);
+        }
+
+        $images = [];
+        if ($hasFiles) {
+            $uploadedFiles = $request->file('images') ?: $request->file('meter_images');
+            foreach ($uploadedFiles as $file) {
+                if ($file->isValid()) {
+                    $images[] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+                }
+            }
+        } else {
+            $images = (array) $rawImages;
+        }
+
+        if (empty($images)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_16_01',
+                'message' => 'Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.',
+            ], 422);
+        }
 
         $tenantId = $this->currentTenantId();
-        $type = $validated['type'];
+        $type = in_array($request->input('type'), ['electricity', 'water']) ? $request->input('type') : 'electricity';
         $serialColumn = $type === 'electricity' ? 'electric_meter_serial' : 'water_meter_serial';
 
         // Lấy danh sách phòng thuộc tenant hiện tại đã có cấu hình số SX
@@ -517,10 +597,39 @@ class AdminDashboardController extends Controller
         $matched = [];
         $unmatched = [];
 
-        foreach ($validated['images'] as $index => $base64) {
+        foreach ($images as $index => $base64) {
             $analysis = $aiManagementService->analyzeMeterImage($base64, $type);
-            $serial = !empty($analysis['serial_number']) ? trim(strtolower($analysis['serial_number'])) : null;
+            $confidence = floatval($analysis['confidence'] ?? 0);
 
+            // Kiểm tra ảnh không phải công tơ (ERR_16_03)
+            if (isset($analysis['is_meter']) && $analysis['is_meter'] === false) {
+                $unmatched[] = [
+                    'index' => $index,
+                    'serial_number' => null,
+                    'value' => null,
+                    'confidence' => $confidence,
+                    'error_code' => 'ERR_16_03',
+                    'reason' => 'Tệp tải lên không phải là ảnh công tơ đo đếm điện nước hợp lệ.',
+                    'used_ai' => $analysis['used_ai'] ?? true,
+                ];
+                continue;
+            }
+
+            // Kiểm tra ảnh mờ hoặc lóa sáng (ERR_16_02)
+            if ($confidence < 0.85 || ($analysis['quality'] ?? '') === 'blurry' || ($analysis['quality'] ?? '') === 'glared' || $analysis['value'] === null) {
+                $unmatched[] = [
+                    'index' => $index,
+                    'serial_number' => $analysis['serial_number'] ?? null,
+                    'value' => $analysis['value'] ?? null,
+                    'confidence' => $confidence,
+                    'error_code' => 'ERR_16_02',
+                    'reason' => 'Ảnh chụp quá mờ hoặc lóa sáng, AI không nhận diện được chữ số rõ ràng.',
+                    'used_ai' => $analysis['used_ai'] ?? true,
+                ];
+                continue;
+            }
+
+            $serial = !empty($analysis['serial_number']) ? trim(strtolower($analysis['serial_number'])) : null;
             $matchedRoom = null;
             if ($serial && isset($rooms[$serial])) {
                 $matchedRoom = $rooms[$serial];
@@ -533,7 +642,7 @@ class AdminDashboardController extends Controller
                     'room_number' => $matchedRoom->room_number,
                     'serial_number' => $analysis['serial_number'],
                     'value' => $analysis['value'],
-                    'confidence' => $analysis['confidence'],
+                    'confidence' => $confidence,
                     'used_ai' => $analysis['used_ai'] ?? true,
                 ];
             } else {
@@ -541,10 +650,10 @@ class AdminDashboardController extends Controller
                     'index' => $index,
                     'serial_number' => $analysis['serial_number'] ?? null,
                     'value' => $analysis['value'],
-                    'confidence' => $analysis['confidence'],
+                    'confidence' => $confidence,
                     'reason' => $serial 
                         ? "Không tìm thấy phòng nào có Số SX [{$analysis['serial_number']}]" 
-                        : "Ảnh mờ hoặc không nhận diện được Số SX",
+                        : "Không nhận diện được Số SX trên mặt công tơ",
                     'used_ai' => $analysis['used_ai'] ?? true,
                 ];
             }
@@ -552,8 +661,10 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'success' => true,
+            'code' => 'ERR_16_04',
+            'message' => 'Đã nhận diện thành công chỉ số công tơ và tự khớp vào phòng!',
             'type' => $type,
-            'total_scanned' => count($validated['images']),
+            'total_scanned' => count($images),
             'matched_count' => count($matched),
             'unmatched_count' => count($unmatched),
             'matched' => $matched,
@@ -592,30 +703,338 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    public function utilityBulkView(Request $request)
+    {
+        return redirect()->route('smartroom.admin', ['tab' => 'utility-section']);
+    }
+
+    /**
+     * FEAT_17_BILLING: Chuyển hướng đến trang / tab Quản lý Hóa đơn
+     */
+    public function invoicesIndex(Request $request)
+    {
+        return redirect()->route('smartroom.admin', ['tab' => 'utility-section']);
+    }
+
+    /**
+     * FEAT_17_BILLING: Tính tiền phòng & Xuất Hóa đơn tự động
+     * POST /smartroom/admin/utility/calculate
+     */
+    public function calculateUtilityInvoice(Request $request)
+    {
+        // 1. Kiểm tra Ngày theo Bảng 123
+        if (!$request->filled('due_date')) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_17_DATE_REQUIRED',
+                'errors' => ['due_date' => ['Vui lòng chọn hạn chót thanh toán']],
+                'message' => 'Vui lòng chọn hạn chót thanh toán',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'room_id' => 'required|integer',
+            'invoice_date' => 'required|date_format:Y-m-d',
+            'due_date' => 'required|date_format:Y-m-d',
+            'other_fees' => 'nullable|numeric|min:0',
+        ]);
+
+        if ($request->input('due_date') < $request->input('invoice_date')) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_17_DATE_RANGE',
+                'errors' => ['due_date' => ['Hạn thanh toán không được trước ngày lập hóa đơn']],
+                'message' => 'Hạn thanh toán không được trước ngày lập hóa đơn',
+            ], 422);
+        }
+
+        $tenantId = $this->currentTenantId();
+        $room = Room::where('tenant_id', $tenantId)->find($validated['room_id']);
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy phòng tương ứng.',
+            ], 404);
+        }
+
+        // 2. ERR_17_01: Phòng chưa có cư dân thuê đại diện
+        $resident = Resident::where('room_id', $room->id)
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$resident) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_17_01',
+                'message' => 'Phòng này chưa có cư dân đại diện thuê, không thể sinh hóa đơn thu tiền.',
+            ], 422);
+        }
+
+        $billingMonth = substr($validated['invoice_date'], 0, 7);
+        $utilityRecord = UtilityRecord::where('tenant_id', $tenantId)
+            ->where('room_id', $room->id)
+            ->where('billing_month', $billingMonth)
+            ->first();
+
+        if (!$utilityRecord) {
+            $utilityRecord = UtilityRecord::where('tenant_id', $tenantId)
+                ->where('room_id', $room->id)
+                ->latest()
+                ->first();
+        }
+
+        // 3. ERR_17_02: Đơn giá dịch vụ bị trống hoặc bằng 0
+        $elecPrice = $request->has('electricity_price')
+            ? $request->input('electricity_price')
+            : ($utilityRecord ? $utilityRecord->electricity_price : 3500);
+
+        $waterPrice = $request->has('water_price')
+            ? $request->input('water_price')
+            : ($utilityRecord ? $utilityRecord->water_price : 15000);
+
+        if (empty($elecPrice) || floatval($elecPrice) <= 0 || empty($waterPrice) || floatval($waterPrice) <= 0) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_17_02',
+                'message' => 'Đơn giá điện nước chưa được cấu hình trong bảng giá cơ sở.',
+            ], 422);
+        }
+
+        // 4. ERR_17_03: Tính toán chiết tính & sinh hóa đơn tự động thành công
+        $elecUsage = intval($request->input('electricity_usage', $utilityRecord ? max(0, $utilityRecord->new_electricity - $utilityRecord->old_electricity) : 0));
+        $waterUsage = intval($request->input('water_usage', $utilityRecord ? max(0, $utilityRecord->new_water - $utilityRecord->old_water) : 0));
+
+        $roomPrice = intval($room->price);
+        $elecCost = $elecUsage * intval($elecPrice);
+        $waterCost = $waterUsage * intval($waterPrice);
+        $serviceCost = intval($request->input('service_cost', 150000));
+        $otherFees = intval($request->input('other_fees', 0));
+        $oldDebt = intval($request->input('old_debt', 0));
+
+        // Công thức P685: Tổng tiền = Tiền phòng + (Số điện * Đơn giá) + (Số nước * Đơn giá) + Phí cố định + Phí phát sinh + Nợ cũ
+        $totalAmount = $roomPrice + $elecCost + $waterCost + $serviceCost + $otherFees + $oldDebt;
+
+        $monthNum = explode('-', $billingMonth)[1];
+        $addInfo = "Thanh toan Phong {$room->room_number} thang {$monthNum}";
+        $vietqrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($addInfo);
+
+        // Lưu / cập nhật vào Bill
+        $bill = Bill::updateOrCreate(
+            [
+                'tenant_id' => $tenantId,
+                'room_id' => $room->id,
+                'billing_month' => $billingMonth,
+            ],
+            [
+                'room_price' => $roomPrice,
+                'electricity_usage' => $elecUsage,
+                'electricity_cost' => $elecCost,
+                'water_usage' => $waterUsage,
+                'water_cost' => $waterCost,
+                'service_cost' => $serviceCost + $otherFees + $oldDebt,
+                'total_amount' => $totalAmount,
+                'status' => 'pending',
+                'vietqr_url' => $vietqrUrl,
+            ]
+        );
+
+        // Chuyển trạng thái phòng sang chờ thanh toán (overdue)
+        $room->update(['status' => 'overdue']);
+
+        AdminActivityLogger::log(
+            'create',
+            'bills',
+            "Sinh hóa đơn tự động tháng {$billingMonth} phòng {$room->room_number}: " . number_format($totalAmount) . "đ",
+            $bill,
+            ['total_amount' => $totalAmount, 'billing_month' => $billingMonth]
+        );
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ERR_17_03',
+            'message' => 'Hóa đơn tiền nhà tháng đã được tính toán và tạo tự động thành công!',
+            'bill' => $bill,
+            'data' => [
+                'bill_id' => $bill->id,
+                'room_id' => $room->id,
+                'room_number' => $room->room_number,
+                'resident_name' => $resident->name,
+                'billing_month' => $billingMonth,
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $validated['due_date'],
+                'room_price' => $roomPrice,
+                'electricity_usage' => $elecUsage,
+                'electricity_price' => (int) $elecPrice,
+                'electricity_cost' => $elecCost,
+                'water_usage' => $waterUsage,
+                'water_price' => (int) $waterPrice,
+                'water_cost' => $waterCost,
+                'service_cost' => $serviceCost,
+                'other_fees' => $otherFees,
+                'old_debt' => $oldDebt,
+                'total_amount' => $totalAmount,
+                'formatted_total' => number_format($totalAmount, 0, ',', '.') . ' đ',
+                'vietqr_url' => $vietqrUrl,
+                'status' => 'pending',
+                'status_label' => 'Chờ thanh toán',
+            ],
+        ]);
+    }
+
+    /**
+     * FEAT_17_BILLING: Xuất mã VietQR NAPAS247 động chuẩn ngân hàng
+     * GET /smartroom/admin/utility/{id}/vietqr
+     */
+    public function getUtilityVietQr($id)
+    {
+        $tenantId = $this->currentTenantId();
+        $record = UtilityRecord::with('room')->where('tenant_id', $tenantId)->find($id);
+
+        if (!$record) {
+            $bill = Bill::with('room')->where('tenant_id', $tenantId)->findOrFail($id);
+            $room = $bill->room;
+            $totalAmount = $bill->total_amount;
+            $billingMonth = $bill->billing_month;
+            $vietqrUrl = $bill->vietqr_url;
+        } else {
+            $room = $record->room;
+            $elecUsed = max(0, $record->new_electricity - $record->old_electricity);
+            $waterUsed = max(0, $record->new_water - $record->old_water);
+            $totalAmount = ($room->price ?? 0) + ($elecUsed * $record->electricity_price) + ($waterUsed * $record->water_price) + 150000;
+            $billingMonth = $record->billing_month;
+            $monthNum = explode('-', $billingMonth)[1];
+            $addInfo = "Thanh toan Phong " . ($room->room_number ?? $room->id) . " thang {$monthNum}";
+            $vietqrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($addInfo);
+        }
+
+        return response()->json([
+            'success' => true,
+            'vietqr_url' => $vietqrUrl,
+            'room_number' => $room->room_number ?? null,
+            'total_amount' => $totalAmount,
+            'formatted_amount' => number_format($totalAmount, 0, ',', '.') . ' đ',
+            'bank_name' => 'Vietcombank (VCB)',
+            'account_number' => '1051572297',
+            'account_holder' => 'CHỦ TRỌ',
+        ]);
+    }
+
+    /**
+     * FEAT_17_BILLING: Kết xuất hóa đơn điện tử tiền phòng định dạng PDF
+     * GET /smartroom/admin/utility/{id}/invoice-pdf
+     */
+    public function exportInvoicePdf($id)
+    {
+        $tenantId = $this->currentTenantId();
+        $record = UtilityRecord::with('room')->where('tenant_id', $tenantId)->find($id);
+
+        if (!$record) {
+            $bill = Bill::with(['room.building', 'electricWaterLog'])->where('tenant_id', $tenantId)->findOrFail($id);
+            $resident = Resident::where('room_id', $bill->room_id)->where('status', 'active')->first();
+            $data = [
+                'bill' => $bill,
+                'resident' => $resident,
+                'tenant' => auth()->user()->tenant ?? Tenant::find($tenantId),
+            ];
+
+            if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+                try {
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pdf_bill', $data);
+                    return $pdf->download('hoa_don_phong_' . $bill->room->room_number . '_' . $bill->billing_month . '.pdf');
+                } catch (\Throwable $e) {
+                    return view('admin.pdf_bill', $data);
+                }
+            }
+            return view('admin.pdf_bill', $data);
+        }
+
+        $resident = Resident::where('room_id', $record->room_id)->where('status', 'active')->first();
+        $data = [
+            'record' => $record,
+            'resident' => $resident,
+            'tenant' => auth()->user()->tenant ?? Tenant::find($tenantId),
+        ];
+
+        if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+            try {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.print_utility', compact('record', 'resident'));
+                return $pdf->download('hoa_don_phong_' . $record->room->room_number . '_' . $record->billing_month . '.pdf');
+            } catch (\Throwable $e) {
+                return view('admin.print_utility', compact('record', 'resident'));
+            }
+        }
+
+        return view('admin.print_utility', compact('record', 'resident'));
+    }
+
     public function storeUtility(Request $request)
     {
+        $input = $request->all();
+        $elecRaw = isset($input['new_electricity']) ? trim((string) $input['new_electricity']) : '';
+        $waterRaw = isset($input['new_water']) ? trim((string) $input['new_water']) : '';
+
+        // ERR_15_04: Nhập ký tự chữ vào ô chỉ số
+        if (!preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $elecRaw) || !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $waterRaw)) {
+            $msg = 'Chỉ số công tơ điện nước chỉ được phép nhập số.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'error_code' => 'ERR_15_04', 'message' => $msg], 422);
+            }
+            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('error', '[ERR_15_04] ' . $msg);
+        }
+
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
-            'new_electricity' => 'required|integer',
-            'new_water' => 'required|integer',
         ]);
 
         $room = Room::findOrFail($request->room_id);
+        $billingMonthRaw = trim((string) ($request->input('billing_month') ?: $request->input('cboMonth') ?: ''));
         $currentMonth = Carbon::now()->format('Y-m');
+        if (!empty($billingMonthRaw)) {
+            if (preg_match('/^(\d{1,2})\/(\d{4})$/', $billingMonthRaw, $matches)) {
+                $currentMonth = sprintf('%04d-%02d', (int) $matches[2], (int) $matches[1]);
+            } elseif (preg_match('/^(\d{4})-(\d{1,2})$/', $billingMonthRaw, $matches)) {
+                $currentMonth = sprintf('%04d-%02d', (int) $matches[1], (int) $matches[2]);
+            }
+        }
 
-        // Check if there is already a record for this month
         $existing = UtilityRecord::where('room_id', $room->id)
             ->where('billing_month', $currentMonth)
             ->first();
 
-        if ($existing) {
-            if ($request->new_electricity < $existing->old_electricity || $request->new_water < $existing->old_water) {
-                return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('error', 'Chỉ số mới không được nhỏ hơn chỉ số cũ!');
+        $latest = UtilityRecord::where('room_id', $room->id)
+            ->where('billing_month', '<', $currentMonth)
+            ->orderBy('billing_month', 'desc')
+            ->first();
+
+        $oldElec = $existing ? $existing->old_electricity : ($latest ? $latest->new_electricity : 0);
+        $oldWater = $existing ? $existing->old_water : ($latest ? $latest->new_water : 0);
+
+        // ERR_15_02: Chỉ số điện mới nhỏ hơn điện cũ
+        if (floatval($elecRaw) < floatval($oldElec)) {
+            $msg = 'Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'error_code' => 'ERR_15_02', 'message' => $msg], 422);
             }
+            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('error', '[ERR_15_02] ' . $msg);
+        }
+
+        // ERR_15_03: Chỉ số nước mới nhỏ hơn nước cũ
+        if (floatval($waterRaw) < floatval($oldWater)) {
+            $msg = 'Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'error_code' => 'ERR_15_03', 'message' => $msg], 422);
+            }
+            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('error', '[ERR_15_03] ' . $msg);
+        }
+
+        $successMsg = 'Đã lưu chỉ số điện nước thành công cho toàn bộ các phòng!';
+
+        if ($existing) {
             $before = $existing->only(['new_electricity', 'new_water', 'status']);
             $existing->update([
-                'new_electricity' => $request->new_electricity,
-                'new_water' => $request->new_water,
+                'new_electricity' => (float) $elecRaw,
+                'new_water' => (float) $waterRaw,
                 'status' => 'sent'
             ]);
             $room->update(['status' => 'overdue']);
@@ -628,34 +1047,25 @@ class AdminDashboardController extends Controller
                 $before,
                 $existing->fresh()->only(['new_electricity', 'new_water', 'status'])
             );
-            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', 'Đã cập nhật chỉ số điện nước & gửi hóa đơn thành công!');
-        }
-
-        // Find latest utility record to verify indices
-        $latest = UtilityRecord::where('room_id', $room->id)
-            ->orderBy('billing_month', 'desc')
-            ->first();
-
-        $oldElec = $latest ? $latest->new_electricity : 0;
-        $oldWater = $latest ? $latest->new_water : 0;
-
-        if ($request->new_electricity < $oldElec || $request->new_water < $oldWater) {
-            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('error', 'Chỉ số mới không được nhỏ hơn chỉ số cũ!');
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'code' => 'ERR_15_05', 'message' => $successMsg]);
+            }
+            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', $successMsg);
         }
 
         $record = UtilityRecord::create([
+            'tenant_id' => $room->tenant_id,
             'room_id' => $room->id,
             'billing_month' => $currentMonth,
             'old_electricity' => $oldElec,
-            'new_electricity' => $request->new_electricity,
+            'new_electricity' => (float) $elecRaw,
             'old_water' => $oldWater,
-            'new_water' => $request->new_water,
+            'new_water' => (float) $waterRaw,
             'electricity_price' => 3500,
             'water_price' => 15000,
-            'status' => 'sent' // Invoice created and sent
+            'status' => 'sent'
         ]);
 
-        // Mark room status as overdue until paid
         $room->update(['status' => 'overdue']);
 
         AdminActivityLogger::log(
@@ -668,64 +1078,186 @@ class AdminDashboardController extends Controller
             $record->only(['old_electricity', 'new_electricity', 'old_water', 'new_water', 'status'])
         );
 
-        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', 'Đã lưu chỉ số điện nước & gửi hóa đơn thành công!');
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'code' => 'ERR_15_05', 'message' => $successMsg]);
+        }
+        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', $successMsg);
     }
 
     public function storeUtilityBulk(Request $request)
     {
+        $billingMonthRaw = trim((string) ($request->input('billing_month') ?: $request->input('cboMonth') ?: ''));
+
+        // 1. ERR_15_01: Để trống tháng chốt cước
+        if (empty($billingMonthRaw)) {
+            $msg = 'Vui lòng chọn tháng tính cước hóa đơn điện nước.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_15_01',
+                    'message' => $msg,
+                ], 422);
+            }
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['billing_month' => $msg])
+                ->with('error', '[ERR_15_01] ' . $msg);
+        }
+
+        // Chuẩn hóa định dạng billing_month thành YYYY-MM
+        $currentMonth = $billingMonthRaw;
+        if (preg_match('/^(\d{1,2})\/(\d{4})$/', $billingMonthRaw, $matches)) {
+            $currentMonth = sprintf('%04d-%02d', (int) $matches[2], (int) $matches[1]);
+        } elseif (preg_match('/^(\d{4})-(\d{1,2})$/', $billingMonthRaw, $matches)) {
+            $currentMonth = sprintf('%04d-%02d', (int) $matches[1], (int) $matches[2]);
+        }
+
         $utilities = $request->input('utilities', []);
-        $currentMonth = Carbon::now()->format('Y-m');
-        
-        $savedCount = 0;
+        if (!is_array($utilities)) {
+            $utilities = [];
+        }
+
+        // 2. Validate format và giá trị từng phòng trước khi ghi nhận
         foreach ($utilities as $roomId => $data) {
-            $newElec = $data['new_electricity'] ?? null;
-            $newWater = $data['new_water'] ?? null;
+            $newElecRaw = isset($data['new_electricity']) ? trim((string) $data['new_electricity']) : '';
+            $newWaterRaw = isset($data['new_water']) ? trim((string) $data['new_water']) : '';
 
-            if ($newElec !== null && $newWater !== null && $newElec !== '' && $newWater !== '') {
-                $room = Room::findOrFail($roomId);
-                
-                $existing = UtilityRecord::where('room_id', $room->id)
-                    ->where('billing_month', $currentMonth)
-                    ->first();
-                    
-                if ($existing) {
-                    if (intval($newElec) >= $existing->old_electricity && intval($newWater) >= $existing->old_water) {
-                        $existing->update([
-                            'new_electricity' => $newElec,
-                            'new_water' => $newWater,
-                            'status' => 'sent'
-                        ]);
-                        $room->update(['status' => 'overdue']);
-                        $savedCount++;
-                    }
-                } else {
-                    $latest = UtilityRecord::where('room_id', $room->id)
-                        ->orderBy('billing_month', 'desc')
-                        ->first();
+            if ($newElecRaw === '' && $newWaterRaw === '') {
+                continue;
+            }
 
-                    $oldElec = $latest ? $latest->new_electricity : 0;
-                    $oldWater = $latest ? $latest->new_water : 0;
-
-                    if (intval($newElec) >= $oldElec && intval($newWater) >= $oldWater) {
-                        UtilityRecord::create([
-                            'room_id' => $room->id,
-                            'billing_month' => $currentMonth,
-                            'old_electricity' => $oldElec,
-                            'new_electricity' => $newElec,
-                            'old_water' => $oldWater,
-                            'new_water' => $newWater,
-                            'electricity_price' => 3500,
-                            'water_price' => 15000,
-                            'status' => 'sent'
-                        ]);
-
-                        $room->update(['status' => 'overdue']);
-                        $savedCount++;
-                    }
+            // ERR_15_04: Nhập ký tự chữ vào ô chỉ số
+            if (($newElecRaw !== '' && !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $newElecRaw)) ||
+                ($newWaterRaw !== '' && !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $newWaterRaw))) {
+                $msg = 'Chỉ số công tơ điện nước chỉ được phép nhập số.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'ERR_15_04',
+                        'room_id' => $roomId,
+                        'message' => $msg,
+                    ], 422);
                 }
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', '[ERR_15_04] ' . $msg);
+            }
+
+            $room = Room::find($roomId);
+            if (!$room) {
+                continue;
+            }
+
+            // Lấy chỉ số kỳ trước
+            $existing = UtilityRecord::where('room_id', $room->id)
+                ->where('billing_month', $currentMonth)
+                ->first();
+
+            $latest = UtilityRecord::where('room_id', $room->id)
+                ->where('billing_month', '<', $currentMonth)
+                ->orderBy('billing_month', 'desc')
+                ->first();
+
+            $oldElec = $existing ? $existing->old_electricity : ($latest ? $latest->new_electricity : 0);
+            $oldWater = $existing ? $existing->old_water : ($latest ? $latest->new_water : 0);
+
+            // ERR_15_02: Chỉ số điện mới nhỏ hơn điện cũ
+            if ($newElecRaw !== '' && floatval($newElecRaw) < floatval($oldElec)) {
+                $msg = 'Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'ERR_15_02',
+                        'room_id' => $room->id,
+                        'room_number' => $room->room_number,
+                        'old_electricity' => $oldElec,
+                        'new_electricity' => $newElecRaw,
+                        'message' => $msg,
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', '[ERR_15_02] ' . $msg);
+            }
+
+            // ERR_15_03: Chỉ số nước mới nhỏ hơn nước cũ
+            if ($newWaterRaw !== '' && floatval($newWaterRaw) < floatval($oldWater)) {
+                $msg = 'Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'ERR_15_03',
+                        'room_id' => $room->id,
+                        'room_number' => $room->room_number,
+                        'old_water' => $oldWater,
+                        'new_water' => $newWaterRaw,
+                        'message' => $msg,
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', '[ERR_15_03] ' . $msg);
             }
         }
 
+        // 3. Thực hiện lưu trữ dữ liệu
+        $savedCount = 0;
+        foreach ($utilities as $roomId => $data) {
+            $newElecRaw = isset($data['new_electricity']) ? trim((string) $data['new_electricity']) : '';
+            $newWaterRaw = isset($data['new_water']) ? trim((string) $data['new_water']) : '';
+
+            if ($newElecRaw === '' && $newWaterRaw === '') {
+                continue;
+            }
+
+            $room = Room::find($roomId);
+            if (!$room) {
+                continue;
+            }
+
+            $existing = UtilityRecord::where('room_id', $room->id)
+                ->where('billing_month', $currentMonth)
+                ->first();
+
+            $latest = UtilityRecord::where('room_id', $room->id)
+                ->where('billing_month', '<', $currentMonth)
+                ->orderBy('billing_month', 'desc')
+                ->first();
+
+            $oldElec = $existing ? $existing->old_electricity : ($latest ? $latest->new_electricity : 0);
+            $oldWater = $existing ? $existing->old_water : ($latest ? $latest->new_water : 0);
+
+            $valElec = $newElecRaw !== '' ? (float) $newElecRaw : $oldElec;
+            $valWater = $newWaterRaw !== '' ? (float) $newWaterRaw : $oldWater;
+
+            if ($existing) {
+                $existing->update([
+                    'new_electricity' => $valElec,
+                    'new_water' => $valWater,
+                    'status' => 'sent',
+                ]);
+                $room->update(['status' => 'overdue']);
+                $savedCount++;
+            } else {
+                UtilityRecord::create([
+                    'tenant_id' => $room->tenant_id,
+                    'room_id' => $room->id,
+                    'billing_month' => $currentMonth,
+                    'old_electricity' => $oldElec,
+                    'new_electricity' => $valElec,
+                    'old_water' => $oldWater,
+                    'new_water' => $valWater,
+                    'electricity_price' => 3500,
+                    'water_price' => 15000,
+                    'status' => 'sent',
+                ]);
+                $room->update(['status' => 'overdue']);
+                $savedCount++;
+            }
+        }
+
+        // ERR_15_05: Lưu chốt số thành công
+        $successMsg = 'Đã lưu chỉ số điện nước thành công cho toàn bộ các phòng!';
         if ($savedCount > 0) {
             AdminActivityLogger::log(
                 'create',
@@ -734,10 +1266,20 @@ class AdminDashboardController extends Controller
                 null,
                 ['billing_month' => $currentMonth, 'saved_count' => $savedCount]
             );
-            return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('success', "Đã chốt nhanh chỉ số điện nước và gửi hóa đơn cho {$savedCount} phòng thành công!");
         }
 
-        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])->with('error', 'Không có chỉ số hợp lệ nào được cập nhật hoặc các chỉ số mới nhỏ hơn chỉ số cũ!');
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'code' => 'ERR_15_05',
+                'message' => $successMsg,
+                'saved_count' => $savedCount,
+                'billing_month' => $currentMonth,
+            ]);
+        }
+
+        return redirect()->route('smartroom.admin', ['tab' => 'utility-section'])
+            ->with('success', $successMsg);
     }
 
     public function storeResident(Request $request)

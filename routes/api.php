@@ -47,6 +47,15 @@ Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'revi
 Route::post('/renty/rooms/compare', [VisitorController::class, 'compare'])->middleware('throttle:30,1');
 Route::post('/renty/rooms/compare-ai', [VisitorController::class, 'compareAi'])->middleware('throttle:30,1');
 
+// FEAT_14_AI_ASSISTANT_HUB: Hệ sinh thái Trợ lý AI Hỗ trợ toàn diện (SmartRoom & Renty AI Assistant Hub)
+Route::prefix('ai')->group(function () {
+    Route::post('/assistant-hub', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'dispatchHub'])->name('api.ai.assistant_hub');
+    Route::post('/room-finder', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'roomFinder'])->name('api.ai.room_finder');
+    Route::post('/landlord-advisor', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'landlordAdvisor'])->name('api.ai.landlord_advisor');
+    Route::post('/landlord-qa', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'landlordQA'])->name('api.ai.landlord_qa');
+    Route::post('/incident-triage', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'incidentTriage'])->name('api.ai.incident_triage');
+});
+
 // FEAT_22_AI_CHATBOT: Trợ lý ảo AI Renty Chatbot tư vấn tìm phòng
 Route::post('/renty/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat'])->middleware('throttle:20,1')->name('api.renty.chatbot.chat');
 Route::get('/renty/chatbot/history', [\App\Http\Controllers\ChatbotController::class, 'history'])->middleware('auth:api')->name('api.renty.chatbot.history');

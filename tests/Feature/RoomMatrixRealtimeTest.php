@@ -117,20 +117,85 @@ class RoomMatrixRealtimeTest extends TestCase
         ]);
     }
 
-    public function test_matrix_poll_returns_latest_room_update(): void
+    public function test_err_13_02_cannot_switch_room_to_maintenance_when_occupied_or_has_active_contract(): void
     {
-        $this->actingAs($this->landlord)
+        // 1. Kiểm tra phòng occupied
+        $this->room->update(['status' => 'occupied']);
+
+        $response = $this->actingAs($this->landlord)
             ->postJson("/smartroom/admin/rooms/{$this->room->id}/quick-status", [
                 'status' => 'maintenance',
             ]);
 
-        $pollResponse = $this->actingAs($this->landlord)
-            ->getJson('/smartroom/admin/rooms/matrix/poll?since=0');
+        $response->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'ERR_13_02')
+            ->assertJsonPath('message', 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.');
 
-        $pollResponse->assertOk()
-            ->assertJsonPath('has_update', true)
-            ->assertJsonPath('event.id', $this->room->id)
-            ->assertJsonPath('event.status', 'maintenance')
-            ->assertJsonPath('event.status_label', 'Bảo trì');
+        $this->assertDatabaseHas('rooms', [
+            'id' => $this->room->id,
+            'status' => 'occupied',
+        ]);
+
+        // 2. Kiểm tra phòng có cư dân active
+        $this->room->update(['status' => 'empty']);
+        Resident::create([
+            'tenant_id' => $this->tenant->id,
+            'room_id' => $this->room->id,
+            'name' => 'Nguyễn Văn C',
+            'phone' => '0912345678',
+            'status' => 'active',
+            'start_date' => now(),
+        ]);
+
+        $responseResident = $this->actingAs($this->landlord)
+            ->postJson("/smartroom/admin/rooms/{$this->room->id}/quick-status", [
+                'status' => 'maintenance',
+            ]);
+
+        $responseResident->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'ERR_13_02')
+            ->assertJsonPath('message', 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.');
+    }
+
+    public function test_err_13_01_view_contains_sse_reconnection_warning_badge(): void
+    {
+        $response = $this->actingAs($this->landlord)
+            ->get(route('smartroom.admin', ['tab' => 'room-map-section']));
+
+        $response->assertOk()
+            ->assertSee('id="sse-reconnect-badge"', false)
+            ->assertSee('Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...', false);
+    }
+
+    public function test_err_13_02_view_contains_conflict_warning_modal(): void
+    {
+        $response = $this->actingAs($this->landlord)
+            ->get(route('smartroom.admin', ['tab' => 'room-map-section']));
+
+        $response->assertOk()
+            ->assertSee('id="modal-conflict-warning"', false)
+            ->assertSee('Cảnh Báo Xung Đột Nghiệp Vụ', false)
+            ->assertSee('Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.', false);
+    }
+
+    public function test_err_13_03_view_contains_floor_filter_and_empty_state(): void
+    {
+        $response = $this->actingAs($this->landlord)
+            ->get(route('smartroom.admin', ['tab' => 'room-map-section']));
+
+        $response->assertOk()
+            ->assertSee('floor-filter-btn', false)
+            ->assertSee('id="floor-empty-state"', false)
+            ->assertSee('Tầng được chọn chưa có phòng nào được tạo.', false);
+    }
+
+    public function test_matrix_alias_route_redirects_to_room_map_section(): void
+    {
+        $response = $this->actingAs($this->landlord)
+            ->get('/smartroom/admin/matrix');
+
+        $response->assertRedirect(route('smartroom.admin', ['tab' => 'room-map-section']));
     }
 }

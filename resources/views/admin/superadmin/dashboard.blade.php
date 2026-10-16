@@ -340,15 +340,15 @@
                                         @endif
                                     </td>
 
-                                    <!-- Cột 6: Hành động Quản trị (menuActions) -->
+                                    <!-- Cột 6: Hành động Quản trị (menuActions - Bảng 140) -->
                                     <td class="px-4 py-3 text-right">
-                                        <div class="inline-flex items-center gap-1.5 justify-end">
+                                        <div id="menuActions" class="menuActions inline-flex items-center gap-1.5 justify-end" data-testid="menuActions">
                                             
                                             <!-- Nút 1: Phân Quyền (Mở Modal RBAC) -->
                                             <button type="button" 
                                                     onclick="openRoleModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->roleSlug() }}', {{ $user->tenant_id ?: 'null' }})"
                                                     title="Phân quyền tài khoản"
-                                                    class="px-2.5 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 transition-all font-semibold text-xs flex items-center gap-1">
+                                                    class="btnRoleModal px-2.5 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 transition-all font-semibold text-xs flex items-center gap-1">
                                                 <i class="fa-solid fa-user-gear"></i>
                                                 <span>Phân Quyền</span>
                                             </button>
@@ -762,6 +762,7 @@
                     </label>
                     <select name="role_slug" 
                             id="select-role-slug" 
+                            data-testid="cboRole"
                             onchange="onRoleChange(this.value)"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-amber-500 transition-all">
                         <option value="">-- Vui lòng chọn vai trò --</option>
@@ -783,6 +784,7 @@
                     </label>
                     <select name="tenant_id" 
                             id="select-tenant-id" 
+                            data-testid="cboTenant"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-amber-500 transition-all">
                         <option value="">-- Chọn cơ sở lưu trú (Bắt buộc cho NV/Quản lý) --</option>
                         @foreach($tenants as $t)
@@ -800,7 +802,7 @@
                     <button type="button" onclick="closeRoleModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
                         Hủy Bỏ
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20">
+                    <button type="submit" id="btnUpdateRole" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20">
                         Cập Nhật Quyền Hạn
                     </button>
                 </div>

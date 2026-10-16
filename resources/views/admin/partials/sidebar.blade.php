@@ -157,7 +157,7 @@
                         <a href="{{ route('admin.reports.index') }}" 
                            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.reports.*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                             <i class="fa-solid fa-chart-column w-5 text-center text-[15px]"></i>
-                            <span class="truncate">Báo Cáo</span>
+                            <span class="truncate">Báo Cáo & Sổ Quỹ</span>
                         </a>
                     @endif
                 </div>

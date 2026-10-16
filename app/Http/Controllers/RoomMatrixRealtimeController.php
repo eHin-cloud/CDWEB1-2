@@ -31,7 +31,20 @@ class RoomMatrixRealtimeController extends Controller
         $oldStatus = $room->status;
         $newStatus = $request->input('status');
 
-        // Logic bảo vệ an toàn nghiệp vụ
+        // Logic bảo vệ an toàn nghiệp vụ: ERR_13_02 - Đổi phòng sang Bảo trì khi đang có khách
+        if ($newStatus === 'maintenance') {
+            $hasActiveResidents = $room->activeResidents()->exists();
+            $hasActiveContract = $room->contracts()->where('status', 'active')->exists();
+            if ($oldStatus === 'occupied' || $hasActiveResidents || $hasActiveContract) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'ERR_13_02',
+                    'message' => 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.',
+                ], 422);
+            }
+        }
+
+        // Logic bảo vệ an toàn nghiệp vụ: Chuyển sang trống hoặc dọn dẹp khi có cư dân
         if ($oldStatus === 'occupied' && in_array($newStatus, ['empty', 'cleaning'], true)) {
             $hasActiveResidents = $room->activeResidents()->exists();
             if ($hasActiveResidents) {

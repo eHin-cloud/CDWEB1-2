@@ -84,7 +84,7 @@
                     </h3>
                     <p class="text-xs text-slate-500 mt-1">Nhập cùng mã thiết bị sẽ cộng thêm số lượng vào danh mục hiện có.</p>
 
-                    <form action="{{ route('admin.equipment.store') }}" method="POST" class="secure-form mt-5 space-y-4" data-watch="equipment-create">
+                    <form action="{{ route('admin.equipment.store') }}" method="POST" class="secure-form mt-5 space-y-4" data-watch="equipment-create" id="formCreateEquipment" novalidate>
                         @csrf
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -124,7 +124,7 @@
                         <i class="fa-solid fa-right-left text-emerald-400"></i> Bàn Giao - Thu Hồi Theo Phòng
                     </h3>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
-                        <form action="{{ route('admin.equipment.allocate') }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-allocate">
+                        <form action="{{ route('admin.equipment.allocate') }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-allocate" id="formAllocateEquipment" novalidate>
                             @csrf
                             <h4 class="text-sm font-bold text-emerald-400">Bàn giao / lắp đặt</h4>
                             @include('admin.equipment.partials.movement-fields', ['equipment' => $equipment, 'rooms' => $rooms, 'mode' => 'allocate'])
@@ -133,7 +133,7 @@
                             </button>
                         </form>
 
-                        <form action="{{ route('admin.equipment.recover') }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-recover">
+                        <form action="{{ route('admin.equipment.recover') }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-recover" id="formRecoverEquipment" novalidate>
                             @csrf
                             <h4 class="text-sm font-bold text-amber-400">Thu hồi về kho</h4>
                             @include('admin.equipment.partials.movement-fields', ['equipment' => $equipment, 'rooms' => $rooms, 'mode' => 'recover'])
@@ -356,6 +356,8 @@
         }
 
         function showFieldError(input, message) {
+            input.classList.remove('border-slate-800');
+            input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/30');
             const error = input.parentElement.querySelector('.field-error');
             if (!error) return;
             error.textContent = message;
@@ -363,12 +365,71 @@
         }
 
         function clearFieldError(input) {
+            input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/30');
+            input.classList.add('border-slate-800');
             const error = input.parentElement.querySelector('.field-error');
             if (error) error.classList.add('hidden');
         }
 
         function validateInput(input, options = {}) {
             const shouldTrim = options.trim !== false;
+            const name = input.name;
+
+            // ERR_12_01: Để trống tên thiết bị
+            if (name === 'name') {
+                const val = input.value.trim();
+                if (val === '') {
+                    showFieldError(input, 'Tên trang thiết bị tài sản không được để trống.');
+                    return false;
+                }
+                clearFieldError(input);
+                return true;
+            }
+
+            // ERR_12_02: Để trống mã thiết bị
+            if (name === 'code') {
+                const val = input.value.trim();
+                if (val === '') {
+                    showFieldError(input, 'Mã quản lý thiết bị là bắt buộc.');
+                    return false;
+                }
+                clearFieldError(input);
+                return true;
+            }
+
+            // ERR_12_03: Nhập số lượng tồn kho nhỏ hơn 0
+            if (name === 'quantity' && input.closest('#formCreateEquipment')) {
+                const rawVal = input.value.trim();
+                if (rawVal === '') {
+                    showFieldError(input, 'Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.');
+                    return false;
+                }
+                const num = Number(rawVal);
+                if (isNaN(num) || num < 0) {
+                    showFieldError(input, 'Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.');
+                    return false;
+                }
+                clearFieldError(input);
+                return true;
+            }
+
+            // ERR_12_05: Bàn giao số lượng vượt quá tồn kho
+            if (name === 'quantity' && input.closest('#formAllocateEquipment')) {
+                const rawVal = input.value.trim();
+                if (rawVal === '' || Number(rawVal) < 1) {
+                    showFieldError(input, 'Vui lòng nhập số lượng bàn giao hợp lệ.');
+                    return false;
+                }
+                const selectEquip = input.closest('form').querySelector('select[name="equipment_id"]');
+                const selectedOption = selectEquip ? selectEquip.options[selectEquip.selectedIndex] : null;
+                const stock = selectedOption && selectedOption.dataset.stock !== undefined ? Number(selectedOption.dataset.stock) : Infinity;
+                if (Number(rawVal) > stock) {
+                    showFieldError(input, 'Số lượng thiết bị bàn giao vượt quá số lượng tồn kho khả dụng!');
+                    return false;
+                }
+                clearFieldError(input);
+                return true;
+            }
 
             if (input.dataset.number !== undefined) {
                 input.value = toHalfWidthNumber(input.value).replace(/[^0-9]/g, '');
@@ -395,6 +456,16 @@
             }
 
             return true;
+        }
+
+        const allocateEquipSelect = document.querySelector('#formAllocateEquipment select[name="equipment_id"]');
+        if (allocateEquipSelect) {
+            allocateEquipSelect.addEventListener('change', () => {
+                const qtyInput = document.querySelector('#formAllocateEquipment input[name="quantity"]');
+                if (qtyInput && qtyInput.value) {
+                    validateInput(qtyInput);
+                }
+            });
         }
 
         document.querySelectorAll('[data-number], [data-text]').forEach(input => {

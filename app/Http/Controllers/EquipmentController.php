@@ -227,7 +227,7 @@ class EquipmentController extends Controller
 
                 // Khóa bản ghi thiết bị trong transaction để hai tab không thể cùng trừ vượt tồn kho.
                 if ($quantity > $stock) {
-                    throw new \RuntimeException('Số lượng tồn không đủ để bàn giao/lắp đặt cho phòng này.');
+                    throw new \RuntimeException('Số lượng thiết bị bàn giao vượt quá số lượng tồn kho khả dụng!');
                 }
 
                 $allocation = RoomEquipment::firstOrNew([
@@ -264,7 +264,7 @@ class EquipmentController extends Controller
             );
         }
 
-        return redirect()->route('admin.equipment.index')->with('success', 'Đã bàn giao/lắp đặt thiết bị cho phòng.');
+        return redirect()->route('admin.equipment.index')->with('success', 'Đã bàn giao trang thiết bị vào phòng thành công.');
     }
 
     public function recover(Request $request)
@@ -368,7 +368,7 @@ class EquipmentController extends Controller
             'code' => 'required|string|max:50',
             'name' => 'required|string|max:150',
             'unit' => 'required|string|max:30',
-            'quantity' => 'required|integer|min:1|max:1000000',
+            'quantity' => 'required|integer|min:0|max:1000000',
             'description' => 'nullable|string|max:1000',
         ];
     }
@@ -401,6 +401,13 @@ class EquipmentController extends Controller
     private function messages(): array
     {
         return [
+            'name.required' => 'Tên trang thiết bị tài sản không được để trống.',
+            'code.required' => 'Mã quản lý thiết bị là bắt buộc.',
+            'quantity.required' => 'Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.',
+            'quantity.min' => 'Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.',
+            'quantity.integer' => 'Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.',
+            'total_quantity.min' => 'Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.',
+            'price.min' => 'Đơn giá giá trị tài sản không được là số âm.',
             'required' => ':attribute không được bỏ trống.',
             'integer' => ':attribute phải là số nguyên hợp lệ.',
             'min' => ':attribute không hợp lệ hoặc nhỏ hơn mức cho phép.',
