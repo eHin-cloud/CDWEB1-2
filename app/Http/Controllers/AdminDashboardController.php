@@ -2172,6 +2172,10 @@ class AdminDashboardController extends Controller
     {
         $tenantId = $this->currentTenantId();
         $user = Auth::user();
+        $currentProfile = \App\Models\LandlordProfile::where('tenant_id', $tenantId)
+            ->orWhere('user_id', $user->id)
+            ->first();
+        $profileId = $currentProfile?->id;
 
         // Chuẩn hóa họ tên: loại bỏ khoảng trắng thừa, viết hoa chữ cái đầu theo spec
         if ($request->has('full_name') && is_string($request->input('full_name'))) {
@@ -2188,7 +2192,12 @@ class AdminDashboardController extends Controller
             'email' => ['nullable', 'string', 'email', 'max:150', 'unique:users,email,' . $user->id],
             'property_name' => [$request->has('property_name') ? 'required' : 'nullable', 'string', 'max:150'],
             'property_address' => [$request->has('property_address') ? 'required' : 'nullable', 'string', 'max:500'],
-            'national_id' => [$request->has('national_id') ? 'required' : 'nullable', 'string', 'regex:/^[0-9]{9,12}$/'],
+            'national_id' => [
+                $request->has('national_id') ? 'required' : 'nullable',
+                'string',
+                'regex:/^[0-9]{9,12}$/',
+                \Illuminate\Validation\Rule::unique('landlord_profiles', 'national_id')->ignore($profileId),
+            ],
             'permanent_address' => [$request->has('permanent_address') ? 'required' : 'nullable', 'string', 'max:500'],
             'business_license' => [$request->has('business_license') ? 'required' : 'nullable', 'string', 'max:150'],
             'bank_account_number' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'max:60', 'required_with:bank_name'],
@@ -2216,6 +2225,7 @@ class AdminDashboardController extends Controller
             'bank_account_number.regex' => 'Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.',
             'national_id.required' => 'Vui lòng nhập số Căn cước công dân của chủ cơ sở.',
             'national_id.regex' => 'Số CCCD / CMND phải gồm 9 đến 12 chữ số.',
+            'national_id.unique' => 'Số Căn cước công dân này đã được đăng ký bởi tài khoản khác trong hệ thống.',
             'permanent_address.required' => 'Vui lòng nhập địa chỉ thường trú theo CCCD.',
             'business_license.required' => 'Vui lòng nhập số Giấy phép kinh doanh hoặc Mã số thuế.',
             'username.alpha_dash' => 'Tài khoản đăng nhập chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới.',

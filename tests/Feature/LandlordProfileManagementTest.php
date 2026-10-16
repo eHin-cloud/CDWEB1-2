@@ -336,4 +336,74 @@ class LandlordProfileManagementTest extends TestCase
         $errors = session('errors')->get('national_id');
         $this->assertContains('Số CCCD / CMND phải gồm 9 đến 12 chữ số.', $errors);
     }
+
+    /**
+     * Kiểm tra chặn trùng lặp số CCCD: không cho phép đăng ký số CCCD đã thuộc về chủ trọ khác
+     */
+    public function test_validation_fails_when_national_id_is_already_taken_by_another_landlord(): void
+    {
+        [$userA, $tenantA, $profileA] = $this->setupLandlord();
+        $profileA->national_id = '079201009999';
+        $profileA->save();
+
+        $tenantB = \App\Models\Tenant::create([
+            'name' => 'Khu Trọ B',
+            'email' => 'tenant_b@example.com',
+            'address' => 'Hà Nội',
+            'verification_status' => 'kyc_verified',
+        ]);
+        $landlordRole = \App\Models\Role::firstOrCreate(['slug' => 'landlord'], ['name' => 'Chủ trọ']);
+        $userB = \App\Models\User::create([
+            'tenant_id' => $tenantB->id,
+            'role_id' => $landlordRole->id,
+            'name' => 'Chủ Trọ B',
+            'username' => 'landlord_b',
+            'email' => 'landlord_b@example.com',
+            'phone' => '0988776655',
+            'role' => 'landlord',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+        ]);
+        \App\Models\LandlordProfile::create([
+            'tenant_id' => $tenantB->id,
+            'user_id' => $userB->id,
+            'username' => 'landlord_b',
+            'full_name' => 'Chủ Trọ B',
+            'phone' => '0988776655',
+            'national_id' => '079201001111',
+            'property_name' => 'Khu Trọ B',
+            'property_address' => 'Hà Nội',
+            'status' => 'unverified',
+        ]);
+
+        // Chủ trọ B cố tình nhập số CCCD của chủ trọ A
+        $response = $this->actingAs($userB)->post(route('smartroom.admin.profile.update'), [
+            'full_name' => 'Chủ Trọ B Đổi Thông Tin',
+            'phone' => '0988776655',
+            'national_id' => '079201009999', // Trùng của chủ trọ A
+        ]);
+
+        $response->assertSessionHasErrors('national_id');
+        $errors = session('errors')->get('national_id');
+        $this->assertContains('Số Căn cước công dân này đã được đăng ký bởi tài khoản khác trong hệ thống.', $errors);
+    }
+
+    /**
+     * Chủ trọ tự cập nhật thông tin và giữ nguyên số CCCD của chính mình thì không bị báo lỗi trùng
+     */
+    public function test_landlord_can_keep_their_own_national_id_without_unique_conflict(): void
+    {
+        [$user, $tenant, $profile] = $this->setupLandlord();
+        $profile->national_id = '079201008888';
+        $profile->save();
+
+        $response = $this->actingAs($user)->post(route('smartroom.admin.profile.update'), [
+            'full_name' => 'Nguyễn Thanh Hiền Đổi Tên',
+            'phone' => '0912345678',
+            'national_id' => '079201008888', // Giữ nguyên của chính mình
+        ]);
+
+        $response->assertSessionDoesntHaveErrors(['national_id']);
+        $this->assertSame('079201008888', $profile->fresh()->national_id);
+    }
 }
+
