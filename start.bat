@@ -3,6 +3,9 @@ chcp 65001 > nul
 setlocal enabledelayedexpansion
 title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
 
+:: Dam bao container CSDL MySQL Docker luon duoc bat
+docker start smartroom_mysql > nul 2>&1
+
 :: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher
 if "%1" neq "--cli" (
     start "" powershell -WindowStyle Normal -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
@@ -153,6 +156,7 @@ if not exist public\storage (
 :: 6. Khoi dong CSDL MySQL trong Docker (Port 3309)
 echo.
 echo    [1/3] Dang khoi dong CSDL MySQL trong Docker (Port 3309)...
+docker start smartroom_mysql > nul 2>&1
 !DOCKER_COMPOSE_CMD! up -d mysql > nul 2>&1
 !DOCKER_COMPOSE_CMD! stop app > nul 2>&1
 
@@ -1604,6 +1608,11 @@ taskkill /f /im node.exe >nul 2>&1
 :: HELPER: DAM BAO MYSQL DA KHOI DONG VA SAN SANG
 :: ======================================================================
 :ENSURE_MYSQL
+if "!DB_PORT!"=="3309" (
+    docker start smartroom_mysql > nul 2>&1
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
+    if !errorlevel! equ 0 exit /b 0
+)
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3306 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
 if !errorlevel! equ 0 (
     if exist "D:\xampp\mysql\bin\mysql.exe" (

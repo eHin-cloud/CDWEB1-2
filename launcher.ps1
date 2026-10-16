@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # SmartRoom & Renty - GUI App Launcher
 # ==============================================================================
 
@@ -597,7 +597,8 @@ $btnRunHybrid.Add_Click({
         return
     }
 
-    # Bật duy nhất container MySQL trong Docker
+    # Bật container MySQL trong Docker
+    Start-Process -FilePath "docker" -ArgumentList "start smartroom_mysql" -WorkingDirectory $scriptDir -Wait -NoNewWindow
     Start-Process -FilePath "docker" -ArgumentList "compose up -d mysql" -WorkingDirectory $scriptDir -Wait -NoNewWindow
     # Tắt container app trong docker nếu đang chạy để nhường cổng 8088
     Start-Process -FilePath "docker" -ArgumentList "compose stop app" -WorkingDirectory $scriptDir -Wait -NoNewWindow
