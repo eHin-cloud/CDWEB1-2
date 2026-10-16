@@ -51,7 +51,7 @@ class BuildingManagementTest extends TestCase
             'name' => 'Landlord ' . $username,
             'username' => $username,
             'email' => $username . '@example.com',
-            'role' => 'admin',
+            'role' => 'landlord',
             'password' => Hash::make('password'),
         ]);
     }
@@ -273,5 +273,135 @@ class BuildingManagementTest extends TestCase
         $response->assertJson([
             'success' => false
         ]);
+    }
+
+    /**
+     * 8. Kiểm tra spec ERR_11_01: Để trống tên cơ sở / tòa nhà
+     */
+    public function test_spec_err_11_01_empty_name_validation(): void
+    {
+        $tenant = $this->createTenant('Tenant Test');
+        $landlord = $this->createLandlordUser($tenant);
+
+        $response = $this->actingAs($landlord)->post(route('admin.buildings.store'), [
+            'name' => '',
+            'address' => '123 Cầu Giấy',
+            'total_floors' => 3,
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'name' => 'Tên cơ sở lưu trú không được để trống.'
+        ]);
+    }
+
+    /**
+     * 9. Kiểm tra spec ERR_11_02: Để trống địa chỉ cơ sở
+     */
+    public function test_spec_err_11_02_empty_address_validation(): void
+    {
+        $tenant = $this->createTenant('Tenant Test');
+        $landlord = $this->createLandlordUser($tenant);
+
+        $response = $this->actingAs($landlord)->post(route('admin.buildings.store'), [
+            'name' => 'Tòa Nhà Test',
+            'address' => '',
+            'total_floors' => 3,
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'address' => 'Địa chỉ cơ sở lưu trú là bắt buộc.'
+        ]);
+    }
+
+    /**
+     * 10. Kiểm tra spec ERR_11_03: Để trống số tầng
+     */
+    public function test_spec_err_11_03_empty_total_floors_validation(): void
+    {
+        $tenant = $this->createTenant('Tenant Test');
+        $landlord = $this->createLandlordUser($tenant);
+
+        $response = $this->actingAs($landlord)->post(route('admin.buildings.store'), [
+            'name' => 'Tòa Nhà Test',
+            'address' => '123 Cầu Giấy',
+            'total_floors' => '',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'total_floors' => 'Vui lòng nhập số tầng của tòa nhà.'
+        ]);
+    }
+
+    /**
+     * 11. Kiểm tra spec ERR_11_04: Nhập số tầng nhỏ hơn 1
+     */
+    public function test_spec_err_11_04_floors_less_than_one_validation(): void
+    {
+        $tenant = $this->createTenant('Tenant Test');
+        $landlord = $this->createLandlordUser($tenant);
+
+        $response = $this->actingAs($landlord)->post(route('admin.buildings.store'), [
+            'name' => 'Tòa Nhà Test',
+            'address' => '123 Cầu Giấy',
+            'total_floors' => 0,
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'total_floors' => 'Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.'
+        ]);
+    }
+
+    /**
+     * 12. Kiểm tra spec ERR_11_05: Xóa tòa nhà còn phòng đang cho thuê
+     */
+    public function test_spec_err_11_05_cannot_delete_building_with_occupied_rooms(): void
+    {
+        $tenant = $this->createTenant('Tenant Test');
+        $landlord = $this->createLandlordUser($tenant);
+
+        $building = Building::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Tòa Nhà Đang Cho Thuê',
+            'address' => 'Hà Nội',
+            'total_floors' => 5,
+            'status' => 'active',
+        ]);
+
+        Room::create([
+            'tenant_id' => $tenant->id,
+            'building_id' => $building->id,
+            'room_number' => '102',
+            'floor' => 1,
+            'price' => 3000000,
+            'status' => 'occupied',
+        ]);
+
+        $response = $this->actingAs($landlord)->delete(route('admin.buildings.destroy', $building->id));
+
+        $response->assertRedirect(route('admin.buildings.index'));
+        $response->assertSessionHas('error', 'Không thể xóa cơ sở lưu trú đang có phòng có cư dân thuê hoạt động.');
+    }
+
+    /**
+     * 13. Kiểm tra spec ERR_11_06: Lưu cơ sở lưu trú thành công
+     */
+    public function test_spec_err_11_06_store_building_success_message(): void
+    {
+        $tenant = $this->createTenant('Tenant Test');
+        $landlord = $this->createLandlordUser($tenant);
+
+        $response = $this->actingAs($landlord)->post(route('admin.buildings.store'), [
+            'name' => 'Tòa Nhà Thành Công',
+            'address' => '789 Đường Láng, Hà Nội',
+            'total_floors' => 4,
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect(route('admin.buildings.index'));
+        $response->assertSessionHas('success', 'Lưu thông tin cơ sở lưu trú thành công!');
     }
 }

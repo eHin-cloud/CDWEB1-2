@@ -141,6 +141,7 @@ Route::prefix('smartroom/resident')->group(function () {
 
 Route::middleware('admin')->group(function () {
     Route::get('/smartroom/admin', [AdminDashboardController::class, 'index'])->name('smartroom.admin');
+    Route::get('/smartroom/admin/matrix', fn () => redirect()->route('smartroom.admin', ['tab' => 'room-map-section']))->name('smartroom.admin.matrix');
     
     Route::get('/api/revenue-breakdown', function () {
         $tenantId = auth()->user()?->tenant_id;
@@ -218,6 +219,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/api/upload-avatar', [AdminDashboardController::class, 'uploadAvatar'])->name('api.upload_avatar');
 
     Route::middleware('role:landlord')->group(function () {
+        Route::post('/smartroom/admin/ai/assistant-hub', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'dispatchHub'])->name('smartroom.admin.ai.assistant_hub');
         Route::post('/smartroom/admin/ai/dashboard-insight', [AdminDashboardController::class, 'aiDashboardInsight'])->name('smartroom.admin.ai.dashboard_insight');
         Route::post('/smartroom/admin/ai/assistant', [AdminDashboardController::class, 'aiAssistant'])->name('smartroom.admin.ai.assistant');
         Route::post('/smartroom/admin/ai/contract-terms', [AdminDashboardController::class, 'aiContractTerms'])->name('smartroom.admin.ai.contract_terms');

@@ -88,7 +88,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.buildings.update', $building->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form action="{{ route('admin.buildings.update', $building->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6" id="buildingEditForm" novalidate>
                 @csrf
 
                 <!-- Basic Information Card -->
@@ -100,31 +100,43 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-300 mb-1.5">
+                            <label for="name" class="block text-xs font-bold text-slate-300 mb-1.5">
                                 Tên Cơ Sở / Tòa Nhà <span class="text-rose-400">*</span>
                             </label>
-                            <input type="text" name="name" value="{{ old('name', $building->name) }}" required class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <input type="text" id="name" name="name" value="{{ old('name', $building->name) }}" class="w-full px-4 py-2.5 bg-slate-900/60 border @error('name') border-rose-500 ring-1 ring-rose-500/30 @else border-slate-800 @enderror rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <p id="err-name" class="text-xs text-rose-400 mt-1.5 font-medium flex items-center gap-1.5 @error('name') flex @else hidden @enderror">
+                                <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                                <span class="err-text">@error('name') {{ $message }} @else Tên cơ sở lưu trú không được để trống. @enderror</span>
+                            </p>
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-300 mb-1.5">
+                            <label for="address" class="block text-xs font-bold text-slate-300 mb-1.5">
                                 Địa Chỉ Chi Tiết <span class="text-rose-400">*</span>
                             </label>
-                            <input type="text" name="address" value="{{ old('address', $building->address) }}" required class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <input type="text" id="address" name="address" value="{{ old('address', $building->address) }}" class="w-full px-4 py-2.5 bg-slate-900/60 border @error('address') border-rose-500 ring-1 ring-rose-500/30 @else border-slate-800 @enderror rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <p id="err-address" class="text-xs text-rose-400 mt-1.5 font-medium flex items-center gap-1.5 @error('address') flex @else hidden @enderror">
+                                <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                                <span class="err-text">@error('address') {{ $message }} @else Địa chỉ cơ sở lưu trú là bắt buộc. @enderror</span>
+                            </p>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 mb-1.5">
+                            <label for="phone" class="block text-xs font-bold text-slate-300 mb-1.5">
                                 Số Hotline / Quản Lý Cơ Sở
                             </label>
-                            <input type="text" name="phone" value="{{ old('phone', $building->phone) }}" class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <input type="text" id="phone" name="phone" value="{{ old('phone', $building->phone) }}" class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 mb-1.5">
+                            <label for="total_floors" class="block text-xs font-bold text-slate-300 mb-1.5">
                                 Tổng Số Tầng <span class="text-rose-400">*</span>
                             </label>
-                            <input type="number" name="total_floors" value="{{ old('total_floors', $building->total_floors ?? 1) }}" min="1" max="100" required class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <input type="number" id="total_floors" name="total_floors" value="{{ old('total_floors', $building->total_floors ?? 1) }}" class="w-full px-4 py-2.5 bg-slate-900/60 border @error('total_floors') border-rose-500 ring-1 ring-rose-500/30 @else border-slate-800 @enderror rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <p id="err-total_floors" class="text-xs text-rose-400 mt-1.5 font-medium flex items-center gap-1.5 @error('total_floors') flex @else hidden @enderror">
+                                <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                                <span class="err-text">@error('total_floors') {{ $message }} @enderror</span>
+                            </p>
                         </div>
 
                         <div>
@@ -233,5 +245,98 @@
 
         </main>
     </div>
+
+    <!-- Client-side Validation (FEAT_11: ERR_11_01, ERR_11_02, ERR_11_03, ERR_11_04) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('buildingEditForm');
+            if (!form) return;
+
+            const nameInput = document.getElementById('name');
+            const addressInput = document.getElementById('address');
+            const floorsInput = document.getElementById('total_floors');
+
+            const errName = document.getElementById('err-name');
+            const errAddress = document.getElementById('err-address');
+            const errFloors = document.getElementById('err-total_floors');
+
+            function showError(input, errContainer, message) {
+                input.classList.remove('border-slate-800');
+                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/30');
+                const textSpan = errContainer.querySelector('.err-text');
+                if (textSpan) textSpan.textContent = message;
+                errContainer.classList.remove('hidden');
+                errContainer.classList.add('flex');
+            }
+
+            function clearError(input, errContainer) {
+                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/30');
+                input.classList.add('border-slate-800');
+                errContainer.classList.add('hidden');
+                errContainer.classList.remove('flex');
+            }
+
+            function validateName() {
+                if (!nameInput.value.trim()) {
+                    showError(nameInput, errName, 'Tên cơ sở lưu trú không được để trống.');
+                    return false;
+                }
+                clearError(nameInput, errName);
+                return true;
+            }
+
+            function validateAddress() {
+                if (!addressInput.value.trim()) {
+                    showError(addressInput, errAddress, 'Địa chỉ cơ sở lưu trú là bắt buộc.');
+                    return false;
+                }
+                clearError(addressInput, errAddress);
+                return true;
+            }
+
+            function validateFloors() {
+                const val = floorsInput.value.trim();
+                if (val === '') {
+                    showError(floorsInput, errFloors, 'Vui lòng nhập số tầng của tòa nhà.');
+                    return false;
+                }
+                const num = Number(val);
+                if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+                    showError(floorsInput, errFloors, 'Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.');
+                    return false;
+                }
+                clearError(floorsInput, errFloors);
+                return true;
+            }
+
+            nameInput.addEventListener('input', validateName);
+            nameInput.addEventListener('blur', validateName);
+
+            addressInput.addEventListener('input', validateAddress);
+            addressInput.addEventListener('blur', validateAddress);
+
+            floorsInput.addEventListener('input', validateFloors);
+            floorsInput.addEventListener('blur', validateFloors);
+
+            form.addEventListener('submit', function (e) {
+                const isNameValid = validateName();
+                const isAddressValid = validateAddress();
+                const isFloorsValid = validateFloors();
+
+                if (!isNameValid || !isAddressValid || !isFloorsValid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (!isNameValid) {
+                        nameInput.focus();
+                    } else if (!isAddressValid) {
+                        addressInput.focus();
+                    } else if (!isFloorsValid) {
+                        floorsInput.focus();
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

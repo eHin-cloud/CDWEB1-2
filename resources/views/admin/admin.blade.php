@@ -1343,21 +1343,107 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6">
-                        <div>
-                            <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                                <i class="fa-solid fa-comments text-emerald-400"></i> Trợ lý AI nhà trọ
-                            </h3>
-                            <p class="text-xs text-slate-500 mt-1">Hỏi bằng tiếng Việt, ví dụ: "Phòng nào chưa đóng tiền tháng này?" hoặc "Ai sắp hết hợp đồng?".</p>
+                    <!-- FEAT_14_AI_ASSISTANT_HUB: HỆ SINH THÁI TRỢ LÝ AI HỖ TRỢ TOÀN DIỆN -->
+                    <div id="ai-assistant-hub-container" class="glass-card rounded-3xl p-6 sm:p-7 border border-indigo-500/20 relative overflow-hidden">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-5 border-b border-slate-800/80 pb-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30">
+                                        FEAT_14 AI ASSISTANT HUB
+                                    </span>
+                                </div>
+                                <h3 class="text-lg font-black text-white mt-1 flex items-center gap-2.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                                    Trợ Lý AI Hỗ Trợ Toàn Diện
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Trung tâm điều phối đa tác nhân: Tìm phòng, Cố vấn kinh doanh & Soạn bài SEO, Xử lý sự cố kỹ thuật.</p>
+                            </div>
                         </div>
-                        <div class="mt-5 flex gap-2">
-                            <input id="ai-assistant-question" type="text" class="min-w-0 flex-1 px-4 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" placeholder="Nhập câu hỏi quản lý nhà trọ...">
-                            <button type="button" onclick="askAiAssistant(this)" class="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2">
-                                <i class="fa-solid fa-paper-plane"></i> Hỏi
+
+                        <!-- 1. Tab Selector (tabMode) -->
+                        <div class="flex flex-wrap items-center gap-2 mb-4 bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800/90 text-xs">
+                            <button type="button" onclick="switchAiHubMode('landlord_advisor', this)" class="ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-bold bg-indigo-600 text-white transition-all flex items-center justify-center gap-2" data-mode="landlord_advisor">
+                                <i class="fa-solid fa-bullhorn text-amber-300"></i> Cố vấn & Viết bài SEO
+                            </button>
+                            <button type="button" onclick="switchAiHubMode('room_finder', this)" class="ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2" data-mode="room_finder">
+                                <i class="fa-solid fa-compass text-teal-400"></i> Khách tìm phòng
+                            </button>
+                            <button type="button" onclick="switchAiHubMode('tenant_incident', this)" class="ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2" data-mode="tenant_incident">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Báo sự cố kỹ thuật
                             </button>
                         </div>
-                        <div id="ai-assistant-answer" class="mt-4 rounded-xl bg-slate-950/40 border border-slate-800 p-4 text-sm text-slate-300 leading-relaxed min-h-20">
-                            Trợ lý chỉ đọc dữ liệu thuộc tài khoản chủ trọ đang đăng nhập.
+
+                        <!-- 2. Controls & Prompt input (cboTone, txtPrompt) -->
+                        <div class="space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <label for="ai-hub-prompt" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-message text-indigo-400"></i> Câu hỏi / Yêu cầu <span class="text-rose-400">*</span>
+                                </label>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="text-slate-400 text-[11px] font-semibold">Văn phong:</span>
+                                    <select id="ai-hub-tone" class="bg-slate-900 border border-slate-800 text-slate-300 rounded-xl px-2.5 py-1 text-xs font-medium focus:outline-none focus:border-purple-500">
+                                        <option value="professional" selected>Chuyên nghiệp, thu hút</option>
+                                        <option value="friendly">Thân thiện, gần gũi</option>
+                                        <option value="urgent">Khẩn cấp, an toàn</option>
+                                        <option value="creative_seo">Sáng tạo Marketing SEO</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <textarea id="ai-hub-prompt" 
+                                          rows="3" 
+                                          placeholder="Bạn cần AI hỗ trợ điều gì? Nhập yêu cầu tại đây... (Nhấn Enter để gửi)" 
+                                          class="w-full px-4 py-3 rounded-2xl bg-slate-950/70 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all resize-none"></textarea>
+                                <div id="ai-hub-prompt-error" class="hidden text-xs text-rose-400 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-exclamation text-xs"></i>
+                                    <span id="ai-hub-prompt-error-text"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <div class="flex items-center gap-2">
+                                    <span id="ai-hub-char-count" class="text-[11px] text-slate-500">0/2000 ký tự</span>
+                                    <span id="ai-hub-countdown-badge" class="hidden text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg animate-pulse">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> Đang chờ: <span id="ai-hub-countdown-seconds">30</span>s
+                                    </span>
+                                </div>
+
+                                <button type="button" 
+                                        id="btn-send-ai-hub" 
+                                        onclick="submitAiAssistantHub()" 
+                                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all">
+                                    <i class="fa-solid fa-bolt text-amber-300"></i>
+                                    <span>Gửi yêu cầu đến AI</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Response Area (responseBox) -->
+                        <div id="ai-hub-response-container" class="mt-5 pt-4 border-t border-slate-800/80">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-robot text-purple-400"></i> Phản hồi của Trợ lý AI
+                                </span>
+                                <div id="ai-hub-status-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded border"></div>
+                            </div>
+
+                            <div id="ai-hub-response-box" class="rounded-2xl bg-slate-950/60 border border-slate-800/80 p-4 text-sm text-slate-300 leading-relaxed min-h-[90px] whitespace-pre-line relative">
+                                <span class="text-slate-500 italic">Chọn tab tác vụ phía trên và nhập câu hỏi/yêu cầu để nhận hỗ trợ tức thời từ Trợ lý AI SmartRoom.</span>
+                            </div>
+
+                            <!-- 4. Quick Action Buttons (btnQuickAction) -->
+                            <div id="ai-hub-actions-bar" class="hidden flex flex-wrap items-center gap-2.5 mt-3 pt-2">
+                                <button type="button" id="btn-copy-ai-post" onclick="copyAiHubContent()" class="hidden px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-copy"></i> Sao chép bài viết marketing SEO
+                                </button>
+                                <button type="button" id="btn-booking-viewing" onclick="openBookingFromAi()" class="hidden px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-calendar-check"></i> Đặt lịch hẹn xem phòng
+                                </button>
+                                <button type="button" id="btn-view-emergency-ticket" onclick="openEmergencyTicketModal()" class="hidden px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-ticket"></i> Xem ticket bảo trì khẩn cấp
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1793,6 +1879,43 @@
                             <span>Bảo trì</span>
                         </div>
                     </div>
+                <!-- Floor filter toolbar (FEAT_13) -->
+                <div class="flex items-center gap-2 flex-wrap bg-slate-900/40 border border-slate-800/80 p-3 rounded-2xl">
+                    <span class="text-xs font-bold text-slate-400 flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-layer-group text-indigo-400"></i> Lọc Tầng:
+                    </span>
+                    <button type="button" data-floor-filter="all" onclick="filterByFloor('all', this)" class="floor-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white transition-all">
+                        Tất cả tầng
+                    </button>
+                    @php
+                        $existingFloors = $roomsByFloor->keys()->map(fn($f) => (int)$f)->filter(fn($f) => $f > 0)->sort()->values();
+                        $maxBuildingFloors = (int) ($buildings->max('total_floors') ?? ($existingFloors->max() ?? 1));
+                        $maxFloorNumber = max($maxBuildingFloors, $existingFloors->max() ?? 1);
+                        $floorList = range(1, max(1, $maxFloorNumber));
+                    @endphp
+                    @foreach($floorList as $fl)
+                        <button type="button" 
+                                data-floor-filter="{{ $fl }}" 
+                                onclick="filterByFloor('{{ $fl }}', this)" 
+                                class="floor-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all">
+                            Tầng {{ $fl }}
+                        </button>
+                    @endforeach
+                </div>
+
+                <!-- Empty state khi tầng được chọn không có phòng nào (ERR_13_03) -->
+                <div id="floor-empty-state" class="hidden p-12 text-center rounded-3xl bg-slate-900/40 border border-slate-800/80 space-y-3">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-2">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-slate-200">Tầng được chọn chưa có phòng nào được tạo.</h4>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto">Vui lòng chọn tầng khác trên bộ lọc hoặc tiến hành thêm phòng mới vào sơ đồ để hoàn tất cấu hình tòa nhà.</p>
+                    <div class="pt-2">
+                        <a href="{{ route('admin.rooms.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/30">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Cấu hình thêm phòng ngay</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Floors and room grid -->
@@ -1849,6 +1972,56 @@
                         </div>
                     </div>
                     @endforeach
+                </div>
+
+                <!-- HUY HIỆU MẤT KẾT NỐI SSE THỜI GIAN THỰC (ERR_13_01) -->
+                <div id="sse-reconnect-badge" class="hidden fixed top-20 right-6 z-50 items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-bold shadow-xl shadow-amber-500/10 backdrop-blur-md animate-pulse transition-all">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm"></i>
+                    <span id="sse-reconnect-text">Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...</span>
+                </div>
+
+                <!-- MODAL CẢNH BÁO XUNG ĐỘT NGHIỆP VỤ (ERR_13_02) -->
+                <div id="modal-conflict-warning" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden items-center justify-center p-4">
+                    <div class="w-full max-w-md bg-[#0a0f1d] border border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <h3 class="text-lg font-black text-white">Cảnh Báo Xung Đột Nghiệp Vụ</h3>
+                            <p id="modal-conflict-message" class="text-sm font-medium text-slate-300 leading-relaxed">
+                                Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.
+                            </p>
+                        </div>
+                        <div class="pt-3 flex justify-center">
+                            <button type="button" onclick="closeConflictModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all shadow-lg shadow-amber-600/30">
+                                Đã hiểu và Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL SỰ CỐ KHẨN CẤP AI (ERR_14_06) -->
+                <div id="modal-ai-emergency-ticket" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden items-center justify-center p-4">
+                    <div class="w-full max-w-md bg-[#13070a] border border-rose-500/50 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
+                        <div class="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 text-2xl mx-auto mb-1 animate-bounce">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                Ưu tiên xử lý khẩn cấp (Emergency)
+                            </span>
+                            <h3 class="text-lg font-black text-white">Cảnh Báo Sự Cố Kỹ Thuật Khẩn Cấp</h3>
+                            <p id="modal-ai-emergency-message" class="text-sm font-semibold text-rose-200 leading-relaxed">
+                                Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!
+                            </p>
+                            <p class="text-xs text-slate-400 mt-2">Đội ngũ kỹ thuật viên tòa nhà đang được điều động ưu tiên đến hiện trường. Vui lòng ngắt nguồn điện/khóa van nước an toàn.</p>
+                        </div>
+                        <div class="pt-3 flex justify-center gap-2">
+                            <button type="button" onclick="closeAiEmergencyModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30">
+                                Đã hiểu & Xác nhận
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ROOM DETAIL MODAL (CENTERED & FITS CONTENT) -->
@@ -4627,20 +4800,100 @@
         // Room filter state & functions
         let currentRoomFilter = 'all';
         let currentBuildingFilter = 'all';
+        let currentFloorFilter = 'all';
 
         function applyCurrentFilterToCard(card) {
             if (!card) return;
             const status = card.getAttribute('data-room-status') || '';
             const buildingId = card.getAttribute('data-building-id') || '';
+            const cardFloor = card.closest('.floor-group')?.getAttribute('data-floor') || '';
             const statusMatch = (currentRoomFilter === 'all' || currentRoomFilter === status);
             const buildingMatch = (currentBuildingFilter === 'all' || String(buildingId) === String(currentBuildingFilter));
+            const floorMatch = (currentFloorFilter === 'all' || String(cardFloor) === String(currentFloorFilter));
 
-            if (statusMatch && buildingMatch) {
+            if (statusMatch && buildingMatch && floorMatch) {
                 card.classList.remove('hidden');
                 card.style.display = '';
             } else {
                 card.classList.add('hidden');
                 card.style.display = 'none';
+            }
+        }
+
+        function refreshFloorGroupsVisibility() {
+            let totalVisibleRooms = 0;
+            const floorGroups = document.querySelectorAll('.floor-group');
+            
+            floorGroups.forEach(group => {
+                const floorVal = group.getAttribute('data-floor');
+                const floorMatches = (currentFloorFilter === 'all' || String(floorVal) === String(currentFloorFilter));
+                
+                if (!floorMatches) {
+                    group.classList.add('hidden');
+                    group.style.display = 'none';
+                } else {
+                    const visibleCards = Array.from(group.querySelectorAll('.room-card')).filter(c => !c.classList.contains('hidden') && c.style.display !== 'none');
+                    if (visibleCards.length === 0) {
+                        group.classList.add('hidden');
+                        group.style.display = 'none';
+                    } else {
+                        group.classList.remove('hidden');
+                        group.style.display = '';
+                        totalVisibleRooms += visibleCards.length;
+                    }
+                }
+            });
+
+            // ERR_13_03: Bộ lọc tầng không có phòng nào
+            const emptyState = document.getElementById('floor-empty-state');
+            if (emptyState) {
+                if (totalVisibleRooms === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.classList.add('hidden');
+                    emptyState.style.display = 'none';
+                }
+            }
+        }
+
+        function filterByFloor(floor, btn) {
+            currentFloorFilter = floor;
+            document.querySelectorAll('.floor-filter-btn').forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white');
+                b.classList.add('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                if (b.getAttribute('data-floor-filter') === String(floor)) {
+                    b.classList.remove('bg-slate-900', 'text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                    b.classList.add('bg-indigo-600', 'text-white');
+                }
+            });
+
+            document.querySelectorAll('.room-card').forEach(card => {
+                applyCurrentFilterToCard(card);
+            });
+
+            refreshFloorGroupsVisibility();
+        }
+
+        function showConflictModal(message) {
+            const modal = document.getElementById('modal-conflict-warning');
+            const msgEl = document.getElementById('modal-conflict-message');
+            if (modal && msgEl) {
+                msgEl.textContent = message || 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            } else {
+                alert(message);
+            }
+        }
+
+        function closeConflictModal() {
+            const modal = document.getElementById('modal-conflict-warning');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
             }
         }
 
@@ -4685,6 +4938,8 @@
             document.querySelectorAll('.room-card').forEach(card => {
                 applyCurrentFilterToCard(card);
             });
+
+            refreshFloorGroupsVisibility();
         }
 
         function toggleAddContractModal(show) {
@@ -4888,6 +5143,8 @@
             document.querySelectorAll('.room-card').forEach(card => {
                 applyCurrentFilterToCard(card);
             });
+
+            refreshFloorGroupsVisibility();
         }
 
         function openRoomDetailById(roomId) {
@@ -5129,7 +5386,11 @@
                 }
 
                 if (!response.ok || !data.success) {
-                    alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
+                    if (response.status === 422 || data.error_code === 'ERR_13_02') {
+                        showConflictModal(data.message || 'Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.');
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái phòng.');
+                    }
                     return;
                 }
 
@@ -7886,58 +8147,338 @@
             });
         }
 
-        function askAiAssistant(btn) {
-            const input = document.getElementById('ai-assistant-question');
-            const target = document.getElementById('ai-assistant-answer');
-            const question = input.value.trim();
+        // ==========================================
+        // FEAT_14_AI_ASSISTANT_HUB JAVASCRIPT LOGIC
+        // ==========================================
+        let currentAiHubMode = 'landlord_advisor';
+        let aiHubCountdownTimer = null;
+        let lastAiHubGeneratedContent = '';
 
-            if (question.length < 3) {
-                target.innerHTML = '<span class="text-amber-400">Vui lòng nhập câu hỏi rõ hơn.</span>';
+        function switchAiHubMode(mode, btn) {
+            currentAiHubMode = mode;
+            document.querySelectorAll('.ai-hub-tab-btn').forEach(b => {
+                b.className = 'ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center gap-2';
+            });
+            if (btn) {
+                btn.className = 'ai-hub-tab-btn flex-1 min-w-[130px] py-2 px-3 rounded-xl font-bold bg-indigo-600 text-white transition-all flex items-center justify-center gap-2';
+            }
+
+            const promptEl = document.getElementById('ai-hub-prompt');
+            const toneSelect = document.getElementById('ai-hub-tone');
+            if (promptEl) {
+                clearAiHubPromptError();
+                if (mode === 'room_finder') {
+                    promptEl.placeholder = 'Nhập nhu cầu tìm phòng (ví dụ: "Tìm phòng khép kín dưới 4 triệu gần đại học có máy giặt")...';
+                    if (toneSelect) toneSelect.value = 'friendly';
+                } else if (mode === 'landlord_advisor') {
+                    promptEl.placeholder = 'Nhập yêu cầu viết bài marketing SEO hoặc câu hỏi kinh doanh (ví dụ: "Soạn bài đăng phòng 101 chuẩn SEO")...';
+                    if (toneSelect) toneSelect.value = 'professional';
+                } else if (mode === 'tenant_incident') {
+                    promptEl.placeholder = 'Mô tả sự cố kỹ thuật phòng bạn (ví dụ: "Chập điện bốc khói khét ở ổ cắm gần tủ lạnh")...';
+                    if (toneSelect) toneSelect.value = 'urgent';
+                }
+            }
+        }
+
+        function clearAiHubPromptError() {
+            const promptEl = document.getElementById('ai-hub-prompt');
+            const errBox = document.getElementById('ai-hub-prompt-error');
+            const errText = document.getElementById('ai-hub-prompt-error-text');
+            if (promptEl) {
+                promptEl.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/40', 'shake-error');
+            }
+            if (errBox) errBox.classList.add('hidden');
+            if (errText) errText.textContent = '';
+        }
+
+        function showAiHubPromptError(message, shake = false) {
+            const promptEl = document.getElementById('ai-hub-prompt');
+            const errBox = document.getElementById('ai-hub-prompt-error');
+            const errText = document.getElementById('ai-hub-prompt-error-text');
+            if (promptEl) {
+                promptEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40');
+                if (shake) {
+                    promptEl.classList.remove('shake-error');
+                    void promptEl.offsetWidth;
+                    promptEl.classList.add('shake-error');
+                }
+                promptEl.focus();
+            }
+            if (errBox && errText) {
+                errText.textContent = message;
+                errBox.classList.remove('hidden');
+            }
+        }
+
+        function showAiHubToast(title, subtitle, type = 'success') {
+            let container = document.getElementById('realtime-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'realtime-toast-container';
+                container.className = 'fixed top-20 right-8 z-50 flex flex-col gap-3 pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const isWarning = type === 'warning';
+            const iconBg = isWarning ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400';
+            const icon = isWarning ? 'fa-triangle-exclamation' : 'fa-circle-check';
+            const borderColor = isWarning ? 'border-amber-500/40' : 'border-emerald-500/40';
+            const tagLabel = isWarning ? 'Cảnh báo Trợ lý AI (ERR_14_03)' : 'Thông báo AI (ERR_14_05)';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 border ${borderColor} text-slate-100 shadow-2xl backdrop-blur-md text-xs font-semibold animate-slide-in transition-all duration-300`;
+            toast.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-sm shrink-0">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div class="min-w-[180px]">
+                    <div class="text-[10px] ${isWarning ? 'text-amber-400' : 'text-emerald-400'} font-bold uppercase tracking-wider">${tagLabel}</div>
+                    <div class="text-slate-100 font-bold mt-0.5">${title}</div>
+                    ${subtitle ? `<div class="text-[11px] text-slate-400 mt-0.5 leading-snug">${subtitle}</div>` : ''}
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-8');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        function startAiHubCountdown(seconds = 30) {
+            const btn = document.getElementById('btn-send-ai-hub');
+            const badge = document.getElementById('ai-hub-countdown-badge');
+            const secSpan = document.getElementById('ai-hub-countdown-seconds');
+
+            if (aiHubCountdownTimer) clearInterval(aiHubCountdownTimer);
+            if (btn) btn.disabled = true;
+            if (badge) badge.classList.remove('hidden');
+
+            let remaining = seconds;
+            if (secSpan) secSpan.textContent = remaining;
+
+            aiHubCountdownTimer = setInterval(() => {
+                remaining--;
+                if (secSpan) secSpan.textContent = remaining;
+                if (remaining <= 0) {
+                    clearInterval(aiHubCountdownTimer);
+                    if (btn) btn.disabled = false;
+                    if (badge) badge.classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        async function submitAiAssistantHub() {
+            clearAiHubPromptError();
+            const promptInput = document.getElementById('ai-hub-prompt');
+            const toneSelect = document.getElementById('ai-hub-tone');
+            const sendBtn = document.getElementById('btn-send-ai-hub');
+            const responseBox = document.getElementById('ai-hub-response-box');
+            const statusBadge = document.getElementById('ai-hub-status-badge');
+            const actionsBar = document.getElementById('ai-hub-actions-bar');
+            const btnCopy = document.getElementById('btn-copy-ai-post');
+            const btnBooking = document.getElementById('btn-booking-viewing');
+            const btnEmergency = document.getElementById('btn-view-emergency-ticket');
+
+            const prompt = promptInput ? promptInput.value.trim() : '';
+
+            // 1. Kiểm tra để trống (ERR_14_01)
+            if (!prompt) {
+                showAiHubPromptError('Vui lòng nhập câu hỏi hoặc yêu cầu cần trợ lý AI hỗ trợ.', true);
                 return;
             }
 
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang hỏi...';
-            target.innerHTML = '<span class="text-slate-500">Trợ lý đang đọc dữ liệu nhà trọ...</span>';
+            // 2. Kiểm tra dưới 5 ký tự (ERR_14_02)
+            if (prompt.length < 5) {
+                showAiHubPromptError('Nội dung yêu cầu quá ngắn (tối thiểu 5 ký tự) để AI có đủ ngữ cảnh xử lý.', false);
+                return;
+            }
 
-            fetch("{{ route('smartroom.admin.ai.assistant') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken()
-                },
-                body: JSON.stringify({ question })
-            })
-            .then(res => res.json())
-            .then(data => {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
+            const originalBtnHtml = sendBtn ? sendBtn.innerHTML : '';
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang xử lý...';
+            }
 
-                if (!data.success) {
-                    target.innerHTML = '<span class="text-rose-400">Không thể hỏi trợ lý AI.</span>';
+            if (responseBox) {
+                responseBox.innerHTML = '<div class="flex items-center gap-2 text-purple-400 py-3"><i class="fa-solid fa-circle-notch animate-spin text-sm"></i> <span>Trợ lý AI đang tư duy và phân tích dữ liệu...</span></div>';
+            }
+            if (actionsBar) actionsBar.classList.add('hidden');
+
+            try {
+                const res = await fetch("{{ route('smartroom.admin.ai.assistant_hub') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken()
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        agent_mode: currentAiHubMode,
+                        tone: toneSelect ? toneSelect.value : 'professional',
+                    })
+                });
+
+                // 4. Xử lý Vượt quá tần suất truy vấn (ERR_14_04: HTTP 429)
+                if (res.status === 429) {
+                    const errData = await res.json().catch(() => ({}));
+                    showAiHubPromptError(errData.message || 'Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!', false);
+                    startAiHubCountdown(errData.retry_after || 30);
+                    if (responseBox) {
+                        responseBox.innerHTML = `<span class="text-amber-400 font-semibold">${errData.message || 'Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!'}</span>`;
+                    }
                     return;
                 }
 
-                const answer = data.answer;
-                const badge = answer.used_ai
-                    ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">AI</span>'
-                    : '<span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Fallback</span>';
+                // 1 & 2: Xử lý validation từ backend (422)
+                if (res.status === 422) {
+                    const errData = await res.json().catch(() => ({}));
+                    showAiHubPromptError(errData.message || 'Dữ liệu yêu cầu không hợp lệ.', errData.error_code === 'ERR_14_01');
+                    if (responseBox) {
+                        responseBox.innerHTML = `<span class="text-rose-400">${errData.message || 'Dữ liệu không hợp lệ.'}</span>`;
+                    }
+                    return;
+                }
 
-                target.innerHTML = `
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="whitespace-pre-line">${escapeHtml(answer.answer || '')}</div>
-                        ${badge}
-                    </div>
-                `;
-            })
-            .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-                target.innerHTML = '<span class="text-rose-400">Không thể kết nối trợ lý AI.</span>';
-                console.error(err);
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    if (responseBox) responseBox.innerHTML = `<span class="text-rose-400">${data.message || 'Không thể nhận phản hồi từ AI.'}</span>`;
+                    return;
+                }
+
+                lastAiHubGeneratedContent = data.response || '';
+
+                if (responseBox) {
+                    responseBox.textContent = data.response || '';
+                }
+
+                if (statusBadge) {
+                    statusBadge.classList.remove('hidden');
+                    if (data.is_fallback) {
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-500/10 text-amber-400 border-amber-500/20';
+                        statusBadge.textContent = 'Kho tri thức dự phòng (Fallback 6s)';
+                        showAiHubToast('Kích hoạt kho tri thức dự phòng', data.warning_message || 'Kết nối máy chủ AI quá thời gian chờ (6s), tự động kích hoạt câu trả lời từ kho tri thức dự phòng.', 'warning');
+                    } else {
+                        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                        statusBadge.textContent = 'Google Gemini AI';
+                    }
+                }
+
+                // 6. Xử lý Sự cố khẩn cấp (ERR_14_06)
+                if (data.is_emergency) {
+                    openAiEmergencyModal(data.message || 'Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!');
+                    if (btnEmergency) btnEmergency.classList.remove('hidden');
+                } else if (btnEmergency) {
+                    btnEmergency.classList.add('hidden');
+                }
+
+                if (actionsBar) actionsBar.classList.remove('hidden');
+                if (btnCopy) {
+                    if (currentAiHubMode === 'landlord_advisor' || data.quick_action === 'copy_content') {
+                        btnCopy.classList.remove('hidden');
+                    } else {
+                        btnCopy.classList.add('hidden');
+                    }
+                }
+                if (btnBooking) {
+                    if (currentAiHubMode === 'room_finder' || data.quick_action === 'book_viewing') {
+                        btnBooking.classList.remove('hidden');
+                    } else {
+                        btnBooking.classList.add('hidden');
+                    }
+                }
+
+            } catch (err) {
+                console.error('Lỗi gọi AI Assistant Hub:', err);
+                if (responseBox) responseBox.innerHTML = '<span class="text-rose-400">Lỗi kết nối đến máy chủ AI. Vui lòng thử lại sau giây lát!</span>';
+            } finally {
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+
+        // ERR_14_05: Sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm
+        function copyAiHubContent() {
+            if (!lastAiHubGeneratedContent) {
+                const box = document.getElementById('ai-hub-response-box');
+                lastAiHubGeneratedContent = box ? box.textContent : '';
+            }
+
+            if (!lastAiHubGeneratedContent) return;
+
+            navigator.clipboard.writeText(lastAiHubGeneratedContent).then(() => {
+                showAiHubToast(
+                    'Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!',
+                    '',
+                    'success'
+                );
+            }).catch(() => {
+                const tempArea = document.createElement('textarea');
+                tempArea.value = lastAiHubGeneratedContent;
+                document.body.appendChild(tempArea);
+                tempArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempArea);
+
+                showAiHubToast(
+                    'Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!',
+                    '',
+                    'success'
+                );
             });
         }
+
+        function openAiEmergencyModal(message) {
+            const modal = document.getElementById('modal-ai-emergency-ticket');
+            const msgEl = document.getElementById('modal-ai-emergency-message');
+            if (modal) {
+                if (msgEl && message) msgEl.textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeAiEmergencyModal() {
+            const modal = document.getElementById('modal-ai-emergency-ticket');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openBookingFromAi() {
+            window.location.href = "{{ route('smartroom.admin.contact_requests') }}";
+        }
+
+        function openEmergencyTicketModal() {
+            window.location.href = "{{ route('smartroom.admin.tickets.index') }}";
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const promptInput = document.getElementById('ai-hub-prompt');
+            const charCount = document.getElementById('ai-hub-char-count');
+
+            if (promptInput) {
+                promptInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        submitAiAssistantHub();
+                    }
+                });
+
+                promptInput.addEventListener('input', function () {
+                    clearAiHubPromptError();
+                    if (charCount) {
+                        charCount.textContent = `${this.value.length}/2000 ký tự`;
+                    }
+                });
+            }
+        });
 
         function generateContractTermsWithAi(btn) {
             const roomId = document.getElementById('contract-room-id')?.value;
@@ -8841,7 +9382,61 @@
             }
         }
 
+        let matrixEventSource = null;
+        function showSseWarning() {
+            const badge = document.getElementById('sse-reconnect-badge');
+            if (badge) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            }
+        }
+
+        function hideSseWarning() {
+            const badge = document.getElementById('sse-reconnect-badge');
+            if (badge) {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        function connectMatrixSSE() {
+            if (typeof EventSource === 'undefined') return;
+            try {
+                if (matrixEventSource) {
+                    matrixEventSource.close();
+                }
+                matrixEventSource = new EventSource("{{ route('admin.rooms.matrix.stream') }}");
+                matrixEventSource.onopen = function () {
+                    hideSseWarning();
+                };
+                matrixEventSource.addEventListener('room-updated', function (e) {
+                    hideSseWarning();
+                    try {
+                        const roomData = JSON.parse(e.data);
+                        if (roomData && roomData.id) {
+                            applyRoomCardUpdate(roomData);
+                        }
+                    } catch (err) {
+                        console.error('SSE room-updated parse error:', err);
+                    }
+                });
+                matrixEventSource.onerror = function () {
+                    showSseWarning();
+                };
+            } catch (err) {
+                showSseWarning();
+            }
+        }
+
         function initRoomMatrixRealtime() {
+            // 0. Khởi tạo luồng SSE thời gian thực (FEAT_13)
+            connectMatrixSSE();
+            window.addEventListener('offline', showSseWarning);
+            window.addEventListener('online', () => {
+                connectMatrixSSE();
+                hideSseWarning();
+            });
+
             // 1. Kết nối Laravel Echo + Reverb (WebSocket)
             if (window.Echo) {
                 try {
@@ -8869,14 +9464,17 @@
                 try {
                     const res = await fetch("{{ route('admin.rooms.matrix.poll') }}?since=" + lastEventTimestamp);
                     if (res.ok) {
+                        hideSseWarning();
                         const json = await res.json();
                         if (json.has_update && json.event) {
                             lastEventTimestamp = json.event.updated_at;
                             applyRoomCardUpdate(json.event);
                         }
+                    } else {
+                        showSseWarning();
                     }
                 } catch (e) {
-                    // im lặng
+                    showSseWarning();
                 }
             }, 25000);
         }
