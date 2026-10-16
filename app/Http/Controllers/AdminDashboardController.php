@@ -2181,21 +2181,23 @@ class AdminDashboardController extends Controller
             }
         }
 
-        $validated = $request->validate([
+        $rules = [
             'username' => ['nullable', 'string', 'alpha_dash:ascii', 'min:3', 'max:50', 'unique:users,username,' . $user->id],
             'full_name' => ['required', 'string', 'min:2', 'max:100'],
             'phone' => ['required', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/', 'unique:users,phone,' . $user->id],
             'email' => ['nullable', 'string', 'email', 'max:150', 'unique:users,email,' . $user->id],
-            'property_name' => ['nullable', 'string', 'max:150'],
-            'property_address' => ['nullable', 'string', 'max:500'],
-            'national_id' => ['nullable', 'string', 'max:50'],
-            'permanent_address' => ['nullable', 'string', 'max:500'],
+            'property_name' => [$request->has('property_name') ? 'required' : 'nullable', 'string', 'max:150'],
+            'property_address' => [$request->has('property_address') ? 'required' : 'nullable', 'string', 'max:500'],
+            'national_id' => [$request->has('national_id') ? 'required' : 'nullable', 'string', 'regex:/^[0-9]{9,12}$/'],
+            'permanent_address' => [$request->has('permanent_address') ? 'required' : 'nullable', 'string', 'max:500'],
+            'business_license' => [$request->has('business_license') ? 'required' : 'nullable', 'string', 'max:150'],
             'bank_account_number' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'max:60', 'required_with:bank_name'],
             'bank_name' => ['nullable', 'string', 'max:120', 'required_with:bank_account_number'],
-            'business_license' => ['nullable', 'string', 'max:150'],
             'password' => ['nullable', 'string', 'min:6'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-        ], [
+        ];
+
+        $messages = [
             // ERR_02_01
             'full_name.required' => 'Họ và tên chủ cơ sở không được để trống.',
             // ERR_02_02
@@ -2212,6 +2214,10 @@ class AdminDashboardController extends Controller
             'bank_name.required_with' => 'Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.',
             // ERR_02_07
             'bank_account_number.regex' => 'Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.',
+            'national_id.required' => 'Vui lòng nhập số Căn cước công dân của chủ cơ sở.',
+            'national_id.regex' => 'Số CCCD / CMND phải gồm 9 đến 12 chữ số.',
+            'permanent_address.required' => 'Vui lòng nhập địa chỉ thường trú theo CCCD.',
+            'business_license.required' => 'Vui lòng nhập số Giấy phép kinh doanh hoặc Mã số thuế.',
             'username.alpha_dash' => 'Tài khoản đăng nhập chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới.',
             'username.min' => 'Tài khoản đăng nhập tối thiểu 3 ký tự.',
             'username.unique' => 'Tài khoản đăng nhập này đã được sử dụng bởi tài khoản khác.',
@@ -2220,7 +2226,9 @@ class AdminDashboardController extends Controller
             'password.min' => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
             'avatar.image' => 'Ảnh đại diện phải là tệp hình ảnh hợp lệ (PNG, JPG, WebP).',
             'avatar.max' => 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (2MB).',
-        ]);
+        ];
+
+        $validated = $request->validate($rules, $messages);
 
         // Username là định danh tài khoản cố định - không cho phép thay đổi từ form hồ sơ
         $user->name = $validated['full_name'];

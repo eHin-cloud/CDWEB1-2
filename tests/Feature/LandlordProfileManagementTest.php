@@ -300,4 +300,40 @@ class LandlordProfileManagementTest extends TestCase
         $this->assertSame($originalUsername, $user->fresh()->username, 'Tài khoản đăng nhập không được phép thay đổi.');
         $this->assertSame($originalUsername, $profile->fresh()->username, 'Landlord profile username phải giữ nguyên theo user.');
     }
+
+    /**
+     * Kiểm tra validate đổi mật khẩu mới: độ dài < 6 ký tự báo lỗi 'Mật khẩu mới phải có tối thiểu 6 ký tự.'
+     */
+    public function test_validation_fails_when_new_password_is_shorter_than_6_characters(): void
+    {
+        [$user] = $this->setupLandlord();
+
+        $response = $this->actingAs($user)->post(route('smartroom.admin.profile.update'), [
+            'full_name' => 'Nguyễn Thanh Hiền',
+            'phone' => '0912345678',
+            'password' => '12345',
+        ]);
+
+        $response->assertSessionHasErrors('password');
+        $errors = session('errors')->get('password');
+        $this->assertContains('Mật khẩu mới phải có tối thiểu 6 ký tự.', $errors);
+    }
+
+    /**
+     * Kiểm tra validate số CCCD/CMND: chứa chữ cái hoặc độ dài không đúng báo lỗi
+     */
+    public function test_validation_fails_when_national_id_is_invalid(): void
+    {
+        [$user] = $this->setupLandlord();
+
+        $response = $this->actingAs($user)->post(route('smartroom.admin.profile.update'), [
+            'full_name' => 'Nguyễn Thanh Hiền',
+            'phone' => '0912345678',
+            'national_id' => '001203ABCDEF',
+        ]);
+
+        $response->assertSessionHasErrors('national_id');
+        $errors = session('errors')->get('national_id');
+        $this->assertContains('Số CCCD / CMND phải gồm 9 đến 12 chữ số.', $errors);
+    }
 }

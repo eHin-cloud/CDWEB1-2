@@ -254,6 +254,20 @@
                     <form id="profile-form" method="POST" action="{{ route('smartroom.admin.profile.update') }}" enctype="multipart/form-data" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-6">
                         @csrf
 
+                        @if ($errors->any())
+                            <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm mt-0.5"></i>
+                                <div>
+                                    <div class="font-bold text-rose-400 mb-1">Cập nhật hồ sơ không thành công! Vui lòng kiểm tra lại:</div>
+                                    <ul class="list-disc list-inside space-y-0.5 text-slate-300">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- STT 1: Avatar Upload (96px circle) -->
                         <div class="flex items-center gap-5 border-b border-slate-800/60 pb-5">
                             <div class="relative w-24 h-24 rounded-full border-2 border-indigo-500/40 bg-slate-900 flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-500/10 group cursor-pointer" onclick="document.getElementById('avatar-input').click()">
@@ -273,7 +287,7 @@
                                     <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
                                     <span>Chọn ảnh từ máy tính</span>
                                 </button>
-                                <span id="err-avatar" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-avatar" class="text-[11px] text-rose-400 mt-1 @error('avatar') block @else hidden @enderror">@error('avatar') {{ $message }} @enderror</span>
                             </div>
                         </div>
 
@@ -297,7 +311,7 @@
                                     <input type="text" name="username" id="username" readonly onkeydown="return false;" value="{{ old('username', $landlordProfile->username ?? Auth::user()->username) }}" class="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-800/80 bg-slate-950/70 text-xs text-slate-400 font-mono outline-none cursor-not-allowed select-none transition-all" tabindex="-1">
                                     <i class="fa-solid fa-lock absolute right-3.5 top-3 text-slate-500 text-xs"></i>
                                 </div>
-                                <span id="err-username" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-username" class="text-[11px] text-rose-400 mt-1 @error('username') block @else hidden @enderror">@error('username') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- STT 2: Họ và tên -->
@@ -305,9 +319,9 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Họ và tên *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-user-tie absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="full_name" id="full_name" required value="{{ old('full_name', $landlordProfile->full_name ?? Auth::user()->name) }}" placeholder="Nguyễn Văn A" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordFullName()">
+                                    <input type="text" name="full_name" id="full_name" required value="{{ old('full_name', $landlordProfile->full_name ?? Auth::user()->name) }}" placeholder="Nguyễn Văn A" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('full_name') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordFullName()" oninput="validateLandlordFullName()">
                                 </div>
-                                <span id="err-full_name" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-full_name" class="text-[11px] text-rose-400 mt-1 @error('full_name') block @else hidden @enderror">@error('full_name') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- STT 3: Số điện thoại liên hệ -->
@@ -315,18 +329,18 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số điện thoại liên hệ *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-phone absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="tel" name="phone" id="phone" required value="{{ old('phone', $landlordProfile->phone ?? Auth::user()->phone) }}" placeholder="0912345678" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordPhone()">
+                                    <input type="tel" name="phone" id="phone" required value="{{ old('phone', $landlordProfile->phone ?? Auth::user()->phone) }}" placeholder="0912345678" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('phone') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordPhone()" oninput="validateLandlordPhone()">
                                 </div>
-                                <span id="err-phone" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-phone" class="text-[11px] text-rose-400 mt-1 @error('phone') block @else hidden @enderror">@error('phone') {{ $message }} @enderror</span>
                             </div>
 
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ Email</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="email" name="email" id="email" value="{{ old('email', $landlordProfile->email ?? Auth::user()->email) }}" placeholder="chutro@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                    <input type="email" name="email" id="email" value="{{ old('email', $landlordProfile->email ?? Auth::user()->email) }}" placeholder="chutro@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('email') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordEmail()" oninput="validateLandlordEmail()">
                                 </div>
-                                <span id="err-email" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-email" class="text-[11px] text-rose-400 mt-1 @error('email') block @else hidden @enderror">@error('email') {{ $message }} @enderror</span>
                             </div>
                         </div>
 
@@ -340,22 +354,22 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Tên cơ sở lưu trú (ERR_02_03) -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên cơ sở lưu trú / Khu trọ</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên cơ sở lưu trú / Khu trọ *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-building absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="property_name" id="property_name" value="{{ old('property_name', $landlordProfile->property_name ?? $tenant->name ?? '') }}" placeholder="Khu trọ Bình An, Tòa nhà Diamond..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-amber-500 transition-all" onblur="validateLandlordPropertyName()">
+                                    <input type="text" name="property_name" id="property_name" value="{{ old('property_name', $landlordProfile->property_name ?? $tenant->name ?? '') }}" placeholder="Khu trọ Bình An, Tòa nhà Diamond..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('property_name') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-amber-500 transition-all" onblur="validateLandlordPropertyName()" oninput="validateLandlordPropertyName()">
                                 </div>
-                                <span id="err-property_name" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-property_name" class="text-[11px] text-rose-400 mt-1 @error('property_name') block @else hidden @enderror">@error('property_name') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- Địa chỉ cơ sở lưu trú (ERR_02_04) -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ cơ sở lưu trú</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ cơ sở lưu trú *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-location-dot absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="property_address" id="property_address" value="{{ old('property_address', $landlordProfile->property_address ?? $tenant->address ?? '') }}" placeholder="Số 123 Đường Số 1, Phường Linh Trung, TP. Thủ Đức" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-amber-500 transition-all" onblur="validateLandlordPropertyAddress()">
+                                    <input type="text" name="property_address" id="property_address" value="{{ old('property_address', $landlordProfile->property_address ?? $tenant->address ?? '') }}" placeholder="Số 123 Đường Số 1, Phường Linh Trung, TP. Thủ Đức" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('property_address') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-amber-500 transition-all" onblur="validateLandlordPropertyAddress()" oninput="validateLandlordPropertyAddress()">
                                 </div>
-                                <span id="err-property_address" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-property_address" class="text-[11px] text-rose-400 mt-1 @error('property_address') block @else hidden @enderror">@error('property_address') {{ $message }} @enderror</span>
                             </div>
                         </div>
 
@@ -369,29 +383,32 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <!-- CCCD/CMND -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">CCCD / CMND</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">CCCD / CMND *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="national_id" id="national_id" value="{{ old('national_id', $landlordProfile->national_id ?? '') }}" placeholder="001203040506" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="national_id" id="national_id" value="{{ old('national_id', $landlordProfile->national_id ?? '') }}" placeholder="001203040506" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('national_id') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordNationalId()" oninput="validateLandlordNationalId()">
                                 </div>
+                                <span id="err-national_id" class="text-[11px] text-rose-400 mt-1 @error('national_id') block @else hidden @enderror">@error('national_id') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- Địa chỉ thường trú -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ thường trú</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Địa chỉ thường trú *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-house-user absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="permanent_address" id="permanent_address" value="{{ old('permanent_address', $landlordProfile->permanent_address ?? '') }}" placeholder="Địa chỉ theo CCCD" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="permanent_address" id="permanent_address" value="{{ old('permanent_address', $landlordProfile->permanent_address ?? '') }}" placeholder="Địa chỉ theo CCCD" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('permanent_address') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordPermanentAddress()" oninput="validateLandlordPermanentAddress()">
                                 </div>
+                                <span id="err-permanent_address" class="text-[11px] text-rose-400 mt-1 @error('permanent_address') block @else hidden @enderror">@error('permanent_address') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- Giấy phép kinh doanh -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Giấy phép kinh doanh / Mã số thuế</label>
+                                <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Giấy phép kinh doanh / Mã số thuế *</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-file-invoice absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="business_license" id="business_license" value="{{ old('business_license', $landlordProfile->business_license ?? '') }}" placeholder="Số ĐKKD hoặc Mã số thuế" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all">
+                                    <input type="text" name="business_license" id="business_license" value="{{ old('business_license', $landlordProfile->business_license ?? '') }}" placeholder="Số ĐKKD hoặc Mã số thuế" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('business_license') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBusinessLicense()" oninput="validateLandlordBusinessLicense()">
                                 </div>
+                                <span id="err-business_license" class="text-[11px] text-rose-400 mt-1 @error('business_license') block @else hidden @enderror">@error('business_license') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- Tên ngân hàng (ERR_02_06) -->
@@ -399,7 +416,7 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Tên ngân hàng thụ hưởng</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-building-columns absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="bank_name" id="bank_name" list="bank-list-admin" value="{{ old('bank_name', $landlordProfile->bank_name ?? $tenant->bank_name ?? '') }}" placeholder="MB Bank, Vietcombank..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBank()">
+                                    <input type="text" name="bank_name" id="bank_name" list="bank-list-admin" value="{{ old('bank_name', $landlordProfile->bank_name ?? $tenant->bank_name ?? '') }}" placeholder="MB Bank, Vietcombank..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('bank_name') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBank()" oninput="validateLandlordBank()">
                                     <datalist id="bank-list-admin">
                                         <option value="MB Bank (Quân Đội)">
                                         <option value="Vietcombank">
@@ -412,7 +429,7 @@
                                         <option value="TPBank">
                                     </datalist>
                                 </div>
-                                <span id="err-bank_name" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-bank_name" class="text-[11px] text-rose-400 mt-1 @error('bank_name') block @else hidden @enderror">@error('bank_name') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- Số tài khoản ngân hàng (ERR_02_05 & ERR_02_07) -->
@@ -420,9 +437,9 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Số tài khoản ngân hàng</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-credit-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="text" name="bank_account_number" id="bank_account_number" value="{{ old('bank_account_number', $landlordProfile->bank_account_number ?? $tenant->bank_account_no ?? '') }}" placeholder="Số tài khoản ngân hàng" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBankAccount()">
+                                    <input type="text" name="bank_account_number" id="bank_account_number" value="{{ old('bank_account_number', $landlordProfile->bank_account_number ?? $tenant->bank_account_no ?? '') }}" placeholder="Số tài khoản ngân hàng" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('bank_account_number') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 font-mono outline-none focus:border-emerald-500 transition-all" onblur="validateLandlordBankAccount()" oninput="validateLandlordBankAccount()">
                                 </div>
-                                <span id="err-bank_account_number" class="text-[11px] text-rose-400 mt-1 hidden block"></span>
+                                <span id="err-bank_account_number" class="text-[11px] text-rose-400 mt-1 @error('bank_account_number') block @else hidden @enderror">@error('bank_account_number') {{ $message }} @enderror</span>
                             </div>
 
                             <!-- Đổi mật khẩu mới -->
@@ -430,8 +447,9 @@
                                 <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">Đổi mật khẩu mới</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                                    <input type="password" name="password" id="password" minlength="6" placeholder="Để trống nếu không đổi" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all">
+                                    <input type="password" name="password" id="password" minlength="6" placeholder="Để trống nếu không đổi" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @error('password') border-rose-500 ring-2 ring-rose-500 @else border-slate-800 @enderror bg-slate-900 text-xs text-slate-100 outline-none focus:border-indigo-500 transition-all" onblur="validateLandlordPassword()" oninput="validateLandlordPassword()">
                                 </div>
+                                <span id="err-password" class="text-[11px] text-rose-400 mt-1 @error('password') block @else hidden @enderror">@error('password') {{ $message }} @enderror</span>
                             </div>
                         </div>
 
@@ -457,6 +475,7 @@
                                 if (err) {
                                     err.textContent = 'Ảnh đại diện phải là tệp hình ảnh hợp lệ (PNG, JPG, WebP).';
                                     err.classList.remove('hidden');
+                                    err.classList.add('block');
                                 }
                                 input.value = '';
                                 return;
@@ -466,12 +485,16 @@
                                 if (err) {
                                     err.textContent = 'Ảnh tải lên vượt quá dung lượng tối đa cho phép (2MB).';
                                     err.classList.remove('hidden');
+                                    err.classList.add('block');
                                 }
                                 input.value = '';
                                 return;
                             }
 
-                            if (err) err.classList.add('hidden');
+                            if (err) {
+                                err.classList.add('hidden');
+                                err.classList.remove('block');
+                            }
 
                             // Xem trước ảnh trên Client (FileReader) - CHƯA gửi lên máy chủ
                             const reader = new FileReader();
@@ -489,10 +512,12 @@
                             if (input.value.trim() === '') {
                                 err.textContent = 'Họ và tên chủ cơ sở không được để trống.';
                                 err.classList.remove('hidden');
+                                err.classList.add('block');
                                 input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                                 return false;
                             }
                             err.classList.add('hidden');
+                            err.classList.remove('block');
                             input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
                             return true;
                         }
@@ -505,10 +530,33 @@
                             if (input.value.trim() === '' || !regex.test(input.value.trim())) {
                                 err.textContent = 'Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.';
                                 err.classList.remove('hidden');
+                                err.classList.add('block');
                                 input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                                 return false;
                             }
                             err.classList.add('hidden');
+                            err.classList.remove('block');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordEmail() {
+                            const input = document.getElementById('email');
+                            const err = document.getElementById('err-email');
+                            if (!input || !err) return true;
+                            const val = input.value.trim();
+                            if (val !== '') {
+                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                if (!emailRegex.test(val)) {
+                                    err.textContent = 'Địa chỉ email không đúng định dạng hợp lệ.';
+                                    err.classList.remove('hidden');
+                                    err.classList.add('block');
+                                    input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                    return false;
+                                }
+                            }
+                            err.classList.add('hidden');
+                            err.classList.remove('block');
                             input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
                             return true;
                         }
@@ -517,14 +565,15 @@
                             const input = document.getElementById('property_name');
                             const err = document.getElementById('err-property_name');
                             if (!input || !err) return true;
-                            // Chỉ cảnh báo nếu người dùng nhập rỗng khi đang điền
-                            if (input.value.trim() === '' && input.dataset.touched === 'true') {
+                            if (input.value.trim() === '') {
                                 err.textContent = 'Tên cơ sở lưu trú / khu trọ không được để trống.';
                                 err.classList.remove('hidden');
+                                err.classList.add('block');
                                 input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                                 return false;
                             }
                             err.classList.add('hidden');
+                            err.classList.remove('block');
                             input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
                             return true;
                         }
@@ -533,29 +582,108 @@
                             const input = document.getElementById('property_address');
                             const err = document.getElementById('err-property_address');
                             if (!input || !err) return true;
-                            if (input.value.trim() === '' && input.dataset.touched === 'true') {
+                            if (input.value.trim() === '') {
                                 err.textContent = 'Địa chỉ cơ sở lưu trú là bắt buộc để khách hàng định vị.';
                                 err.classList.remove('hidden');
+                                err.classList.add('block');
                                 input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                                 return false;
                             }
                             err.classList.add('hidden');
+                            err.classList.remove('block');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordNationalId() {
+                            const input = document.getElementById('national_id');
+                            const err = document.getElementById('err-national_id');
+                            if (!input || !err) return true;
+                            const val = input.value.trim();
+                            if (val === '') {
+                                err.textContent = 'Vui lòng nhập số Căn cước công dân của chủ cơ sở.';
+                                err.classList.remove('hidden');
+                                err.classList.add('block');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            if (!/^[0-9]+$/.test(val) || val.length < 9 || val.length > 12) {
+                                err.textContent = 'Số CCCD / CMND phải gồm 9 đến 12 chữ số.';
+                                err.classList.remove('hidden');
+                                err.classList.add('block');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            err.classList.remove('block');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordPermanentAddress() {
+                            const input = document.getElementById('permanent_address');
+                            const err = document.getElementById('err-permanent_address');
+                            if (!input || !err) return true;
+                            const val = input.value.trim();
+                            if (val === '') {
+                                err.textContent = 'Vui lòng nhập địa chỉ thường trú theo CCCD.';
+                                err.classList.remove('hidden');
+                                err.classList.add('block');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            err.classList.remove('block');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordBusinessLicense() {
+                            const input = document.getElementById('business_license');
+                            const err = document.getElementById('err-business_license');
+                            if (!input || !err) return true;
+                            const val = input.value.trim();
+                            if (val === '') {
+                                err.textContent = 'Vui lòng nhập số Giấy phép kinh doanh hoặc Mã số thuế.';
+                                err.classList.remove('hidden');
+                                err.classList.add('block');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+                            err.classList.add('hidden');
+                            err.classList.remove('block');
                             input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
                             return true;
                         }
 
                         function validateLandlordBankAccount() {
                             const input = document.getElementById('bank_account_number');
+                            const bankInput = document.getElementById('bank_name');
                             const err = document.getElementById('err-bank_account_number');
                             if (!input || !err) return true;
                             const val = input.value.trim();
-                            if (val !== '' && !/^[0-9]+$/.test(val)) {
-                                err.textContent = 'Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.';
+                            const bankVal = bankInput ? bankInput.value.trim() : '';
+
+                            // ERR_02_05: Có tên ngân hàng mà để trống số tài khoản
+                            if (bankVal !== '' && val === '') {
+                                err.textContent = 'Số tài khoản ngân hàng không được để trống để tạo mã VietQR.';
                                 err.classList.remove('hidden');
+                                err.classList.add('block');
                                 input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                                 return false;
                             }
+
+                            // ERR_02_07: Số tài khoản chứa ký tự không phải số
+                            if (val !== '' && !/^[0-9]+$/.test(val)) {
+                                err.textContent = 'Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.';
+                                err.classList.remove('hidden');
+                                err.classList.add('block');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
+                            }
+
                             err.classList.add('hidden');
+                            err.classList.remove('block');
                             input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
                             return true;
                         }
@@ -564,30 +692,62 @@
                             const bankInput = document.getElementById('bank_name');
                             const accInput = document.getElementById('bank_account_number');
                             const errBank = document.getElementById('err-bank_name');
-                            const errAcc = document.getElementById('err-bank_account_number');
+                            if (!bankInput || !errBank) return true;
+                            const bankVal = bankInput.value.trim();
+                            const accVal = accInput ? accInput.value.trim() : '';
                             
-                            if (accInput && accInput.value.trim() !== '' && (!bankInput || bankInput.value.trim() === '')) {
-                                if (errBank) {
-                                    errBank.textContent = 'Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.';
-                                    errBank.classList.remove('hidden');
-                                    bankInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
-                                }
+                            // ERR_02_06: Có số tài khoản mà chưa chọn ngân hàng
+                            if (accVal !== '' && bankVal === '') {
+                                errBank.textContent = 'Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.';
+                                errBank.classList.remove('hidden');
+                                errBank.classList.add('block');
+                                bankInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
                                 return false;
                             }
-                            if (errBank) {
-                                errBank.classList.add('hidden');
-                                bankInput?.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            errBank.classList.add('hidden');
+                            errBank.classList.remove('block');
+                            bankInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                            return true;
+                        }
+
+                        function validateLandlordPassword() {
+                            const input = document.getElementById('password');
+                            const err = document.getElementById('err-password');
+                            if (!input || !err) return true;
+                            const val = input.value;
+                            if (val !== '' && val.length < 6) {
+                                err.textContent = 'Mật khẩu mới phải có tối thiểu 6 ký tự.';
+                                err.classList.remove('hidden');
+                                err.classList.add('block');
+                                input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                return false;
                             }
+                            err.classList.add('hidden');
+                            err.classList.remove('block');
+                            input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
                             return true;
                         }
 
                         document.getElementById('profile-form')?.addEventListener('submit', function(e) {
                             const okName = validateLandlordFullName();
                             const okPhone = validateLandlordPhone();
+                            const okEmail = validateLandlordEmail();
+                            const okPropName = validateLandlordPropertyName();
+                            const okPropAddr = validateLandlordPropertyAddress();
+                            const okNationalId = validateLandlordNationalId();
+                            const okPermanent = validateLandlordPermanentAddress();
+                            const okLicense = validateLandlordBusinessLicense();
                             const okAcc = validateLandlordBankAccount();
                             const okBank = validateLandlordBank();
-                            if (!okName || !okPhone || !okAcc || !okBank) {
+                            const okPass = validateLandlordPassword();
+
+                            if (!okName || !okPhone || !okEmail || !okPropName || !okPropAddr || !okNationalId || !okPermanent || !okLicense || !okAcc || !okBank || !okPass) {
                                 e.preventDefault();
+                                const firstErr = document.querySelector('#profile-form .ring-rose-500, #profile-form .border-rose-500');
+                                if (firstErr) {
+                                    firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    firstErr.focus();
+                                }
                                 return false;
                             }
                         });
@@ -665,64 +825,285 @@
                                     <p class="mt-2 text-slate-300">Mã hồ sơ: #{{ $kycRequest->id ?? 'N/A' }}. Ban quản trị SmartRoom đang thẩm định CCCD và phê duyệt cấp Tích Xanh cho cơ sở của bạn.</p>
                                 </div>
                             @else
-                                <form method="POST" action="{{ route('smartroom.admin.kyc.submit') }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                                <form id="kyc-form" method="POST" action="{{ route('smartroom.admin.kyc.submit') }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-5 rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
                                     @csrf
-                                    <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                                        <label class="block">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Số CCCD 12 số *</span>
-                                            <input name="cccd_number" id="id_card_number" required maxlength="12" placeholder="07920100xxxx" value="{{ old('cccd_number', old('id_card_number', '')) }}" class="w-full rounded-xl border @error('cccd_number') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 focus:border-amber-400 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none">
-                                            @error('cccd_number')
-                                                <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
-                                            @enderror
+
+                                    <!-- STT 1: Input Số CCCD 12 số (id_card_number) -->
+                                    <div class="lg:col-span-3">
+                                        <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">
+                                            Số CCCD 12 số *
                                         </label>
-                                        <label class="block">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ngân hàng</span>
-                                            <input name="bank_name" value="{{ old('bank_name', $tenant->bank_name ?? 'MB') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
-                                        </label>
-                                        <label class="block">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Số tài khoản</span>
-                                            <input name="bank_account_no" value="{{ old('bank_account_no', $tenant->bank_account_no ?? '') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
-                                        </label>
-                                        <label class="block">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tên chủ tài khoản</span>
-                                            <input name="bank_account_name" value="{{ old('bank_account_name', $tenant->bank_account_name ?? '') }}" class="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-400">
-                                        </label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                                            <input type="text" name="id_card_number" id="id_card_number" maxlength="12" placeholder="07920100xxxx" value="{{ old('id_card_number', old('cccd_number', '')) }}" class="w-full pl-9 pr-3 py-2.5 rounded-xl border @if($errors->has('id_card_number') || $errors->has('cccd_number')) border-rose-500 ring-2 ring-rose-500 @else border-slate-800 focus:border-emerald-500 @enderror bg-slate-900 text-xs text-slate-100 outline-none transition-all font-mono" onblur="validateKycCccd()" oninput="validateKycCccd()">
+                                        </div>
+                                        <span id="err-id_card_number" class="text-[11px] text-rose-400 mt-1.5 @if($errors->has('id_card_number') || $errors->has('cccd_number')) block @else hidden @endif font-medium">
+                                            {{ $errors->first('id_card_number') ?: $errors->first('cccd_number') }}
+                                        </span>
                                     </div>
 
-                                    <label class="block">
-                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ảnh mặt trước *</span>
-                                        <input type="file" name="cccd_front" id="file_front" accept="image/*,.pdf" required class="w-full rounded-xl border @error('cccd_front') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-300">
-                                        @error('cccd_front')
-                                            <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
-                                        @enderror
-                                    </label>
-                                    <label class="block">
-                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ảnh mặt sau *</span>
-                                        <input type="file" name="cccd_back" id="file_back" accept="image/*,.pdf" required class="w-full rounded-xl border @error('cccd_back') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-300">
-                                        @error('cccd_back')
-                                            <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
-                                        @enderror
-                                    </label>
-                                    <label class="block">
-                                        <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Ảnh/xác nhận tài khoản NH</span>
-                                        <input type="file" name="bank_account_proof" id="file_proof" accept="image/*,.pdf" class="w-full rounded-xl border @error('bank_account_proof') border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950 px-3 py-2 text-xs text-slate-300">
-                                        @error('bank_account_proof')
-                                            <p class="text-rose-400 text-[11px] mt-1">{{ $message }}</p>
-                                        @enderror
+                                    <!-- STT 2: Upload Box Ảnh mặt trước * (file_front) -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">
+                                            Ảnh mặt trước *
+                                        </label>
+                                        <div id="box-front" class="relative border-2 border-dashed @if($errors->has('file_front') || $errors->has('front_image') || $errors->has('cccd_front')) border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 hover:border-emerald-500/60 @enderror rounded-2xl p-4 text-center bg-slate-900/60 transition-all cursor-pointer group flex flex-col items-center justify-center min-h-[140px]" onclick="document.getElementById('file_front').click()">
+                                            <input type="file" name="file_front" id="file_front" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" onchange="handleKycFileSelect(this, 'preview-front', 'placeholder-front', 'err-file_front', 'box-front')">
+                                            
+                                            <!-- Placeholder hướng dẫn -->
+                                            <div id="placeholder-front" class="flex flex-col items-center justify-center space-y-1.5">
+                                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 transition-colors">
+                                                    <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                                                </div>
+                                                <p class="text-xs font-semibold text-slate-200">Chọn file JPG/PNG...</p>
+                                                <p class="text-[10px] text-slate-500">Kéo thả hoặc bấm để tải lên (tối đa 10MB)</p>
+                                            </div>
+
+                                            <!-- Thumbnail xem trước -->
+                                            <div id="preview-front" class="hidden relative w-full h-28 rounded-xl overflow-hidden border border-slate-700/80">
+                                                <img src="" alt="CCCD Mặt trước" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white text-[10px] font-bold">
+                                                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Đổi ảnh khác
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span id="err-file_front" class="text-[11px] text-rose-400 mt-1.5 @if($errors->has('file_front') || $errors->has('front_image') || $errors->has('cccd_front')) block @else hidden @endif font-medium">
+                                            {{ $errors->first('file_front') ?: ($errors->first('front_image') ?: $errors->first('cccd_front')) }}
+                                        </span>
+                                    </div>
+
+                                    <!-- STT 3: Upload Box Ảnh mặt sau * (file_back) -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">
+                                            Ảnh mặt sau *
+                                        </label>
+                                        <div id="box-back" class="relative border-2 border-dashed @if($errors->has('file_back') || $errors->has('back_image') || $errors->has('cccd_back')) border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 hover:border-emerald-500/60 @enderror rounded-2xl p-4 text-center bg-slate-900/60 transition-all cursor-pointer group flex flex-col items-center justify-center min-h-[140px]" onclick="document.getElementById('file_back').click()">
+                                            <input type="file" name="file_back" id="file_back" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" onchange="handleKycFileSelect(this, 'preview-back', 'placeholder-back', 'err-file_back', 'box-back')">
+                                            
+                                            <div id="placeholder-back" class="flex flex-col items-center justify-center space-y-1.5">
+                                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 transition-colors">
+                                                    <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                                                </div>
+                                                <p class="text-xs font-semibold text-slate-200">Chọn file JPG/PNG...</p>
+                                                <p class="text-[10px] text-slate-500">Kéo thả hoặc bấm để tải lên (tối đa 10MB)</p>
+                                            </div>
+
+                                            <div id="preview-back" class="hidden relative w-full h-28 rounded-xl overflow-hidden border border-slate-700/80">
+                                                <img src="" alt="CCCD Mặt sau" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white text-[10px] font-bold">
+                                                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Đổi ảnh khác
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span id="err-file_back" class="text-[11px] text-rose-400 mt-1.5 @if($errors->has('file_back') || $errors->has('back_image') || $errors->has('cccd_back')) block @else hidden @endif font-medium">
+                                            {{ $errors->first('file_back') ?: ($errors->first('back_image') ?: $errors->first('cccd_back')) }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Bảng 3: Ảnh chụp chân dung cầm CCCD / Giấy tờ bổ sung (holding_image) -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1.5">
+                                            Ảnh chân dung cầm CCCD (Tùy chọn)
+                                        </label>
+                                        <div id="box-holding" class="relative border-2 border-dashed @if($errors->has('holding_image') || $errors->has('bank_account_proof')) border-rose-500 ring-2 ring-rose-500/50 @else border-slate-800 hover:border-emerald-500/60 @enderror rounded-2xl p-4 text-center bg-slate-900/60 transition-all cursor-pointer group flex flex-col items-center justify-center min-h-[140px]" onclick="document.getElementById('holding_image').click()">
+                                            <input type="file" name="holding_image" id="holding_image" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" onchange="handleKycFileSelect(this, 'preview-holding', 'placeholder-holding', 'err-holding_image', 'box-holding')">
+                                            
+                                            <div id="placeholder-holding" class="flex flex-col items-center justify-center space-y-1.5">
+                                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 transition-colors">
+                                                    <i class="fa-solid fa-user-shield text-base"></i>
+                                                </div>
+                                                <p class="text-xs font-semibold text-slate-200">Chân dung hoặc PCCC/NH</p>
+                                                <p class="text-[10px] text-slate-500">Giúp duyệt Tích Xanh siêu tốc</p>
+                                            </div>
+
+                                            <div id="preview-holding" class="hidden relative w-full h-28 rounded-xl overflow-hidden border border-slate-700/80">
+                                                <img src="" alt="Ảnh chân dung" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white text-[10px] font-bold">
+                                                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Đổi ảnh khác
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span id="err-holding_image" class="text-[11px] text-rose-400 mt-1.5 hidden font-medium"></span>
+                                    </div>
+
+                                    <!-- Bản Cam Kết Pháp Lý (Hình 9.1 Spec) -->
+                                    <label class="lg:col-span-3 flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 text-xs leading-5 text-emerald-100 cursor-pointer">
+                                        <input type="checkbox" name="admin_review_consent" value="1" required checked class="mt-0.5 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+                                        <span>Tôi cam kết các thông tin định danh và hình ảnh CCCD cung cấp là chính xác, chính chủ, tuân thủ theo <a href="javascript:void(0)" onclick="openKycTermsModal()" class="text-emerald-300 underline underline-offset-2 hover:text-emerald-200 font-bold transition-colors">Điều khoản Bảo mật & Xác thực KYC</a> của SmartRoom.</span>
                                     </label>
 
-                                    <label class="lg:col-span-3 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] leading-5 text-amber-50">
-                                        <input type="checkbox" name="admin_review_consent" value="1" required class="mt-1 rounded border-slate-700 bg-slate-950 text-amber-400 focus:ring-amber-400">
-                                        <span>Tôi đồng ý với <a href="javascript:void(0)" onclick="openKycTermsModal()" class="text-amber-300 underline underline-offset-2 hover:text-amber-200 font-bold transition-colors">Điều khoản Bảo mật Thông tin & Xác thực Tài khoản (KYC)</a> của SmartRoom.</span>
-                                    </label>
-
-                                    <div class="lg:col-span-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <p class="text-[11px] leading-5 text-slate-500">Thông tin này chỉ dùng để mở khóa nhận tiền/chuyển khoản và cấp Tích Xanh uy tín. Giấy phép PCCC và ANTT là bước nâng cấp Tích xanh toàn diện.</p>
-                                        <button type="submit" id="btnSubmitKYC" class="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-amber-400 transition-colors">
-                                            Gửi hồ sơ kiểm duyệt
+                                    <!-- STT 4: Nút Submit (btnSubmitKYC) Nền xanh lá/xanh dương đậm -->
+                                    <div class="lg:col-span-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                                        <p class="text-[11px] leading-relaxed text-slate-400">
+                                            <i class="fa-solid fa-lock text-emerald-400 mr-1"></i> Thông tin được mã hóa bảo mật Zero Trust SHA-256 và chỉ phục vụ xét duyệt cấp Tích Xanh uy tín.
+                                        </p>
+                                        <button type="submit" id="btnSubmitKYC" class="shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                            <i class="fa-solid fa-shield-check text-xs"></i>
+                                            <span>Gửi hồ sơ phê duyệt</span>
                                         </button>
                                     </div>
                                 </form>
+
+                                <script>
+                                    // Xử lý xem trước ảnh (Preview) và Drag & Drop cho Upload Box
+                                    function handleKycFileSelect(input, previewId, placeholderId, errorId, boxId) {
+                                        const file = input.files[0];
+                                        const previewEl = document.getElementById(previewId);
+                                        const placeholderEl = document.getElementById(placeholderId);
+                                        const errEl = document.getElementById(errorId);
+                                        const boxEl = document.getElementById(boxId);
+
+                                        if (!file) return;
+
+                                        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+                                        // ERR_09_05: Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.
+                                        if (!allowedTypes.includes(file.type)) {
+                                            if (errEl) {
+                                                errEl.textContent = 'Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.';
+                                                errEl.classList.remove('hidden');
+                                                errEl.classList.add('block');
+                                            }
+                                            if (boxEl) boxEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                            input.value = '';
+                                            return;
+                                        }
+
+                                        // ERR_09_06: Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).
+                                        if (file.size > 10 * 1024 * 1024) {
+                                            if (errEl) {
+                                                errEl.textContent = 'Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).';
+                                                errEl.classList.remove('hidden');
+                                                errEl.classList.add('block');
+                                            }
+                                            if (boxEl) boxEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                            input.value = '';
+                                            return;
+                                        }
+
+                                        if (errEl) {
+                                            errEl.classList.add('hidden');
+                                            errEl.classList.remove('block');
+                                        }
+                                        if (boxEl) {
+                                            boxEl.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                            boxEl.classList.add('border-emerald-500');
+                                        }
+
+                                        if (file.type === 'application/pdf') {
+                                            if (placeholderEl) {
+                                                placeholderEl.innerHTML = `
+                                                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto mb-1">
+                                                        <i class="fa-solid fa-file-pdf text-xl"></i>
+                                                    </div>
+                                                    <p class="text-xs font-bold text-emerald-300 truncate max-w-[180px]">${file.name}</p>
+                                                    <p class="text-[10px] text-slate-400">Đã chọn tệp PDF</p>
+                                                `;
+                                            }
+                                            if (previewEl) previewEl.classList.add('hidden');
+                                        } else {
+                                            const reader = new FileReader();
+                                            reader.onload = function(e) {
+                                                if (previewEl) {
+                                                    const img = previewEl.querySelector('img');
+                                                    if (img) img.src = e.target.result;
+                                                    previewEl.classList.remove('hidden');
+                                                }
+                                                if (placeholderEl) placeholderEl.classList.add('hidden');
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                    }
+
+                                    // Client-side Validation cho Form KYC (FEAT_09_KYC)
+                                    function validateKycCccd() {
+                                        const input = document.getElementById('id_card_number');
+                                        const err = document.getElementById('err-id_card_number');
+                                        if (!input || !err) return true;
+                                        const val = input.value.trim();
+
+                                        // ERR_09_01: Để trống số CCCD
+                                        if (val === '') {
+                                            err.textContent = 'Vui lòng nhập số Căn cước công dân của chủ cơ sở.';
+                                            err.classList.remove('hidden');
+                                            err.classList.add('block');
+                                            input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                            return false;
+                                        }
+
+                                        // ERR_09_02: Số CCCD không đúng 12 chữ số
+                                        if (!/^[0-9]{12}$/.test(val)) {
+                                            err.textContent = 'Số Căn cước công dân phải gồm chính xác 12 chữ số.';
+                                            err.classList.remove('hidden');
+                                            err.classList.add('block');
+                                            input.classList.add('border-rose-500', 'ring-2', 'ring-rose-500');
+                                            return false;
+                                        }
+
+                                        err.classList.add('hidden');
+                                        err.classList.remove('block');
+                                        input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500');
+                                        return true;
+                                    }
+
+                                    function validateKycFront() {
+                                        const input = document.getElementById('file_front');
+                                        const err = document.getElementById('err-file_front');
+                                        const box = document.getElementById('box-front');
+                                        if (!input || !err) return true;
+
+                                        // ERR_09_03: Chưa tải ảnh mặt trước CCCD
+                                        if (!input.files || input.files.length === 0) {
+                                            err.textContent = 'Vui lòng tải lên hình ảnh chụp mặt trước Căn cước công dân.';
+                                            err.classList.remove('hidden');
+                                            err.classList.add('block');
+                                            if (box) box.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                            return false;
+                                        }
+
+                                        err.classList.add('hidden');
+                                        err.classList.remove('block');
+                                        if (box) box.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                        return true;
+                                    }
+
+                                    function validateKycBack() {
+                                        const input = document.getElementById('file_back');
+                                        const err = document.getElementById('err-file_back');
+                                        const box = document.getElementById('box-back');
+                                        if (!input || !err) return true;
+
+                                        // ERR_09_04: Chưa tải ảnh mặt sau CCCD
+                                        if (!input.files || input.files.length === 0) {
+                                            err.textContent = 'Vui lòng tải lên hình ảnh chụp mặt sau Căn cước công dân.';
+                                            err.classList.remove('hidden');
+                                            err.classList.add('block');
+                                            if (box) box.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                            return false;
+                                        }
+
+                                        err.classList.add('hidden');
+                                        err.classList.remove('block');
+                                        if (box) box.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/50');
+                                        return true;
+                                    }
+
+                                    // Lắng nghe sự kiện Submit Form KYC
+                                    document.getElementById('kyc-form')?.addEventListener('submit', function(e) {
+                                        const okCccd = validateKycCccd();
+                                        const okFront = validateKycFront();
+                                        const okBack = validateKycBack();
+
+                                        if (!okCccd || !okFront || !okBack) {
+                                            e.preventDefault();
+                                            const firstErr = document.querySelector('#kyc-form .ring-rose-500, #kyc-form .border-rose-500');
+                                            if (firstErr) {
+                                                firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                if (firstErr.tagName === 'INPUT') firstErr.focus();
+                                            }
+                                            return false;
+                                        }
+                                    });
+                                </script>
                             @endif
                         </div>
                     @endif
@@ -779,6 +1160,35 @@
 
             <!-- SECTION 1: DASHBOARD OVERVIEW -->
             <section id="dashboard-section" class="tab-content space-y-8 animate-fade-in">
+                <!-- BANNER NÂNG CẤP TÍCH XANH UY TÍN (TRIGGER FEAT_09_KYC) -->
+                @if(($tenant->verification_status ?? 'unverified') !== 'premium_verified')
+                    <div class="glass-card rounded-2xl p-5 border border-sky-500/30 bg-gradient-to-r from-sky-500/15 via-indigo-950/40 to-slate-900/80 mb-6 shadow-lg shadow-sky-500/5">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3.5">
+                                <div class="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/40 text-sky-300 flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-sky-500/20">
+                                    <i class="fa-solid fa-certificate text-xl text-sky-400"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="text-base font-extrabold text-white">Nâng cấp Tích Xanh uy tín cho nhà trọ của bạn</h4>
+                                        <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 uppercase tracking-wider flex items-center gap-1">
+                                            <i class="fa-solid fa-bolt text-[9px] text-amber-400"></i> Ưu tiên Top 1 Renty
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 mt-1.5 leading-relaxed max-w-3xl">
+                                        Xác thực định danh CCCD và giấy tờ để tin đăng được gắn huy hiệu <strong class="text-sky-300">Tích Xanh chính chủ</strong>, tự động mở khóa nhận tiền VietQR và tăng đến 300% tỷ lệ khách thuê liên hệ.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <a href="{{ route('smartroom.admin.kyc') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-sky-500/25 cursor-pointer">
+                                <i class="fa-solid fa-shield-halved text-xs"></i>
+                                <span>Nâng cấp Tích Xanh uy tín</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 @php
                     $hasLegal = !empty($landlordProfile?->national_id) && !empty($landlordProfile?->business_license);
                     $isApproved = in_array($landlordProfile?->status, ['approved', 'verified'], true)

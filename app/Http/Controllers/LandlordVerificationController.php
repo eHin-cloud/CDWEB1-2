@@ -76,7 +76,47 @@ class LandlordVerificationController extends Controller
             'bank_account_proof.max' => 'Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).', // ERR_09_06
         ];
 
-        $validated = Validator::make($data, $rules, $messages)->validate();
+        $validator = Validator::make($data, $rules, $messages);
+
+        if ($validator->fails()) {
+            // Đồng bộ lỗi sang cả các tên field alias theo chuẩn đặc tả FEAT_09_KYC
+            $failedMessages = $validator->getMessageBag();
+            if ($failedMessages->has('cccd_number')) {
+                foreach ($failedMessages->get('cccd_number') as $msg) {
+                    $failedMessages->add('id_card_number', $msg);
+                }
+            }
+            if ($failedMessages->has('cccd_front')) {
+                foreach ($failedMessages->get('cccd_front') as $msg) {
+                    $failedMessages->add('file_front', $msg);
+                    $failedMessages->add('front_image', $msg);
+                }
+            }
+            if ($failedMessages->has('cccd_back')) {
+                foreach ($failedMessages->get('cccd_back') as $msg) {
+                    $failedMessages->add('file_back', $msg);
+                    $failedMessages->add('back_image', $msg);
+                }
+            }
+            if ($failedMessages->has('bank_account_proof')) {
+                foreach ($failedMessages->get('bank_account_proof') as $msg) {
+                    $failedMessages->add('holding_image', $msg);
+                }
+            }
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => $failedMessages->first(),
+                    'errors' => $failedMessages->toArray(),
+                ], 422);
+            }
+
+            return redirect()->to(route('smartroom.admin') . '#verification-section')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
 
         $verification = null;
 
