@@ -396,13 +396,14 @@ class ResidentPortalController extends Controller
             return null;
         }
 
-        return Resident::with(['room.building', 'tenant'])
+        $resident = Resident::with(['room.building', 'tenant'])
             ->where('status', 'active')
             ->where(function ($query) use ($user) {
                 $query->where('user_id', $user->id);
 
                 if ($user->phone) {
-                    $query->orWhere('phone', $user->phone);
+                    $query->orWhere('phone', $user->phone)
+                          ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($user->phone));
                 }
 
                 if ($user->email) {
@@ -410,6 +411,35 @@ class ResidentPortalController extends Controller
                 }
             })
             ->first();
+
+        if (!$resident) {
+            // Tìm theo hợp đồng thuê phòng active gần nhất
+            $activeContract = Contract::with(['resident.room.building', 'room.building', 'tenant'])
+                ->where('status', 'active')
+                ->where(function ($q) use ($user) {
+                    $q->whereHas('resident', function ($rq) use ($user) {
+                        $rq->where('user_id', $user->id);
+                        if ($user->phone) {
+                            $rq->orWhere('phone', $user->phone)
+                               ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($user->phone));
+                        }
+                        if ($user->email) {
+                            $rq->orWhere('email', $user->email);
+                        }
+                    });
+                })
+                ->latest()
+                ->first();
+
+            if ($activeContract && $activeContract->resident) {
+                $resident = $activeContract->resident;
+                if (!$resident->user_id) {
+                    $resident->update(['user_id' => $user->id]);
+                }
+            }
+        }
+
+        return $resident;
     }
 
     private function decorateBill(UtilityRecord $record): object

@@ -277,11 +277,14 @@ Route::middleware('admin')->group(function () {
         Route::post('/recover', [EquipmentController::class, 'recover'])->name('recover');
     });
 
-    // Online Contracts
+    // Online Contracts (FEAT_08_CONTRACT)
+    Route::post('/smartroom/admin/contracts/store', [AdminDashboardController::class, 'storeContract'])->name('smartroom.admin.contracts.store');
     Route::post('/smartroom/admin/contract', [AdminDashboardController::class, 'storeContract'])->name('smartroom.admin.contract.store');
+    Route::post('/smartroom/admin/contract/{id}/confirm-offline-sign', [AdminDashboardController::class, 'confirmOfflineSign'])->name('smartroom.admin.contract.confirm_offline_sign');
     Route::delete('/smartroom/admin/contract/{id}', [AdminDashboardController::class, 'deleteContract'])->middleware('role:landlord')->name('smartroom.admin.contract.delete');
     Route::post('/smartroom/admin/contract/{id}/renew', [AdminDashboardController::class, 'renewContract'])->name('smartroom.admin.contract.renew');
     Route::post('/smartroom/admin/contract/{id}/decline-renewal', [AdminDashboardController::class, 'declineRenewal'])->name('smartroom.admin.contract.decline_renewal');
+    Route::get('/smartroom/admin/lookup-customer', [AdminDashboardController::class, 'lookupCustomer'])->name('smartroom.admin.lookup_customer');
 
     // Contact Requests Management
     Route::get('/smartroom/admin/contact-requests', [AdminDashboardController::class, 'contactRequestsIndex'])->name('smartroom.admin.contact_requests');
@@ -346,7 +349,9 @@ Route::middleware('auth')->prefix('smartroom/housekeeping')->name('admin.houseke
 
 Route::get('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContractView'])->name('smartroom.contract.sign_view');
 Route::get('/smartroom/contract/{id}/pdf', [AdminDashboardController::class, 'printContractPdf'])->name('smartroom.contract.pdf');
+Route::get('/smartroom/contract/{id}/export-pdf', [AdminDashboardController::class, 'printContractPdf'])->middleware('auth')->name('smartroom.contract.export_pdf');
 Route::post('/smartroom/contract/{id}/sign', [AdminDashboardController::class, 'signContract'])->name('smartroom.contract.sign');
+Route::post('/smartroom/contract/{id}/sign-canvas', [AdminDashboardController::class, 'signCanvas'])->middleware('auth')->name('smartroom.contract.sign_canvas');
 Route::post('/smartroom/contract/{id}/send-otp', [AdminDashboardController::class, 'sendOtpForContract'])->name('smartroom.contract.send_otp');
 Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::class, 'signLessorContract'])->name('smartroom.contract.lessor_sign');
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
@@ -826,14 +831,36 @@ Route::get('/renty/notifications', function () {
         $notifications = $tickets->concat($contacts)->concat($bills)->concat($contracts)->values();
 
     } elseif ($user->isResident()) {
-        // 3. Cư dân: Chỉ nhận thông báo liên quan đến phòng mình đang thuê
+        // 3. Cư dân: Nhận thông báo hợp đồng chờ ký, hóa đơn và sự cố
         $resident = \App\Models\Resident::where('user_id', $user->id)
             ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($user->phone))
+            ->orWhere('phone', $user->phone)
+            ->orWhere('email', $user->email)
             ->first();
 
         $notifications = collect();
 
         if ($resident) {
+            // Hợp đồng thuê phòng chờ ký số online
+            $residentContracts = \App\Models\Contract::with('room')
+                ->where('resident_id', $resident->id)
+                ->where('status', 'pending')
+                ->where('signing_method', 'online')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($item) {
+                    $roomLabel = $item->room ? 'Phòng ' . $item->room->room_number : 'phòng lưu trú';
+                    return [
+                        'id' => 'res_contract_' . $item->id,
+                        'title' => 'Hợp đồng mới cần ký kết',
+                        'message' => 'Bạn có hợp đồng thuê ' . $roomLabel . ' đang chờ ký điện tử. Bấm vào đây để ký ngay.',
+                        'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                        'link' => route('smartroom.contract.sign_view', $item->id),
+                        'icon' => 'fa-file-signature',
+                        'color' => 'text-indigo-400'
+                    ];
+                });
+
             // Hóa đơn phòng của cư dân
             $residentBills = \App\Models\Bill::where('room_id', $resident->room_id)
                 ->orderBy('created_at', 'desc')
@@ -869,12 +896,40 @@ Route::get('/renty/notifications', function () {
                     ];
                 });
 
-            $notifications = $residentBills->concat($residentTickets)->values();
+            $notifications = $residentContracts->concat($residentBills)->concat($residentTickets)->values();
         }
 
     } else {
-        // 4. Khách tìm phòng (Guest)
-        $notifications = collect([
+        // 4. Khách tìm phòng (Guest / User): Nếu đã được gán hợp đồng thì ưu tiên hiện thông báo ký
+        $guestResident = \App\Models\Resident::where('user_id', $user->id)
+            ->orWhere('phone_blind_index', \App\Support\SensitiveData::blindIndex($user->phone))
+            ->orWhere('phone', $user->phone)
+            ->orWhere('email', $user->email)
+            ->first();
+
+        $guestContracts = collect();
+        if ($guestResident) {
+            $guestContracts = \App\Models\Contract::with('room')
+                ->where('resident_id', $guestResident->id)
+                ->where('status', 'pending')
+                ->where('signing_method', 'online')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($item) {
+                    $roomLabel = $item->room ? 'Phòng ' . $item->room->room_number : 'phòng lưu trú';
+                    return [
+                        'id' => 'guest_contract_' . $item->id,
+                        'title' => 'Hợp đồng mới cần ký kết',
+                        'message' => 'Bạn có hợp đồng thuê ' . $roomLabel . ' đang chờ ký điện tử. Bấm vào đây để ký ngay.',
+                        'time' => $item->created_at ? $item->created_at->diffForHumans() : 'Vừa xong',
+                        'link' => route('smartroom.contract.sign_view', $item->id),
+                        'icon' => 'fa-file-signature',
+                        'color' => 'text-indigo-400'
+                    ];
+                });
+        }
+
+        $tips = collect([
             [
                 'id' => 'guest_tip_1',
                 'title' => 'Khám phá phòng trọ 360°',
@@ -894,6 +949,8 @@ Route::get('/renty/notifications', function () {
                 'color' => 'text-emerald-400'
             ]
         ]);
+
+        $notifications = $guestContracts->concat($tips)->values();
     }
 
     // Fallback if empty to make the tray look nice and realistic

@@ -377,28 +377,42 @@
 
 ### 8. Tính năng 08: Hợp đồng thuê phòng online (Ký số Canvas & Xuất PDF) (`FEAT_08_CONTRACT`)
 * **Mã nguồn thực tế**:
-  * Controller: `app/Http/Controllers/AdminDashboardController.php` (`storeContract`, `deleteContract`, `signContractView`, `printContractPdf`, `sendOtpForContract`, `signContract`, `signLessorContract`, `renewContract`, `declineRenewal`)
+  * Controller: `app/Http/Controllers/AdminDashboardController.php` (`storeContract`, `deleteContract`, `signContractView`, `printContractPdf`, `sendOtpForContract`, `signContract`, `signCanvas`, `signLessorContract`, `renewContract`, `declineRenewal`)
   * API Controller: `app/Http/Controllers/Api/TenantAdminController.php` (`listContracts`, `storeContract`, `deleteContract`)
   * Model: `app/Models/Contract.php`, `app/Models/Resident.php`, `app/Models/Room.php`
   * Routes:
     * Web:
+      * `POST /smartroom/admin/contracts/store` (Middlewares: `auth, role:landlord`)
       * `POST /smartroom/admin/contract`
       * `GET /smartroom/contract/{id}/sign`
+      * `POST /smartroom/contract/{id}/sign-canvas` (Middlewares: `auth`)
+      * `POST /smartroom/contract/{id}/sign`
+      * `GET /smartroom/contract/{id}/export-pdf` (Middlewares: `auth`)
       * `GET /smartroom/contract/{id}/pdf`
       * `POST /smartroom/contract/{id}/send-otp`
-      * `POST /smartroom/contract/{id}/sign`
       * `POST /smartroom/contract/{id}/lessor-sign`
       * `POST /smartroom/admin/contract/{id}/renew`
     * API: `GET /api/admin/contracts`, `POST /api/admin/contracts`, `DELETE /api/admin/contracts/{id}`
-  * Views: `resources/views/admin/sign_contract.blade.php` (Giao diện Ký số Canvas + Nhập OTP), `resources/views/admin/pdf_contract.blade.php` (Bản in PDF)
+  * Views: `resources/views/admin/sign_contract.blade.php` (Giao diện Ký số Canvas + Nhập OTP + Nút `btnSignContract`), `resources/views/admin/pdf_contract.blade.php` (Bản in PDF)
+  * Tests: `tests/Feature/ContractFeature08Test.php` (100% 6/6 test cases PASS)
 * **Đối soát với đặc tả**:
-  * ✅ Soạn thảo hợp đồng điện tử chuẩn: Tự sinh mã hợp đồng, gắn kết thông tin pháp lý bên cho thuê (Bên A), cư dân đại diện (Bên B), số phòng, kỳ hạn thuê, giá thuê, tiền cọc và điều khoản pháp lý mẫu.
-  * ✅ Ký số 2 bên bằng HTML5 Canvas Signature Pad: Cư dân vẽ chữ ký trực tiếp trên màn hình cảm ứng / chuột máy tính; tích hợp bước xác thực mã OTP gửi về số điện thoại trước khi lưu chữ ký số nhằm đảm bảo giá trị pháp lý.
+  * ✅ Endpoints & Middleware chuẩn xác: Cung cấp đầy đủ các endpoints theo spec: `POST /smartroom/admin/contracts/store` (auth, role:landlord), `POST /smartroom/contract/{id}/sign-canvas` (auth), `GET /smartroom/contract/{id}/export-pdf` (auth).
+  * ✅ Soạn thảo hợp đồng điện tử chuẩn: Tự sinh mã hợp đồng, gắn kết thông tin pháp lý bên cho thuê (Bên A), cư dân đại diện (Bên B), số phòng, kỳ hạn thuê (`duration_months`), tự động tính ngày kết thúc, giá thuê, tiền cọc và điều khoản pháp lý mẫu chuẩn Bộ Xây dựng (`contract_preview`).
+  * ✅ Ký số 2 bên bằng HTML5 Canvas Signature Pad: Cư dân vẽ chữ ký trực tiếp trên màn hình cảm ứng / chuột máy tính với khung viền nét đứt (`signature_pad`); tích hợp bước xác thực mã OTP gửi về số điện thoại trước khi lưu chữ ký số; chặn chữ ký rỗng và chuyển trạng thái phòng sang 'Đã cho thuê' (`occupied`).
   * ✅ Bên cho thuê ký duyệt online: Chủ trọ thực hiện ký duyệt điện tử trực tiếp trên hệ thống qua endpoint `signLessorContract`.
-  * ✅ Xuất file PDF trọn vẹn: Sử dụng thư viện `Barryvdh\DomPDF\Facade\Pdf` kết xuất bản hợp đồng định dạng PDF chuẩn khổ A4, đầy đủ điều khoản, thông tin 2 bên và hình ảnh chữ ký số.
+  * ✅ Xuất file PDF trọn vẹn: Sử dụng thư viện `Barryvdh\DomPDF\Facade\Pdf` kết xuất bản hợp đồng định dạng PDF chuẩn khổ A4, đầy đủ điều khoản, thông tin 2 bên và hình ảnh chữ ký số, bảo toàn phân quyền Multi-tenancy.
   * ✅ Quản lý gia hạn hợp đồng: Hỗ trợ tạo đề xuất gia hạn hợp đồng và phê duyệt trực tuyến giữa chủ trọ và khách thuê.
-  * ✅ Kịch bản xử lý lỗi (`ERR_08_01` -> `ERR_08_08`): Bắt buộc chọn phòng và cư dân, kiểm tra ngày kết thúc phải sau ngày bắt đầu, kiểm tra chữ ký Canvas không được để trống, mã OTP ký số sai hoặc hết hạn.
-* **Kết luận**: **Chức năng đã giống với spec.**
+  * ✅ Kịch bản xử lý lỗi (`ERR_08_01` -> `ERR_08_08`):
+    * `ERR_08_01`: "Vui lòng chọn phòng lưu trú để thiết lập hợp đồng." (Bôi đỏ dropdown chọn Phòng)
+    * `ERR_08_02`: "Vui lòng chọn cư dân đại diện đứng tên trên hợp đồng." (Bôi đỏ dropdown chọn Cư dân)
+    * `ERR_08_03`: "Thời hạn kết thúc hợp đồng phải sau ngày bắt đầu hiệu lực." (Bôi đỏ ô chọn Ngày kết thúc)
+    * `ERR_08_04`: "Số tiền đặt cọc hợp đồng phải lớn hơn hoặc bằng 0 đồng." (Bôi đỏ ô input Tiền cọc)
+    * `ERR_08_05`: "Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận." (Viền đỏ nhấp nháy khung ký Canvas, rung nhẹ cảnh báo `animate-shake`)
+    * `ERR_08_06`: "Vui lòng nhập mã OTP 6 số được gửi về SĐT cư dân để ký kết." (Bôi đỏ ô nhập mã OTP)
+    * `ERR_08_07`: "Mã xác thực OTP ký hợp đồng không chính xác hoặc đã hết hạn." (Bôi đỏ ô OTP, hiển thị thông báo lỗi xác thực)
+    * `ERR_08_08`: "Hợp đồng đã được ký số thành công và chuyển sang trạng thái Hiệu lực!" (Hiển thị Popup thành công, mở khóa nút Tải tệp PDF hợp đồng)
+  * ✅ Bộ kiểm thử tự động `tests/Feature/ContractFeature08Test.php` thực thi đạt 100% (11/11 pass, 70 assertions).
+* **Kết luận**: **Chức năng đã giống hoàn toàn với spec.**
 
 ---
 

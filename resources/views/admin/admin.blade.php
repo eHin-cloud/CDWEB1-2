@@ -1160,36 +1160,14 @@
 
             <!-- SECTION 1: DASHBOARD OVERVIEW -->
             <section id="dashboard-section" class="tab-content space-y-8 animate-fade-in">
-                <!-- BANNER NÂNG CẤP TÍCH XANH UY TÍN (TRIGGER FEAT_09_KYC) -->
-                @if(($tenant->verification_status ?? 'unverified') !== 'premium_verified')
-                    <div class="glass-card rounded-2xl p-5 border border-sky-500/30 bg-gradient-to-r from-sky-500/15 via-indigo-950/40 to-slate-900/80 mb-6 shadow-lg shadow-sky-500/5">
-                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <div class="flex items-start gap-3.5">
-                                <div class="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/40 text-sky-300 flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-sky-500/20">
-                                    <i class="fa-solid fa-certificate text-xl text-sky-400"></i>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <h4 class="text-base font-extrabold text-white">Nâng cấp Tích Xanh uy tín cho nhà trọ của bạn</h4>
-                                        <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 uppercase tracking-wider flex items-center gap-1">
-                                            <i class="fa-solid fa-bolt text-[9px] text-amber-400"></i> Ưu tiên Top 1 Renty
-                                        </span>
-                                    </div>
-                                    <p class="text-xs text-slate-300 mt-1.5 leading-relaxed max-w-3xl">
-                                        Xác thực định danh CCCD và giấy tờ để tin đăng được gắn huy hiệu <strong class="text-sky-300">Tích Xanh chính chủ</strong>, tự động mở khóa nhận tiền VietQR và tăng đến 300% tỷ lệ khách thuê liên hệ.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <a href="{{ route('smartroom.admin.kyc') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-sky-500/25 cursor-pointer">
-                                <i class="fa-solid fa-shield-halved text-xs"></i>
-                                <span>Nâng cấp Tích Xanh uy tín</span>
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
                 @php
+                    $hasProfileUpdated = !empty(trim((string)($landlordProfile?->national_id ?? '')))
+                        || !empty(trim((string)($landlordProfile?->business_license ?? '')));
+
+                    $hasVerifiedBadge = in_array($tenant->verification_status ?? '', ['premium_verified', 'verified'], true)
+                        || in_array($tenant->listing_badge ?? '', ['premium_verified', 'verified'], true)
+                        || (($premiumRequest?->status ?? '') === 'approved');
+
                     $hasLegal = !empty($landlordProfile?->national_id) && !empty($landlordProfile?->business_license);
                     $isApproved = in_array($landlordProfile?->status, ['approved', 'verified'], true)
                         || in_array($landlordProfile?->verification_status, ['approved', 'verified', 'kyc_verified', 'premium_verified'], true)
@@ -1201,6 +1179,65 @@
                         || (($kycRequest?->status ?? '') === 'pending')
                         || (($tenant->verification_status ?? '') === 'kyc_pending');
                 @endphp
+
+                <!-- BANNER ĐỊNH DANH / NÂNG CẤP TÍCH XANH THEO TRẠNG THÁI HỒ SƠ -->
+                @if(!$hasVerifiedBadge)
+                    @if(!$hasProfileUpdated)
+                        <!-- 1. Khi chủ trọ CHƯA cập nhật hồ sơ -> Hiện mục Cập nhật hồ sơ -->
+                        <div class="glass-card rounded-2xl p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-indigo-950/40 to-slate-900/80 mb-6 shadow-lg shadow-amber-500/5">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div class="flex items-start gap-3.5">
+                                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-amber-500/20">
+                                        <i class="fa-solid fa-address-card text-xl text-amber-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="text-base font-extrabold text-white">Cập nhật hồ sơ định danh chủ trọ</h4>
+                                            <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider flex items-center gap-1">
+                                                <i class="fa-solid fa-triangle-exclamation text-[9px]"></i> Yêu cầu cập nhật
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-300 mt-1.5 leading-relaxed max-w-3xl">
+                                            Vui lòng cập nhật số CCCD và thông tin giấy tờ để hoàn thiện hồ sơ chủ trọ, mở khóa quyền quản lý cơ sở lưu trú và đủ điều kiện nâng cấp huy hiệu Tích Xanh chính chủ.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <a href="{{ route('smartroom.admin', ['tab' => 'profile-section']) }}" onclick="if(typeof switchTab === 'function'){ switchTab('profile-section'); return false; }" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-amber-500/25 cursor-pointer">
+                                    <i class="fa-solid fa-user-pen text-xs"></i>
+                                    <span>Cập nhật hồ sơ</span>
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <!-- 2. Khi chủ trọ ĐÃ cập nhật hồ sơ -> Hiện mục Nâng cấp lên Tích Xanh -->
+                        <div class="glass-card rounded-2xl p-5 border border-sky-500/30 bg-gradient-to-r from-sky-500/15 via-indigo-950/40 to-slate-900/80 mb-6 shadow-lg shadow-sky-500/5">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div class="flex items-start gap-3.5">
+                                    <div class="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/40 text-sky-300 flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-sky-500/20">
+                                        <i class="fa-solid fa-certificate text-xl text-sky-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="text-base font-extrabold text-white">Nâng cấp Tích Xanh uy tín cho nhà trọ của bạn</h4>
+                                            <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 uppercase tracking-wider flex items-center gap-1">
+                                                <i class="fa-solid fa-bolt text-[9px] text-amber-400"></i> Ưu tiên Top 1 Renty
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-300 mt-1.5 leading-relaxed max-w-3xl">
+                                            Hồ sơ định danh của bạn đã được ghi nhận. Nâng cấp để tin đăng được gắn huy hiệu <strong class="text-sky-300">Tích Xanh chính chủ</strong>, tự động mở khóa nhận tiền VietQR và tăng đến 300% tỷ lệ khách thuê liên hệ.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <a href="{{ route('smartroom.admin', ['tab' => 'profile-section']) }}" onclick="if(typeof switchTab === 'function'){ switchTab('profile-section'); return false; }" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-sky-500/25 cursor-pointer">
+                                    <i class="fa-solid fa-certificate text-xs text-sky-300"></i>
+                                    <span>Nâng cấp lên Tích Xanh</span>
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+                @endif
 
                 @if(!$isApproved)
                     <div class="glass-card rounded-2xl p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-indigo-500/10 mb-6">
@@ -2884,7 +2921,20 @@
                             <tbody class="divide-y divide-slate-900 bg-slate-950/20">
                                 @forelse($contracts as $c)
                                 <tr class="hover:bg-slate-900/40 transition-all group">
-                                    <td class="px-6 py-4 font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">{{ $c->contract_code }}</td>
+                                    <td class="px-6 py-4 font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">
+                                        <div>{{ $c->contract_code }}</div>
+                                        <div class="mt-1">
+                                            @if(($c->signing_method ?? 'online') === 'offline')
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                    <i class="fa-solid fa-file-signature text-[9px]"></i> Ký trực tiếp (Giấy)
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                                    <i class="fa-solid fa-globe text-[9px]"></i> Ký số Online
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4">
                                         <span class="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">
                                             Phòng {{ $c->room ? $c->room->room_number : 'N/A' }}
@@ -2908,10 +2958,17 @@
                                                 Đã ký hiệu lực
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                                Chờ chữ ký
-                                            </span>
+                                            @if(($c->signing_method ?? 'online') === 'offline')
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                                    Chờ ký giấy
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                                                    Chờ ký online
+                                                </span>
+                                            @endif
                                         @endif
 
                                         @if($c->renewal_status === 'requested')
@@ -2943,12 +3000,21 @@
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex items-center justify-center gap-2 flex-wrap">
                                             @if($c->status === 'pending')
-                                                <button onclick="copySignLink('{{ route('smartroom.contract.sign_view', $c->id, false) }}', this)" class="px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/20 transition-all flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-link"></i> Link ký
-                                                </button>
-                                                <button onclick="openSendMsgModal('{{ $c->resident ? $c->resident->phone : '' }}', '{{ $c->resident ? $c->resident->name : '' }}', 'Kính gửi anh/chị {{ $c->resident ? $c->resident->name : '' }}, vui lòng truy cập đường link sau để hoàn tất ký kết hợp đồng thuê phòng {{ $c->room ? $c->room->room_number : '' }}: ' + window.location.origin + '{{ route('smartroom.contract.sign_view', $c->id, false) }}', 'contract')" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-xl text-xs font-bold border border-emerald-500/20 transition-all flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-paper-plane"></i> Gửi Zalo/SMS
-                                                </button>
+                                                @if(($c->signing_method ?? 'online') === 'offline')
+                                                    <button type="button" onclick="openConfirmOfflineSignModal({{ $c->toJson() }})" class="px-3 py-2 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white rounded-xl text-xs font-bold border border-amber-500/30 transition-all flex items-center gap-1.5 shadow-sm">
+                                                        <i class="fa-solid fa-check-double text-amber-400"></i> Xác nhận đã ký
+                                                    </button>
+                                                    <a href="{{ route('smartroom.contract.pdf', $c->id) }}" target="_blank" class="px-3 py-2 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white rounded-xl text-xs font-bold border border-cyan-500/25 transition-all flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-print"></i> In ký giấy (PDF)
+                                                    </a>
+                                                @else
+                                                    <button onclick="copySignLink('{{ route('smartroom.contract.sign_view', $c->id, false) }}', this)" class="px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/20 transition-all flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-link"></i> Link ký
+                                                    </button>
+                                                    <button onclick="openSendMsgModal('{{ $c->resident ? $c->resident->phone : '' }}', '{{ $c->resident ? $c->resident->name : '' }}', 'Kính gửi anh/chị {{ $c->resident ? $c->resident->name : '' }}, vui lòng truy cập đường link sau để hoàn tất ký kết hợp đồng thuê phòng {{ $c->room ? $c->room->room_number : '' }}: ' + window.location.origin + '{{ route('smartroom.contract.sign_view', $c->id, false) }}', 'contract')" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-xl text-xs font-bold border border-emerald-500/20 transition-all flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-paper-plane"></i> Gửi link ký
+                                                    </button>
+                                                @endif
                                             @endif
                                             
                                             @if($c->status === 'active' || $c->renewal_status === 'requested')
@@ -2963,6 +3029,13 @@
                                             <a href="{{ route('smartroom.contract.pdf', $c->id) }}" target="_blank" class="px-3 py-2 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white rounded-xl text-xs font-bold border border-cyan-500/25 transition-all flex items-center gap-1.5">
                                                 <i class="fa-solid fa-file-pdf"></i> In/PDF
                                             </a>
+
+                                            @if($c->offline_contract_scan)
+                                                <a href="/storage/{{ ltrim($c->offline_contract_scan, '/') }}" target="_blank" class="px-3 py-2 bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-white rounded-xl text-xs font-bold border border-amber-500/20 transition-all flex items-center gap-1.5" title="Xem bản scan/ảnh chụp hợp đồng giấy đã ký">
+                                                    <i class="fa-solid fa-paperclip"></i> Bản scan
+                                                </a>
+                                            @endif
+
                                             @if($isLandlord)
                                                 <form action="{{ route('smartroom.admin.contract.delete', $c->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này không?')" class="inline">
                                                     @csrf
@@ -3859,17 +3932,202 @@
     <!-- CELEBRATION MODAL FOR APPROVED VERIFICATION / TICH XANH -->
     @include('admin.partials.celebration_modal')
 
+    <!-- STYLE HỖ TRỢ GIAO DIỆN SÁNG (LIGHT MODE) & CHỐNG LỖI FONT NỀN XUYÊN THẤU CHO MODAL HỢP ĐỒNG -->
+    <style>
+        #add-contract-modal .modal-box {
+            background-color: #0b1120;
+            color: #f1f5f9;
+            border: 1px solid #1e293b;
+        }
+        #contract-room-results {
+            background-color: #0b1120 !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+        }
+        #contract-room-results .contract-room-option {
+            background: transparent;
+        }
+        #contract-room-results .contract-room-option:hover {
+            background-color: rgba(99, 102, 241, 0.2) !important;
+        }
+
+        /* TRẠNG THÁI BÔI ĐỎ VIỀN KHI VALIDATE SAI (CẢ DARK & LIGHT MODE) */
+        #add-contract-modal .input-error,
+        #add-contract-modal input.input-error,
+        #add-contract-modal textarea.input-error,
+        #add-contract-modal #contract-room-search-wrapper.input-error,
+        html.theme-light #add-contract-modal .input-error,
+        html.theme-light #add-contract-modal input.input-error,
+        html.theme-light #add-contract-modal textarea.input-error,
+        html.theme-light #add-contract-modal #contract-room-search-wrapper.input-error,
+        body.theme-light #add-contract-modal .input-error,
+        body.theme-light #add-contract-modal input.input-error,
+        body.theme-light #add-contract-modal textarea.input-error,
+        body.theme-light #add-contract-modal #contract-room-search-wrapper.input-error {
+            border: 2px solid #ef4444 !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+            background-color: rgba(239, 68, 68, 0.08) !important;
+            outline: none !important;
+        }
+
+        #add-contract-modal .error-message {
+            color: #ef4444 !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            margin-top: 0.375rem !important;
+        }
+        #add-contract-modal .error-message.hidden {
+            display: none !important;
+        }
+        #add-contract-modal .error-message:not(.hidden) {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.375rem !important;
+        }
+
+        /* GIAO DIỆN SÁNG (LIGHT MODE) */
+        html.theme-light #add-contract-modal .modal-box,
+        body.theme-light #add-contract-modal .modal-box {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25) !important;
+        }
+        html.theme-light #add-contract-modal .contract-section-card,
+        body.theme-light #add-contract-modal .contract-section-card {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light #add-contract-modal h2,
+        html.theme-light #add-contract-modal h3,
+        body.theme-light #add-contract-modal h2,
+        body.theme-light #add-contract-modal h3 {
+            color: #0f172a !important;
+        }
+        html.theme-light #add-contract-modal label,
+        body.theme-light #add-contract-modal label {
+            color: #475569 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light #add-contract-modal input:not(.input-error),
+        html.theme-light #add-contract-modal textarea:not(.input-error),
+        body.theme-light #add-contract-modal input:not(.input-error),
+        body.theme-light #add-contract-modal textarea:not(.input-error) {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #add-contract-modal input::placeholder,
+        html.theme-light #add-contract-modal textarea::placeholder,
+        body.theme-light #add-contract-modal input::placeholder,
+        body.theme-light #add-contract-modal textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.theme-light #contract-room-search-wrapper:not(.input-error),
+        body.theme-light #contract-room-search-wrapper:not(.input-error) {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light #contract-room-search,
+        body.theme-light #contract-room-search {
+            background-color: transparent !important;
+            border: none !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #contract-room-results,
+        body.theme-light #contract-room-results {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 25px 60px -10px rgba(15, 23, 42, 0.3) !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+        }
+        html.theme-light #contract-room-results .contract-room-option span.text-slate-100,
+        body.theme-light #contract-room-results .contract-room-option span.text-slate-100 {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light #contract-room-results .contract-room-option span.text-slate-500,
+        body.theme-light #contract-room-results .contract-room-option span.text-slate-500 {
+            color: #64748b !important;
+        }
+        html.theme-light #contract-room-results .contract-room-option:hover,
+        body.theme-light #contract-room-results .contract-room-option:hover {
+            background-color: #eef2ff !important;
+        }
+        /* Khắc phục lỗi autofill trắng đục của Chrome */
+        #add-contract-modal input:-webkit-autofill,
+        #add-contract-modal input:-webkit-autofill:hover,
+        #add-contract-modal input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #0b1120 inset !important;
+            -webkit-text-fill-color: #f8fafc !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        html.theme-light #add-contract-modal input:-webkit-autofill,
+        html.theme-light #add-contract-modal input:-webkit-autofill:hover,
+        html.theme-light #add-contract-modal input:-webkit-autofill:focus,
+        body.theme-light #add-contract-modal input:-webkit-autofill,
+        body.theme-light #add-contract-modal input:-webkit-autofill:hover,
+        body.theme-light #add-contract-modal input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #0f172a !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+    </style>
+
     <!-- ADD CONTRACT MODAL (POPUP) -->
     <div id="add-contract-modal" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-sm hidden flex items-center justify-center transition-opacity duration-300">
-        <div class="w-full max-w-5xl bg-[#0a0f1d] border border-slate-800 p-8 rounded-3xl shadow-2xl relative animate-fade-in mx-4 max-h-[92vh] overflow-y-auto">
+        <div class="modal-box w-full max-w-5xl border p-8 rounded-3xl shadow-2xl relative animate-fade-in mx-4 max-h-[92vh] overflow-y-auto">
             <button onclick="toggleAddContractModal(false)" class="absolute top-6 right-6 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <h2 class="text-xl font-bold mb-4 text-slate-100 flex items-center gap-2">
                 <i class="fa-solid fa-file-signature text-indigo-400"></i> Tạo Hợp Đồng Thuê Nhà Mới
             </h2>
-            <form action="{{ route('smartroom.admin.contract.store') }}" method="POST" class="space-y-6">
+            <form id="create-contract-form" action="{{ route('smartroom.admin.contract.store') }}" method="POST" onsubmit="return validateCreateContractForm(event)" novalidate class="space-y-6">
                 @csrf
+
+                <!-- Phương thức ký kết hợp đồng -->
+                <div class="contract-section-card rounded-2xl border border-slate-800 bg-slate-950/40 p-4 space-y-3">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-pen-ruler text-indigo-400"></i> Phương thức ký kết hợp đồng *
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="relative flex items-start gap-3 p-3.5 rounded-xl border border-indigo-500/40 bg-indigo-500/5 hover:bg-indigo-500/10 cursor-pointer transition-all has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-600/10">
+                            <input type="radio" name="signing_method" value="online" checked class="mt-1 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-globe text-indigo-400"></i> Ký số Online (Khuyến nghị)
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Nhanh gọn</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                                    Sinh liên kết ký số, cư dân vẽ chữ ký tay Canvas trên điện thoại và xác thực mã OTP qua Gmail.
+                                </p>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-start gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 cursor-pointer transition-all has-[:checked]:border-amber-500 has-[:checked]:bg-amber-500/10">
+                            <input type="radio" name="signing_method" value="offline" class="mt-1 text-amber-500 focus:ring-amber-500">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-file-signature text-amber-400"></i> Ký bản cứng trực tiếp (In giấy)
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">Truyền thống</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                                    Tải/In file PDF chuẩn A4 ra giấy để 2 bên ký bút mực. Sau đó xác nhận hoặc tải ảnh chụp hợp đồng lên để kích hoạt phòng.
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi ký</label>
@@ -3891,28 +4149,43 @@
 
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Chọn Phòng Trọ</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Chọn Phòng Trọ *</label>
                         <div class="relative">
-                            <div class="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 focus-within:border-indigo-500 px-4">
+                            <div id="contract-room-search-wrapper" class="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 focus-within:border-indigo-500 px-4 transition-all">
                                 <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs"></i>
                                 <input type="text" id="contract-room-search" oninput="filterContractRooms(this.value)" onfocus="filterContractRooms(this.value)" placeholder="Tìm số phòng, tên tòa, địa chỉ..." autocomplete="off" class="w-full py-2.5 bg-transparent text-slate-200 text-sm focus:outline-none">
                             </div>
-                            <input type="hidden" name="room_id" id="contract-room-id" required>
-                            <div id="contract-room-results" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-72 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40 p-1">
-                                @foreach($rooms as $r)
-                                    @if($r->status !== 'empty')
-                                        @php
-                                            $buildingName = $r->building?->name ?? 'Chưa rõ tòa';
-                                            $buildingAddress = $r->building?->address ?? '';
-                                            $roomLabel = 'Phòng ' . $r->room_number . ' - ' . $buildingName;
-                                            $roomSearchText = $roomLabel . ' Phòng' . $r->room_number . ' ' . $buildingAddress;
-                                        @endphp
-                                        <button type="button" onclick="selectContractRoom(this)" data-id="{{ $r->id }}" data-price="{{ $r->price }}" data-area="{{ $r->area }}" data-room="{{ $r->room_number }}" data-address="{{ $buildingAddress }}" data-label="{{ $roomLabel }}" data-search="{{ mb_strtolower($roomSearchText) }}" class="contract-room-option w-full text-left px-3 py-2.5 rounded-xl hover:bg-indigo-600/20 transition-all">
-                                            <span class="block text-sm font-bold text-slate-100">Phòng {{ $r->room_number }}</span>
-                                            <span class="block text-[11px] text-slate-500">{{ $buildingName }}</span>
-                                        </button>
-                                    @endif
-                                @endforeach
+                            <input type="hidden" name="room_id" id="contract-room-id">
+                            <p id="err-contract-room" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Vui lòng chọn phòng lưu trú để thiết lập hợp đồng.</span>
+                            </p>
+                            <div id="contract-room-results" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-72 overflow-y-auto rounded-2xl border border-slate-800 bg-[#0b1120] shadow-2xl p-1">
+                                @php
+                                    $availableRooms = $rooms->filter(function($r) {
+                                        return $r->status === 'empty';
+                                    });
+                                @endphp
+                                @forelse($availableRooms as $r)
+                                    @php
+                                        $buildingName = $r->building?->name ?? 'Chưa rõ tòa';
+                                        $buildingAddress = $r->building?->address ?? '';
+                                        $roomLabel = 'Phòng ' . $r->room_number . ' - ' . $buildingName;
+                                        $roomSearchText = $roomLabel . ' Phòng' . $r->room_number . ' ' . $buildingAddress;
+                                    @endphp
+                                    <button type="button" onclick="selectContractRoom(this)" data-id="{{ $r->id }}" data-price="{{ $r->price }}" data-area="{{ $r->area }}" data-room="{{ $r->room_number }}" data-address="{{ $buildingAddress }}" data-label="{{ $roomLabel }}" data-search="{{ mb_strtolower($roomSearchText) }}" class="contract-room-option w-full text-left px-3 py-2.5 rounded-xl hover:bg-indigo-600/20 transition-all flex items-center justify-between group">
+                                        <div>
+                                            <span class="block text-sm font-bold text-slate-100 group-hover:text-indigo-300">Phòng {{ $r->room_number }}</span>
+                                            <span class="block text-[11px] text-slate-500">{{ $buildingName }} • {{ number_format($r->price) }} đ/tháng • {{ $r->area }}m²</span>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Trống
+                                        </span>
+                                    </button>
+                                @empty
+                                    <div class="px-3 py-4 text-center text-xs font-semibold text-amber-400">
+                                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Hiện không còn phòng trống nào khả dụng để tạo hợp đồng mới.
+                                    </div>
+                                @endforelse
                                 <div id="contract-room-empty" class="hidden px-3 py-4 text-center text-xs font-semibold text-slate-500">
                                     Không tìm thấy phòng phù hợp
                                 </div>
@@ -3921,59 +4194,189 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
+                <div class="contract-section-card rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
                     <h3 class="text-sm font-extrabold text-slate-200 mb-3">I. Bên cho thuê nhà (Bên A)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="lessor_name" required value="{{ Auth::user()->name ?? 'Chủ trọ SmartRoom' }}" placeholder="Ông/Bà bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="lessor_id_number" placeholder="CMTND/CCCD bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="lessor_phone" value="{{ Auth::user()->phone ?? '' }}" placeholder="Điện thoại bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="lessor_address" placeholder="HKTT/Chỗ ở hiện tại bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Họ và tên bên A *</label>
+                            <input type="text" name="lessor_name" id="lessor-name" value="{{ Auth::user()->name ?? 'Chủ trọ SmartRoom' }}" placeholder="Họ và tên bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-lessor-name" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Họ và tên bên cho thuê không được để trống.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">CMTND / CCCD bên A</label>
+                            <input type="text" name="lessor_id_number" id="lessor-id-number" placeholder="Số CMTND / CCCD bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại bên A</label>
+                            <input type="text" name="lessor_phone" id="lessor-phone" value="{{ Auth::user()->phone ?? '' }}" placeholder="Số điện thoại bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">HKTT / Chỗ ở hiện tại bên A</label>
+                            <input type="text" name="lessor_address" id="lessor-address" placeholder="Địa chỉ thường trú bên A" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        </div>
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
+                <div class="contract-section-card rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
                     <h3 class="text-sm font-extrabold text-slate-200 mb-3">II. Bên thuê nhà ở (Bên B)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên bên thuê</label>
-                            <input type="text" name="lessee_name" id="lessee-name" required placeholder="Nhập họ tên bên thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên bên thuê (Cư dân đại diện) *</label>
+                            <input type="text" name="lessee_name" id="lessee-name" placeholder="Nhập họ tên bên thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
                             <input type="hidden" name="resident_id" id="contract-resident-id">
+                            <p id="err-lessee-name" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Vui lòng chọn cư dân đại diện đứng tên trên hợp đồng.</span>
+                            </p>
                         </div>
-                        <input type="text" name="lessee_id_number" id="lessee-id-number" placeholder="CMND/CCCD bên B" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="lessee_phone" id="lessee-phone" placeholder="Điện thoại bên B" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="lessee_permanent_address" id="lessee-permanent-address" placeholder="HKTT bên B" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="lessee_current_address" placeholder="Chỗ ở hiện tại bên B" class="md:col-span-2 w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">CMND / CCCD bên B *</label>
+                            <input type="text" name="lessee_id_number" id="lessee-id-number" placeholder="Nhập 9 hoặc 12 số CCCD" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-lessee-id-number" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Số CMND/CCCD bên thuê phải gồm 9 đến 12 chữ số.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại bên B *</label>
+                            <div class="relative">
+                                <input type="text" name="lessee_phone" id="lessee-phone" oninput="lookupCustomerByPhone(this.value)" placeholder="VD: 0988123456" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                                <span id="lookup-customer-spinner" class="hidden absolute right-3 top-3 text-indigo-400">
+                                    <i class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                                </span>
+                            </div>
+                            <p id="err-lessee-phone" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (VD: 0988123456).</span>
+                            </p>
+                            <!-- Huy hiệu nhận dạng tài khoản khách -->
+                            <div id="customer-lookup-badge" class="hidden mt-2 p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs flex items-center justify-between gap-2 transition-all">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                                    <div>
+                                        <div class="font-bold text-slate-100 flex items-center gap-1.5">
+                                            <span id="lookup-customer-name">Khách thuê</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Đã có tài khoản</span>
+                                        </div>
+                                        <div id="lookup-customer-email" class="text-[11px] text-slate-400">email@example.com</div>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-emerald-300 font-semibold bg-emerald-500/20 px-2 py-0.5 rounded">Tự điền ✓</span>
+                            </div>
+                            <!-- Cảnh báo nếu khách đang có hợp đồng chưa kết thúc -->
+                            <div id="customer-active-contract-warning" class="hidden mt-2 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs transition-all space-y-1">
+                                <div class="flex items-center gap-1.5 font-bold text-amber-200">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                                    <span>Khách này đang có hợp đồng chưa kết thúc!</span>
+                                </div>
+                                <div id="customer-active-contract-desc" class="text-[11px] text-amber-300/90 leading-relaxed font-sans">
+                                    Hiện đang thuê phòng...
+                                </div>
+                                <div class="text-[10px] text-slate-400 italic">
+                                    💡 Xác nhận nếu khách thuê thêm phòng mới, hoặc dùng chức năng <strong>"Gia hạn"</strong> nếu khách ở tiếp phòng cũ.
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email bên B (Nhận link ký &amp; OTP)</label>
+                            <input type="email" name="lessee_email" id="lessee-email" placeholder="VD: nguyenvana@gmail.com" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hộ khẩu thường trú (HKTT) bên B *</label>
+                            <input type="text" name="lessee_permanent_address" id="lessee-permanent-address" placeholder="Địa chỉ theo CCCD bên B" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-lessee-permanent-address" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Vui lòng nhập hộ khẩu thường trú của bên thuê.</span>
+                            </p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Chỗ ở hiện tại bên B *</label>
+                            <input type="text" name="lessee_current_address" id="lessee-current-address" placeholder="Nơi cư trú hoặc tạm trú hiện tại bên B" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-lessee-current-address" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Vui lòng nhập chỗ ở hiện tại của bên thuê.</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày Bắt Đầu</label>
-                        <input type="date" name="start_date" id="contract-start-date" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày Bắt Đầu *</label>
+                        <input type="date" name="start_date" id="contract-start-date" onchange="calculateContractEndDate()" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        <p id="err-start-date" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Ngày bắt đầu hợp đồng là bắt buộc.</span>
+                        </p>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày Kết Thúc</label>
-                        <input type="date" name="end_date" id="contract-end-date" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Thời Hạn (Tháng) *</label>
+                        <input type="number" name="duration_months" id="contract-duration-months" min="1" max="60" value="6" oninput="calculateContractEndDate()" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" placeholder="6">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tiền Đặt Cọc (VNĐ)</label>
-                        <input type="number" name="deposit" id="contract-deposit" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" placeholder="3000000">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày Kết Thúc *</label>
+                        <input type="date" name="end_date" id="contract-end-date" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        <p id="err-end-date" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Thời hạn kết thúc hợp đồng phải sau ngày bắt đầu hiệu lực.</span>
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tiền Đặt Cọc (VNĐ) *</label>
+                        <input type="number" name="deposit" id="contract-deposit" min="0" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all" placeholder="3000000">
+                        <p id="err-deposit" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Số tiền đặt cọc hợp đồng phải lớn hơn hoặc bằng 0 đồng.</span>
+                        </p>
                     </div>
                 </div>
-                <div class="rounded-2xl border border-slate-800 bg-slate-950/30 p-4 space-y-4">
+                <div class="contract-section-card rounded-2xl border border-slate-800 bg-slate-950/30 p-4 space-y-4">
                     <h3 class="text-sm font-extrabold text-slate-200">Nội dung thuê và thanh toán</h3>
-                    <input type="text" name="rental_address" id="rental-address" required placeholder="Địa chỉ nhà/phòng cho thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                    <textarea name="rental_area_description" id="rental-area-description" rows="2" placeholder="Diện tích cho thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none resize-none"></textarea>
-                    <textarea name="equipment_list" rows="4" placeholder="Trang thiết bị kèm theo..." class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Địa chỉ nhà/phòng cho thuê *</label>
+                        <input type="text" name="rental_address" id="rental-address" placeholder="Địa chỉ nhà/phòng cho thuê *" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                        <p id="err-rental-address" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Địa chỉ nhà/phòng cho thuê là bắt buộc.</span>
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mô tả diện tích cho thuê</label>
+                        <textarea name="rental_area_description" id="rental-area-description" rows="2" placeholder="Diện tích cho thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Trang thiết bị kèm theo</label>
+                        <textarea name="equipment_list" rows="4" placeholder="Trang thiết bị kèm theo..." class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" name="rental_purpose" value="ở" placeholder="Mục đích thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="number" name="occupant_count" min="1" max="20" value="1" placeholder="Số người ở" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="number" name="rent_price" id="contract-rent-price" required placeholder="Giá thuê/tháng" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="number" name="payment_cycle_months" min="1" max="12" value="3" placeholder="Chu kỳ thanh toán tháng" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mục đích thuê</label>
+                            <input type="text" name="rental_purpose" value="ở" placeholder="Mục đích thuê" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số người ở</label>
+                            <input type="number" name="occupant_count" min="1" max="20" value="1" placeholder="Số người ở" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giá thuê/tháng *</label>
+                            <input type="number" name="rent_price" id="contract-rent-price" placeholder="Giá thuê/tháng *" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-rent-price" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Giá thuê là bắt buộc và phải lớn hơn 0 đồng.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Chu kỳ TT (tháng)</label>
+                            <input type="number" name="payment_cycle_months" min="1" max="12" value="3" placeholder="Chu kỳ thanh toán tháng" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="first_payment_date" placeholder="Thời điểm thanh toán lần đầu" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
-                        <input type="text" name="payment_method" placeholder="Hình thức thanh toán" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Thời điểm TT lần đầu *</label>
+                            <input type="text" name="first_payment_date" id="first-payment-date" placeholder="Thời điểm thanh toán lần đầu" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-first-payment-date" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Thời điểm thanh toán lần đầu là bắt buộc.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hình thức thanh toán *</label>
+                            <input type="text" name="payment_method" id="payment-method" placeholder="Hình thức thanh toán" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none transition-all">
+                            <p id="err-payment-method" class="error-message text-xs text-rose-500 mt-1.5 hidden items-center gap-1.5 font-semibold">
+                                <i class="fa-solid fa-circle-exclamation text-xs"></i> <span>Hình thức thanh toán là bắt buộc.</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
@@ -3988,8 +4391,92 @@
         </div>
     </div>
 
+    <!-- Modal Xác Nhận Ký Hợp Đồng Giấy Trực Tiếp -->
+    <div id="modal-confirm-offline-sign" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
+        <div class="modal-box w-full max-w-lg border border-slate-800 bg-[#0f172a] p-6 rounded-3xl shadow-2xl relative animate-fade-in space-y-5">
+            <button type="button" onclick="toggleConfirmOfflineSignModal(false)" class="absolute top-5 right-5 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-base">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-100">Xác Nhận Ký Hợp Đồng Trực Tiếp</h3>
+                    <p class="text-xs text-slate-400">Ký bằng bản in giấy truyền thống &amp; kích hoạt phòng</p>
+                </div>
+            </div>
+
+            <form id="form-confirm-offline-sign" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5 text-xs text-slate-300">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Mã hợp đồng:</span>
+                        <span id="offline-modal-code" class="font-mono font-bold text-indigo-400">HĐ-001</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Cư dân đại diện:</span>
+                        <span id="offline-modal-resident" class="font-bold text-slate-200">Nguyễn Văn A</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Phòng lưu trú:</span>
+                        <span id="offline-modal-room" class="font-bold text-emerald-400">Phòng 101</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5 flex items-center justify-between">
+                        <span><i class="fa-solid fa-camera mr-1 text-slate-400"></i> Ảnh chụp / Bản scan HĐ đã ký (Tùy chọn)</span>
+                        <span class="text-[10px] text-slate-500 font-normal">PNG, JPG, PDF (Tối đa 5MB)</span>
+                    </label>
+                    <input type="file" name="scan_file" accept="image/png,image/jpeg,image/webp,application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600/20 file:text-indigo-400 hover:file:bg-indigo-600/30 cursor-pointer bg-slate-900 border border-slate-800 rounded-xl p-1.5 focus:outline-none">
+                    <p class="text-[11px] text-slate-500 mt-1">Đính kèm ảnh chụp giúp lưu trữ hồ sơ pháp lý đối soát an toàn trên Cloud.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5">Ghi chú xác nhận (Tùy chọn):</label>
+                    <textarea name="offline_note" rows="2" placeholder="Ghi chú thêm (VD: Hai bên đã ký biên bản bàn giao phòng và nhận đủ tiền cọc)..." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="toggleConfirmOfflineSignModal(false)" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-transparent hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-600/20 transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Xác Nhận Đã Ký &amp; Kích Hoạt</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JS Logic -->
     <script>
+        function openConfirmOfflineSignModal(contract) {
+            const modal = document.getElementById('modal-confirm-offline-sign');
+            const form = document.getElementById('form-confirm-offline-sign');
+            const codeEl = document.getElementById('offline-modal-code');
+            const residentEl = document.getElementById('offline-modal-resident');
+            const roomEl = document.getElementById('offline-modal-room');
+
+            if (!contract || !modal || !form) return;
+
+            codeEl.innerText = contract.contract_code || '---';
+            residentEl.innerText = (contract.resident && contract.resident.name) ? contract.resident.name : (contract.lessee_name || 'Cư dân');
+            roomEl.innerText = (contract.room && contract.room.room_number) ? ('Phòng ' + contract.room.room_number) : 'Phòng lưu trú';
+
+            form.action = '/smartroom/admin/contract/' + contract.id + '/confirm-offline-sign';
+            modal.classList.remove('hidden');
+        }
+
+        function toggleConfirmOfflineSignModal(show) {
+            const modal = document.getElementById('modal-confirm-offline-sign');
+            if (modal) {
+                if (show) modal.classList.remove('hidden');
+                else modal.classList.add('hidden');
+            }
+        }
         const currentUserIsLandlord = @json($isLandlord);
         const canReceiveOnlinePayments = {{ in_array(($tenant->verification_status ?? 'unverified'), ['kyc_verified', 'premium_pending', 'premium_verified'], true) ? 'true' : 'false' }};
 
@@ -4692,6 +5179,7 @@
             if (show) {
                 resetContractDraftFields();
                 modal.classList.remove('hidden');
+                setTimeout(initContractFormValidationListeners, 50);
             } else {
                 modal.classList.add('hidden');
                 closeContractRoomResults();
@@ -4705,11 +5193,14 @@
                 'lessee-name',
                 'lessee-id-number',
                 'lessee-phone',
+                'lessee-email',
                 'lessee-permanent-address',
                 'rental-address',
                 'rental-area-description',
                 'contract-rent-price',
                 'contract-deposit',
+                'first-payment-date',
+                'payment-method',
             ];
 
             valuesToClear.forEach(id => {
@@ -4726,7 +5217,63 @@
             const residentSelect = document.getElementById('contract-resident-id');
             if (residentSelect) residentSelect.value = '';
 
+            // Ẩn huy hiệu nhận dạng tài khoản khách và cảnh báo hợp đồng
+            document.getElementById('customer-lookup-badge')?.classList.add('hidden');
+            document.getElementById('customer-active-contract-warning')?.classList.add('hidden');
+            document.getElementById('lookup-customer-spinner')?.classList.add('hidden');
+
+            // Xóa toàn bộ trạng thái lỗi và ẩn các thông báo lỗi
+            clearContractFormErrors();
             closeContractRoomResults();
+        }
+
+        function clearContractFormErrors() {
+            const inputsToReset = [
+                'contract-room-search-wrapper',
+                'lessor-name',
+                'lessee-name',
+                'lessee-id-number',
+                'lessee-phone',
+                'lessee-permanent-address',
+                'lessee-current-address',
+                'contract-start-date',
+                'contract-end-date',
+                'contract-deposit',
+                'rental-address',
+                'contract-rent-price',
+                'first-payment-date',
+                'payment-method'
+            ];
+            inputsToReset.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                }
+            });
+
+            const errIds = [
+                'err-contract-room',
+                'err-lessor-name',
+                'err-lessee-name',
+                'err-lessee-id-number',
+                'err-lessee-phone',
+                'err-lessee-permanent-address',
+                'err-lessee-current-address',
+                'err-start-date',
+                'err-end-date',
+                'err-deposit',
+                'err-rental-address',
+                'err-rent-price',
+                'err-first-payment-date',
+                'err-payment-method'
+            ];
+            errIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
         }
 
         function fillContractResident(select) {
@@ -4737,7 +5284,9 @@
                 'lessee-name': option.dataset.name || '',
                 'lessee-id-number': option.dataset.cccd || '',
                 'lessee-phone': option.dataset.phone || '',
+                'lessee-email': option.dataset.email || '',
                 'lessee-permanent-address': option.dataset.hometown || '',
+                'lessee-current-address': option.dataset.address || '',
             };
 
             Object.entries(fields).forEach(([id, value]) => {
@@ -4746,6 +5295,127 @@
                     input.value = value;
                 }
             });
+
+            // Xóa lỗi cư dân nếu đã chọn
+            const fieldsToClear = [
+                ['lessee-name', 'err-lessee-name'],
+                ['lessee-id-number', 'err-lessee-id-number'],
+                ['lessee-phone', 'err-lessee-phone'],
+                ['lessee-permanent-address', 'err-lessee-permanent-address'],
+                ['lessee-current-address', 'err-lessee-current-address'],
+            ];
+            fieldsToClear.forEach(([inputId, errId]) => {
+                const el = document.getElementById(inputId);
+                const err = document.getElementById(errId);
+                el?.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                if (err) {
+                    err.classList.add('hidden');
+                    err.classList.remove('flex');
+                }
+            });
+        }
+
+        // Tự động nhận diện tài khoản khách thuê theo số điện thoại và điền sẵn dữ liệu
+        let customerLookupTimeout = null;
+
+        function lookupCustomerByPhone(phone) {
+            clearTimeout(customerLookupTimeout);
+            const badge = document.getElementById('customer-lookup-badge');
+            const contractWarning = document.getElementById('customer-active-contract-warning');
+            const contractWarningDesc = document.getElementById('customer-active-contract-desc');
+            const spinner = document.getElementById('lookup-customer-spinner');
+            const cleanPhone = (phone || '').trim();
+
+            if (!/^0[0-9]{9}$/.test(cleanPhone)) {
+                if (badge) badge.classList.add('hidden');
+                if (contractWarning) contractWarning.classList.add('hidden');
+                if (spinner) spinner.classList.add('hidden');
+                return;
+            }
+
+            if (spinner) spinner.classList.remove('hidden');
+
+            customerLookupTimeout = setTimeout(() => {
+                fetch(`{{ route('smartroom.admin.lookup_customer') }}?phone=${encodeURIComponent(cleanPhone)}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (spinner) spinner.classList.add('hidden');
+                    if (data && data.found && data.customer) {
+                        const cust = data.customer;
+                        // Hiển thị huy hiệu nhận dạng tài khoản thành công
+                        if (badge) {
+                            const nameEl = document.getElementById('lookup-customer-name');
+                            const emailEl = document.getElementById('lookup-customer-email');
+                            if (nameEl) nameEl.textContent = cust.name || 'Khách thuê';
+                            if (emailEl) emailEl.textContent = cust.email || 'Chưa cập nhật email';
+                            badge.classList.remove('hidden');
+                        }
+
+                        // Cảnh báo nếu khách đang có hợp đồng hiệu lực
+                        if (data.has_active_contract && data.active_contract) {
+                            if (contractWarning && contractWarningDesc) {
+                                const c = data.active_contract;
+                                contractWarningDesc.innerHTML = `Khách hàng hiện đang có hợp đồng <strong>${c.status}</strong> tại <strong>Phòng ${c.room_number}</strong> (${c.building_name}) • Mã HĐ: <span class="font-mono font-semibold">${c.contract_code}</span> • Hạn hợp đồng: <strong>${c.end_date}</strong>.`;
+                                contractWarning.classList.remove('hidden');
+                            }
+                        } else {
+                            if (contractWarning) contractWarning.classList.add('hidden');
+                        }
+
+                        // Tự động điền Họ tên nếu chưa nhập hoặc cập nhật
+                        const nameInput = document.getElementById('lessee-name');
+                        if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
+                            nameInput.value = cust.name || '';
+                            clearContractFieldError(nameInput, document.getElementById('err-lessee-name'));
+                        }
+
+                        // Tự động điền Email nếu có
+                        const emailInput = document.getElementById('lessee-email');
+                        if (emailInput && (!emailInput.value || emailInput.value.trim() === '')) {
+                            emailInput.value = cust.email || '';
+                        }
+
+                        // Tự động điền CCCD nếu có
+                        const cccdInput = document.getElementById('lessee-id-number');
+                        if (cccdInput && cust.cccd && (!cccdInput.value || cccdInput.value.trim() === '')) {
+                            cccdInput.value = cust.cccd;
+                            clearContractFieldError(cccdInput, document.getElementById('err-lessee-id-number'));
+                        }
+
+                        // Tự động điền Hộ khẩu thường trú
+                        const permanentInput = document.getElementById('lessee-permanent-address');
+                        if (permanentInput && cust.permanent_address && (!permanentInput.value || permanentInput.value.trim() === '')) {
+                            permanentInput.value = cust.permanent_address;
+                            clearContractFieldError(permanentInput, document.getElementById('err-lessee-permanent-address'));
+                        }
+
+                        // Tự động điền Chỗ ở hiện tại
+                        const currentInput = document.getElementById('lessee-current-address');
+                        if (currentInput && cust.current_address && (!currentInput.value || currentInput.value.trim() === '')) {
+                            currentInput.value = cust.current_address;
+                            clearContractFieldError(currentInput, document.getElementById('err-lessee-current-address'));
+                        }
+
+                        if (cust.resident_id) {
+                            const resHidden = document.getElementById('contract-resident-id');
+                            if (resHidden) resHidden.value = cust.resident_id;
+                        }
+                    } else {
+                        if (badge) badge.classList.add('hidden');
+                        if (contractWarning) contractWarning.classList.add('hidden');
+                    }
+                })
+                .catch(err => {
+                    if (spinner) spinner.classList.add('hidden');
+                    if (badge) badge.classList.add('hidden');
+                    if (contractWarning) contractWarning.classList.add('hidden');
+                });
+            }, 300);
         }
 
         function filterContractRooms(keyword = '') {
@@ -4789,6 +5459,15 @@
             if (searchInput) searchInput.value = option.dataset.label || '';
             fillContractRoom(option);
             closeContractRoomResults();
+
+            // Xóa trạng thái lỗi phòng
+            const roomWrapper = document.getElementById('contract-room-search-wrapper');
+            const errRoom = document.getElementById('err-contract-room');
+            roomWrapper?.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+            if (errRoom) {
+                errRoom.classList.add('hidden');
+                errRoom.classList.remove('flex');
+            }
         }
 
         function fillContractRoom(option) {
@@ -4806,6 +5485,9 @@
 
             if (rentalAddress) {
                 rentalAddress.value = [address, roomNumber ? `Phòng ${roomNumber}` : ''].filter(Boolean).join(' - ');
+                rentalAddress.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                const errAddr = document.getElementById('err-rental-address');
+                if (errAddr) { errAddr.classList.add('hidden'); errAddr.classList.remove('flex'); }
             }
             if (areaDescription) {
                 areaDescription.value = roomNumber
@@ -4814,11 +5496,377 @@
             }
             if (rentPrice) {
                 rentPrice.value = price;
+                rentPrice.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                const errPrice = document.getElementById('err-rent-price');
+                if (errPrice) { errPrice.classList.add('hidden'); errPrice.classList.remove('flex'); }
             }
             if (deposit && price) {
                 deposit.value = price;
+                deposit.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                const errDep = document.getElementById('err-deposit');
+                if (errDep) { errDep.classList.add('hidden'); errDep.classList.remove('flex'); }
             }
         }
+
+        function calculateContractEndDate() {
+            const startInput = document.getElementById('contract-start-date');
+            const monthsInput = document.getElementById('contract-duration-months');
+            const endInput = document.getElementById('contract-end-date');
+            if (!startInput || !monthsInput || !endInput) return;
+
+            const startVal = startInput.value;
+            const months = parseInt(monthsInput.value) || 0;
+            if (startVal && months > 0) {
+                const parts = startVal.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    d.setMonth(d.getMonth() + months);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    endInput.value = `${yyyy}-${mm}-${dd}`;
+                }
+            }
+
+            // Nếu ngày kết thúc hợp lệ sau ngày bắt đầu, xóa viền đỏ lỗi
+            if (startVal && endInput.value && endInput.value > startVal) {
+                endInput.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                const errEnd = document.getElementById('err-end-date');
+                if (errEnd) {
+                    errEnd.classList.add('hidden');
+                    errEnd.classList.remove('flex');
+                }
+            }
+        }
+
+        // Hàm đặt viền đỏ + thông báo lỗi
+        function setContractFieldError(inputEl, errEl, msg) {
+            if (inputEl) {
+                inputEl.classList.add('input-error', '!border-rose-500');
+            }
+            if (errEl) {
+                const span = errEl.querySelector('span');
+                if (span && msg) span.textContent = msg;
+                errEl.classList.remove('hidden');
+                errEl.classList.add('flex');
+            }
+        }
+
+        // Hàm xóa viền đỏ + ẩn thông báo lỗi
+        function clearContractFieldError(inputEl, errEl) {
+            if (inputEl) {
+                inputEl.classList.remove('input-error', '!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+            }
+            if (errEl) {
+                errEl.classList.add('hidden');
+                errEl.classList.remove('flex');
+            }
+        }
+
+        // Validate từng trường độc lập (dùng cho blur, input, change và submit)
+        function validateSingleContractField(fieldId) {
+            let isValid = true;
+            if (fieldId === 'lessor-name') {
+                const el = document.getElementById('lessor-name');
+                const err = document.getElementById('err-lessor-name');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Họ và tên bên cho thuê không được để trống.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'lessee-name') {
+                const el = document.getElementById('lessee-name');
+                const err = document.getElementById('err-lessee-name');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Vui lòng chọn cư dân đại diện đứng tên trên hợp đồng.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'lessee-id-number') {
+                const el = document.getElementById('lessee-id-number');
+                const err = document.getElementById('err-lessee-id-number');
+                const val = el ? el.value.trim() : '';
+                if (!val || !/^[0-9]{9,12}$/.test(val)) {
+                    setContractFieldError(el, err, 'Số CMND/CCCD bên thuê phải gồm 9 đến 12 chữ số.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'lessee-phone') {
+                const el = document.getElementById('lessee-phone');
+                const err = document.getElementById('err-lessee-phone');
+                const val = el ? el.value.trim() : '';
+                if (!val || !/^0[0-9]{9}$/.test(val)) {
+                    setContractFieldError(el, err, 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (VD: 0988123456).');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'lessee-permanent-address') {
+                const el = document.getElementById('lessee-permanent-address');
+                const err = document.getElementById('err-lessee-permanent-address');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Vui lòng nhập hộ khẩu thường trú của bên thuê.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'lessee-current-address') {
+                const el = document.getElementById('lessee-current-address');
+                const err = document.getElementById('err-lessee-current-address');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Vui lòng nhập chỗ ở hiện tại của bên thuê.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'contract-start-date') {
+                const el = document.getElementById('contract-start-date');
+                const err = document.getElementById('err-start-date');
+                if (!el || !el.value) {
+                    setContractFieldError(el, err, 'Ngày bắt đầu hợp đồng là bắt buộc.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'contract-end-date') {
+                const el = document.getElementById('contract-end-date');
+                const startEl = document.getElementById('contract-start-date');
+                const err = document.getElementById('err-end-date');
+                if (!el || !el.value) {
+                    setContractFieldError(el, err, 'Thời hạn kết thúc hợp đồng là bắt buộc.');
+                    isValid = false;
+                } else if (startEl && startEl.value && el.value <= startEl.value) {
+                    setContractFieldError(el, err, 'Thời hạn kết thúc hợp đồng phải sau ngày bắt đầu hiệu lực.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'contract-deposit') {
+                const el = document.getElementById('contract-deposit');
+                const err = document.getElementById('err-deposit');
+                if (!el || el.value === '' || el.value === null) {
+                    setContractFieldError(el, err, 'Số tiền đặt cọc hợp đồng là bắt buộc.');
+                    isValid = false;
+                } else if (parseInt(el.value) < 0) {
+                    setContractFieldError(el, err, 'Số tiền đặt cọc hợp đồng phải lớn hơn hoặc bằng 0 đồng.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'rental-address') {
+                const el = document.getElementById('rental-address');
+                const err = document.getElementById('err-rental-address');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Địa chỉ nhà/phòng cho thuê là bắt buộc.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'contract-rent-price') {
+                const el = document.getElementById('contract-rent-price');
+                const err = document.getElementById('err-rent-price');
+                if (!el || el.value === '' || parseInt(el.value) <= 0) {
+                    setContractFieldError(el, err, 'Giá thuê là bắt buộc và phải lớn hơn 0 đồng.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'first-payment-date') {
+                const el = document.getElementById('first-payment-date');
+                const err = document.getElementById('err-first-payment-date');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Thời điểm thanh toán lần đầu là bắt buộc.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            } else if (fieldId === 'payment-method') {
+                const el = document.getElementById('payment-method');
+                const err = document.getElementById('err-payment-method');
+                if (!el || !el.value.trim()) {
+                    setContractFieldError(el, err, 'Hình thức thanh toán là bắt buộc.');
+                    isValid = false;
+                } else {
+                    clearContractFieldError(el, err);
+                }
+            }
+            return isValid;
+        }
+
+        // Validate toàn bộ form khi submit
+        function validateCreateContractForm(e) {
+            let isValid = true;
+            let firstInvalidEl = null;
+
+            // 1. Kiểm tra Chọn Phòng: ERR_08_01
+            const roomId = document.getElementById('contract-room-id')?.value;
+            const roomWrapper = document.getElementById('contract-room-search-wrapper');
+            const roomSearch = document.getElementById('contract-room-search');
+            const errRoom = document.getElementById('err-contract-room');
+
+            if (!roomId || !roomId.trim()) {
+                setContractFieldError(roomWrapper, errRoom, 'Vui lòng chọn phòng lưu trú để thiết lập hợp đồng.');
+                isValid = false;
+                if (!firstInvalidEl) firstInvalidEl = roomSearch || roomWrapper;
+            } else {
+                clearContractFieldError(roomWrapper, errRoom);
+            }
+
+            // 2. Kiểm tra tất cả các trường còn lại
+            const contractFieldsToValidate = [
+                'lessor-name',
+                'lessee-name',
+                'lessee-id-number',
+                'lessee-phone',
+                'lessee-permanent-address',
+                'lessee-current-address',
+                'contract-start-date',
+                'contract-end-date',
+                'contract-deposit',
+                'rental-address',
+                'contract-rent-price',
+                'first-payment-date',
+                'payment-method'
+            ];
+
+            contractFieldsToValidate.forEach(fieldId => {
+                const isFieldValid = validateSingleContractField(fieldId);
+                if (!isFieldValid) {
+                    isValid = false;
+                    if (!firstInvalidEl) {
+                        firstInvalidEl = document.getElementById(fieldId);
+                    }
+                }
+            });
+
+            if (!isValid) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (firstInvalidEl) {
+                    firstInvalidEl.focus();
+                    firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        // Gắn listener blur, input và change cho toàn bộ các trường để phản hồi tức thì
+        function initContractFormValidationListeners() {
+            const fields = [
+                'lessor-name',
+                'lessee-name',
+                'lessee-id-number',
+                'lessee-phone',
+                'lessee-permanent-address',
+                'lessee-current-address',
+                'contract-start-date',
+                'contract-end-date',
+                'contract-deposit',
+                'rental-address',
+                'contract-rent-price',
+                'first-payment-date',
+                'payment-method'
+            ];
+
+            fields.forEach(fieldId => {
+                const el = document.getElementById(fieldId);
+                if (!el || el.dataset.validateAttached) return;
+                el.dataset.validateAttached = 'true';
+
+                // Khi rời ô (blur) -> bôi đỏ ngay nếu sai/thiếu
+                el.addEventListener('blur', function() {
+                    validateSingleContractField(fieldId);
+                });
+
+                // Khi đang gõ (input) -> kiểm tra và tự gỡ viền đỏ khi đã thỏa mãn
+                el.addEventListener('input', function() {
+                    validateSingleContractField(fieldId);
+                });
+
+                // Khi thay đổi giá trị (change)
+                el.addEventListener('change', function() {
+                    validateSingleContractField(fieldId);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initContractFormValidationListeners();
+
+            @if($errors->has('room_id') || $errors->has('resident_id') || $errors->has('lessee_name') || $errors->has('start_date') || $errors->has('end_date') || $errors->has('deposit') || $errors->has('first_payment_date') || $errors->has('payment_method'))
+                toggleAddContractModal(true);
+                @if($errors->has('room_id'))
+                    document.getElementById('contract-room-search-wrapper')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errR = document.getElementById('err-contract-room');
+                    if (errR) {
+                        errR.querySelector('span').textContent = "{{ $errors->first('room_id') }}";
+                        errR.classList.remove('hidden');
+                        errR.classList.add('flex');
+                    }
+                @endif
+                @if($errors->has('resident_id') || $errors->has('lessee_name'))
+                    document.getElementById('lessee-name')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errL = document.getElementById('err-lessee-name');
+                    if (errL) {
+                        errL.querySelector('span').textContent = "{{ $errors->first('resident_id') ?: $errors->first('lessee_name') }}";
+                        errL.classList.remove('hidden');
+                        errL.classList.add('flex');
+                    }
+                @endif
+                @if($errors->has('start_date'))
+                    document.getElementById('contract-start-date')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errS = document.getElementById('err-start-date');
+                    if (errS) {
+                        errS.querySelector('span').textContent = "{{ $errors->first('start_date') }}";
+                        errS.classList.remove('hidden');
+                        errS.classList.add('flex');
+                    }
+                @endif
+                @if($errors->has('end_date'))
+                    document.getElementById('contract-end-date')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errE = document.getElementById('err-end-date');
+                    if (errE) {
+                        errE.querySelector('span').textContent = "{{ $errors->first('end_date') }}";
+                        errE.classList.remove('hidden');
+                        errE.classList.add('flex');
+                    }
+                @endif
+                @if($errors->has('deposit'))
+                    document.getElementById('contract-deposit')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errD = document.getElementById('err-deposit');
+                    if (errD) {
+                        errD.querySelector('span').textContent = "{{ $errors->first('deposit') }}";
+                        errD.classList.remove('hidden');
+                        errD.classList.add('flex');
+                    }
+                @endif
+                @if($errors->has('first_payment_date'))
+                    document.getElementById('first-payment-date')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errFP = document.getElementById('err-first-payment-date');
+                    if (errFP) {
+                        errFP.querySelector('span').textContent = "{{ $errors->first('first_payment_date') }}";
+                        errFP.classList.remove('hidden');
+                        errFP.classList.add('flex');
+                    }
+                @endif
+                @if($errors->has('payment_method'))
+                    document.getElementById('payment-method')?.classList.add('!border-rose-500', 'ring-2', 'ring-rose-500', 'bg-rose-500/10');
+                    const errPM = document.getElementById('err-payment-method');
+                    if (errPM) {
+                        errPM.querySelector('span').textContent = "{{ $errors->first('payment_method') }}";
+                        errPM.classList.remove('hidden');
+                        errPM.classList.add('flex');
+                    }
+                @endif
+            @endif
+        });
 
         document.addEventListener('click', (event) => {
             const picker = document.getElementById('contract-room-results');
