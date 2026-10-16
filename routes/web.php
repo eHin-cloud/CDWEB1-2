@@ -195,8 +195,18 @@ Route::middleware('admin')->group(function () {
 
     Route::get('/smartroom/admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
     Route::post('/smartroom/admin/payments/{payment}', [PaymentController::class, 'update'])->name('admin.payments.update');
+    Route::get('/smartroom/admin/utility/bulk', [AdminDashboardController::class, 'utilityBulkView'])->name('smartroom.admin.utility.bulk');
+    Route::get('/smartroom/admin/utilities/bulk', [AdminDashboardController::class, 'utilityBulkView'])->name('smartroom.admin.utilities.bulk');
     Route::post('/smartroom/admin/utility', [AdminDashboardController::class, 'storeUtility'])->name('smartroom.admin.utility.store');
     Route::post('/smartroom/admin/utility/bulk', [AdminDashboardController::class, 'storeUtilityBulk'])->name('smartroom.admin.utility.bulk_store');
+    Route::post('/smartroom/admin/utility/bulk-store', [AdminDashboardController::class, 'storeUtilityBulk'])->name('smartroom.admin.utility.bulk_store_post');
+
+    // FEAT_17_BILLING: Tính tiền phòng & Xuất Hóa đơn tự động (Bảng 118 - 123)
+    Route::get('/smartroom/admin/invoices', [AdminDashboardController::class, 'invoicesIndex'])->name('smartroom.admin.invoices');
+    Route::post('/smartroom/admin/utility/calculate', [AdminDashboardController::class, 'calculateUtilityInvoice'])->name('smartroom.admin.utility.calculate');
+    Route::get('/smartroom/admin/utility/{id}/vietqr', [AdminDashboardController::class, 'getUtilityVietQr'])->name('smartroom.admin.utility.vietqr');
+    Route::get('/smartroom/admin/utility/{id}/invoice-pdf', [AdminDashboardController::class, 'exportInvoicePdf'])->name('smartroom.admin.utility.invoice_pdf');
+
     Route::post('/smartroom/admin/resident', [AdminDashboardController::class, 'storeResident'])->name('smartroom.admin.resident.store');
     Route::put('/smartroom/admin/resident/{id}', [AdminDashboardController::class, 'updateResident'])->name('smartroom.admin.resident.update');
     Route::get('/smartroom/admin/resident/{id}/export-ct01', [AdminDashboardController::class, 'exportCt01'])->name('smartroom.admin.resident.export_ct01');
@@ -226,7 +236,10 @@ Route::middleware('admin')->group(function () {
         Route::post('/smartroom/admin/ai/ocr-meter', [AdminDashboardController::class, 'aiOcrMeter'])->name('smartroom.admin.ai.ocr_meter');
         Route::post('/smartroom/admin/ai/ocr-meter-bulk', [AdminDashboardController::class, 'aiOcrMeterBulk'])->name('smartroom.admin.ai.ocr_meter_bulk');
         Route::get('/smartroom/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
+        Route::get('/smartroom/admin/ledger', [ReportController::class, 'index'])->name('admin.reports.ledger');
+        Route::get('/smartroom/admin/reports/cash-flow', [ReportController::class, 'cashFlow'])->name('admin.reports.cash_flow');
         Route::post('/smartroom/admin/reports/transactions', [ReportController::class, 'storeTransaction'])->name('admin.reports.transaction.store');
+        Route::get('/smartroom/admin/reports/export-excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export_excel');
         Route::get('/smartroom/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity_logs.index');
         Route::get('/smartroom/admin/payments/export', [PaymentController::class, 'export'])->name('admin.payments.export');
         Route::delete('/smartroom/admin/resident/{id}', [AdminDashboardController::class, 'deleteResident'])->name('smartroom.admin.resident.delete');

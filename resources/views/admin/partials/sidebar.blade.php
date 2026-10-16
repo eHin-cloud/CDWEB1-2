@@ -152,20 +152,12 @@
                         <i class="fa-solid fa-chart-pie w-5 text-center text-[15px]"></i>
                         <span class="truncate">Tổng Quan</span>
                     </a>
-
-                    <a href="{{ route('smartroom.admin') }}#ai-assistant-hub-container" 
-                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 border-transparent hover:border-purple-500/20"
-                       title="Trợ lý AI Hỗ trợ toàn diện (FEAT_14)">
-                        <i class="fa-solid fa-wand-magic-sparkles w-5 text-center text-[15px] text-purple-400"></i>
-                        <span class="truncate">Trợ Lý AI Hub</span>
-                        <span class="ml-auto text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">AI</span>
-                    </a>
                     
                     @if($isLandlord)
                         <a href="{{ route('admin.reports.index') }}" 
                            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.reports.*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
                             <i class="fa-solid fa-chart-column w-5 text-center text-[15px]"></i>
-                            <span class="truncate">Báo Cáo</span>
+                            <span class="truncate">Báo Cáo & Sổ Quỹ</span>
                         </a>
                     @endif
                 </div>

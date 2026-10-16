@@ -194,7 +194,26 @@ class AiAssistantHubTest extends TestCase
     }
 
     /**
-     * Kiểm tra giao diện Admin Dashboard render đầy đủ UI elements FEAT_14
+     * Agent 2b (Mới): Chủ trọ đặt câu hỏi nghiệp vụ và nhận câu trả lời tư vấn từ AI
+     */
+    public function test_landlord_qa_mode_provides_answers_and_fallback(): void
+    {
+        $response = $this->actingAs($this->landlord)
+            ->postJson('/api/ai/landlord-qa', [
+                'prompt' => 'Quy định đăng ký tạm trú cho khách thuê phòng trọ như thế nào?',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('agent_mode', 'landlord_qa')
+            ->assertJsonPath('quick_action', 'copy_content');
+
+        $this->assertStringContainsString('HƯỚNG DẪN NGHIỆP VỤ QUẢN LÝ DÀNH CHO CHỦ TRỌ', $response->json('response'));
+    }
+
+    /**
+     * Kiểm tra giao diện Admin Dashboard render đầy đủ UI elements FEAT_14 dành riêng cho Chủ trọ
+     * (Đã loại bỏ tác vụ tìm phòng, chuyển báo sự cố về khách thuê, thêm tab Hỏi - Đáp chủ trọ)
      */
     public function test_admin_dashboard_renders_ai_assistant_hub(): void
     {
@@ -206,8 +225,13 @@ class AiAssistantHubTest extends TestCase
             ->assertSee('ai-hub-prompt', false)
             ->assertSee('btn-send-ai-hub', false)
             ->assertSee('ai-hub-response-box', false)
-            ->assertSee('modal-ai-emergency-ticket', false)
             ->assertSee('Trợ Lý AI Hỗ Trợ Toàn Diện', false)
-            ->assertSee('Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!', false);
+            // Kiểm tra thấy 2 tab nghiệp vụ dành riêng cho chủ trọ
+            ->assertSee('data-mode="landlord_advisor"', false)
+            ->assertSee('data-mode="landlord_qa"', false)
+            ->assertSee('Hỏi - Đáp & Trợ Lý Chủ Trọ', false)
+            // Xác minh KHÔNG còn xuất hiện tab "Khách tìm phòng" hay "Báo sự cố kỹ thuật" trên dashboard của chủ trọ
+            ->assertDontSee('data-mode="room_finder"', false)
+            ->assertDontSee('data-mode="tenant_incident"', false);
     }
 }

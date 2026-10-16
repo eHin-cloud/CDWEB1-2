@@ -52,6 +52,7 @@ Route::prefix('ai')->group(function () {
     Route::post('/assistant-hub', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'dispatchHub'])->name('api.ai.assistant_hub');
     Route::post('/room-finder', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'roomFinder'])->name('api.ai.room_finder');
     Route::post('/landlord-advisor', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'landlordAdvisor'])->name('api.ai.landlord_advisor');
+    Route::post('/landlord-qa', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'landlordQA'])->name('api.ai.landlord_qa');
     Route::post('/incident-triage', [\App\Http\Controllers\Api\AiAssistantHubController::class, 'incidentTriage'])->name('api.ai.incident_triage');
 });
 

@@ -68,9 +68,9 @@ class AiAssistantHubController extends Controller
             $prompt = strip_tags($prompt);
         }
 
-        $agentMode = $request->input('agent_mode', 'room_finder');
-        if (!in_array($agentMode, ['room_finder', 'landlord_advisor', 'tenant_incident'], true)) {
-            $agentMode = 'room_finder';
+        $agentMode = $request->input('agent_mode', 'landlord_advisor');
+        if (!in_array($agentMode, ['landlord_advisor', 'landlord_qa', 'tenant_incident', 'room_finder'], true)) {
+            $agentMode = 'landlord_advisor';
         }
 
         $tone = $request->input('tone', 'professional');
@@ -78,6 +78,8 @@ class AiAssistantHubController extends Controller
 
         // Định tuyến xử lý theo chế độ Agent
         switch ($agentMode) {
+            case 'landlord_qa':
+                return $this->handleLandlordQA($request, $prompt, $tone, $contextId, $aiService);
             case 'landlord_advisor':
                 return $this->handleLandlordAdvisor($request, $prompt, $tone, $contextId, $aiService);
             case 'tenant_incident':
@@ -107,7 +109,16 @@ class AiAssistantHubController extends Controller
     }
 
     /**
-     * Agent 3: Tiếp nhận, phân loại khẩn cấp sự cố kỹ thuật và hướng dẫn xử lý an toàn
+     * Agent 2b: Trợ lý Hỏi - Đáp & Tư vấn nghiệp vụ quản lý cho chủ trọ
+     */
+    public function landlordQA(Request $request, AiManagementService $aiService)
+    {
+        $request->merge(['agent_mode' => 'landlord_qa']);
+        return $this->dispatchHub($request, $aiService);
+    }
+
+    /**
+     * Agent 3: Tiếp nhận, phân loại khẩn cấp sự cố kỹ thuật và hướng dẫn xử lý an toàn (Khách thuê / Cư dân)
      */
     public function incidentTriage(Request $request, AiManagementService $aiService)
     {
@@ -118,6 +129,66 @@ class AiAssistantHubController extends Controller
     // ==========================================
     // CÁC HÀM XỬ LÝ AGENT CHUYÊN BIỆT
     // ==========================================
+
+    /**
+     * Xử lý Trợ lý Hỏi - Đáp & Tư vấn nghiệp vụ vận hành cho chủ trọ
+     */
+    private function handleLandlordQA(Request $request, string $prompt, string $tone, ?int $contextId, AiManagementService $aiService)
+    {
+        $user = Auth::user();
+        $tenant = $user?->tenant;
+
+        $contextSummary = [
+            'facility_name' => $tenant?->name ?? 'Cơ sở lưu trú SmartRoom',
+            'facility_address' => $tenant?->address ?? 'Khu vực nội thành',
+            'user_name' => $user?->name ?? 'Chủ trọ SmartRoom',
+        ];
+
+        // Gọi AI giải đáp thắc mắc nghiệp vụ với timeout 6s (ERR_14_03)
+        $aiResult = $this->callGeminiWithTimeout([
+            [
+                'role' => 'system',
+                'content' => 'Bạn là Trợ lý AI Chuyên gia Cố vấn Vận hành & Quản lý Nhà trọ của hệ thống SmartRoom. '
+                    . 'Hãy giải đáp tận tâm, chuẩn xác, chuyên nghiệp bằng tiếng Việt cho chủ trọ về mọi vấn đề: '
+                    . 'thủ tục đăng ký tạm trú, hợp đồng thuê nhà điện tử, xử lý tiền cọc, giải quyết tranh chấp cư dân, '
+                    . 'tính toán đối soát hóa đơn điện nước, quy định an toàn PCCC, và kinh nghiệm gia tăng tỷ lệ lấp đầy phòng.'
+            ],
+            [
+                'role' => 'user',
+                'content' => "Câu hỏi/Thắc mắc của chủ trọ: {$prompt}\nVăn phong mong muốn: {$tone}\nThông tin cơ sở:\n" . json_encode($contextSummary, JSON_UNESCAPED_UNICODE)
+            ]
+        ], 6);
+
+        if (!$aiResult['success']) {
+            // Kho tri thức mẫu dự phòng nghiệp vụ chủ trọ (ERR_14_03)
+            $fallbackAnswer = "💡 HƯỚNG DẪN NGHIỆP VỤ QUẢN LÝ DÀNH CHO CHỦ TRỌ:\n\n"
+                . "• Về câu hỏi của bạn: \"{$prompt}\"\n\n"
+                . "1. Về Quy định & Thủ tục: Chủ cơ sở cần kiểm tra kỹ thông tin định danh CCCD và hoàn tất thủ tục khai báo tạm trú qua Cổng Dịch vụ công Quản lý cư trú trong vòng 24 giờ sau khi khách dọn vào.\n"
+                . "2. Về Hợp đồng & Tiền cọc: Quy định rõ ràng trong hợp đồng về điều khoản hoàn cọc (báo trước tối thiểu 30 ngày), bàn giao hiện trạng trang thiết bị đầy đủ.\n"
+                . "3. Về Điện - Nước & Chi phí: Áp dụng công tơ riêng từng phòng, chốt số định kỳ ngày 25-30 hàng tháng và xuất hóa đơn tự động kèm mã VietQR trên SmartRoom để tránh thất thoát và minh bạch công nợ.\n\n"
+                . "Bạn có thể sao chép hướng dẫn này hoặc tham khảo thêm tại mục Quy trình vận hành SmartRoom!";
+
+            return response()->json([
+                'success' => true,
+                'agent_mode' => 'landlord_qa',
+                'response' => $fallbackAnswer,
+                'is_fallback' => true,
+                'error_code' => 'ERR_14_03',
+                'warning_message' => 'Kết nối máy chủ AI quá thời gian chờ (6s), tự động kích hoạt câu trả lời từ kho tri thức dự phòng.',
+                'quick_action' => 'copy_content',
+                'copy_success_message' => 'Đã sao chép câu trả lời tư vấn nghiệp vụ vào bộ nhớ tạm thành công!',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'agent_mode' => 'landlord_qa',
+            'response' => $aiResult['content'],
+            'is_fallback' => false,
+            'quick_action' => 'copy_content',
+            'copy_success_message' => 'Đã sao chép câu trả lời tư vấn nghiệp vụ vào bộ nhớ tạm thành công!',
+        ]);
+    }
 
     /**
      * Xử lý Tra cứu phòng thông minh
