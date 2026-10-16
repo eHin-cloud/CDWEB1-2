@@ -115,10 +115,13 @@
                                     <i class="fa-regular fa-calendar-days text-indigo-400 mr-1"></i> Kỳ xem báo cáo
                                 </label>
                                 <select name="time_filter" id="time_filter" onchange="handleTimeFilterChange(this.value)" class="w-full px-3.5 py-2 rounded-xl text-sm bg-slate-900/90 border border-slate-700/80 text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-                                    <option value="this_year" {{ ($filters['time_filter'] ?? '') === 'this_year' ? 'selected' : '' }}>Năm nay (12 tháng)</option>
-                                    <option value="this_quarter" {{ ($filters['time_filter'] ?? '') === 'this_quarter' ? 'selected' : '' }}>Quý này</option>
+                                    <option value="today" {{ ($filters['time_filter'] ?? '') === 'today' ? 'selected' : '' }}>Hôm nay</option>
+                                    <option value="last_7_days" {{ ($filters['time_filter'] ?? '') === 'last_7_days' ? 'selected' : '' }}>7 ngày qua</option>
+                                    <option value="last_30_days" {{ ($filters['time_filter'] ?? '') === 'last_30_days' ? 'selected' : '' }}>30 ngày qua</option>
                                     <option value="this_month" {{ ($filters['time_filter'] ?? '') === 'this_month' ? 'selected' : '' }}>Tháng này</option>
-                                    <option value="custom" {{ ($filters['time_filter'] ?? '') === 'custom' ? 'selected' : '' }}>Tùy chỉnh khoảng ngày</option>
+                                    <option value="this_quarter" {{ ($filters['time_filter'] ?? '') === 'this_quarter' ? 'selected' : '' }}>Quý này</option>
+                                    <option value="this_year" {{ ($filters['time_filter'] ?? '') === 'this_year' ? 'selected' : '' }}>Năm nay (12 tháng)</option>
+                                    <option value="custom" {{ ($filters['time_filter'] ?? '') === 'custom' ? 'selected' : '' }}>Tùy chỉnh khoảng ngày...</option>
                                 </select>
                             </div>
 
@@ -136,19 +139,21 @@
                                 </select>
                             </div>
 
-                            <!-- Khoảng ngày tùy chỉnh -->
-                            <div id="custom-date-container" class="{{ ($filters['time_filter'] ?? '') === 'custom' ? '' : 'hidden' }} sm:col-span-2 lg:col-span-1">
-                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    <i class="fa-solid fa-calendar-range text-indigo-400 mr-1"></i> Chọn từ ngày - đến ngày...
+                            <!-- Khoảng ngày tùy chỉnh (Custom Date Range Picker / range_picker) -->
+                            <div id="range_picker" class="range_picker {{ ($filters['time_filter'] ?? '') === 'custom' ? '' : 'hidden' }} sm:col-span-2 lg:col-span-1">
+                                <label for="start_date" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                                    <i class="fa-solid fa-calendar-range text-indigo-400 mr-1"></i> Lọc thời gian
                                 </label>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <input type="date" name="start_date" id="start_date" 
+                                               placeholder="Chọn từ ngày - đến ngày..."
                                                value="{{ $filters['start_date_input'] ?? $filters['start_date'] ?? '' }}"
                                                class="w-full px-3 py-2 rounded-xl text-xs bg-slate-900/90 border {{ $dateRangeError ? 'is-invalid border-rose-500 bg-rose-950/20' : 'border-slate-700/80' }} text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors">
                                     </div>
                                     <div>
                                         <input type="date" name="end_date" id="end_date" 
+                                               placeholder="Chọn từ ngày - đến ngày..."
                                                value="{{ $filters['end_date_input'] ?? $filters['end_date'] ?? '' }}"
                                                class="w-full px-3 py-2 rounded-xl text-xs bg-slate-900/90 border {{ $dateRangeError ? 'is-invalid border-rose-500 bg-rose-950/20' : 'border-slate-700/80' }} text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors">
                                     </div>
@@ -168,6 +173,23 @@
                         </div>
                     </div>
 
+                    <!-- Thanh Quick Presets Bấm Nhanh Khoảng Ngày -->
+                    <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/60">
+                        <span class="text-[11px] font-semibold text-slate-400 mr-1"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i>Chọn nhanh:</span>
+                        <button type="button" onclick="setQuickRange('today')" class="px-2.5 py-1 rounded-lg text-xs {{ ($filters['time_filter'] ?? '') === 'today' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300' }} border border-slate-700/60 transition-all">Hôm nay</button>
+                        <button type="button" onclick="setQuickRange('last_7_days')" class="px-2.5 py-1 rounded-lg text-xs {{ ($filters['time_filter'] ?? '') === 'last_7_days' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300' }} border border-slate-700/60 transition-all">7 ngày qua</button>
+                        <button type="button" onclick="setQuickRange('last_30_days')" class="px-2.5 py-1 rounded-lg text-xs {{ ($filters['time_filter'] ?? '') === 'last_30_days' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300' }} border border-slate-700/60 transition-all">30 ngày qua</button>
+                        <button type="button" onclick="setQuickRange('this_month')" class="px-2.5 py-1 rounded-lg text-xs {{ ($filters['time_filter'] ?? '') === 'this_month' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300' }} border border-slate-700/60 transition-all">Tháng này</button>
+                        <button type="button" onclick="setQuickRange('this_quarter')" class="px-2.5 py-1 rounded-lg text-xs {{ ($filters['time_filter'] ?? '') === 'this_quarter' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300' }} border border-slate-700/60 transition-all">Quý này</button>
+                        <button type="button" onclick="setQuickRange('this_year')" class="px-2.5 py-1 rounded-lg text-xs {{ ($filters['time_filter'] ?? '') === 'this_year' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300' }} border border-slate-700/60 transition-all">Cả năm</button>
+
+                        @if(!empty($filters['start_date']) && !empty($filters['end_date']))
+                            <span class="ml-auto text-[11px] font-medium text-indigo-300 bg-indigo-950/40 px-2.5 py-0.5 rounded-md border border-indigo-500/20">
+                                <i class="fa-regular fa-calendar-check mr-1"></i>Từ: {{ \Carbon\Carbon::parse($filters['start_date'])->format('d/m/Y') }} → Đến: {{ \Carbon\Carbon::parse($filters['end_date'])->format('d/m/Y') }}
+                            </span>
+                        @endif
+                    </div>
+
                     <!-- THÔNG BÁO LỖI DATE RANGE (DoD 1: Khoảng thời gian thống kê không hợp lệ: Từ ngày phải nhỏ hơn hoặc bằng Đến ngày) -->
                     <div id="date-range-error-box" class="{{ $dateRangeError ? '' : 'hidden' }} p-3 rounded-xl bg-rose-950/40 border border-rose-500/50 text-rose-300 text-xs font-semibold flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-circle-exclamation text-rose-400 text-sm"></i>
@@ -179,7 +201,7 @@
             <!-- 4 THẺ CHỈ SỐ KPI TRỌNG YẾU (kpi_box) -->
             <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="kpi-container">
                 <!-- 1. TỔNG DOANH THU -->
-                <div class="panel rounded-2xl p-5 border border-emerald-500/20 bg-gradient-to-b from-emerald-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
+                <div class="kpi_box panel rounded-2xl p-5 border border-emerald-500/20 bg-gradient-to-b from-emerald-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-emerald-500/10 blur-xl group-hover:scale-125 transition-transform"></div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Doanh Thu</span>
@@ -197,7 +219,7 @@
                 </div>
 
                 <!-- 2. TỶ LỆ LẤP ĐẦY -->
-                <div class="panel rounded-2xl p-5 border border-indigo-500/20 bg-gradient-to-b from-indigo-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
+                <div class="kpi_box panel rounded-2xl p-5 border border-indigo-500/20 bg-gradient-to-b from-indigo-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-indigo-500/10 blur-xl group-hover:scale-125 transition-transform"></div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tỷ Lệ Lấp Đầy</span>
@@ -218,7 +240,7 @@
                 </div>
 
                 <!-- 3. TIỀN CHƯA THU / CÔNG NỢ TỒN -->
-                <div class="panel rounded-2xl p-5 border border-rose-500/20 bg-gradient-to-b from-rose-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
+                <div class="kpi_box panel rounded-2xl p-5 border border-rose-500/20 bg-gradient-to-b from-rose-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-rose-500/10 blur-xl group-hover:scale-125 transition-transform"></div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiền Chưa Thu (Nợ Tồn)</span>
@@ -236,7 +258,7 @@
                 </div>
 
                 <!-- 4. SỐ LƯỢNG CƯ DÂN -->
-                <div class="panel rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-b from-purple-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
+                <div class="kpi_box panel rounded-2xl p-5 border border-purple-500/20 bg-gradient-to-b from-purple-950/20 to-slate-900/60 shadow-lg relative overflow-hidden group">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-purple-500/10 blur-xl group-hover:scale-125 transition-transform"></div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Số Lượng Cư Dân</span>
@@ -343,6 +365,130 @@
                     </div>
                 </div>
             </section>
+
+            <!-- BIỂU ĐỒ CƠ CẤU DOANH THU THỰC TẾ THEO NGUỒN THU (REVENUE BREAKDOWN REALTIME) -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Doughnut Chart Cơ cấu nguồn thu -->
+                <div class="panel rounded-2xl p-6 shadow-xl flex flex-col min-h-[340px]">
+                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/80">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+                                Cơ Cấu Nguồn Thu
+                            </h2>
+                            <p class="text-xs text-slate-400">Tỷ trọng tiền phòng, điện, nước & dịch vụ thực tế</p>
+                        </div>
+                        <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            Realtime
+                        </span>
+                    </div>
+
+                    <!-- Vùng vẽ Doughnut Chart -->
+                    <div class="relative flex-1 w-full flex items-center justify-center my-2">
+                        <div class="w-48 h-48 relative">
+                            <canvas id="chart_revenue_breakdown"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span class="text-sm font-extrabold text-white text-center px-2">{{ number_format(($revenueBreakdown['total'] ?? 0) / 1000000, 1) }}M</span>
+                                <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tổng thu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng chi tiết thành phần nguồn thu và tiến trình -->
+                <div class="lg:col-span-2 panel rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/80">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                                    <i class="fa-solid fa-receipt text-indigo-400"></i>
+                                    Chi Tiết Nguồn Doanh Thu Trong Kỳ
+                                </h3>
+                                <p class="text-xs text-slate-400">Số tiền thực tế cộng dồn từ các hóa đơn Bills và chỉ số điện nước</p>
+                            </div>
+                            <span class="text-xs font-bold text-slate-200">
+                                Tổng: <span class="text-indigo-400">{{ number_format($revenueBreakdown['total'] ?? 0, 0, ',', '.') }} đ</span>
+                            </span>
+                        </div>
+
+                        <!-- 4 Thành phần doanh thu -->
+                        <div class="space-y-4">
+                            <!-- 1. Tiền phòng -->
+                            <div>
+                                <div class="flex justify-between items-center text-xs mb-1.5">
+                                    <span class="font-semibold text-slate-200 flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-md bg-indigo-500 inline-block"></span>
+                                        Tiền thuê phòng
+                                    </span>
+                                    <span class="font-bold text-slate-100">
+                                        {{ number_format($revenueBreakdown['data'][0] ?? 0, 0, ',', '.') }} đ 
+                                        <span class="text-indigo-400 font-semibold ml-1">({{ $revenueBreakdown['percentages'][0] ?? 0 }}%)</span>
+                                    </span>
+                                </div>
+                                <div class="w-full bg-slate-800/80 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $revenueBreakdown['percentages'][0] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Tiền điện -->
+                            <div>
+                                <div class="flex justify-between items-center text-xs mb-1.5">
+                                    <span class="font-semibold text-slate-200 flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-md bg-amber-500 inline-block"></span>
+                                        Tiền điện tiêu thụ
+                                    </span>
+                                    <span class="font-bold text-slate-100">
+                                        {{ number_format($revenueBreakdown['data'][1] ?? 0, 0, ',', '.') }} đ 
+                                        <span class="text-amber-400 font-semibold ml-1">({{ $revenueBreakdown['percentages'][1] ?? 0 }}%)</span>
+                                    </span>
+                                </div>
+                                <div class="w-full bg-slate-800/80 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $revenueBreakdown['percentages'][1] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Tiền nước -->
+                            <div>
+                                <div class="flex justify-between items-center text-xs mb-1.5">
+                                    <span class="font-semibold text-slate-200 flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-md bg-cyan-500 inline-block"></span>
+                                        Tiền nước sinh hoạt
+                                    </span>
+                                    <span class="font-bold text-slate-100">
+                                        {{ number_format($revenueBreakdown['data'][2] ?? 0, 0, ',', '.') }} đ 
+                                        <span class="text-cyan-400 font-semibold ml-1">({{ $revenueBreakdown['percentages'][2] ?? 0 }}%)</span>
+                                    </span>
+                                </div>
+                                <div class="w-full bg-slate-800/80 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-cyan-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $revenueBreakdown['percentages'][2] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Phí dịch vụ -->
+                            <div>
+                                <div class="flex justify-between items-center text-xs mb-1.5">
+                                    <span class="font-semibold text-slate-200 flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-md bg-purple-500 inline-block"></span>
+                                        Phí dịch vụ (Rác, Net, Vệ sinh)
+                                    </span>
+                                    <span class="font-bold text-slate-100">
+                                        {{ number_format($revenueBreakdown['data'][3] ?? 0, 0, ',', '.') }} đ 
+                                        <span class="text-purple-400 font-semibold ml-1">({{ $revenueBreakdown['percentages'][3] ?? 0 }}%)</span>
+                                    </span>
+                                </div>
+                                <div class="w-full bg-slate-800/80 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-purple-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ $revenueBreakdown['percentages'][3] ?? 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                        <span><i class="fa-solid fa-circle-info text-indigo-400 mr-1.5"></i>Số liệu được tổng hợp tự động theo thời gian thực từ cơ sở dữ liệu</span>
+                        <span class="font-medium text-slate-300">4 nhóm chi phí chuẩn</span>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -416,6 +562,7 @@
     <script>
         let revenueChartInstance = null;
         let occupancyChartInstance = null;
+        let revenueBreakdownChartInstance = null;
         let chartJsAvailable = (typeof Chart !== 'undefined');
 
         const initialRevenueLabels = {!! json_encode($revenueChart['labels'] ?? []) !!};
@@ -424,6 +571,10 @@
 
         const initialOccupancyLabels = {!! json_encode($occupancyChart['labels'] ?? []) !!};
         const initialOccupancyData = {!! json_encode($occupancyChart['data'] ?? []) !!};
+
+        const initialRevenueBreakdownLabels = {!! json_encode($revenueBreakdown['labels'] ?? []) !!};
+        const initialRevenueBreakdownData = {!! json_encode($revenueBreakdown['data'] ?? []) !!};
+        const initialRevenueBreakdownPercentages = {!! json_encode($revenueBreakdown['percentages'] ?? []) !!};
 
         function handleChartLibraryError() {
             chartJsAvailable = false;
@@ -542,23 +693,134 @@
                     }
                 });
             }
+
+            // 3. Khởi tạo Biểu đồ Tròn Cơ cấu Doanh thu (Realtime Revenue Breakdown)
+            const breakdownCanvas = document.getElementById('chart_revenue_breakdown');
+            if (breakdownCanvas) {
+                const breakdownCtx = breakdownCanvas.getContext('2d');
+                revenueBreakdownChartInstance = new Chart(breakdownCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: initialRevenueBreakdownLabels,
+                        datasets: [{
+                            data: initialRevenueBreakdownData,
+                            backgroundColor: [
+                                'rgba(99, 102, 241, 0.85)', // Tiền phòng (Indigo)
+                                'rgba(245, 158, 11, 0.85)', // Tiền điện (Amber)
+                                'rgba(6, 182, 212, 0.85)',  // Tiền nước (Cyan)
+                                'rgba(168, 85, 247, 0.85)'  // Dịch vụ (Purple)
+                            ],
+                            borderColor: '#080b11',
+                            borderWidth: 2,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '68%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleColor: '#f8fafc',
+                                bodyColor: '#e2e8f0',
+                                callbacks: {
+                                    label: function(context) {
+                                        let val = context.raw || 0;
+                                        let idx = context.dataIndex;
+                                        let pct = initialRevenueBreakdownPercentages[idx] || 0;
+                                        return ' ' + context.label + ': ' + new Intl.NumberFormat('vi-VN').format(val) + ' đ (' + pct + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         // Xử lý thay đổi Kỳ xem báo cáo
         function handleTimeFilterChange(val) {
-            const container = document.getElementById('custom-date-container');
+            const container = document.getElementById('range_picker') || document.getElementById('custom-date-container');
             if (val === 'custom') {
-                container.classList.remove('hidden');
+                container?.classList.remove('hidden');
             } else {
-                container.classList.add('hidden');
-                // Tự động submit form khi chọn các kỳ cố định (Năm nay, Quý này, Tháng này)
+                container?.classList.add('hidden');
+                // Tự động submit form khi chọn các kỳ cố định (Năm nay, Quý này, Tháng này, v.v.)
                 document.getElementById('filter-form').submit();
             }
         }
 
+        // Chọn nhanh khoảng ngày bằng Presets
+        function setQuickRange(type) {
+            const timeFilterSelect = document.getElementById('time_filter');
+            const customContainer = document.getElementById('range_picker') || document.getElementById('custom-date-container');
+            const startInput = document.getElementById('start_date');
+            const endInput = document.getElementById('end_date');
+            const form = document.getElementById('filter-form');
+
+            const now = new Date();
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            if (type === 'today') {
+                timeFilterSelect.value = 'today';
+                const todayStr = formatDate(now);
+                startInput.value = todayStr;
+                endInput.value = todayStr;
+                customContainer.classList.add('hidden');
+                form.submit();
+            } else if (type === 'last_7_days') {
+                timeFilterSelect.value = 'last_7_days';
+                const past = new Date(now);
+                past.setDate(past.getDate() - 6);
+                startInput.value = formatDate(past);
+                endInput.value = formatDate(now);
+                customContainer.classList.add('hidden');
+                form.submit();
+            } else if (type === 'last_30_days') {
+                timeFilterSelect.value = 'last_30_days';
+                const past = new Date(now);
+                past.setDate(past.getDate() - 29);
+                startInput.value = formatDate(past);
+                endInput.value = formatDate(now);
+                customContainer.classList.add('hidden');
+                form.submit();
+            } else if (type === 'this_month') {
+                timeFilterSelect.value = 'this_month';
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                startInput.value = formatDate(firstDay);
+                endInput.value = formatDate(lastDay);
+                customContainer.classList.add('hidden');
+                form.submit();
+            } else if (type === 'this_quarter') {
+                timeFilterSelect.value = 'this_quarter';
+                const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+                const firstDay = new Date(now.getFullYear(), quarterMonth, 1);
+                const lastDay = new Date(now.getFullYear(), quarterMonth + 3, 0);
+                startInput.value = formatDate(firstDay);
+                endInput.value = formatDate(lastDay);
+                customContainer.classList.add('hidden');
+                form.submit();
+            } else if (type === 'this_year') {
+                timeFilterSelect.value = 'this_year';
+                const firstDay = new Date(now.getFullYear(), 0, 1);
+                const lastDay = new Date(now.getFullYear(), 11, 31);
+                startInput.value = formatDate(firstDay);
+                endInput.value = formatDate(lastDay);
+                customContainer.classList.add('hidden');
+                form.submit();
+            }
+        }
+
         function quickSelectThisYear() {
-            document.getElementById('time_filter').value = 'this_year';
-            document.getElementById('filter-form').submit();
+            setQuickRange('this_year');
         }
 
         // Kiểm tra Date range client-side trước khi submit (DoD 1)

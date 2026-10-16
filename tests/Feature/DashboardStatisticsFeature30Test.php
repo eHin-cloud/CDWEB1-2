@@ -362,4 +362,69 @@ class DashboardStatisticsFeature30Test extends TestCase
         $this->assertEquals(0, $response2->json('data.kpi.occupancy_rate'));
         $this->assertEquals(0, $response2->json('data.kpi.total_revenue'));
     }
+
+    /**
+     * 9. Kiểm tra tính toán cơ cấu doanh thu thực tế (Revenue Breakdown: Tiền phòng, điện, nước, dịch vụ)
+     */
+    public function test_revenue_breakdown_realtime_calculation(): void
+    {
+        $tenant = $this->createTenant();
+        $landlord = $this->createLandlordUser($tenant);
+        $building = Building::create(['tenant_id' => $tenant->id, 'name' => 'Tòa Nhà Thử Nghiệm', 'address' => 'Hà Nội']);
+        $room = $this->createRoom($tenant, $building, '301', 'occupied');
+
+        $currentMonth = date('Y-m');
+        Bill::create([
+            'tenant_id' => $tenant->id,
+            'room_id' => $room->id,
+            'billing_month' => $currentMonth,
+            'room_price' => 3000000,
+            'electricity_cost' => 500000,
+            'water_cost' => 200000,
+            'service_cost' => 150000,
+            'total_amount' => 3850000,
+            'status' => 'paid',
+        ]);
+
+        $response = $this->actingAs($landlord)->getJson('/smartroom/admin/dashboard');
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'data' => [
+                'revenue_breakdown' => [
+                    'has_data' => true,
+                    'total' => 3850000,
+                    'data' => [3000000, 500000, 200000, 150000],
+                ]
+            ]
+        ]);
+
+        $breakdown = $response->json('data.revenue_breakdown');
+        $this->assertCount(4, $breakdown['labels']);
+        $this->assertEquals('Tiền phòng', $breakdown['labels'][0]);
+        $this->assertEquals(77.9, $breakdown['percentages'][0]); // 3000000 / 3850000 ~ 77.9%
+    }
+
+    /**
+     * 10. Kiểm tra hỗ trợ lọc doanh thu tùy chọn theo khoảng ngày bất kỳ (Custom Date Range Picker)
+     */
+    public function test_custom_date_range_presets(): void
+    {
+        $tenant = $this->createTenant();
+        $landlord = $this->createLandlordUser($tenant);
+
+        // Test preset 7 ngày qua
+        $res7Days = $this->actingAs($landlord)->getJson('/smartroom/admin/dashboard?time_filter=last_7_days');
+        $res7Days->assertStatus(200);
+        $this->assertEquals('last_7_days', $res7Days->json('data.filters.time_filter'));
+        $this->assertNotNull($res7Days->json('data.filters.start_date'));
+        $this->assertNotNull($res7Days->json('data.filters.end_date'));
+
+        // Test custom range hợp lệ
+        $resCustom = $this->actingAs($landlord)->getJson('/smartroom/admin/dashboard?time_filter=custom&start_date=2026-06-01&end_date=2026-08-31');
+        $resCustom->assertStatus(200);
+        $this->assertEquals('2026-06-01', $resCustom->json('data.filters.start_date'));
+        $this->assertEquals('2026-08-31', $resCustom->json('data.filters.end_date'));
+    }
 }
+
