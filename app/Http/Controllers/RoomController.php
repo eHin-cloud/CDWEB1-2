@@ -72,10 +72,26 @@ class RoomController extends Controller
         $rooms = Room::with('building')
             ->where('tenant_id', $tenantId)
             ->when(!$rangePriceError && $filters['room_number'] !== '', function ($query) use ($filters) {
-                $term = $filters['room_number'];
-                $query->where(function ($q) use ($term) {
+                $term = trim($filters['room_number']);
+                $words = array_filter(explode(' ', $term));
+                $reversedTerm = implode(' ', array_reverse($words));
+
+                $query->where(function ($q) use ($term, $words, $reversedTerm) {
                     $q->where('room_number', 'like', "%{$term}%")
                       ->orWhere('name', 'like', "%{$term}%");
+
+                    if (count($words) > 1) {
+                        $q->orWhere('room_number', 'like', "%{$reversedTerm}%")
+                          ->orWhere('name', 'like', "%{$reversedTerm}%")
+                          ->orWhere(function ($allQ) use ($words) {
+                              foreach ($words as $w) {
+                                  $allQ->where(function ($subQ) use ($w) {
+                                      $subQ->where('room_number', 'like', "%{$w}%")
+                                           ->orWhere('name', 'like', "%{$w}%");
+                                  });
+                              }
+                          });
+                    }
                 });
             })
             ->when(!$rangePriceError && $filters['building_id'], fn ($query) => $query->where('building_id', $filters['building_id']))

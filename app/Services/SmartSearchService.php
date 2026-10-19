@@ -150,22 +150,86 @@ class SmartSearchService
         while ($i < $count) {
             $matched = false;
 
-            // Thử so khớp cụm 3 từ, 2 từ, 1 từ với từ điển
+            // Xử lý nhanh trường hợp số phòng bị đảo từ: vd "101 phong" -> "Phòng 101"
+            if ($i + 1 < $count) {
+                if (is_numeric($words[$i]) && in_array($words[$i + 1], ['phong', 'p', 'room'], true)) {
+                    $roomCanonical = 'Phòng ' . $words[$i];
+                    $matchedTerms[] = $roomCanonical;
+                    $correctedTokens[] = $roomCanonical;
+                    $didYouMeanTokens[] = $roomCanonical;
+                    $hasCorrection = true;
+                    $matched = true;
+                    $i += 2;
+                    continue;
+                } elseif (in_array($words[$i], ['phong', 'p', 'room'], true) && is_numeric($words[$i + 1])) {
+                    $roomCanonical = 'Phòng ' . $words[$i + 1];
+                    $matchedTerms[] = $roomCanonical;
+                    $correctedTokens[] = $roomCanonical;
+                    $didYouMeanTokens[] = $roomCanonical;
+                    $matched = true;
+                    $i += 2;
+                    continue;
+                }
+            }
+
+            // Thử so khớp cụm 3 từ, 2 từ, 1 từ với từ điển (Hỗ trợ cả xuôi, đảo từ và hoán vị)
             for ($len = min(3, $count - $i); $len >= 1; $len--) {
-                $phrase = implode(' ', array_slice($words, $i, $len));
+                $slice = array_slice($words, $i, $len);
+                $phrase = implode(' ', $slice);
+                $reversedPhrase = ($len > 1) ? implode(' ', array_reverse($slice)) : null;
+
+                $sortedSlice = $slice;
+                sort($sortedSlice);
+                $sortedSliceKey = implode(' ', $sortedSlice);
 
                 foreach ($this->getDictionary() as $canonical => $aliases) {
                     $normCanonical = $this->normalize($canonical);
+                    $canonicalTokens = explode(' ', $normCanonical);
+                    $sortedCanonical = $canonicalTokens;
+                    sort($sortedCanonical);
+                    $sortedCanonicalKey = implode(' ', $sortedCanonical);
 
-                    // 1. Khớp chính xác canonical hoặc alias
+                    // 1. Khớp chính xác xuôi
                     if ($phrase === $normCanonical || in_array($phrase, $aliases, true)) {
                         $matchedTerms[] = $canonical;
                         $correctedTokens[] = $canonical;
                         $didYouMeanTokens[] = $canonical;
-                        // Nếu người dùng gõ khác với tên chuẩn có dấu thì coi là có gợi ý chuẩn hoá/sửa lỗi
                         if ($phrase !== $normCanonical || mb_strtolower($raw, 'UTF-8') !== mb_strtolower($canonical, 'UTF-8')) {
                             $hasCorrection = true;
                         }
+                        $matched = true;
+                        $i += $len;
+                        break 2;
+                    }
+
+                    // 1b. Khớp ngược từ / đảo thứ tự từ (Word Reversal / Anagram of Words)
+                    // Ví dụ: "giay cau" -> "Cầu Giấy", "xuan thanh" -> "Thanh Xuân", "lung gac" -> "Gác lửng"
+                    $isReversedMatch = false;
+                    if ($len > 1) {
+                        if ($reversedPhrase === $normCanonical || in_array($reversedPhrase, $aliases, true)) {
+                            $isReversedMatch = true;
+                        } elseif ($sortedSliceKey === $sortedCanonicalKey && count($slice) === count($canonicalTokens)) {
+                            $isReversedMatch = true;
+                        } else {
+                            foreach ($aliases as $alias) {
+                                $aliasTokens = explode(' ', $alias);
+                                if (count($aliasTokens) === count($slice)) {
+                                    $sortedAlias = $aliasTokens;
+                                    sort($sortedAlias);
+                                    if ($sortedSliceKey === implode(' ', $sortedAlias)) {
+                                        $isReversedMatch = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if ($isReversedMatch) {
+                        $matchedTerms[] = $canonical;
+                        $correctedTokens[] = $canonical;
+                        $didYouMeanTokens[] = $canonical;
+                        $hasCorrection = true; // Báo có gợi ý sửa từ gõ ngược thành tên chuẩn
                         $matched = true;
                         $i += $len;
                         break 2;
@@ -265,14 +329,14 @@ class SmartSearchService
             $filters['min_price'] = $amount < 100 ? (int) ($amount * 1000000) : (int) $amount;
         }
 
-        // 2. Phân tích tiện ích
+        // 2. Phân tích tiện ích (Hỗ trợ cả từ xuôi và từ gõ ngược)
         $amenityMap = [
-            'thú cưng' => ['thu cung', 'pet', 'pets'],
-            'gác lửng' => ['gac lung', 'gac xep', 'gac'],
-            'ban công' => ['ban cong'],
-            'khép kín' => ['khep kin', 'wc rieng', 'wc khep kin', 'khep kn', 'khep kni'],
-            'điều hòa' => ['dieu hoa', 'may lanh'],
-            'nóng lạnh' => ['nong lanh'],
+            'thú cưng' => ['thu cung', 'cung thu', 'pet', 'pets'],
+            'gác lửng' => ['gac lung', 'lung gac', 'gac xep', 'xep gac', 'gac'],
+            'ban công' => ['ban cong', 'cong ban'],
+            'khép kín' => ['khep kin', 'kin khep', 'wc rieng', 'rieng wc', 'wc khep kin', 'khep kin wc', 'khep kn', 'khep kni'],
+            'điều hòa' => ['dieu hoa', 'hoa dieu', 'may lanh', 'lanh may'],
+            'nóng lạnh' => ['nong lanh', 'lanh nong'],
         ];
 
         foreach ($amenityMap as $amenity => $keywords) {
@@ -284,7 +348,7 @@ class SmartSearchService
             }
         }
 
-        // 3. Phân tích vị trí
+        // 3. Phân tích vị trí (Hỗ trợ cả tên xuôi và tên gõ ngược ví dụ: "giay cau", "xuan thanh", "da dong")
         $locationPool = [
             'Cầu Giấy', 'Thanh Xuân', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Tây Hồ',
             'Quận 1', 'Quận 3', 'Quận 4', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Gò Vấp', 'Thủ Đức',
@@ -293,7 +357,10 @@ class SmartSearchService
 
         foreach ($locationPool as $loc) {
             $normLoc = $this->normalize($loc);
-            if (str_contains($normalized, $normLoc)) {
+            $locWords = explode(' ', $normLoc);
+            $reversedLoc = implode(' ', array_reverse($locWords));
+
+            if (str_contains($normalized, $normLoc) || ($reversedLoc !== $normLoc && str_contains($normalized, $reversedLoc))) {
                 $filters['locations'][] = $loc;
             }
         }
@@ -421,6 +488,26 @@ class SmartSearchService
                 // Khớp chính xác query
                 if (str_contains($fullSearchable, $analysis['normalized'])) {
                     $score += 60;
+                }
+                // Khớp chuỗi đảo ngược từ của query (Inverted tokens match)
+                $normWords = array_filter(explode(' ', $analysis['normalized']));
+                if (count($normWords) > 1) {
+                    $reversedNormQuery = implode(' ', array_reverse($normWords));
+                    if ($reversedNormQuery !== $analysis['normalized'] && str_contains($fullSearchable, $reversedNormQuery)) {
+                        $score += 55;
+                    }
+
+                    // Kiểm tra tất cả các từ trong query có cùng xuất hiện trong phòng hay không (Bất kể vị trí trước/sau)
+                    $allQueryTokensMatched = true;
+                    foreach ($normWords as $nw) {
+                        if (strlen($nw) >= 2 && !str_contains($fullSearchable, $nw)) {
+                            $allQueryTokensMatched = false;
+                            break;
+                        }
+                    }
+                    if ($allQueryTokensMatched) {
+                        $score += 45;
+                    }
                 }
                 // Khớp từ đã sửa chính tả Did you mean
                 if ($analysis['did_you_mean'] && str_contains($fullSearchable, $this->normalize($analysis['did_you_mean']))) {

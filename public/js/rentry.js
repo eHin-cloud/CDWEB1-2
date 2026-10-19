@@ -651,14 +651,21 @@ function parseNaturalSearch(query) {
         maxPrice: null,
         keywords: normalized.split(/\s+/).filter(Boolean),
         locations: [],
+        roomNumber: null,
         amenities: {
-            pets: normalized.includes('thu cung') || normalized.includes('pet'),
-            loft: normalized.includes('gac') || normalized.includes('gac lung') || normalized.includes('gac xep'),
-            balcony: normalized.includes('ban cong'),
-            wc: normalized.includes('khep kin') || normalized.includes('wc') || normalized.includes('ve sinh') || normalized.includes('nha ve sinh')
+            pets: normalized.includes('thu cung') || normalized.includes('cung thu') || normalized.includes('pet'),
+            loft: normalized.includes('gac') || normalized.includes('gac lung') || normalized.includes('lung gac') || normalized.includes('gac xep') || normalized.includes('xep gac'),
+            balcony: normalized.includes('ban cong') || normalized.includes('cong ban'),
+            wc: normalized.includes('khep kin') || normalized.includes('kin khep') || normalized.includes('wc') || normalized.includes('ve sinh') || normalized.includes('nha ve sinh')
         },
         near: []
     };
+
+    // Nhận diện số phòng đảo từ: ví dụ "101 phong", "phong 101", "p101"
+    const roomMatch = normalized.match(/(?:phong|p)\s*(\d{2,4})|(\d{2,4})\s*(?:phong|p)/);
+    if (roomMatch) {
+        parsed.roomNumber = roomMatch[1] || roomMatch[2];
+    }
 
     const priceMatch = normalized.match(/(?:duoi|nho hon|toi da|<=?|tam|khoang)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr|m|000000)?/);
     if (priceMatch) {
@@ -670,16 +677,28 @@ function parseNaturalSearch(query) {
     let tempQuery = normalized;
 
     dynamicLocs.forEach(loc => {
-        const index = tempQuery.indexOf(loc);
+        let index = tempQuery.indexOf(loc);
+        let foundLoc = loc;
+
+        // Hỗ trợ nhận diện khi gõ ngược tên địa danh (ví dụ "giay cau" thay vì "cau giay")
+        if (index === -1 && loc.includes(' ')) {
+            const reversedLoc = loc.split(' ').reverse().join(' ');
+            const revIndex = tempQuery.indexOf(reversedLoc);
+            if (revIndex !== -1) {
+                index = revIndex;
+                foundLoc = reversedLoc;
+            }
+        }
+
         if (index !== -1) {
             // Kiểm tra xem đây có phải là một từ độc lập hay không (tránh 'quan 1' khớp trong 'quan 10')
             const isWord = (index === 0 || /\s/.test(tempQuery[index - 1])) && 
-                           (index + loc.length === tempQuery.length || /\s/.test(tempQuery[index + loc.length]));
+                           (index + foundLoc.length === tempQuery.length || /\s/.test(tempQuery[index + foundLoc.length]));
             
             if (isWord) {
                 parsed.locations.push(loc);
                 parsed.near.push(loc);
-                tempQuery = tempQuery.substring(0, index) + ' ' + tempQuery.substring(index + loc.length);
+                tempQuery = tempQuery.substring(0, index) + ' ' + tempQuery.substring(index + foundLoc.length);
             }
         }
     });
@@ -1918,7 +1937,27 @@ function filterItems(options = {}) {
                 .replace(/\s+/g, ' ')
                 .trim();
 
-            const containsFullQuery = searchableText.includes(cleanQuery);
+            const queryWords = cleanQuery.split(/\s+/).filter(Boolean);
+            const reversedCleanQuery = queryWords.slice().reverse().join(' ');
+
+            // 1. Khớp chính xác cụm từ xuôi hoặc đảo ngược từ (ví dụ "giay cau" khớp "cau giay")
+            const containsFullQuery = searchableText.includes(cleanQuery) || 
+                (reversedCleanQuery !== cleanQuery && searchableText.includes(reversedCleanQuery));
+
+            // 2. Khớp theo gợi ý Did You Mean nếu có (ví dụ gõ 'giay cau' -> backend trả 'Cầu Giấy')
+            let matchesCorrection = false;
+            if (currentSmartSearchCorrection) {
+                const normCorrection = normalizeText(currentSmartSearchCorrection);
+                if (normCorrection && searchableText.includes(normCorrection)) {
+                    matchesCorrection = true;
+                }
+            }
+
+            // 3. Khớp số phòng (kể cả khi gõ "101 phong" hay "phong 101")
+            let matchesRoomNumber = false;
+            if (parsedSearch.roomNumber) {
+                matchesRoomNumber = searchableText.includes(parsedSearch.roomNumber);
+            }
 
             const stopWords = [
                 'tim', 'phong', 'tro', 'duoi', 'o', 'gan', 'dai', 'hoc', 'trieu', 'tr', 'gia',
@@ -1927,17 +1966,19 @@ function filterItems(options = {}) {
             ];
 
             const importantTerms = (parsedSearch.keywords || []).filter(term => !stopWords.includes(term));
+            const termsToMatch = importantTerms.length > 0 ? importantTerms : queryWords;
 
             let matchesAllTerms = false;
-            if (importantTerms.length === 0) {
+            if (termsToMatch.length === 0) {
                 matchesAllTerms = true;
             } else {
-                const matchCount = importantTerms.filter(term => searchableText.includes(term)).length;
-                const matchRatio = matchCount / importantTerms.length;
-                matchesAllTerms = importantTerms.length <= 2 ? (matchRatio === 1) : (matchRatio >= 0.7);
+                // Kiểm tra từng từ xuất hiện trong văn bản (bất kể vị trí trước hay sau)
+                const matchCount = termsToMatch.filter(term => searchableText.includes(term)).length;
+                const matchRatio = matchCount / termsToMatch.length;
+                matchesAllTerms = termsToMatch.length <= 2 ? (matchRatio === 1) : (matchRatio >= 0.7);
             }
 
-            matchesQuery = containsFullQuery || matchesAllTerms;
+            matchesQuery = containsFullQuery || matchesCorrection || matchesRoomNumber || matchesAllTerms;
         }
 
         let matchesPrice = true;
