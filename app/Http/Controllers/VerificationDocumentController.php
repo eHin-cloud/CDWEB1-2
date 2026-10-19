@@ -88,6 +88,8 @@ class VerificationDocumentController extends Controller
         return redirect()->away($url);
     }
 
+    public function stream(Request $request, LandlordVerificationDocument $document)
+    {
         if (!$request->hasValidSignature()) {
             if ($request->expectsJson()) {
                 return response()->json([
