@@ -44,6 +44,7 @@ Route::get('/renty/rooms/map', [VisitorController::class, 'map']);
 Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/room/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/rooms/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);
+Route::get('/renty/room/{id}/reviews/summary', [VisitorController::class, 'reviewSummary']);
 Route::post('/renty/rooms/compare', [VisitorController::class, 'compare'])->middleware('throttle:30,1');
 Route::post('/renty/rooms/compare-ai', [VisitorController::class, 'compareAi'])->middleware('throttle:30,1');
 

@@ -346,16 +346,38 @@ function closeQuickRoomPreview() {
 }
 
 function openReportModal(roomId, title) {
+    if (typeof window.openDetailReportModal === 'function' && document.getElementById('formRoomReport')) {
+        return window.openDetailReportModal(roomId, title);
+    }
+
     const modal = document.getElementById('room-report-modal');
-    const form = document.getElementById('room-report-form');
-    form.action = `/renty/room/${roomId}/report`;
-    document.getElementById('report-room-title').textContent = title || 'Renty Review sẽ kiểm tra báo cáo này.';
+    if (!modal) return;
+
+    const targetRoomId = roomId 
+        || window.currentDetailRoomId 
+        || (window.location.pathname.match(/\/renty\/room\/(\d+)/) || [])[1];
+
+    const form = document.getElementById('room-report-form') || document.getElementById('formRoomReport');
+    if (form && targetRoomId) {
+        form.action = `/renty/room/${targetRoomId}/report`;
+    }
+
+    const titleEl = document.getElementById('report-room-title');
+    if (titleEl && title) {
+        titleEl.textContent = title;
+    }
+
     modal.classList.remove('hidden');
+    modal.classList.add('flex');
     document.body.classList.add('overflow-hidden');
 }
 
 function closeReportModal() {
-    document.getElementById('room-report-modal').classList.add('hidden');
+    const modal = document.getElementById('room-report-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
     document.body.classList.remove('overflow-hidden');
 }
 
@@ -827,16 +849,28 @@ function openRoomDetailModal(roomId) {
 }
 
 function loadReviewSummary(btn) {
-    if (!currentDetailRoomId) return;
+    if (typeof window.loadDetailReviewSummary === 'function' && document.getElementById('review-summary-box') && !document.getElementById('room-detail-modal')) {
+        return window.loadDetailReviewSummary(btn);
+    }
+
+    const roomId = currentDetailRoomId 
+        || btn?.dataset?.roomId 
+        || window.currentDetailRoomId 
+        || (window.location.pathname.match(/\/renty\/room\/(\d+)/) || [])[1];
+
+    if (!roomId) return;
 
     const box = document.getElementById('review-summary-box');
+    if (!box) return;
     const original = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang tóm tắt...';
     box.classList.remove('hidden');
     box.textContent = 'AI đang đọc các review...';
 
-    fetch(`/api/renty/rooms/${currentDetailRoomId}/reviews/summary`)
+    fetch(`/api/renty/rooms/${roomId}/reviews/summary`, {
+        headers: { 'Accept': 'application/json' }
+    })
         .then(res => res.json())
         .then(data => {
             btn.disabled = false;
@@ -3552,8 +3586,10 @@ window.toggleFilterDrawer = toggleFilterDrawer;
 window.toggleThemeMode = toggleThemeMode;
 window.openQuickRoomPreview = openQuickRoomPreview;
 window.closeQuickRoomPreview = closeQuickRoomPreview;
-window.openReportModal = openReportModal;
-window.closeReportModal = closeReportModal;
+if (typeof window.openDetailReportModal !== 'function') {
+    window.openReportModal = openReportModal;
+    window.closeReportModal = closeReportModal;
+}
 window.updateMoveInCost = updateMoveInCost;
 window.toggleDetailDescription = toggleDetailDescription;
 window.renderReviewSummary = renderReviewSummary;
@@ -3565,7 +3601,9 @@ window.changeZoomImage = changeZoomImage;
 window.closeImageZoom = closeImageZoom;
 window.clearViewedRooms = clearViewedRooms;
 window.openRoomDetailModal = openRoomDetailModal;
-window.loadReviewSummary = loadReviewSummary;
+if (typeof window.loadDetailReviewSummary !== 'function') {
+    window.loadReviewSummary = loadReviewSummary;
+}
 window.closeRoomDetailModal = closeRoomDetailModal;
 window.setViewMode = setViewMode;
 window.runSearchWithSkeleton = runSearchWithSkeleton;

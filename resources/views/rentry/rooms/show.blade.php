@@ -210,7 +210,7 @@
                             <i class="fa-solid fa-share-nodes text-[11px] text-emerald-400"></i>
                             <span>Chia sẻ phòng</span>
                         </button>
-                        <button type="button" onclick="openReportModal()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-350 hover:text-rose-200 text-xs font-bold transition-colors active:scale-95">
+                        <button type="button" id="btnOpenReportModal" onclick="openDetailReportModal()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-350 hover:text-rose-200 text-xs font-bold transition-colors active:scale-95 cursor-pointer">
                             <i class="fa-solid fa-flag text-[10px]"></i>
                             <span>Báo cáo tin</span>
                         </button>
@@ -297,7 +297,7 @@
                         <h2 class="text-sm font-extrabold text-slate-100 flex items-center gap-2">
                             <i class="fa-solid fa-comments text-amber-400"></i> Đánh giá khách quan
                         </h2>
-                        <button type="button" onclick="loadReviewSummary(this)" class="px-3 py-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-600/10 active:scale-95 transition-all">
+                        <button type="button" onclick="loadDetailReviewSummary(this)" data-room-id="{{ $room['id'] }}" class="px-3 py-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-600/10 active:scale-95 transition-all">
                             <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
                             <span>AI Tóm tắt</span>
                         </button>
@@ -408,8 +408,8 @@
                                 <span>Gửi đánh giá</span>
                             </button>
 
-                            <a href="javascript:void(0)" id="lnkReport" onclick="openReportModal()" 
-                                class="text-xs font-semibold text-rose-400/90 hover:text-rose-300 transition-colors flex items-center gap-1.5">
+                            <a href="javascript:void(0)" id="lnkReport" onclick="openDetailReportModal()" 
+                                class="text-xs font-semibold text-rose-400/90 hover:text-rose-300 transition-colors flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
                                 <span>Báo cáo tin này có sai phạm</span>
                             </a>
@@ -783,7 +783,7 @@
     </div>
 
     <!-- Overlay Report Modal -->
-    <div id="room-report-modal" class="fixed inset-0 z-[60] hidden bg-[#02040a]/80 backdrop-blur-md p-4 items-center justify-center">
+    <div id="room-report-modal" onclick="if(event.target === this) closeReportModal()" class="fixed inset-0 z-[60] hidden bg-[#02040a]/80 backdrop-blur-md p-4 items-center justify-center">
         <div class="w-full max-w-lg rounded-3xl bg-[#0a0f1d] border border-slate-800 p-5 md:p-6 shadow-2xl animate-fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent"></div>
             
@@ -793,7 +793,7 @@
                         <i class="fa-solid fa-shield-halved text-[9px]"></i> Báo cáo phòng
                     </span>
                     <h2 class="mt-3 text-xl font-extrabold text-slate-100">Báo cáo tin đăng đáng ngờ</h2>
-                    <p class="mt-1 text-xs text-slate-500 truncate max-w-[320px]">{{ $room['title'] }}</p>
+                    <p id="report-room-title" class="mt-1 text-xs text-slate-500 truncate max-w-[320px]">{{ $room['title'] }}</p>
                 </div>
                 <button type="button" onclick="closeReportModal()" class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 text-slate-355 hover:text-white flex items-center justify-center transition-all active:scale-95 shadow-sm">
                     <i class="fa-solid fa-xmark"></i>
@@ -919,20 +919,37 @@
             document.getElementById('zoom-modal').classList.remove('flex');
         }
 
-        function openReportModal() {
-            document.getElementById('room-report-modal').classList.remove('hidden');
-            document.getElementById('room-report-modal').classList.add('flex');
+        function openDetailReportModal(roomId, title) {
+            const modal = document.getElementById('room-report-modal');
+            if (!modal) return;
+            const targetRoomId = roomId || window.currentDetailRoomId || '{{ $room['id'] }}';
+            const form = document.getElementById('formRoomReport');
+            if (form) {
+                form.action = `/renty/room/${targetRoomId}/report`;
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
         }
 
         function closeReportModal() {
-            document.getElementById('room-report-modal').classList.add('hidden');
-            document.getElementById('room-report-modal').classList.remove('flex');
+            const modal = document.getElementById('room-report-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
-        function loadReviewSummary(button) {
+        window.openDetailReportModal = openDetailReportModal;
+        window.openReportModal = openDetailReportModal;
+        window.closeReportModal = closeReportModal;
+
+        window.currentDetailRoomId = {{ (int) $room['id'] }};
+
+        function loadDetailReviewSummary(button) {
             const box = document.getElementById('review-summary-box');
+            if (!box) return;
             const original = button.innerHTML;
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-1"></i> Đang tóm tắt...';
@@ -944,23 +961,29 @@
                 </div>
             `;
 
-            fetch('/api/renty/rooms/{{ $room['id'] }}/reviews/summary')
+            const roomId = button?.dataset?.roomId || window.currentDetailRoomId || '{{ $room['id'] }}';
+
+            fetch(`/api/renty/rooms/${roomId}/reviews/summary`, {
+                headers: { 'Accept': 'application/json' }
+            })
                 .then(response => response.json())
                 .then(data => {
                     button.disabled = false;
                     button.innerHTML = original;
-                    if (!data.success) {
-                        box.innerHTML = '<span class="text-rose-450"><i class="fa-solid fa-circle-exclamation mr-1"></i> Không thể tóm tắt lúc này.</span>';
+                    if (!data || !data.success) {
+                        box.innerHTML = '<span class="text-rose-450"><i class="fa-solid fa-circle-exclamation mr-1"></i> ' + escapeHtml(data?.message || 'Không thể tóm tắt lúc này.') + '</span>';
                         return;
                     }
                     const summary = data.summary || {};
-                    const pros = (summary.pros || []).map(item => `
+                    const prosList = summary.pros || [];
+                    const consList = summary.cons || [];
+                    const pros = prosList.map(item => `
                         <li class="flex items-start gap-2 text-slate-300">
                             <i class="fa-solid fa-circle-check text-emerald-400 mt-1 shrink-0 text-[10px]"></i>
                             <span>${escapeHtml(item)}</span>
                         </li>
                     `).join('');
-                    const cons = (summary.cons || []).map(item => `
+                    const cons = consList.map(item => `
                         <li class="flex items-start gap-2 text-slate-300">
                             <i class="fa-solid fa-circle-exclamation text-amber-400 mt-1 shrink-0 text-[10px]"></i>
                             <span>${escapeHtml(item)}</span>
@@ -973,8 +996,9 @@
                                 <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
                                 <span>AI PHÂN TÍCH REVIEW</span>
                             </div>
-                            <p class="text-slate-350 leading-relaxed text-xs">${escapeHtml(summary.summary || '')}</p>
+                            <p class="text-slate-350 leading-relaxed text-xs">${escapeHtml(summary.summary || 'Chưa có đủ nội dung đánh giá để tổng hợp.')}</p>
                             
+                            ${(pros || cons) ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-900/60">
                                 ${pros ? `
                                     <div>
@@ -993,6 +1017,7 @@
                                     </div>
                                 ` : ''}
                             </div>
+                            ` : ''}
                         </div>
                     `;
                 })
@@ -1002,6 +1027,9 @@
                     box.innerHTML = '<span class="text-rose-450"><i class="fa-solid fa-circle-exclamation mr-1"></i> Lỗi kết nối máy chủ AI. Vui lòng thử lại.</span>';
                 });
         }
+
+        window.loadDetailReviewSummary = loadDetailReviewSummary;
+        window.loadReviewSummary = loadDetailReviewSummary;
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -1352,7 +1380,9 @@
                         },
                         body: JSON.stringify({
                             report_reason: reasonVal,
-                            description: descVal
+                            description: descVal,
+                            reporter_name: formRoomReport.querySelector('[name="reporter_name"]')?.value?.trim() || '',
+                            reporter_phone: formRoomReport.querySelector('[name="reporter_phone"]')?.value?.trim() || ''
                         })
                     });
 

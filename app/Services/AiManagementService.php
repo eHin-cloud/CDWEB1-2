@@ -607,7 +607,7 @@ class AiManagementService
     {
         if (empty($reviews)) {
             return [
-                'summary' => 'Chua co review de tom tat.',
+                'summary' => 'Chưa có review nào từ khách thuê để tóm tắt.',
                 'pros' => [],
                 'cons' => [],
             ];
@@ -616,9 +616,9 @@ class AiManagementService
         $average = collect($reviews)->avg('rating');
 
         return [
-            'summary' => 'Phong co ' . count($reviews) . ' review, diem trung binh khoang ' . round((float) $average, 1) . '/5.',
-            'pros' => ['Co du lieu danh gia tu khach thue de tham khao.'],
-            'cons' => ['Can doc chi tiet tung review de nam ro diem can cai thien.'],
+            'summary' => 'Phòng có ' . count($reviews) . ' review thực tế, điểm trung bình khoảng ' . round((float) $average, 1) . '/5 sao từ khách thuê.',
+            'pros' => ['Có dữ liệu đánh giá thực tế từ khách thuê để tham khảo.'],
+            'cons' => ['Nên đọc chi tiết từng review hoặc liên hệ chủ cơ sở để nắm rõ tình trạng mới nhất.'],
         ];
     }
 

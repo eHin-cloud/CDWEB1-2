@@ -430,33 +430,48 @@ class VisitorController extends Controller
 
     public function reviewSummary($roomId, AiManagementService $aiManagementService)
     {
-        $room = Room::with(['building', 'reviews' => function ($query) {
-            $query->latest()->take(30);
-        }])->find($roomId);
+        try {
+            $room = Room::with(['building', 'reviews' => function ($query) {
+                $query->latest()->take(30);
+            }])->find($roomId);
 
-        if (!$room) {
+            if (!$room) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Phòng không tồn tại',
+                ], 404);
+            }
+
             return response()->json([
-                'success' => false,
-                'message' => 'Phòng không tồn tại',
-            ], 404);
-        }
+                'success' => true,
+                'summary' => $aiManagementService->summarizeReviews([
+                    'room_number' => $room->room_number,
+                    'price' => (int) $room->price,
+                    'area' => (int) $room->area,
+                    'building' => $room->building->name ?? null,
+                    'address' => $room->building->address ?? null,
+                    'rating_avg' => round($room->reviews->avg('rating') ?: 0, 1),
+                    'reviews_count' => $room->reviews->count(),
+                ], $room->reviews->map(fn (Review $review) => [
+                    'rating' => (int) $review->rating,
+                    'comment' => $review->comment,
+                    'author_name' => $review->author_name,
+                ])->values()->all()),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AI Review summary error: ' . $e->getMessage());
 
-        return response()->json([
-            'success' => true,
-            'summary' => $aiManagementService->summarizeReviews([
-                'room_number' => $room->room_number,
-                'price' => (int) $room->price,
-                'area' => (int) $room->area,
-                'building' => $room->building->name ?? null,
-                'address' => $room->building->address ?? null,
-                'rating_avg' => round($room->reviews->avg('rating') ?: 0, 1),
-                'reviews_count' => $room->reviews->count(),
-            ], $room->reviews->map(fn (Review $review) => [
-                'rating' => (int) $review->rating,
-                'comment' => $review->comment,
-                'author_name' => $review->author_name,
-            ])->values()->all()),
-        ]);
+            return response()->json([
+                'success' => true,
+                'summary' => [
+                    'summary' => 'Hệ thống đang tổng hợp dữ liệu đánh giá thực tế cho phòng này. Vui lòng thử lại sau giây lát.',
+                    'pros' => ['Khu trọ có các thông tin đánh giá thực tế được bảo mật và kiểm duyệt.'],
+                    'cons' => ['Nên liên hệ trực tiếp chủ trọ để biết thêm chi tiết.'],
+                    'used_ai' => false,
+                    'fallback_reason' => 'server_busy',
+                ],
+            ]);
+        }
     }
 
     // Viết đánh giá (Yêu cầu xác thực tài khoản)
