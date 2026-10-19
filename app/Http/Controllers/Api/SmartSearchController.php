@@ -22,7 +22,7 @@ class SmartSearchController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
-        $query = (string) $request->input('q', $request->input('query', ''));
+        $query = mb_substr((string) $request->input('q', $request->input('query', '')), 0, 100);
         $limit = min(50, max(1, (int) $request->input('limit', 12)));
         $page = max(1, (int) $request->input('page', 1));
         $status = (string) $request->input('status', 'all');
@@ -93,7 +93,7 @@ class SmartSearchController extends Controller
      */
     public function suggestions(Request $request): JsonResponse
     {
-        $query = (string) $request->input('q', $request->input('query', ''));
+        $query = mb_substr((string) $request->input('q', $request->input('query', '')), 0, 100);
 
         if (trim($query) === '') {
             return response()->json([
