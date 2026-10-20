@@ -1940,20 +1940,11 @@ function filterItems(options = {}) {
             const queryWords = cleanQuery.split(/\s+/).filter(Boolean);
             const reversedCleanQuery = queryWords.slice().reverse().join(' ');
 
-            // 1. Khớp chính xác cụm từ xuôi hoặc đảo ngược từ (ví dụ "giay cau" khớp "cau giay")
+            // 1. Khớp chính xác cụm từ xuôi hoặc đảo ngược từ (ví dụ "giay cau" khớp "cau giay", "lung gac" khớp "gac lung")
             const containsFullQuery = searchableText.includes(cleanQuery) || 
                 (reversedCleanQuery !== cleanQuery && searchableText.includes(reversedCleanQuery));
 
-            // 2. Khớp theo gợi ý Did You Mean nếu có (ví dụ gõ 'giay cau' -> backend trả 'Cầu Giấy')
-            let matchesCorrection = false;
-            if (currentSmartSearchCorrection) {
-                const normCorrection = normalizeText(currentSmartSearchCorrection);
-                if (normCorrection && searchableText.includes(normCorrection)) {
-                    matchesCorrection = true;
-                }
-            }
-
-            // 3. Khớp số phòng (kể cả khi gõ "101 phong" hay "phong 101")
+            // 2. Khớp số phòng (kể cả khi gõ "101 phong" hay "phong 101")
             let matchesRoomNumber = false;
             if (parsedSearch.roomNumber) {
                 matchesRoomNumber = searchableText.includes(parsedSearch.roomNumber);
@@ -1969,16 +1960,18 @@ function filterItems(options = {}) {
             const termsToMatch = importantTerms.length > 0 ? importantTerms : queryWords;
 
             let matchesAllTerms = false;
-            if (termsToMatch.length === 0) {
-                matchesAllTerms = true;
-            } else {
-                // Kiểm tra từng từ xuất hiện trong văn bản (bất kể vị trí trước hay sau)
-                const matchCount = termsToMatch.filter(term => searchableText.includes(term)).length;
-                const matchRatio = matchCount / termsToMatch.length;
-                matchesAllTerms = termsToMatch.length <= 2 ? (matchRatio === 1) : (matchRatio >= 0.7);
+            if (termsToMatch.length > 0) {
+                // TẤT CẢ các từ tìm kiếm đều phải có trong thông tin phòng (100% khớp, nếu có từ gõ sai thì không khớp)
+                const allWordsFound = termsToMatch.every(term => term.length >= 2 ? searchableText.includes(term) : true);
+                const hasAtLeastOneSignificant = termsToMatch.some(term => term.length >= 2 && searchableText.includes(term));
+                if (allWordsFound && hasAtLeastOneSignificant) {
+                    matchesAllTerms = true;
+                }
             }
 
-            matchesQuery = containsFullQuery || matchesCorrection || matchesRoomNumber || matchesAllTerms;
+            // Chỉ hiển thị phòng nếu khớp toàn bộ chuỗi (xuôi/ngược), khớp số phòng, hoặc 100% từ khóa hợp lệ
+            // Không tự động áp dụng matchesCorrection khi người dùng chưa bấm vào gợi ý sửa lỗi
+            matchesQuery = containsFullQuery || matchesRoomNumber || matchesAllTerms;
         }
 
         let matchesPrice = true;
@@ -2519,6 +2512,9 @@ window.clearGlobalSearch = clearGlobalSearch;
 
 function handleSearchInput(e) {
     const input = e.target;
+    if (input && input.value && input.value.length > 100) {
+        input.value = input.value.slice(0, 100);
+    }
     const query = input ? input.value : '';
     const trimmed = query.trim();
 
@@ -2528,14 +2524,14 @@ function handleSearchInput(e) {
     const heroClearBtn = document.getElementById('hero-search-clear-btn');
     if (heroClearBtn) heroClearBtn.classList.toggle('hidden', !trimmed);
 
-    // Đồng bộ sang hero input và navbar input nếu có
+    // Đồng bộ sang hero input và navbar input nếu có (giới hạn tối đa 100 ký tự)
     const heroInput = document.getElementById('hero-search-input');
     if (heroInput && heroInput !== input) {
-        heroInput.value = query;
+        heroInput.value = query.slice(0, 100);
     }
     const navInput = document.getElementById('search-input');
     if (navInput && navInput !== input) {
-        navInput.value = query;
+        navInput.value = query.slice(0, 100);
     }
 
     // 1. Khi KHÔNG gõ chữ hoặc đã xóa hết chữ:
