@@ -473,6 +473,7 @@
                                     id="hero-search-input" 
                                     name="search_box" 
                                     data-field-name="search_box"
+                                    maxlength="100"
                                     oninput="handleSearchInput(event)" 
                                     onkeyup="handleSearchInput(event)" 
                                     class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" 
@@ -1816,7 +1817,7 @@
             const boxContainer = document.getElementById('hero-search-box-container');
             const errEmpty = document.getElementById('search-empty-error');
             const errInvalid = document.getElementById('search-invalid-error');
-            const val = heroInput ? heroInput.value.trim() : '';
+            const val = heroInput ? heroInput.value.trim().slice(0, 100) : '';
 
             if (!val) {
                 // ERR_04_01: Bấm tìm kiếm khi từ khóa rỗng -> Viền sáng ô tìm kiếm và hiển thị gợi ý
@@ -1886,7 +1887,7 @@
 
             function syncInputs(source, target) {
                 if (source && target && target.value !== source.value) {
-                    target.value = source.value;
+                    target.value = source.value.slice(0, 100);
                 }
             }
 

@@ -72,7 +72,7 @@ class RoomController extends Controller
         $rooms = Room::with('building')
             ->where('tenant_id', $tenantId)
             ->when(!$rangePriceError && $filters['room_number'] !== '', function ($query) use ($filters) {
-                $term = trim($filters['room_number']);
+                $term = mb_substr(trim($filters['room_number']), 0, 100);
                 $words = array_filter(explode(' ', $term));
                 $reversedTerm = implode(' ', array_reverse($words));
 

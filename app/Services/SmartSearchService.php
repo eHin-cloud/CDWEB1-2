@@ -117,7 +117,7 @@ class SmartSearchService
      */
     public function analyzeAndCorrect(string $query): array
     {
-        $raw = trim($query);
+        $raw = mb_substr(trim($query), 0, 100);
         if ($raw === '') {
             return [
                 'original' => '',
@@ -394,6 +394,7 @@ class SmartSearchService
      */
     public function search(string $query, array $options = []): array
     {
+        $query = mb_substr(trim($query), 0, 100);
         $analysis = $this->analyzeAndCorrect($query);
         $limit = max(1, min(50, (int) ($options['limit'] ?? 12)));
         $page = max(1, (int) ($options['page'] ?? 1));
@@ -483,21 +484,25 @@ class SmartSearchService
             );
 
             $score = 0;
+            $hasKeywordMatch = false;
 
             if ($analysis['normalized'] !== '') {
-                // Khớp chính xác query
+                // 1. Khớp chính xác toàn bộ query
                 if (str_contains($fullSearchable, $analysis['normalized'])) {
                     $score += 60;
+                    $hasKeywordMatch = true;
                 }
-                // Khớp chuỗi đảo ngược từ của query (Inverted tokens match)
-                $normWords = array_filter(explode(' ', $analysis['normalized']));
+
+                // 2. Khớp chuỗi đảo ngược từ của query (Gõ chữ ngược: ví dụ "giay cau" -> "cau giay", "lung gac" -> "gac lung")
+                $normWords = array_values(array_filter(explode(' ', $analysis['normalized'])));
                 if (count($normWords) > 1) {
                     $reversedNormQuery = implode(' ', array_reverse($normWords));
                     if ($reversedNormQuery !== $analysis['normalized'] && str_contains($fullSearchable, $reversedNormQuery)) {
                         $score += 55;
+                        $hasKeywordMatch = true;
                     }
 
-                    // Kiểm tra tất cả các từ trong query có cùng xuất hiện trong phòng hay không (Bất kể vị trí trước/sau)
+                    // 3. Khớp hoán vị tất cả các từ trong query (Mọi từ đều phải xuất hiện trong phòng)
                     $allQueryTokensMatched = true;
                     foreach ($normWords as $nw) {
                         if (strlen($nw) >= 2 && !str_contains($fullSearchable, $nw)) {
@@ -507,45 +512,64 @@ class SmartSearchService
                     }
                     if ($allQueryTokensMatched) {
                         $score += 45;
+                        $hasKeywordMatch = true;
                     }
-                }
-                // Khớp từ đã sửa chính tả Did you mean
-                if ($analysis['did_you_mean'] && str_contains($fullSearchable, $this->normalize($analysis['did_you_mean']))) {
-                    $score += 50;
                 }
             }
 
-            // Khớp các thực thể nhận diện (recognized terms)
+            // Khớp các thực thể nhận diện (recognized terms) - CHỈ khi term hoặc đảo term thực sự có trong query của user
             foreach ($analysis['recognized_terms'] as $term) {
                 $normTerm = $this->normalize($term);
                 if (str_contains($fullSearchable, $normTerm)) {
-                    $score += 35;
+                    $termTokens = explode(' ', $normTerm);
+                    $reversedTerm = implode(' ', array_reverse($termTokens));
+                    if (str_contains($analysis['normalized'], $normTerm) || str_contains($analysis['normalized'], $reversedTerm)) {
+                        $score += 35;
+                        $hasKeywordMatch = true;
+                    }
                 }
             }
 
-            // Khớp địa danh bóc tách
+            // Khớp địa danh bóc tách - CHỈ khi địa danh có trong query
             foreach ($analysis['filters']['locations'] as $loc) {
-                if (str_contains($this->normalize($room['address']), $this->normalize($loc))) {
-                    $score += 40;
+                $normLoc = $this->normalize($loc);
+                $locTokens = explode(' ', $normLoc);
+                $reversedLoc = implode(' ', array_reverse($locTokens));
+                if (str_contains($analysis['normalized'], $normLoc) || str_contains($analysis['normalized'], $reversedLoc)) {
+                    if (str_contains($this->normalize($room['address']), $normLoc)) {
+                        $score += 40;
+                        $hasKeywordMatch = true;
+                    }
                 }
             }
 
-            // Điểm rating và boost score
-            $score += (int) round(((float) $room['rating']) * 2);
-            $score += (int) ($room['boost_score'] ?? 0);
+            // Điểm rating và boost score: CHỈ CỘNG khi KHÔNG CÓ từ khóa HOẶC ĐÃ KHỚP TỪ KHÓA
+            // Tuyệt đối không cộng khi query không khớp vì sẽ làm từ khóa gõ sai vẫn ra kết quả
+            if ($analysis['normalized'] === '') {
+                $score += (int) round(((float) $room['rating']) * 2);
+                $score += (int) ($room['boost_score'] ?? 0);
+            } elseif ($hasKeywordMatch) {
+                $score += (int) round(((float) $room['rating']) * 2);
+                $score += (int) ($room['boost_score'] ?? 0);
+            }
 
             $room['relevance_score'] = $score;
+            $room['has_keyword_match'] = $hasKeywordMatch;
             return $room;
         });
 
-        // Nếu có nhập từ khóa, áp dụng Hybrid Search (Sparse BM25 + Dense Semantic + RRF Fusion)
+        // Nếu có nhập từ khóa: Lọc chặt chẽ, chỉ giữ lại những phòng thực sự khớp từ khóa (hoặc chữ ngược)
         if ($analysis['normalized'] !== '') {
-            try {
-                $scoredRooms = $this->hybridSearch->search($query, $scoredRooms, $options);
-            } catch (\Throwable $e) {
-                // Giữ nguyên baseline scoring nếu hybrid search có exception
+            $scoredRooms = $scoredRooms->filter(fn ($item) => !empty($item['has_keyword_match']) && ($item['relevance_score'] ?? 0) > 0);
+
+            if ($scoredRooms->isNotEmpty()) {
+                try {
+                    $scoredRooms = $this->hybridSearch->search($query, $scoredRooms, $options);
+                } catch (\Throwable $e) {
+                    // Giữ nguyên baseline scoring nếu hybrid search có exception
+                }
+                $scoredRooms = $scoredRooms->filter(fn ($item) => !empty($item['has_keyword_match']) && (($item['relevance_score'] ?? 0) > 0 || ($item['rrf_score'] ?? 0) > 0));
             }
-            $scoredRooms = $scoredRooms->filter(fn ($item) => ($item['relevance_score'] ?? 0) > 0 || ($item['rrf_score'] ?? 0) > 0);
         }
 
         // Sắp xếp kết quả (Ưu tiên điểm RRF và relevance score)

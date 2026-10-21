@@ -31,7 +31,7 @@
             <div class="relative w-full renty-search-shell">
                 <div class="relative flex items-center w-full">
                     <i class="fa-solid fa-location-dot absolute left-3.5 text-slate-500 pointer-events-none text-xs z-10 renty-search-icon"></i>
-                    <input type="text" id="search-input" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-14 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
+                    <input type="text" id="search-input" maxlength="100" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-14 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
                     <button type="button" id="header-search-clear-btn" onclick="clearGlobalSearch()" class="hidden absolute right-8 text-slate-400 hover:text-white transition-colors w-5 h-5 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-[10px] z-10" title="Xóa tìm kiếm">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
