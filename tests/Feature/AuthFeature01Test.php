@@ -329,5 +329,57 @@ class AuthFeature01Test extends TestCase
         $resLogin->assertJson(['success' => true]);
         $this->assertNotEmpty($resLogin->json('access_token'));
     }
+
+    /**
+     * Kịch bản 12: Tự động nhận diện vai trò và điều hướng thông minh (Không làm lộ thông tin tài khoản)
+     */
+    public function test_role_mismatch_validation(): void
+    {
+        $landlordRole = Role::where('slug', 'landlord')->first();
+        $landlord = User::factory()->create([
+            'username' => 'landlord_test',
+            'role_id' => $landlordRole->id,
+            'role' => 'landlord',
+            'password' => Hash::make('Password123!'),
+            'status' => 'active',
+        ]);
+
+        $tenantRole = Role::where('slug', 'tenant')->first();
+        $tenant = User::factory()->create([
+            'username' => 'tenant_test',
+            'role_id' => $tenantRole->id,
+            'role' => 'user',
+            'password' => Hash::make('Password123!'),
+            'status' => 'active',
+        ]);
+
+        // 12.1: Chủ trọ đăng nhập ở bất kỳ tab nào (auth_role = guest) -> Tự động nhận diện và chuyển hướng về admin.dashboard
+        $res1 = $this->post('/login', [
+            'login' => 'landlord_test',
+            'password' => 'Password123!',
+            'auth_role' => 'guest',
+        ]);
+        $this->assertAuthenticatedAs($landlord);
+        $res1->assertRedirect(route('admin.dashboard'));
+        $this->post('/logout');
+
+        // 12.2: Khách thuê đăng nhập ở bất kỳ tab nào (auth_role = landlord) -> Tự động nhận diện và chuyển hướng về renty.user
+        $res2 = $this->post('/login', [
+            'login' => 'tenant_test',
+            'password' => 'Password123!',
+            'auth_role' => 'landlord',
+        ]);
+        $this->assertAuthenticatedAs($tenant);
+        $res2->assertRedirect(route('renty.user'));
+        $this->post('/logout');
+
+        // 12.3: Gửi OTP: Cho phép gửi OTP bình thường không để lộ vai trò
+        $resOtp1 = $this->postJson('/login/send-otp', [
+            'login' => 'landlord_test',
+            'auth_role' => 'guest',
+        ]);
+        $resOtp1->assertStatus(200);
+        $resOtp1->assertJson(['success' => true]);
+    }
 }
 

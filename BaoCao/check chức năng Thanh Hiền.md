@@ -371,6 +371,40 @@
   * ✅ Thông báo đẩy chủ trọ: Chuông thông báo trên thanh điều khiển của chủ trọ tự động hiển thị thẻ nhắc nhở kèm số điện thoại của khách vừa gửi yêu cầu.
   * ✅ Ghi vết kiểm toán (Audit Logs): Mọi thao tác cập nhật trạng thái và xóa yêu cầu hẹn xem phòng đều được ghi lại qua `AdminActivityLogger`.
   * ✅ Kịch bản xử lý lỗi (`ERR_07_01` -> `ERR_07_06`): Bắt buộc nhập họ tên, kiểm tra số điện thoại đúng chuẩn 10 chữ số, chống spam yêu cầu qua Rate Limiting `throttle:15,1`.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Khách để trống họ và tên | **`ERR_07_01`** | `Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.` | Bôi đỏ viền ô input Họ và tên |
+| Khách để trống số điện thoại | **`ERR_07_02`** | `Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.` | Bôi đỏ viền ô input Số điện thoại |
+| Số điện thoại không đủ 10 số | **`ERR_07_03`** | `Số điện thoại liên hệ phải có chính xác 10 chữ số.` | Bôi đỏ viền ô input Số điện thoại |
+| Chọn ngày hẹn trong quá khứ | **`ERR_07_04`** | `Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.` | Bôi đỏ ô chọn Ngày hẹn xem phòng |
+| Gửi yêu cầu hẹn xem phòng thành công | **`ERR_07_05`** | `Gửi yêu cầu hẹn xem phòng thành công! Chủ trọ sẽ sớm liên hệ lại.` | Hiển thị Modal popup thông báo cảm ơn và xác nhận |
+| Chủ trọ cập nhật trạng thái cuộc gọi | **`ERR_07_06`** | `Đã cập nhật trạng thái yêu cầu tư vấn thành công.` | Hàng dữ liệu đổi trạng thái sang Đã liên hệ, trừ badge đỏ |
+
+#### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
+* **Hình 7.1: Giao diện Tiếp nhận & Quản lý yêu cầu hẹn xem phòng của khách**
+  * *Mô tả chức năng*: Bảng điều khiển dành cho chủ trọ quản lý danh sách khách đặt lịch hẹn, số điện thoại liên hệ, giờ hẹn và trạng thái xử lý.
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Input | `customer_name` | Họ và tên của bạn * | `Nguyễn Văn B` | Ô nhập văn bản |
+| **2** | Input | `customer_phone` | Số điện thoại liên hệ * | `0987654321` | Ô nhập số điện thoại |
+| **3** | DateTimePicker | `appointment_time` | Ngày & Giờ xem phòng * | `Chọn ngày giờ...` | Bộ chọn ngày giờ trực quan |
+| **4** | Button | `btnSubmitRequest` | `Gửi yêu cầu hẹn xem` | — | Nền xanh dương, rộng 100% |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Để trống toàn bộ form rồi bấm Gửi | Báo lỗi đỏ yêu cầu nhập Họ tên và Số điện thoại | Kiểm tra Required (`ERR_07_01`, `ERR_07_02`) |
+| **2** | Chọn giờ hẹn trong quá khứ (hôm qua) | Báo lỗi 'Thời gian hẹn phải ở thời điểm tương lai' | Kiểm tra Date validation (`ERR_07_04`) |
+| **3** | Nhập thông tin hợp lệ và bấm Gửi | Thông báo thành công và chuyển trạng thái yêu cầu sang 'Chờ xác nhận' | Happy case (`ERR_07_05`) |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+* ☑ Bộ kiểm thử tự động `tests/Feature/RentyFormSubmissionTest.php` thực thi đạt 100% (4/4 pass).
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---
@@ -431,6 +465,42 @@
   * ✅ Kiến trúc lưu trữ bảo mật Zero Trust: Toàn bộ tài liệu nhạy cảm được lưu vào thư mục cô lập `landlord-verifications/{tenant_id}`, tính toán mã băm toàn vẹn SHA-256 (`sha256_checksum`), che mờ số CCCD bằng hàm `SensitiveData::maskNationalId`.
   * ✅ Quản lý vòng đời trạng thái hồ sơ: Tự động chuyển đổi mượt mà giữa các trạng thái: Chưa xác minh (`unverified`) -> Chờ duyệt KYC (`kyc_pending`) -> Đã duyệt KYC (`kyc_verified`) -> Chờ duyệt Tích xanh (`premium_pending`) -> Đã cấp Tích xanh (`premium_verified`).
   * ✅ Kịch bản xử lý lỗi (`ERR_09_01` -> `ERR_09_07`): Kiểm tra định dạng số CCCD, chặn nộp trùng khi hồ sơ đang chờ duyệt, kiểm tra định dạng và kích thước file tải lên, bắt buộc đồng ý điều khoản xét duyệt `admin_review_consent`.
+
+#### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
+| Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
+| :--- | :---: | :--- | :--- |
+| Để trống số CCCD | **`ERR_09_01`** | `Vui lòng nhập số Căn cước công dân của chủ cơ sở.` | Bôi đỏ viền ô input Số CCCD |
+| Số CCCD không đúng 12 chữ số | **`ERR_09_02`** | `Số Căn cước công dân phải gồm chính xác 12 chữ số.` | Bôi đỏ viền ô input Số CCCD |
+| Chưa tải ảnh mặt trước CCCD | **`ERR_09_03`** | `Vui lòng tải lên hình ảnh chụp mặt trước Căn cước công dân.` | Viền đỏ khung upload ảnh mặt trước |
+| Chưa tải ảnh mặt sau CCCD | **`ERR_09_04`** | `Vui lòng tải lên hình ảnh chụp mặt sau Căn cước công dân.` | Viền đỏ khung upload ảnh mặt sau |
+| Tải tệp không đúng định dạng | **`ERR_09_05`** | `Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.` | Khung tải file báo lỗi định dạng không hỗ trợ |
+| Dung lượng tệp vượt quá 10MB | **`ERR_09_06`** | `Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).` | Hiển thị cảnh báo dung lượng vượt mức quy định |
+| Gửi hồ sơ KYC thành công | **`ERR_09_07`** | `Hồ sơ xác minh KYC đã được gửi thành công! Vui lòng chờ Admin duyệt.` | Hiển thị thẻ trạng thái Chờ duyệt KYC màu vàng cam |
+
+#### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
+* **Hình 9.1: Giao diện Điều khoản cam kết và Hồ sơ Xác thực định danh KYC Chủ trọ**
+  * *Mô tả chức năng*: Bản cam kết pháp lý về tính chính xác của tài liệu định danh căn cước công dân được gửi duyệt cấp tích xanh uy tín.
+* **Hình 9.2: Giao diện Tải lên CCCD 2 mặt & Giấy phép kinh doanh đối tác**
+  * *Mô tả chức năng*: Giao diện tải lên các tệp tài liệu định danh mặt trước, mặt sau và tài liệu pháp lý đính kèm.
+
+#### Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)
+| STT | Loại phần tử | Tên field | Label hiển thị | Placeholder | Vị trí trên form & Quy cách |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | Input | `id_card_number` | Số CCCD 12 số * | `07920100xxxx` | Ô nhập số |
+| **2** | Upload Box | `file_front` | Ảnh mặt trước * | `Chọn file JPG/PNG...` | Khung kéo thả file có xem trước ảnh |
+| **3** | Upload Box | `file_back` | Ảnh mặt sau * | `Chọn file JPG/PNG...` | Khung kéo thả file có xem trước ảnh |
+| **4** | Button | `btnSubmitKYC` | `Gửi hồ sơ phê duyệt` | — | Nền xanh lá/xanh dương đậm |
+
+#### Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)
+| STT | Input kiểm thử | Kết quả mong đợi | Ghi chú phân loại |
+| :---: | :--- | :--- | :--- |
+| **1** | Nhập CCCD '12345' (5 số) rồi bấm Gửi | Báo lỗi đỏ 'Số Căn cước công dân phải gồm chính xác 12 chữ số.' | Kiểm tra Format CCCD (`ERR_09_02`) |
+| **2** | Nhập CCCD 12 số nhưng không tải ảnh | Báo lỗi đỏ 'Vui lòng tải lên ảnh mặt trước CCCD' | Kiểm tra Required file (`ERR_09_03`) |
+| **3** | Nhập đầy đủ CCCD và đính kèm 2 mặt ảnh rõ ràng | Thông báo nộp thành công, hồ sơ chuyển sang trạng thái Chờ duyệt | Happy case (`ERR_09_07`) |
+* ☑ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.
+* ☑ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.
+* ☑ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy.
+
 * **Kết luận**: **Chức năng đã giống với spec.**
 
 ---

@@ -284,7 +284,7 @@
             
             <div class="glass-card rounded-3xl p-6 sm:p-9 space-y-6">
 
-                <!-- Header Icon & Title -->
+
                 <div class="text-center space-y-2">
                     <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mx-auto text-indigo-400 text-2xl shadow-inner shadow-indigo-500/20">
                         <i class="fa-solid fa-shield-halved"></i>
@@ -315,7 +315,7 @@
                 @endif
 
                 @if(session('success'))
-                    <div class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-3 shadow-lg shadow-emerald-500/5">
+                    <div id="session-success-alert" class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-3 shadow-lg shadow-emerald-500/5">
                         <i class="fa-solid fa-circle-check text-emerald-400 text-base mt-0.5 shrink-0"></i>
                         <div class="flex-grow">
                             <p class="font-bold text-emerald-200">Thành công!</p>
@@ -376,40 +376,40 @@
                         </button>
                     </form>
                 @else
-                    <!-- BƯỚC 2: NHẬP OTP VÀ ĐẶT LẠI MẬT KHẨU MỚI -->
-                    <div class="p-3 rounded-xl bg-slate-900/60 border border-indigo-500/20 flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <i class="fa-solid fa-envelope-circle-check text-indigo-400"></i>
-                            <span>Gửi tới: <strong class="text-indigo-300 font-mono">{{ $email }}</strong></span>
+                    <!-- BƯỚC 2: QUY TRÌNH 2 GIAI ĐOẠN (XÁC THỰC OTP TRƯỚC -> THIẾT LẬP MẬT KHẨU SAU) -->
+                    
+                    <!-- GIAI ĐOẠN 2A: CHỈ NHẬP VÀ XÁC THỰC MÃ OTP -->
+                    <div id="stage-otp" class="space-y-4">
+                        <!-- THÔNG TIN EMAIL ĐANG NHẬN OTP -->
+                        <div class="p-3 rounded-xl bg-slate-900/60 border border-indigo-500/20 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <i class="fa-solid fa-envelope-circle-check text-indigo-400"></i>
+                                <span>Gửi tới: <strong class="text-indigo-300 font-mono">{{ $email }}</strong></span>
+                            </div>
+                            <a href="{{ route('password.forgot') }}?reset=1" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold underline hover:no-underline transition-all">
+                                Đổi email
+                            </a>
                         </div>
-                        <a href="{{ route('password.forgot') }}?reset=1" onclick="resetEmailStep()" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold underline">
-                            Đổi email
-                        </a>
-                    </div>
 
-                    <form action="{{ route('password.resetWithOtp') }}" method="POST" class="space-y-4">
-                        @csrf
-
-                        <!-- OTP Input 6 số -->
                         <div>
                             <label for="input-otp" class="block text-xs font-semibold text-slate-300 mb-1.5 text-center">
-                                Nhập mã OTP 6 số <span class="text-rose-400 font-bold">*</span>
+                                Nhập mã OTP 6 số xác thực <span class="text-rose-400 font-bold">*</span>
                             </label>
                             <input 
                                 type="text" 
-                                name="otp" 
                                 id="input-otp" 
-                                required 
                                 maxlength="6" 
-                                pattern="[0-9]{6}" 
                                 inputmode="numeric" 
                                 placeholder="••••••" 
                                 class="otp-box w-full py-3.5 px-4 rounded-xl bg-slate-950/80 border-2 border-indigo-500/40 focus:border-indigo-500 text-2xl font-bold text-indigo-300 outline-none transition-all placeholder:text-slate-700"
+                                oninput="onOtpInputChange(this)"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();verifyOtpAndProceed();}"
                                 autofocus
                             >
-                            
+                            <p id="otp-error-msg" class="hidden text-xs text-rose-400 font-semibold mt-1.5 text-center"></p>
+
                             <!-- Timer & Resend -->
-                            <div class="flex items-center justify-between text-xs text-slate-400 mt-2 px-1">
+                            <div class="flex items-center justify-between text-xs text-slate-400 mt-2.5 px-1">
                                 <span class="flex items-center gap-1.5">
                                     <i class="fa-regular fa-clock text-slate-500"></i>
                                     <span>Hết hạn:</span>
@@ -421,83 +421,113 @@
                             </div>
                         </div>
 
-                        <!-- Mật khẩu mới -->
-                        <div>
-                            <label for="input-password" class="block text-xs font-semibold text-slate-300 mb-1.5">
-                                Mật khẩu mới <span class="text-rose-400 font-bold">*</span>
-                            </label>
-                            <div class="form-input-shell">
-                                <i class="fa-solid fa-lock form-input-icon"></i>
-                                <input 
-                                    type="password" 
-                                    name="password" 
-                                    id="input-password" 
-                                    required 
-                                    minlength="6" 
-                                    placeholder="Tối thiểu 6 ký tự" 
-                                    class="auth-input-field pr-10"
-                                    oninput="evalPasswordStrength(this.value)"
-                                    autocomplete="new-password"
-                                >
-                                <button type="button" onclick="togglePasswordVisibility('input-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu">
-                                    <i class="fa-solid fa-eye-slash"></i>
-                                </button>
-                            </div>
-
-                            <!-- Thanh đo độ mạnh mật khẩu -->
-                            <div id="pwd-strength-box" class="mt-2 space-y-1">
-                                <div class="auth-strength-track">
-                                    <div class="auth-strength-segment"></div>
-                                    <div class="auth-strength-segment"></div>
-                                    <div class="auth-strength-segment"></div>
-                                </div>
-                                <div class="flex justify-between items-center text-[10px]">
-                                    <span id="pwd-strength-label" class="font-bold text-slate-500 uppercase tracking-wider">Độ mạnh: Chưa nhập</span>
-                                    <span class="text-slate-500">Nên có chữ hoa, số &amp; ký tự đặc biệt</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Xác nhận mật khẩu mới -->
-                        <div>
-                            <label for="input-password-confirmation" class="block text-xs font-semibold text-slate-300 mb-1.5">
-                                Xác nhận mật khẩu mới <span class="text-rose-400 font-bold">*</span>
-                            </label>
-                            <div class="form-input-shell">
-                                <i class="fa-solid fa-lock-open form-input-icon"></i>
-                                <input 
-                                    type="password" 
-                                    name="password_confirmation" 
-                                    id="input-password-confirmation" 
-                                    required 
-                                    minlength="6" 
-                                    placeholder="Nhập lại mật khẩu mới" 
-                                    class="auth-input-field pr-10"
-                                    autocomplete="new-password"
-                                >
-                                <button type="button" onclick="togglePasswordVisibility('input-password-confirmation', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu">
-                                    <i class="fa-solid fa-eye-slash"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Submit button -->
                         <button 
-                            type="submit" 
-                            class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+                            type="button" 
+                            id="btn-verify-otp"
+                            onclick="verifyOtpAndProceed()"
+                            class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
                         >
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>Xác Nhận &amp; Đặt Lại Mật Khẩu</span>
+                            <i id="btn-verify-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                            <span id="btn-verify-text">Xác Thực Mã OTP &amp; Tiếp Tục</span>
+                            <i id="btn-verify-icon" class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
-                    </form>
+                    </div>
+
+                    <!-- GIAI ĐOẠN 2B: THIẾT LẬP MẬT KHẨU MỚI (CHỈ XUẤT HIỆN SAU KHI OTP ĐÃ HỢP LỆ) -->
+                    <div id="stage-password" class="hidden space-y-4">
+                        <form id="form-reset-password" action="{{ route('password.resetWithOtp') }}" method="POST" class="space-y-4" novalidate onsubmit="return handleResetPasswordSubmit(event)">
+                            @csrf
+                            <input type="hidden" name="otp" id="hidden-otp-input" value="{{ old('otp') }}">
+
+                            <!-- Mật khẩu mới -->
+                            <div>
+                                <label for="input-password" class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                    Mật khẩu mới <span class="text-rose-400 font-bold">*</span>
+                                </label>
+                                <div class="form-input-shell">
+                                    <i class="fa-solid fa-lock form-input-icon"></i>
+                                    <input 
+                                        type="password" 
+                                        name="password" 
+                                        id="input-password" 
+                                        required 
+                                        minlength="6" 
+                                        placeholder="Tối thiểu 6 ký tự" 
+                                        class="auth-input-field pr-10"
+                                        oninput="evalPasswordStrength(this.value); clearPasswordError('input-password')"
+                                        autocomplete="new-password"
+                                    >
+                                    <button type="button" onclick="togglePasswordVisibility('input-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <p id="password-error-msg" class="hidden text-xs text-rose-400 font-semibold mt-1"></p>
+
+                                <!-- Thanh đo độ mạnh mật khẩu -->
+                                <div id="pwd-strength-box" class="mt-2 space-y-1">
+                                    <div class="auth-strength-track">
+                                        <div class="auth-strength-segment"></div>
+                                        <div class="auth-strength-segment"></div>
+                                        <div class="auth-strength-segment"></div>
+                                    </div>
+                                    <div class="flex justify-between items-center text-[10px]">
+                                        <span id="pwd-strength-label" class="font-bold text-slate-500 uppercase tracking-wider">Độ mạnh: Chưa nhập</span>
+                                        <span class="text-slate-500">Nên có chữ hoa, số &amp; ký tự đặc biệt</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Xác nhận mật khẩu mới -->
+                            <div>
+                                <label for="input-password-confirmation" class="block text-xs font-semibold text-slate-300 mb-1.5">
+                                    Xác nhận mật khẩu mới <span class="text-rose-400 font-bold">*</span>
+                                </label>
+                                <div class="form-input-shell">
+                                    <i class="fa-solid fa-lock-open form-input-icon"></i>
+                                    <input 
+                                        type="password" 
+                                        name="password_confirmation" 
+                                        id="input-password-confirmation" 
+                                        required 
+                                        minlength="6" 
+                                        placeholder="Nhập lại mật khẩu mới" 
+                                        class="auth-input-field pr-10"
+                                        oninput="clearPasswordError('input-password-confirmation')"
+                                        autocomplete="new-password"
+                                    >
+                                    <button type="button" onclick="togglePasswordVisibility('input-password-confirmation', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <p id="password-confirmation-error-msg" class="hidden text-xs text-rose-400 font-semibold mt-1"></p>
+                            </div>
+
+                            <!-- Submit button -->
+                            <button 
+                                type="submit" 
+                                id="btn-submit-reset"
+                                class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+                            >
+                                <i id="btn-reset-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                                <i id="btn-reset-icon" class="fa-solid fa-circle-check"></i>
+                                <span id="btn-reset-text">Xác Nhận &amp; Đặt Lại Mật Khẩu</span>
+                            </button>
+                        </form>
+                    </div>
                 @endif
 
-                <!-- Footer Back to Login -->
-                <div class="pt-4 border-t border-slate-800 text-center text-xs text-slate-400">
-                    Nhớ lại mật khẩu rồi? 
-                    <a href="{{ route('login') }}" class="font-bold text-indigo-400 hover:text-indigo-300 ml-1 transition-colors">
-                        Đăng nhập ngay
+                <!-- Footer Back to Login Button -->
+                <div class="pt-4 border-t border-slate-800/80 space-y-3 text-center">
+                    <a href="{{ route('login') }}" class="w-full py-2.5 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 group shadow-sm">
+                        <i class="fa-solid fa-arrow-left text-[10px] group-hover:-translate-x-1 transition-transform"></i>
+                        <span>Quay lại trang đăng nhập</span>
                     </a>
+                    <p class="text-xs text-slate-400">
+                        Nhớ lại mật khẩu rồi? 
+                        <a href="{{ route('login') }}" class="font-bold text-indigo-400 hover:text-indigo-300 ml-1 transition-colors underline underline-offset-2">
+                            Đăng nhập ngay
+                        </a>
+                    </p>
                 </div>
 
             </div>
@@ -661,6 +691,191 @@
                     if (btnResend) btnResend.disabled = false;
                 }
             }
+
+            function onOtpInputChange(el) {
+                el.value = el.value.replace(/[^0-9]/g, '');
+                const errEl = document.getElementById('otp-error-msg');
+                if (errEl) errEl.classList.add('hidden');
+                el.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/30');
+                if (el.value.length === 6) {
+                    verifyOtpAndProceed();
+                }
+            }
+
+            async function verifyOtpAndProceed() {
+                const otpInput = document.getElementById('input-otp');
+                const errEl = document.getElementById('otp-error-msg');
+                const btn = document.getElementById('btn-verify-otp');
+                const spinner = document.getElementById('btn-verify-spinner');
+                const text = document.getElementById('btn-verify-text');
+                const icon = document.getElementById('btn-verify-icon');
+
+                const otpVal = otpInput ? otpInput.value.trim() : '';
+
+                if (!otpVal) {
+                    if (errEl) {
+                        errEl.textContent = 'Vui lòng nhập đủ 6 chữ số mã OTP xác thực.';
+                        errEl.classList.remove('hidden');
+                    }
+                    if (otpInput) {
+                        otpInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30');
+                        otpInput.focus();
+                    }
+                    showToast('Vui lòng nhập mã OTP 6 số đã được gửi tới email.', 'error');
+                    return;
+                }
+
+                if (otpVal.length < 6) {
+                    if (errEl) {
+                        errEl.textContent = 'Mã OTP phải gồm đủ 6 chữ số (bạn mới nhập ' + otpVal.length + '/6 số).';
+                        errEl.classList.remove('hidden');
+                    }
+                    if (otpInput) {
+                        otpInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30');
+                        otpInput.focus();
+                    }
+                    showToast('Vui lòng nhập đủ 6 chữ số của mã OTP.', 'error');
+                    return;
+                }
+
+                if (btn) { btn.disabled = true; btn.classList.add('opacity-75', 'cursor-not-allowed'); }
+                if (spinner) spinner.classList.remove('hidden');
+                if (icon) icon.classList.add('hidden');
+                if (text) text.textContent = 'Đang kiểm tra mã OTP...';
+
+                try {
+                    const res = await fetch("{{ route('password.verifyOtp') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                        },
+                        body: JSON.stringify({ otp: otpVal })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        const hiddenOtp = document.getElementById('hidden-otp-input');
+                        if (hiddenOtp) hiddenOtp.value = otpVal;
+
+                        const sessionSuccessAlert = document.getElementById('session-success-alert');
+                        if (sessionSuccessAlert) sessionSuccessAlert.remove();
+
+                        const stageOtp = document.getElementById('stage-otp');
+                        const stagePassword = document.getElementById('stage-password');
+                        if (stageOtp) stageOtp.classList.add('hidden');
+                        if (stagePassword) stagePassword.classList.remove('hidden');
+
+                        showToast('Xác thực OTP thành công! Vui lòng thiết lập mật khẩu mới.', 'success');
+
+                        const pwdInput = document.getElementById('input-password');
+                        if (pwdInput) setTimeout(() => pwdInput.focus(), 150);
+                    } else {
+                        const msg = data.message || 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại.';
+                        if (errEl) {
+                            errEl.textContent = msg;
+                            errEl.classList.remove('hidden');
+                        }
+                        if (otpInput) {
+                            otpInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30');
+                            otpInput.focus();
+                        }
+                        showToast(msg, 'error');
+                    }
+                } catch (e) {
+                    showToast('Lỗi kết nối khi xác thực OTP. Vui lòng thử lại.', 'error');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.classList.remove('opacity-75', 'cursor-not-allowed'); }
+                    if (spinner) spinner.classList.add('hidden');
+                    if (icon) icon.classList.remove('hidden');
+                    if (text) text.textContent = 'Xác Thực Mã OTP & Tiếp Tục';
+                }
+            }
+
+            function resetEmailStep() {
+                window.location.href = "{{ route('password.forgot') }}?reset=1";
+            }
+
+            function backToOtpStage() {
+                const stageOtp = document.getElementById('stage-otp');
+                const stagePassword = document.getElementById('stage-password');
+                if (stagePassword) stagePassword.classList.add('hidden');
+                if (stageOtp) stageOtp.classList.remove('hidden');
+                const otpInput = document.getElementById('input-otp');
+                if (otpInput) setTimeout(() => otpInput.focus(), 100);
+            }
+
+            function clearPasswordError(id) {
+                const errEl = document.getElementById(id === 'input-password' ? 'password-error-msg' : 'password-confirmation-error-msg');
+                if (errEl) errEl.classList.add('hidden');
+                const input = document.getElementById(id);
+                if (input) input.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/30');
+            }
+
+            function handleResetPasswordSubmit(e) {
+                const pwd = document.getElementById('input-password');
+                const pwdConf = document.getElementById('input-password-confirmation');
+                const pwdErr = document.getElementById('password-error-msg');
+                const confErr = document.getElementById('password-confirmation-error-msg');
+
+                const pwdVal = pwd ? pwd.value : '';
+                const confVal = pwdConf ? pwdConf.value : '';
+
+                if (!pwdVal || pwdVal.length < 6) {
+                    e.preventDefault();
+                    if (pwdErr) {
+                        pwdErr.textContent = 'Mật khẩu mới phải có tối thiểu 6 ký tự.';
+                        pwdErr.classList.remove('hidden');
+                    }
+                    if (pwd) {
+                        pwd.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30');
+                        pwd.focus();
+                    }
+                    showToast('Vui lòng nhập mật khẩu mới tối thiểu 6 ký tự.', 'error');
+                    return false;
+                }
+
+                if (pwdVal !== confVal) {
+                    e.preventDefault();
+                    if (confErr) {
+                        confErr.textContent = 'Xác nhận mật khẩu không trùng khớp với mật khẩu mới.';
+                        confErr.classList.remove('hidden');
+                    }
+                    if (pwdConf) {
+                        pwdConf.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/30');
+                        pwdConf.focus();
+                    }
+                    showToast('Mật khẩu xác nhận không trùng khớp.', 'error');
+                    return false;
+                }
+
+                const btn = document.getElementById('btn-submit-reset');
+                const spinner = document.getElementById('btn-reset-spinner');
+                const icon = document.getElementById('btn-reset-icon');
+                const text = document.getElementById('btn-reset-text');
+                if (btn) { btn.disabled = true; btn.classList.add('opacity-75', 'cursor-not-allowed'); }
+                if (spinner) spinner.classList.remove('hidden');
+                if (icon) icon.classList.add('hidden');
+                if (text) text.textContent = 'Đang lưu mật khẩu mới...';
+
+                return true;
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                @if($errors->has('password') || $errors->has('password_confirmation'))
+                    const sessionSuccessAlert = document.getElementById('session-success-alert');
+                    if (sessionSuccessAlert) sessionSuccessAlert.remove();
+
+                    const stageOtp = document.getElementById('stage-otp');
+                    const stagePassword = document.getElementById('stage-password');
+                    if (stageOtp && stagePassword) {
+                        stageOtp.classList.add('hidden');
+                        stagePassword.classList.remove('hidden');
+                    }
+                @endif
+            });
         @endif
     </script>
 </body>

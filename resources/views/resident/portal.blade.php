@@ -24,11 +24,24 @@
                     <span class="font-black tracking-tight">SmartRoom Resident</span>
                 </a>
                 <div class="flex items-center gap-3">
+                    <a href="{{ route('renty.user') }}" 
+                       class="group relative inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold text-white transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 border border-white/20 overflow-hidden"
+                       style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #9333ea 100%);"
+                       title="Quay về Renty - Sàn tìm phòng trọ">
+                        <span class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                        <span class="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center text-cyan-200 group-hover:text-white transition">
+                            <i class="fa-solid fa-compass text-[11px] group-hover:rotate-45 transition-transform duration-300"></i>
+                        </span>
+                        <span class="tracking-tight">
+                            Về <span class="text-cyan-200 font-black">Renty</span>
+                        </span>
+                        <i class="fa-solid fa-arrow-right text-[10px] text-purple-200 group-hover:translate-x-0.5 transition-transform"></i>
+                    </a>
                     <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                         <i class="fa-solid fa-moon" data-theme-icon></i>
                     </button>
                     <span class="hidden sm:inline text-xs text-slate-400">{{ Auth::user()->name ?? 'Resident' }}</span>
-                    <a href="{{ route('signout') }}" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold">
+                    <a href="{{ route('signout') }}" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold" title="Đăng xuất">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     </a>
                 </div>
@@ -91,7 +104,12 @@
                             Vui lòng liên hệ ban quản lý theo số hotline trên để ký hoặc kích hoạt hợp đồng thuê phòng của bạn.
                         </div>
                     </div>
-                    <div class="mt-6 flex justify-center gap-3">
+                    <div class="mt-6 flex flex-wrap justify-center gap-3">
+                        <a href="{{ route('renty.user') }}" 
+                           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm text-white transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 border border-white/20"
+                           style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #9333ea 100%);">
+                            <i class="fa-solid fa-compass text-cyan-200"></i> Quay về Renty Tìm Phòng
+                        </a>
                         <a href="{{ route('signout') }}" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all">
                             <i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Đăng xuất
                         </a>
