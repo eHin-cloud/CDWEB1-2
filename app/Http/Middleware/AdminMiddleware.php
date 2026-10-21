@@ -21,9 +21,9 @@ class AdminMiddleware
 
         $user = auth()->user();
 
-        if ($user->isAdmin()) {
+        if ($user->isAdmin() || $user->isSuperAdmin()) {
             return redirect()
-                ->route('user.list')
+                ->route($user->isSuperAdmin() ? 'admin.superadmin.dashboard' : 'user.list')
                 ->with('error', 'Admin hệ thống không truy cập trực tiếp dashboard chủ trọ.');
         }
 

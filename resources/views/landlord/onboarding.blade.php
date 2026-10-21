@@ -267,6 +267,19 @@
             opacity: 0;
             transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
         }
+        .verification-option {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.4);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .verification-option:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        .verification-option:has(input:checked) {
+            background: rgba(30, 41, 59, 0.95) !important;
+            box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.35);
+        }
         .verification-option:has(input:checked) .radio-dot,
         .verification-option input:checked ~ div .radio-dot {
             transform: scale(1) !important;
@@ -276,6 +289,9 @@
         .verification-option input[value="phone"]:checked ~ div.radio-indicator {
             border-color: #10b981 !important;
         }
+        .verification-option:has(input[value="phone"]:checked) {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+        }
         .verification-option:has(input[value="phone"]:checked) .radio-dot,
         .verification-option input[value="phone"]:checked ~ div .radio-dot {
             background-color: #10b981 !important;
@@ -283,6 +299,9 @@
         .verification-option:has(input[value="email"]:checked) .radio-indicator,
         .verification-option input[value="email"]:checked ~ div.radio-indicator {
             border-color: #818cf8 !important;
+        }
+        .verification-option:has(input[value="email"]:checked) {
+            border-color: rgba(99, 102, 241, 0.5) !important;
         }
         .verification-option:has(input[value="email"]:checked) .radio-dot,
         .verification-option input[value="email"]:checked ~ div .radio-dot {
@@ -439,139 +458,138 @@
     </header>
 
     <!-- MAIN SECTION -->
-    <main class="container mx-auto px-4 sm:px-6 py-6 lg:py-10 flex-grow relative z-10">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+    <main class="container mx-auto px-4 sm:px-6 py-6 lg:py-8 flex-grow relative z-10">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
             
             <!-- LEFT COLUMN: Value Proposition & Onboarding Steps -->
-            <section class="flex flex-col justify-between space-y-6 lg:space-y-8 md:col-span-5 lg:col-span-5 order-2 md:order-1">
-                <div>
+            <section class="flex flex-col justify-between space-y-6 lg:col-span-5 order-2 lg:order-1">
+                <div class="space-y-5">
                     <!-- Back Button -->
-                    <div class="mb-5">
-                        <a href="{{ route('login') }}" onclick="clearLandlordDraft()" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-400 hover:text-slate-100 transition-all shadow-sm group">
+                    <div>
+                        <a href="{{ route('login') }}" onclick="clearLandlordDraft()" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-400 hover:text-white transition-all shadow-sm group">
                             <i class="fa-solid fa-arrow-left text-xs transition-transform group-hover:-translate-x-1 text-slate-500 group-hover:text-indigo-400"></i>
                             <span>Quay lại đăng nhập</span>
                         </a>
                     </div>
 
                     <!-- Section Badge -->
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-inner">
-                        <i class="fa-solid fa-crown text-amber-400"></i> Giải pháp số hóa nhà trọ toàn diện
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-bold uppercase tracking-wider shadow-inner">
+                        <i class="fa-solid fa-crown text-amber-400"></i> Cổng Đối Tác Vận Hành Cơ Sở
                     </div>
 
-                    <h1 class="text-3xl sm:text-4xl lg:text-4xl font-black tracking-tight text-white leading-tight">
-                        Vào Dashboard Quản Lý Ngay, <span class="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Xác Minh Khi Nhận Tiền</span>
+                    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+                        Số Hóa Cơ Sở Lưu Trú, <br>
+                        <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">Vận Hành &amp; Đón Khách Renty</span>
                     </h1>
 
-                    <p class="mt-4 text-sm text-slate-400 leading-relaxed">
-                        SmartRoom loại bỏ rào cản thủ tục phức tạp: Chỉ cần 60 giây đăng ký để mở Dashboard, khởi tạo danh sách phòng và tiếp cận ngay mạng lưới khách thuê của Renty Review.
+                    <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                        SmartRoom giúp chủ trọ và đơn vị lưu trú chuyển đổi số toàn diện chỉ trong 60 giây: Quản lý sơ đồ phòng trực quan, chốt số điện nước online và thanh toán VietQR tự động.
                     </p>
-                </div>
 
-                <!-- 3-STEP ROADMAP -->
-                <div class="space-y-3">
-                    <div class="glass-panel-subtle rounded-2xl p-4 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
-                            1
+                    <!-- 3-STEP ROADMAP -->
+                    <div class="space-y-3 pt-1">
+                        <div class="glass-panel-subtle rounded-2xl p-3.5 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-emerald-500/20 mt-0.5">
+                                1
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Khởi Tạo Nhanh (60 giây)</h4>
+                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Đăng ký thông tin quản trị cơ bản để nhận bàn giao Dashboard quản lý cơ sở ngay lập tức.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Khởi Tạo Nhanh (60 giây)</h4>
-                            <p class="text-xs text-slate-400 mt-0.5">Đăng ký số điện thoại và tên tòa nhà để vào thẳng hệ thống quản lý phòng trọ.</p>
-                        </div>
-                    </div>
 
-                    <div class="glass-panel-subtle rounded-2xl p-4 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
-                            2
+                        <div class="glass-panel-subtle rounded-2xl p-3.5 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-indigo-500/20 mt-0.5">
+                                2
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Số Hóa Cơ Sở &amp; Phòng Trọ</h4>
+                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Thiết lập sơ đồ tòa nhà, buồng phòng, đơn giá điện nước và quản lý hợp đồng cư dân trực tuyến.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Đăng Tin &amp; Tiếp Cận Khách Thuê</h4>
-                            <p class="text-xs text-slate-400 mt-0.5">Tạo phòng, thiết lập giá điện nước, phòng xuất hiện trên bản đồ Renty để đón khách xem phòng.</p>
-                        </div>
-                    </div>
 
-                    <div class="glass-panel-subtle rounded-2xl p-4 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
-                            3
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Tích Xanh &amp; Nhận Tiền Tự Động</h4>
-                            <p class="text-xs text-slate-400 mt-0.5">Xác minh CCCD/Ngân hàng khi cần nhận tiền thuê phòng, cấp chứng nhận uy tín.</p>
+                        <div class="glass-panel-subtle rounded-2xl p-3.5 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-amber-500/20 mt-0.5">
+                                3
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Tích Xanh &amp; Thu Tiền Tự Động</h4>
+                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Gắn huy hiệu Tích Xanh uy tín, ưu tiên hiển thị trên Renty và nhận tiền thuê qua VietQR tiện lợi.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- STATS COUNTER -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="glass-panel-subtle rounded-2xl p-3.5 text-center">
-                        <span class="text-xl font-black text-white block">12.5K+</span>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 block">Cư dân tìm phòng</span>
+                <div class="grid grid-cols-3 gap-3 pt-2">
+                    <div class="glass-panel-subtle rounded-2xl p-3 text-center border border-slate-800/80">
+                        <span class="text-lg sm:text-xl font-black text-white block">12.5K+</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 block">Khách tìm phòng</span>
                     </div>
-                    <div class="glass-panel-subtle rounded-2xl p-3.5 text-center">
-                        <span class="text-xl font-black text-emerald-400 block">99.2%</span>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 block">Tỷ lệ lấp đầy</span>
+                    <div class="glass-panel-subtle rounded-2xl p-3 text-center border border-slate-800/80">
+                        <span class="text-lg sm:text-xl font-black text-emerald-400 block">99.2%</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 block">Tỷ lệ lấp đầy</span>
                     </div>
-                    <div class="glass-panel-subtle rounded-2xl p-3.5 text-center">
-                        <span class="text-xl font-black text-indigo-400 block">0 VNĐ</span>
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 block">Phí khởi tạo</span>
+                    <div class="glass-panel-subtle rounded-2xl p-3 text-center border border-slate-800/80">
+                        <span class="text-lg sm:text-xl font-black text-indigo-400 block">0 VNĐ</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 block">Phí khởi tạo</span>
                     </div>
                 </div>
 
             </section>
 
             <!-- RIGHT COLUMN: Registration Form Card -->
-            <section class="md:col-span-7 lg:col-span-7 order-1 md:order-2">
-                <div class="glass-panel rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+            <section class="lg:col-span-7 order-1 lg:order-2 flex flex-col justify-center">
+                <div class="glass-panel rounded-3xl p-6 sm:p-8 lg:p-9 relative overflow-hidden border border-indigo-500/20 shadow-2xl">
                     
                     <!-- Form Header -->
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="mb-5">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
                             <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                                <i class="fa-solid fa-house-chimney-user"></i> Cổng Đăng Ký Chủ Trọ
+                                <i class="fa-solid fa-house-chimney-user"></i> Cổng Đăng Ký Cơ Sở Đối Tác
                             </span>
-                            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
-                                Miễn Phí Trọn Đời
+                            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300">
+                                Miễn Phí Khởi Tạo
                             </span>
                         </div>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight">Đăng Ký Tài Khoản Chủ Trọ</h2>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tracking-tight">Đăng Ký Tài Khoản Cơ Sở</h2>
                         <p class="text-xs text-slate-400 mt-1">Chỉ 60 giây — điền thông tin cơ bản để vào Dashboard ngay. Hồ sơ pháp lý hoàn thiện sau trong Dashboard.</p>
 
-                        <!-- 3-STEP STEPPER PROGRESS -->
-                        <div class="mt-4 flex items-center gap-0">
-                            <!-- Step 1: Active (current page) -->
-                            <div class="flex flex-col items-center min-w-0">
-                                <div class="w-7 h-7 rounded-full bg-indigo-600 border-2 border-indigo-400 flex items-center justify-center text-white font-black text-xs shadow-md shadow-indigo-600/40 shrink-0">
+                        <!-- STEPPER 3 BƯỚC PHẲNG (FLEXBOX CHUẨN, KHÔNG DÙNG MARGIN ÂM) -->
+                        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                            <!-- Bước 1: Đang làm -->
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-indigo-600 border border-indigo-400 flex items-center justify-center text-white font-bold text-[11px] shadow-md shadow-indigo-600/40 shrink-0">
                                     1
                                 </div>
-                                <span class="hidden sm:block text-[10px] font-bold text-indigo-300 mt-1 text-center leading-tight whitespace-nowrap">ĐK Cơ Bản</span>
+                                <span class="text-xs font-bold text-indigo-300 whitespace-nowrap">ĐK Cơ Bản</span>
                             </div>
-                            <!-- Connector 1-2 -->
-                            <div class="flex-1 h-0.5 bg-slate-700 mx-1.5 mt-[-14px] sm:mt-[-16px]"></div>
-                            <!-- Step 2: Pending -->
-                            <div class="flex flex-col items-center min-w-0">
-                                <div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-slate-400 font-black text-xs shrink-0">
+                            <div class="flex-1 h-0.5 bg-indigo-500/40 rounded-full mx-1"></div>
+                            <!-- Bước 2 -->
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400 font-bold text-[11px] shrink-0">
                                     2
                                 </div>
-                                <span class="hidden sm:block text-[10px] font-semibold text-slate-500 mt-1 text-center leading-tight whitespace-nowrap">Xác Minh OTP</span>
+                                <span class="text-xs font-medium text-slate-400 whitespace-nowrap">Xác Minh OTP</span>
                             </div>
-                            <!-- Connector 2-3 -->
-                            <div class="flex-1 h-0.5 bg-slate-700 mx-1.5 mt-[-14px] sm:mt-[-16px]"></div>
-                            <!-- Step 3: Pending -->
-                            <div class="flex flex-col items-center min-w-0">
-                                <div class="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-slate-400 font-black text-xs shrink-0">
+                            <div class="flex-1 h-0.5 bg-slate-800 rounded-full mx-1"></div>
+                            <!-- Bước 3 -->
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-500 font-bold text-[11px] shrink-0">
                                     3
                                 </div>
-                                <span class="hidden sm:block text-[10px] font-semibold text-slate-500 mt-1 text-center leading-tight whitespace-nowrap">Hoàn Thiện Hồ Sơ</span>
+                                <span class="hidden sm:inline text-xs font-medium text-slate-500 whitespace-nowrap">Dashboard</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- ERROR ALERT -->
                     @if($errors->any())
-                        <div class="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-200">
-                            <div class="flex items-center gap-2 font-bold mb-1.5 text-rose-300">
-                                <i class="fa-solid fa-triangle-exclamation"></i> Có lỗi trong quá trình nhập liệu:
+                        <div class="mb-5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-200">
+                            <div class="flex items-center gap-2 font-bold mb-1 text-rose-300">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Vui lòng kiểm tra lại thông tin:
                             </div>
-                            <ul class="list-disc pl-5 space-y-1 text-[11px]">
+                            <ul class="list-disc pl-5 space-y-0.5 text-[11px]">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -583,15 +601,10 @@
                     <form method="POST" action="{{ route('landlord.register.store') }}" class="space-y-4" novalidate>
                         @csrf
 
-                        <!-- KHỐI 1: 4 TRƯỜNG ĐĂNG KÝ -->
-                        <div class="rounded-2xl border border-indigo-500/20 bg-slate-900/60 p-4 space-y-4">
-                            <div class="border-b border-slate-800 pb-2.5">
-                                <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                                    <i class="fa-solid fa-user-shield text-indigo-400"></i> Thông Tin Đăng Nhập &amp; Đại Diện
-                                </span>
-                            </div>
-
-                             <!-- 1. Tài khoản đăng nhập & Họ và tên chủ trọ -->
+                        <!-- KHỐI 1: CÁC TRƯỜNG ĐĂNG KÝ -->
+                        <div class="rounded-2xl border border-indigo-500/20 bg-slate-900/60 p-4 sm:p-5 space-y-4">
+                            
+                            <!-- 1. Tài khoản đăng nhập & Họ và tên chủ cơ sở -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="input-username">
@@ -618,7 +631,7 @@
 
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="input-fullname">
-                                        Họ và tên chủ trọ <span class="text-rose-400 font-bold">*</span>
+                                        Họ và tên chủ cơ sở <span class="text-rose-400 font-bold">*</span>
                                     </label>
                                     <div class="form-input-shell">
                                         <i class="fa-solid fa-user-tie form-input-icon"></i>
@@ -635,11 +648,9 @@
                             <!-- 2 & 3: Số điện thoại & Email -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <div>
-                                    <div class="mb-1.5">
-                                        <label class="block text-xs font-semibold text-slate-300" for="input-phone">
-                                            Số điện thoại <span class="text-rose-400 font-bold">*</span>
-                                        </label>
-                                    </div>
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="input-phone">
+                                        Số điện thoại liên hệ <span class="text-rose-400 font-bold">*</span>
+                                    </label>
                                     <div class="form-input-shell">
                                         <i class="fa-solid fa-phone form-input-icon"></i>
                                         <input type="tel" name="phone" id="input-phone" value="{{ old('phone', $regData['phone'] ?? '') }}" required maxlength="10" pattern="^0[0-9]{9}$" placeholder="0988123456" class="onboarding-input @error('phone') border-rose-500 ring-2 ring-rose-500/20 @enderror" autocomplete="tel" oninput="validateLandlordPhoneInput(this)" onblur="validateLandlordPhoneBlur(this)">
@@ -654,11 +665,9 @@
                                 </div>
 
                                 <div>
-                                    <div class="mb-1.5">
-                                        <label class="block text-xs font-semibold text-slate-300" for="input-email">
-                                            Địa chỉ Email
-                                        </label>
-                                    </div>
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="input-email">
+                                        Địa chỉ Email (tùy chọn)
+                                    </label>
                                     <div class="form-input-shell">
                                         <i class="fa-solid fa-envelope form-input-icon"></i>
                                         <input type="email" name="email" id="input-email" value="{{ old('email', $regData['email'] ?? '') }}" placeholder="chutro@example.com" class="onboarding-input @error('email') border-rose-500 ring-2 ring-rose-500/20 @enderror" autocomplete="email" oninput="handleLandlordEmailInput(this)" onblur="handleLandlordEmailBlur(this)">
@@ -673,28 +682,33 @@
                                 </div>
                             </div>
 
-                            <!-- Phương thức xác minh tài khoản (chống spam) -->
+                            <!-- Phương thức nhận mã OTP (Segmented Control gọn gàng) -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-2">
-                                    Phương thức xác minh tài khoản <span class="text-rose-400 font-bold">*</span>
-                                </label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="verification-method-group">
-                                    <label class="verification-option relative flex items-center gap-3 p-3 rounded-xl border border-slate-700/60 bg-slate-900/40 cursor-pointer transition-all hover:border-amber-500/40" for="method-phone" id="landlord-pill-phone">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-300">
+                                        Phương thức nhận OTP xác thực <span class="text-rose-400 font-bold">*</span>
+                                    </label>
+                                    <span class="text-[10px] text-slate-400 font-medium">Chọn 1 trong 2 kênh</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-950/70 border border-slate-800" id="verification-method-group">
+                                    <label class="verification-option relative flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-transparent cursor-pointer transition-all duration-200" for="method-phone" id="landlord-pill-phone">
                                         <input type="radio" name="verification_method" id="method-phone" value="phone" {{ old('verification_method', $regData['verification_method'] ?? 'phone') == 'phone' ? 'checked' : '' }} class="hidden" onchange="onLandlordMethodChange('phone')">
-                                        <div class="radio-indicator w-5 h-5">
-                                            <div class="radio-dot w-2.5 h-2.5"></div>
+                                        <div class="radio-indicator w-4 h-4">
+                                            <div class="radio-dot w-2 h-2"></div>
                                         </div>
-                                        <div>
-                                            <span class="text-xs font-bold text-white block"><i class="fa-solid fa-phone text-emerald-400 mr-1"></i>Xác minh qua SĐT</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-phone text-emerald-400 text-xs"></i>
+                                            <span class="text-xs font-bold text-white">Qua SĐT</span>
                                         </div>
                                     </label>
-                                    <label class="verification-option relative flex items-center gap-3 p-3 rounded-xl border border-slate-700/60 bg-slate-900/40 cursor-pointer transition-all hover:border-amber-500/40" for="method-email" id="landlord-pill-email">
+                                    <label class="verification-option relative flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-transparent cursor-pointer transition-all duration-200" for="method-email" id="landlord-pill-email">
                                         <input type="radio" name="verification_method" id="method-email" value="email" {{ old('verification_method', $regData['verification_method'] ?? '') == 'email' ? 'checked' : '' }} class="hidden" onchange="onLandlordMethodChange('email')">
-                                        <div class="radio-indicator w-5 h-5">
-                                            <div class="radio-dot w-2.5 h-2.5"></div>
+                                        <div class="radio-indicator w-4 h-4">
+                                            <div class="radio-dot w-2 h-2"></div>
                                         </div>
-                                        <div>
-                                            <span class="text-xs font-bold text-white block"><i class="fa-solid fa-envelope text-indigo-400 mr-1"></i>Xác minh qua Email</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-envelope text-indigo-400 text-xs"></i>
+                                            <span class="text-xs font-bold text-white">Qua Email</span>
                                         </div>
                                     </label>
                                 </div>
@@ -702,26 +716,21 @@
                                     <i id="landlord-email-method-hint-icon" class="fa-solid fa-circle-info text-[10px] shrink-0 text-amber-400"></i>
                                     <span id="landlord-email-method-hint-text">Vui lòng nhập địa chỉ email ở trên để kích hoạt phương thức nhận OTP qua Email.</span>
                                 </div>
+                                @error('verification_method')
+                                    <p class="text-xs text-rose-400 font-semibold mt-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-exclamation text-[10px]"></i>{{ $message }}
+                                    </p>
+                                @enderror
                             </div>
 
-
-                            @error('verification_method')
-                                <p class="text-xs text-rose-400 font-semibold mt-1 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>{{ $message }}
-                                </p>
-                            @enderror
-
-
-                            <!-- 4. Mật khẩu -->
+                            <!-- 4. Mật khẩu đăng nhập -->
                             <div>
-                                <div class="mb-1.5">
-                                    <label class="block text-xs font-semibold text-slate-300" for="input-password">
-                                        Mật khẩu đăng nhập <span class="text-rose-400 font-bold">*</span>
-                                    </label>
-                                </div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="input-password">
+                                    Mật khẩu đăng nhập <span class="text-rose-400 font-bold">*</span>
+                                </label>
                                 <div class="form-input-shell">
                                     <i class="fa-solid fa-lock form-input-icon"></i>
-                                    <input type="password" name="password" id="input-password" value="{{ old('password', $regData['password'] ?? '') }}" required minlength="6" maxlength="100" oninput="evalPasswordStrength(this.value)" placeholder="••••••••" class="onboarding-input pr-10 @error('password') border-rose-500 ring-2 ring-rose-500/20 @enderror" autocomplete="new-password">
+                                    <input type="password" name="password" id="input-password" value="{{ old('password', $regData['password'] ?? '') }}" required minlength="6" maxlength="100" oninput="evalPasswordStrength(this.value)" placeholder="Tối thiểu 6 ký tự" class="onboarding-input pr-10 @error('password') border-rose-500 ring-2 ring-rose-500/20 @enderror" autocomplete="new-password">
                                     <button type="button" onclick="togglePasswordVisibility('input-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu" aria-label="Hiện / Ẩn mật khẩu">
                                         <i class="fa-solid fa-eye-slash"></i>
                                     </button>
@@ -745,31 +754,28 @@
                             </div>
                         </div>
 
-                        <!-- Info note: pháp lý hoàn thiện sau -->
-                        <div class="rounded-xl border border-indigo-500/15 bg-indigo-500/5 p-3 flex items-start gap-2.5 text-xs text-slate-400">
+                        <!-- Ghi chú hoàn thiện hồ sơ sau -->
+                        <div class="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3 flex items-start gap-2.5 text-xs text-slate-400">
                             <i class="fa-solid fa-circle-info text-indigo-400 shrink-0 mt-0.5"></i>
-                            <span>Sau khi xác minh OTP, bạn có thể bổ sung <strong class="text-slate-300">MST/Giấy phép KD, CCCD, tài khoản ngân hàng, tên nhà trọ</strong> trong Dashboard → mục <em>Hoàn thiện hồ sơ</em>.</span>
+                            <span>Sau khi xác minh OTP, bạn vào thẳng Dashboard để thiết lập cơ sở, phòng và tiện ích. Hồ sơ pháp lý có thể hoàn thiện sau.</span>
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-600 hover:from-indigo-500 hover:via-indigo-400 hover:to-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/25 transform active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 mt-2 cursor-pointer">
-                            <span>Đăng Ký &amp; Nhận Mã Xác Minh OTP</span>
+                        <button type="submit" class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-1">
+                            <span>Đăng Ký Cơ Sở &amp; Nhận Mã OTP</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
 
-                        <!-- Footer Links -->
-                        <div class="pt-3 border-t border-slate-800/80 text-center space-y-2 text-xs text-slate-400">
-                            <div>
-                                Đã có tài khoản chủ trọ? 
-                                <a href="{{ route('login') }}" onclick="clearLandlordDraft()" class="font-bold text-indigo-400 hover:text-indigo-300 transition-colors ml-1">
-                                    Đăng nhập ngay
-                                </a>
-                            </div>
-                            <div>
-                                Bạn là người thuê tìm phòng? 
-                                <a href="{{ route('user.createUser') }}" class="font-bold text-emerald-400 hover:text-emerald-300 transition-colors ml-1">
-                                    Đăng ký tài khoản khách thuê
-                                </a>
+                        <!-- Footer Links & Back to Login Button -->
+                        <div class="pt-3 border-t border-slate-800/80 space-y-3 text-center">
+                            <a href="{{ route('login') }}" onclick="clearLandlordDraft()" class="w-full py-2.5 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 group shadow-sm">
+                                <i class="fa-solid fa-arrow-left text-[10px] group-hover:-translate-x-1 transition-transform"></i>
+                                <span>Quay lại trang đăng nhập</span>
+                            </a>
+                            <div class="flex items-center justify-center gap-3 text-xs text-slate-400 flex-wrap">
+                                <span>Đã có tài khoản? <a href="{{ route('login') }}" onclick="clearLandlordDraft()" class="font-bold text-indigo-400 hover:text-indigo-300 ml-0.5 underline underline-offset-2">Đăng nhập</a></span>
+                                <span class="text-slate-600">•</span>
+                                <span>Tìm phòng? <a href="{{ route('user.createUser') }}" class="font-bold text-emerald-400 hover:text-emerald-300 ml-0.5 underline underline-offset-2">Đăng ký khách thuê</a></span>
                             </div>
                         </div>
                     </form>

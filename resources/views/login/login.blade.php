@@ -19,1331 +19,1110 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } } }
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                } 
+            } 
+        }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @if($isAdminPage)
         <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
     @endif
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     <style>
-        .toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:99999;display:flex;flex-direction:column;gap:.75rem;max-width:420px;width:calc(100% - 3rem);pointer-events:none}
-        .toast-card{background:rgba(15,23,42,.95);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,.1);border-left:4px solid #10b981;padding:1rem 1.25rem;border-radius:1rem;box-shadow:0 20px 40px -10px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);display:flex;align-items:flex-start;gap:.875rem;pointer-events:auto;transform:translateX(120%);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        /* Toast Notifications */
+        .toast-container{position:fixed;top:1.25rem;right:1.25rem;z-index:99999;display:flex;flex-direction:column;gap:.625rem;max-width:380px;width:calc(100% - 2.5rem);pointer-events:none}
+        .toast-card{background:#0f172a;border:1px solid #1e293b;border-left:3px solid #10b981;padding:.875rem 1rem;border-radius:.875rem;box-shadow:0 20px 40px -10px rgba(0,0,0,.6);display:flex;align-items:flex-start;gap:.75rem;pointer-events:auto;transform:translateX(120%);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1)}
         .toast-card.show{transform:translateX(0);opacity:1}
-        .toast-success{border-left-color:#10b981}.toast-error{border-left-color:#ef4444}.toast-info{border-left-color:#3b82f6}
-        .verification-pill{transition:opacity .25s ease,border-color .25s ease,background-color .25s ease,box-shadow .25s ease,transform .25s ease}
-        .verification-pill:has(input:checked){border-color:rgba(99,102,241,.8);background:rgba(99,102,241,.12);box-shadow:0 0 15px -3px rgba(99,102,241,.3)}
-        .verification-pill:has(input[value="phone"]:checked){border-color:rgba(16,185,129,.8);background:rgba(16,185,129,.12);box-shadow:0 0 15px -3px rgba(16,185,129,.3)}
-        .radio-indicator{display:flex;align-items:center;justify-content:center;border-radius:9999px;border-width:2px;border-color:#475569;transition:all .25s ease;flex-shrink:0}
-        .radio-dot{border-radius:9999px;transform:scale(0);opacity:0;transition:transform .25s cubic-bezier(.16,1,.3,1),opacity .25s ease}
-        .verification-pill:has(input:checked) .radio-dot,.verification-pill input:checked ~ div .radio-dot{transform:scale(1)!important;opacity:1!important}
-        .verification-pill:has(input[value="phone"]:checked) .radio-indicator,.verification-pill input[value="phone"]:checked ~ div.radio-indicator{border-color:#10b981!important}
-        .verification-pill:has(input[value="phone"]:checked) .radio-dot,.verification-pill input[value="phone"]:checked ~ div .radio-dot{background-color:#10b981!important}
-        .verification-pill:has(input[value="email"]:checked) .radio-indicator,.verification-pill input[value="email"]:checked ~ div.radio-indicator{border-color:#818cf8!important}
-        .verification-pill:has(input[value="email"]:checked) .radio-dot,.verification-pill input[value="email"]:checked ~ div .radio-dot{background-color:#818cf8!important}
-        .email-hint-transition{transition:opacity .25s ease,max-height .25s ease,transform .25s ease,margin .25s ease;overflow:hidden}
-        .email-hint-hidden{opacity:0;max-height:0;margin-top:0!important;transform:translateY(-4px);pointer-events:none}
-        .email-hint-visible{opacity:1;max-height:48px;margin-top:.375rem!important;transform:translateY(0);pointer-events:auto}
+        .toast-success{border-left-color:#10b981}.toast-error{border-left-color:#ef4444}.toast-info{border-left-color:#6366f1}
+        .toast-card h4{color:#ffffff;font-size:.8125rem;font-weight:700}
+        .toast-card p{color:#94a3b8;font-size:.75rem;font-weight:500;line-height:1.4}
 
-        /* ===== LIGHT MODE STYLING CHO ĐĂNG NHẬP & ĐĂNG KÝ ===== */
+        /* Phối nền Bên Xanh Bên Đen */
+        .split-ambient-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background: #060911;
+            overflow: hidden;
+        }
+        .glow-sphere-left-green {
+            position: absolute;
+            top: 50%;
+            left: -12%;
+            transform: translateY(-50%);
+            width: 850px;
+            height: 1000px;
+            border-radius: 9999px;
+            background: radial-gradient(circle at 45% 50%, rgba(16, 185, 129, 0.35) 0%, rgba(5, 150, 105, 0.18) 40%, rgba(4, 47, 46, 0.06) 70%, transparent 85%);
+            filter: blur(75px);
+        }
+        .glow-sphere-right-dark {
+            position: absolute;
+            top: 50%;
+            right: -12%;
+            transform: translateY(-50%);
+            width: 850px;
+            height: 1000px;
+            border-radius: 9999px;
+            background: radial-gradient(circle at 55% 50%, rgba(79, 70, 229, 0.18) 0%, rgba(30, 27, 75, 0.25) 40%, rgba(15, 23, 42, 0.9) 70%, transparent 85%);
+            filter: blur(80px);
+        }
+
+        /* Cyber-Grid Blueprint Texture */
+        .cyber-grid-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 26px 26px;
+            mask-image: radial-gradient(ellipse 65% 65% at 50% 50%, #000 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse 65% 65% at 50% 50%, #000 30%, transparent 80%);
+        }
+
+        /* Thẻ Card Kính Mờ (Glass Luxe - Khung viền bao quanh toàn diện) */
+        .saas-card {
+            background: rgba(13, 19, 33, 0.88);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 30px 80px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+        }
+        .saas-card.role-guest-mode {
+            border-color: rgba(16, 185, 129, 0.45);
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25), 0 30px 80px -20px rgba(16, 185, 129, 0.2), inset 0 1px 0 0 rgba(16, 185, 129, 0.3);
+        }
+        .saas-card.role-landlord-mode {
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.25), 0 30px 80px -20px rgba(99, 102, 241, 0.25), inset 0 1px 0 0 rgba(129, 140, 248, 0.35);
+        }
+
+        /* Linear Style Segmented Controls */
+        .segmented-control {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 4px;
+            background: rgba(2, 6, 23, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            gap: 4px;
+        }
+        .segmented-btn {
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .segmented-btn:hover {
+            color: #cbd5e1;
+        }
+        .segmented-btn.active.role-guest-active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.25);
+        }
+        .segmented-btn.active.role-landlord-active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(124, 58, 237, 0.3) 100%);
+            color: #a5b4fc;
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.25);
+        }
+
+        /* Subtle Method Toggle (Password vs OTP) */
+        .sub-tab-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .sub-tab-btn:hover {
+            color: #cbd5e1;
+        }
+        .sub-tab-btn.active {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        /* Full Screen OTP Animation Transition */
+        .auth-screen-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+        }
+        .auth-screen-pane {
+            width: 100%;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, filter 0.35s ease;
+            will-change: transform, opacity, filter;
+        }
+        .auth-screen-pane.screen-visible {
+            opacity: 1;
+            transform: translateX(0);
+            filter: blur(0);
+            pointer-events: auto;
+            position: relative;
+        }
+        .auth-screen-pane.screen-exit-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            filter: blur(4px);
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+        }
+        .auth-screen-pane.screen-enter-right {
+            opacity: 0;
+            transform: translateX(40px);
+            filter: blur(4px);
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+        }
+
+        /* 6 Digit Box Styling with Staggered Entrance */
+        @keyframes otpBoxPopIn {
+            0% {
+                opacity: 0;
+                transform: translateY(22px) scale(0.78);
+            }
+            65% {
+                opacity: 1;
+                transform: translateY(-4px) scale(1.08);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .otp-digit-box {
+            width: 44px;
+            height: 52px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            color: #f8fafc;
+            outline: none;
+            opacity: 0;
+            transform: translateY(22px) scale(0.78);
+            transition: 
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background-color 0.2s ease,
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        /* Khi màn hình OTP trượt xong hoàn toàn, kích hoạt 6 ô xuất hiện lần lượt từ từ */
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box {
+            animation: otpBoxPopIn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        /* Độ trễ xuất hiện từng ô tuần tự (Staggered cascading delays) */
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box:nth-child(1) { animation-delay: 0.06s; }
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box:nth-child(2) { animation-delay: 0.18s; }
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box:nth-child(3) { animation-delay: 0.30s; }
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box:nth-child(4) { animation-delay: 0.42s; }
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box:nth-child(5) { animation-delay: 0.54s; }
+        .auth-screen-pane.screen-visible.digits-revealed .otp-digit-box:nth-child(6) { animation-delay: 0.66s; }
+
+        .otp-digit-box:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 1px #10b981, 0 0 18px -2px rgba(16, 185, 129, 0.45) !important;
+            background: #050b18 !important;
+            transform: translateY(-3px) scale(1.06) !important;
+        }
+        .otp-digit-box.filled {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .otp-digit-box.has-error {
+            border-color: #f43f5e !important;
+            box-shadow: 0 0 0 1px #f43f5e !important;
+        }
+        html.theme-light .otp-digit-box {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        html.theme-light .otp-digit-box:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 1px #10b981, 0 0 12px -2px rgba(16, 185, 129, 0.25);
+            background: #f8fafc;
+        }
+
+        /* Clean SaaS Inputs */
+        .saas-input {
+            width: 100%;
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #f8fafc;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .saas-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 1px #6366f1, 0 0 16px -4px rgba(99, 102, 241, 0.3);
+            background: #050b18;
+        }
+        .saas-input.role-guest-focus:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 1px #10b981, 0 0 16px -4px rgba(16, 185, 129, 0.3);
+        }
+        .saas-input.has-error {
+            border-color: #f43f5e !important;
+            box-shadow: 0 0 0 1px #f43f5e !important;
+        }
+
+        /* Password Strength Meter (Linear Minimalist) */
+        .strength-bar-track { display: flex; gap: 4px; height: 3px; margin-top: 6px; }
+        .strength-bar-seg { flex: 1; background: #1e293b; border-radius: 9999px; transition: background 0.3s ease; }
+        .strength-weak .strength-bar-seg:nth-child(1) { background: #f43f5e; }
+        .strength-medium .strength-bar-seg:nth-child(1),
+        .strength-medium .strength-bar-seg:nth-child(2) { background: #f59e0b; }
+        .strength-strong .strength-bar-seg { background: #10b981; }
+
+        /* Light Mode Overrides */
         html.theme-light body, body.theme-light {
-            background-color: #f1f5f9 !important;
+            background-color: #f8fafc !important;
             color: #0f172a !important;
         }
-        html.theme-light .auth-card-modern, body.theme-light .auth-card-modern,
-        html.theme-light .login-card-upgraded, body.theme-light .login-card-upgraded,
-        html.theme-light .register-card-upgraded, body.theme-light .register-card-upgraded {
+        html.theme-light .ambient-bg {
+            background-color: #f8fafc !important;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.08), transparent 70%) !important;
+        }
+        html.theme-light .saas-card {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12) !important;
-            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.07) !important;
         }
-        html.theme-light .auth-card-modern h2, body.theme-light .auth-card-modern h2,
-        html.theme-light .register-card-header h1, body.theme-light .register-card-header h1,
-        html.theme-light .auth-card-modern .text-white, body.theme-light .auth-card-modern .text-white {
-            color: #0f172a !important;
-        }
-        html.theme-light .auth-card-modern .text-slate-400, body.theme-light .auth-card-modern .text-slate-400,
-        html.theme-light .auth-card-modern .text-slate-500, body.theme-light .auth-card-modern .text-slate-500,
-        html.theme-light .register-card-header p, body.theme-light .register-card-header p {
-            color: #475569 !important;
-            font-weight: 500 !important;
-        }
-        html.theme-light .auth-tabs-nav, body.theme-light .auth-tabs-nav {
+        html.theme-light .segmented-control {
             background: #f1f5f9 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        html.theme-light .auth-tab-btn, body.theme-light .auth-tab-btn {
-            color: #475569 !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light .auth-tab-btn:hover, body.theme-light .auth-tab-btn:hover {
-            color: #0f172a !important;
-            background: rgba(15, 23, 42, 0.05) !important;
-        }
-        html.theme-light .auth-tab-btn.active, body.theme-light .auth-tab-btn.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3) !important;
-        }
-        html.theme-light .auth-input-group label, body.theme-light .auth-input-group label,
-        html.theme-light .register-field label, body.theme-light .register-field label {
-            color: #0f172a !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light .auth-input-field, body.theme-light .auth-input-field,
-        html.theme-light .login-input-control, body.theme-light .login-input-control {
-            background: #ffffff !important;
-            border: 1.5px solid #cbd5e1 !important;
-            color: #0f172a !important;
-            font-weight: 600 !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
-        }
-        html.theme-light .auth-input-field:hover, body.theme-light .auth-input-field:hover,
-        html.theme-light .login-input-control:hover, body.theme-light .login-input-control:hover {
-            border-color: #94a3b8 !important;
-            background: #f8fafc !important;
-        }
-        html.theme-light .auth-input-field:focus, body.theme-light .auth-input-field:focus,
-        html.theme-light .login-input-control:focus, body.theme-light .login-input-control:focus {
-            border-color: #4f46e5 !important;
-            background: #ffffff !important;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
-        }
-        html.theme-light .auth-input-field::placeholder, body.theme-light .auth-input-field::placeholder,
-        html.theme-light .login-input-control::placeholder, body.theme-light .login-input-control::placeholder {
-            color: #64748b !important;
-            opacity: 1 !important;
-        }
-        html.theme-light .auth-input-icon, body.theme-light .auth-input-icon {
-            color: #64748b !important;
-        }
-        html.theme-light .auth-pwd-toggle, body.theme-light .auth-pwd-toggle {
-            color: #64748b !important;
-        }
-        html.theme-light .auth-pwd-toggle:hover, body.theme-light .auth-pwd-toggle:hover {
-            color: #0f172a !important;
-            background: #e2e8f0 !important;
-        }
-        html.theme-light .verification-pill, body.theme-light .verification-pill {
-            background: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-        }
-        html.theme-light .verification-pill:hover, body.theme-light .verification-pill:hover {
-            border-color: #94a3b8 !important;
-        }
-        html.theme-light .verification-pill span.text-white, body.theme-light .verification-pill span.text-white {
-            color: #0f172a !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light .auth-checkbox-label, body.theme-light .auth-checkbox-label {
-            color: #334155 !important;
-            font-weight: 500 !important;
-        }
-        html.theme-light #footer-switch-to-signup, body.theme-light #footer-switch-to-signup,
-        html.theme-light #footer-switch-to-signin, body.theme-light #footer-switch-to-signin {
-            color: #334155 !important;
-            font-weight: 500 !important;
-        }
-        html.theme-light .login-register-link, body.theme-light .login-register-link {
-            background: #eef2ff !important;
-            border: 1px solid #c7d2fe !important;
-            color: #3730a3 !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light .login-register-link:hover, body.theme-light .login-register-link:hover {
-            background: #e0e7ff !important;
-            color: #312e81 !important;
-        }
-        html.theme-light .login-visual-panel, body.theme-light .login-visual-panel {
-            background: rgba(255, 255, 255, 0.75) !important;
-            border-color: #cbd5e1 !important;
-        }
-        html.theme-light .login-visual-copy h1, body.theme-light .login-visual-copy h1 {
-            color: #0f172a !important;
-        }
-        html.theme-light .login-visual-copy p, body.theme-light .login-visual-copy p {
-            color: #334155 !important;
-            font-weight: 500 !important;
-        }
-        html.theme-light .login-visual-stats, body.theme-light .login-visual-stats {
-            background: transparent !important;
-            border: none !important;
-        }
-        html.theme-light .login-visual-stats span, body.theme-light .login-visual-stats span {
-            background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
-            color: #475569 !important;
-        }
-        html.theme-light .login-visual-stats strong, body.theme-light .login-visual-stats strong {
-            color: #0f172a !important;
-        }
-        html.theme-light .login-3d-controls-panel, body.theme-light .login-3d-controls-panel {
-            background: #ffffff !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-        html.theme-light .login-3d-controls-panel span, body.theme-light .login-3d-controls-panel span {
-            color: #334155 !important;
-        }
-        html.theme-light .login-3d-controls-panel button.bg-slate-900, body.theme-light .login-3d-controls-panel button.bg-slate-900 {
-            background: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #334155 !important;
-        }
-        html.theme-light .login-3d-controls-panel button.bg-slate-900:hover, body.theme-light .login-3d-controls-panel button.bg-slate-900:hover {
-            background: #f1f5f9 !important;
-            color: #0f172a !important;
-        }
-        html.theme-light .login-3d-controls-panel .border-white\/10, body.theme-light .login-3d-controls-panel .border-white\/10 {
             border-color: #e2e8f0 !important;
         }
-        html.theme-light .login-3d-controls-panel span.text-slate-500, body.theme-light .login-3d-controls-panel span.text-slate-500 {
-            color: #334155 !important;
-            font-weight: 700 !important;
+        html.theme-light .segmented-btn {
+            color: #64748b !important;
         }
-        html.theme-light .auth-card-modern a[onclick*="showToast"], body.theme-light .auth-card-modern a[onclick*="showToast"] {
-            color: #4f46e5 !important;
-            font-weight: 700 !important;
+        html.theme-light .segmented-btn.active {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
         }
-        html.theme-light #footer-switch-to-signup button, body.theme-light #footer-switch-to-signup button,
-        html.theme-light #footer-switch-to-signin button, body.theme-light #footer-switch-to-signin button {
-            color: #4338ca !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light #form-signup-guest p.text-slate-500, body.theme-light #form-signup-guest p.text-slate-500 {
-            color: #475569 !important;
-            font-weight: 500 !important;
-        }
-        html.theme-light .auth-input-group span.text-slate-500, body.theme-light .auth-input-group span.text-slate-500 {
-            color: #475569 !important;
-            font-weight: 600 !important;
-        }
-        html.theme-light #signup-pwd-status, body.theme-light #signup-pwd-status {
-            color: #475569 !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light .login-brand-smart, body.theme-light .login-brand-smart {
+        html.theme-light .sub-tab-btn.active {
+            background: #e2e8f0 !important;
             color: #0f172a !important;
         }
-        html.theme-light .login-brand-renty, body.theme-light .login-brand-renty {
-            color: #4f46e5 !important;
+        html.theme-light .cyber-grid-overlay {
+            background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px) !important;
         }
-        html.theme-light .theme-toggle-button, body.theme-light .theme-toggle-button {
+        html.theme-light .saas-input {
             background: #ffffff !important;
             border-color: #cbd5e1 !important;
-            color: #334155 !important;
+            color: #0f172a !important;
         }
 
-        /* Toast Card: Luôn hiển thị chữ sáng rõ nét, không bị màu đen trên nền đen */
-        .toast-card {
-            background: #0f172a !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6) !important;
+        /* Hero Showcase Responsive Display (Tránh xung đột với class .hidden !important toàn cục) */
+        @media (max-width: 1023px) {
+            .auth-hero-showcase {
+                display: none !important;
+            }
         }
-        .toast-card h4, html.theme-light .toast-card h4, body.theme-light .toast-card h4 {
-            color: #ffffff !important;
-            font-weight: 800 !important;
-        }
-        .toast-card p, html.theme-light .toast-card p, body.theme-light .toast-card p,
-        .toast-card .toast-message, html.theme-light .toast-card .toast-message {
-            color: #e2e8f0 !important;
-            font-weight: 500 !important;
-            opacity: 1 !important;
-        }
-        .toast-card button, html.theme-light .toast-card button, body.theme-light .toast-card button {
-            color: #94a3b8 !important;
-        }
-        .toast-card button:hover, html.theme-light .toast-card button:hover, body.theme-light .toast-card button:hover {
-            color: #ffffff !important;
+        @media (min-width: 1024px) {
+            .auth-hero-showcase {
+                display: flex !important;
+            }
         }
 
-        /* Banner lỗi đăng nhập trong Light Mode */
-        html.theme-light .login-error-banner, body.theme-light .login-error-banner {
-            background: #fff1f2 !important;
-            border: 1px solid #fecdd3 !important;
+        /* DYNAMIC ANIMATED BRAND TYPOGRAPHY (CHỮ & LOGO ĐỘNG SANG TRỌNG) */
+        @keyframes brandGradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
-        html.theme-light .login-error-banner i, body.theme-light .login-error-banner i {
-            color: #e11d48 !important;
+
+        @keyframes brandAmpPulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: scale(0.96);
+                filter: drop-shadow(0 0 0px transparent);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.7));
+            }
         }
-        html.theme-light .login-error-banner p.font-bold, body.theme-light .login-error-banner p.font-bold {
-            color: #881337 !important;
-            font-weight: 800 !important;
+
+        @keyframes brandTileGlow {
+            0%, 100% {
+                box-shadow: 0 8px 22px -4px rgba(99, 102, 241, 0.5), 0 0 0 2px rgba(129, 140, 248, 0.4);
+                border-color: rgba(165, 180, 252, 0.45);
+            }
+            50% {
+                box-shadow: 0 8px 22px -4px rgba(16, 185, 129, 0.45), 0 0 0 2px rgba(52, 211, 153, 0.45);
+                border-color: rgba(110, 231, 183, 0.45);
+            }
         }
-        html.theme-light .login-error-banner .login-error-banner-desc, body.theme-light .login-error-banner .login-error-banner-desc {
-            color: #be123c !important;
-            font-weight: 600 !important;
+
+        .animated-brand-smartroom {
+            background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 25%, #818cf8 50%, #e879f9 75%, #a5b4fc 100%);
+            background-size: 250% 250%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: brandGradientFlow 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.35));
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            display: inline-block;
+            will-change: background-position;
         }
-        html.theme-light #login-error-message, body.theme-light #login-error-message {
-            color: #e11d48 !important;
-            font-weight: 600 !important;
+
+        .animated-brand-amp {
+            display: inline-block;
+            color: #c084fc;
+            animation: brandAmpPulse 2.8s ease-in-out infinite;
+            margin: 0 2px;
+            font-weight: 700;
+            will-change: transform, opacity;
+        }
+
+        .animated-brand-renty {
+            background: linear-gradient(135deg, #34d399 0%, #2dd4bf 25%, #10b981 50%, #38bdf8 75%, #34d399 100%);
+            background-size: 250% 250%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: brandGradientFlow 4s ease-in-out infinite reverse;
+            filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.35));
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            display: inline-block;
+            will-change: background-position;
+        }
+
+        .animated-brand-tile {
+            animation: brandTileGlow 4s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="bg-[#0b0f19] text-slate-100 min-h-screen {{ $isAdminPage ? 'overflow-hidden font-sans' : 'flex flex-col justify-between overflow-x-hidden' }} selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#090d16] text-slate-100 min-h-screen {{ $isAdminPage ? 'overflow-hidden font-sans' : 'flex flex-col justify-between overflow-x-hidden' }} selection:bg-indigo-500 selection:text-white">
+
+    <!-- SPLIT AMBIENT BACKDROP: BÊN XANH BÊN ĐEN -->
+    <div class="split-ambient-bg" aria-hidden="true">
+        <div class="glow-sphere-left-green"></div>
+        <div class="glow-sphere-right-dark"></div>
+    </div>
+    <!-- CYBER-GRID BLUEPRINT TEXTURE -->
+    <div class="cyber-grid-overlay" aria-hidden="true"></div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
     @if($isAdminPage)
         @include('admin.partials.sidebar')
         <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200">
-    @endif
-    <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none"></div>
-    <div id="toast-container" class="toast-container"></div>
-
-    <header class="container mx-auto px-6 py-6 flex justify-between items-center relative z-10 {{ in_array($page, ['list', 'read', 'update']) ? 'border-b border-slate-900' : '' }}">
-        <a href="{{ route('renty.user') }}" class="flex items-center gap-3 group">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-all">
-                <i class="fa-solid fa-hotel text-white text-lg"></i>
-            </div>
-            <span class="login-brand-lockup text-xl font-extrabold tracking-tight">
-                <span class="login-brand-word login-brand-smart">SmartRoom</span>
-                <span class="login-brand-word login-brand-renty">&amp; Renty</span>
-            </span>
-        </a>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('renty.user') }}" class="px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-emerald-500/60 hover:bg-emerald-500/10 text-slate-200 hover:text-emerald-400 text-xs font-semibold transition-all flex items-center gap-2 shadow-sm group">
-                <i class="fa-solid fa-arrow-left text-xs group-hover:-translate-x-0.5 transition-transform text-emerald-400"></i>
-                <span>Quay lại Renty</span>
-            </a>
-            <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
-                <i class="fa-solid fa-moon" data-theme-icon></i>
-            </button>
             @if($page === 'list')
-                <a href="{{ route('admin.verifications.index') }}" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-sky-500/25 transition-all">
-                    <i class="fa-solid fa-shield-halved mr-1.5"></i> Giám Sát & Bảo Mật
-                </a>
-                <a href="{{ route('smartroom.admin') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-500/25 transition-all">
-                    <i class="fa-solid fa-gauge mr-1.5"></i> Dashboard Admin
-                </a>
-                <a href="{{ route('signout') }}" class="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-rose-400 rounded-xl text-xs font-semibold transition-all">
-                    Đăng Xuất
-                </a>
+                @include('login.partials.admin_list')
+            @elseif($page === 'read')
+                <main class="container mx-auto px-6 py-12 flex-grow relative z-10">
+                    <div class="max-w-xl mx-auto bg-slate-900/40 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                        @include('login.partials.admin_detail')
+                    </div>
+                </main>
+            @elseif($page === 'create' || $page === 'update')
+                <main class="container mx-auto px-6 py-12 flex-grow relative z-10">
+                    <div class="max-w-xl mx-auto bg-slate-900/40 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                        @include('login.partials.admin_form')
+                    </div>
+                </main>
             @endif
         </div>
-    </header>
-
-    @if($page === 'list')
-        <main class="container mx-auto px-6 py-12 flex-grow relative z-10">
-            <div class="max-w-7xl mx-auto">
-                <!-- Header Section -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <div>
-                        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Quản Trị Hệ Thống</h1>
-                        <p class="text-xs text-slate-400 mt-1">Danh sách người dùng và phân quyền quản lý trong hệ thống SmartRoom</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{{ route('admin.verifications.index') }}" class="px-4 py-2.5 bg-sky-600/90 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-sky-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-1.5">
-                            <i class="fa-solid fa-shield-halved"></i> Giám Sát & Bảo Mật
-                        </a>
-                        <a href="{{ route('user.createUser') }}" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-plus"></i> Thêm Admin Mới
-                        </a>
-                    </div>
+    @else
+        <!-- TOP BRAND BAR -->
+        <header class="container mx-auto px-6 py-5 flex justify-between items-center relative z-20">
+            <a href="{{ route('renty.user') }}" class="flex items-center gap-2.5 group">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-sm ring-1 ring-indigo-400/30 animated-brand-tile group-hover:scale-105 transition-all">
+                    <i class="fa-solid fa-hotel text-xs"></i>
                 </div>
+                <span class="text-sm font-bold tracking-tight text-white flex items-center gap-1">
+                    <span class="animated-brand-smartroom">SmartRoom</span>
+                    <span class="animated-brand-amp">&amp;</span>
+                    <span class="animated-brand-renty">Renty</span>
+                </span>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('renty.user') }}" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 font-medium">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span>Trang chủ</span>
+                </a>
+                <button type="button" onclick="toggleThemeMode()" class="w-8 h-8 rounded-lg border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors" aria-label="Chuyển chế độ sáng tối">
+                    <i class="fa-solid fa-moon text-xs" data-theme-icon></i>
+                </button>
+            </div>
+        </header>
 
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-                    <!-- Total members -->
-                    <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Tổng thành viên</span>
-                            <h3 class="text-2xl font-black text-slate-100 mt-1">{{ number_format($stats['total'] ?? $users->total()) }}</h3>
+        <!-- MAIN TWO-COLUMN STAGE (MASTER GLASS CARD BAO QUANH CẢ 2 DIV) -->
+        <main class="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-6 lg:py-10 relative z-10">
+            <div class="w-full max-w-5xl mx-auto">
+                
+                <!-- SAAS AUTH MASTER CARD (BAO QUANH TOÀN BỘ CẢ 2 CỘT) -->
+                <div id="auth-card" class="saas-card role-guest-mode shadow-2xl relative overflow-hidden">
+                    <!-- TOP HAIRLINE ACCENT CHẠY TOÀN BỘ ĐỈNH KHUNG (TÍM SMARTOOM & NGỌC RENTY) -->
+                    <div id="card-top-hairline" class="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 via-purple-500 to-emerald-400/80 to-transparent transition-all duration-500"></div>
+
+                    <div class="flex flex-col lg:flex-row items-stretch">
+                        
+                        <!-- CỘT TRÁI: HERO SHOWCASE (NẰM BÊN TRONG KHUNG BAO QUANH) -->
+                        <!-- CỘT TRÁI: HERO SHOWCASE (NẰM BÊN TRONG KHUNG BAO QUANH) -->
+                        <div class="auth-hero-showcase flex-col justify-between p-6 lg:p-7 lg:w-[53%] border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-slate-950/30">
+                            
+                            <!-- NHÓM NỘI DUNG CHÍNH (GẮN KẾT CHẶT CHẼ, KHÔNG BỊ GIÃN KHOẢNG TRỐNG) -->
+                            <div class="space-y-3.5">
+                                <!-- Top: Pill & Headline -->
+                                <div class="space-y-3">
+                                    <div id="hero-pill-badge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/15 border border-indigo-500/35 w-max transition-all duration-300">
+                                        <span id="hero-pill-dot" class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                                        <span id="hero-role-tag" class="text-xs font-semibold text-indigo-300 tracking-wide uppercase">Hệ sinh thái SmartRoom &amp; Renty</span>
+                                    </div>
+
+                                    <h1 class="text-2xl xl:text-3xl font-extrabold text-white tracking-tight leading-tight">
+                                        Tìm phòng minh bạch.<br>
+                                        <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">Vận hành cơ sở chuẩn số hóa.</span>
+                                    </h1>
+                                    <p class="text-xs text-slate-300/90 leading-relaxed max-w-lg">
+                                        Nền tảng kết nối trực tiếp Khách thuê và Chủ nhà trọ thông minh với quy trình xác thực CCCD gắn chip (KYC), hợp đồng điện tử pháp lý và tự động hóa hóa đơn VietQR 24/7.
+                                    </p>
+                                </div>
+
+                                <!-- Middle: 3 Bento Features -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 hover:border-emerald-500/30 transition-all duration-300 group">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2.5 group-hover:scale-105 transition-transform">
+                                            <i class="fa-solid fa-shield-halved text-xs"></i>
+                                        </div>
+                                        <h3 class="text-xs font-bold text-white mb-1">100% KYC</h3>
+                                        <p class="text-[11px] text-slate-400 leading-normal">
+                                            Kiểm duyệt thực tế, hoàn cọc an toàn.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 hover:border-indigo-500/30 transition-all duration-300 group">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-2.5 group-hover:scale-105 transition-transform">
+                                            <i class="fa-solid fa-bolt-lightning text-xs"></i>
+                                        </div>
+                                        <h3 class="text-xs font-bold text-white mb-1">Chốt Số IoT</h3>
+                                        <p class="text-[11px] text-slate-400 leading-normal">
+                                            Điện nước tự động &amp; gạch nợ VietQR.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 hover:border-teal-500/30 transition-all duration-300 group">
+                                        <div class="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 mb-2.5 group-hover:scale-105 transition-transform">
+                                            <i class="fa-solid fa-file-signature text-xs"></i>
+                                        </div>
+                                        <h3 class="text-xs font-bold text-white mb-1">Hợp Đồng Số</h3>
+                                        <p class="text-[11px] text-slate-400 leading-normal">
+                                            Ký kết điện tử bảo vệ pháp lý.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- THẺ HỆ THỐNG LIÊN THÔNG (LẤP ĐẦY KHOẢNG TRỐNG, CÂN ĐỐI VỚI CỘT PHẢI) -->
+                                <div class="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/80 flex items-center justify-between gap-3 text-xs">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                                            <i class="fa-solid fa-server text-[11px]"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-white text-xs truncate">Hệ thống liên thông 24/7</div>
+                                            <div class="text-[11px] text-slate-400 truncate">Hợp đồng điện tử • Gạch nợ VietQR • SmartLock IoT</div>
+                                        </div>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-semibold text-emerald-400 shrink-0 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        Online 99.9%
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Bottom: Live Metrics Counters & Avatars (NẰM DƯỚI ĐÁY CÂN ĐỐI) -->
+                            <div class="space-y-3 pt-3.5 border-t border-slate-800/80 mt-3.5">
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <div class="text-lg xl:text-xl font-black text-white tracking-tight flex items-center gap-1">
+                                            <span>5.000+</span>
+                                            <span class="text-emerald-400 text-xs"><i class="fa-solid fa-arrow-trend-up text-[10px]"></i></span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Phòng xác thực</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-lg xl:text-xl font-black text-white tracking-tight">
+                                            98.8%
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Tỷ lệ hài lòng</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-lg xl:text-xl font-black text-white tracking-tight flex items-center gap-1">
+                                            <span>24/7</span>
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Hỗ trợ vận hành</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="flex -space-x-1.5">
+                                        <div class="w-6 h-6 rounded-full bg-emerald-600 border-2 border-slate-900 flex items-center justify-center text-[9px] font-bold text-white">TN</div>
+                                        <div class="w-6 h-6 rounded-full bg-indigo-600 border-2 border-slate-900 flex items-center justify-center text-[9px] font-bold text-white">LH</div>
+                                        <div class="w-6 h-6 rounded-full bg-teal-600 border-2 border-slate-900 flex items-center justify-center text-[9px] font-bold text-white">MK</div>
+                                        <div class="w-6 h-6 rounded-full bg-amber-600 border-2 border-slate-900 flex items-center justify-center text-[9px] font-bold text-white">+15k</div>
+                                    </div>
+                                    <div class="text-[11px] text-slate-400">
+                                        Hơn <span class="text-slate-200 font-semibold">15.000+</span> cư dân &amp; chủ cơ sở tin dùng.
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-users text-lg"></i>
-                        </div>
+
+                        <!-- CỘT PHẢI: FORM ĐĂNG NHẬP / ĐĂNG KÝ / MÀN HÌNH XÁC THỰC OTP CHUYÊN BIỆT -->
+                        <div class="p-6 sm:p-7 lg:w-[47%] relative overflow-hidden flex flex-col justify-between" id="auth-right-col">
+                            <div class="auth-screen-container">
+
+                                <!-- MÀN HÌNH 1: FORM CHÍNH (ĐĂNG NHẬP / ĐĂNG KÝ) -->
+                                <div id="auth-screen-main" class="auth-screen-pane screen-visible">
+
+                    <!-- 2. CARD HEADER -->
+                    <div class="mb-3.5">
+                        <h1 id="auth-heading" class="text-xl font-bold text-white tracking-tight">Đăng nhập tài khoản</h1>
+                        <p id="auth-subheading" class="text-xs text-slate-400 mt-1">
+                            Hệ sinh thái kết nối Khách thuê và Quản trị cơ sở lưu trú thông minh
+                        </p>
                     </div>
-                    <!-- Admin count -->
-                    <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Quản trị viên</span>
-                            <h3 class="text-2xl font-black text-rose-400 mt-1">{{ number_format($stats['admin'] ?? 0) }}</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-user-shield text-lg"></i>
-                        </div>
-                    </div>
-                    <!-- Landlord count -->
-                    <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Chủ nhà trọ</span>
-                            <h3 class="text-2xl font-black text-sky-400 mt-1">{{ number_format($stats['landlord'] ?? 0) }}</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-house-user text-lg"></i>
-                        </div>
-                    </div>
-                    <!-- Resident count -->
-                    <div class="bg-slate-900/30 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-md">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Cư dân thuê trọ</span>
-                            <h3 class="text-2xl font-black text-emerald-400 mt-1">{{ number_format($stats['resident'] ?? 0) }}</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-door-closed text-lg"></i>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Filters & Search Form -->
-                <form method="GET" action="{{ route('user.list') }}" class="flex flex-col md:flex-row gap-3 justify-between items-center mb-6">
-                    <div class="relative w-full md:w-80">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 pointer-events-none">
-                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                        </span>
-                        <input type="text" 
-                               name="search" 
-                               id="user-search" 
-                               value="{{ request('search') }}" 
-                               onkeyup="filterUserList()" 
-                               placeholder="Tìm tên, username, email, SĐT..." 
-                               class="w-full bg-slate-950/60 border border-slate-800 hover:border-slate-700/60 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none transition-all text-slate-200 placeholder-slate-500">
-                    </div>
-                    <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end items-center">
-                        <select name="role" id="role-filter" onchange="this.form.submit()" class="bg-slate-950/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 transition-all text-slate-300">
-                            <option value="all">-- Tất cả vai trò --</option>
-                            @foreach($roles as $r)
-                                <option value="{{ $r->slug }}" {{ request('role') === $r->slug ? 'selected' : '' }}>{{ $r->name }}</option>
-                            @endforeach
-                        </select>
-                        <select name="status" id="status-filter" onchange="this.form.submit()" class="bg-slate-950/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 transition-all text-slate-300">
-                            <option value="all">-- Tất cả trạng thái --</option>
-                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Đang hoạt động</option>
-                            <option value="locked" {{ request('status') === 'locked' ? 'selected' : '' }}>Đã khóa</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Chờ duyệt</option>
-                        </select>
-                        <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-500/20 flex items-center gap-1.5">
-                            <i class="fa-solid fa-filter"></i> Lọc
-                        </button>
-                        @if(request()->hasAny(['search', 'role', 'status']))
-                            <a href="{{ route('user.list') }}" class="px-3 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-semibold transition-all" title="Làm mới bộ lọc">
-                                <i class="fa-solid fa-rotate-right"></i>
-                            </a>
-                        @endif
-                    </div>
-                </form>
-
-                <!-- Table Content -->
-                <div class="bg-slate-900/35 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse" id="users-table">
-                            <thead>
-                                <tr class="border-b border-slate-800 bg-slate-900/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    <th class="px-5 py-4">ID & Ngày Tạo</th>
-                                    <th class="px-5 py-4">Thành Viên</th>
-                                    <th class="px-5 py-4">Liên Hệ</th>
-                                    <th class="px-5 py-4">Vai Trò &amp; Đối Tác</th>
-                                    <th class="px-5 py-4 text-center">Tình Trạng</th>
-                                    <th class="px-5 py-4">Ghi Chú</th>
-                                    <th class="px-5 py-4 text-center">Phân Quyền</th>
-                                    <th class="px-5 py-4 text-right">Hành Động</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-800/40 text-slate-200">
-                                @forelse($users as $userItem)
-                                    <tr class="hover:bg-slate-800/15 transition-colors user-row {{ $userItem->id === auth()->id() ? 'bg-amber-500/5' : '' }}"
-                                        data-name="{{ strtolower($userItem->name) }}"
-                                        data-email="{{ strtolower($userItem->email ?? '') }}"
-                                        data-phone="{{ strtolower($userItem->phone ?? '') }}"
-                                        data-role="{{ $userItem->roleSlug() }}">
-                                        
-                                        <!-- Cột 1: ID & Ngày tạo -->
-                                        <td class="px-5 py-4">
-                                            <span class="text-xs font-bold text-slate-300 block">#{{ $userItem->id }}</span>
-                                            <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
-                                                {{ $userItem->created_at ? $userItem->created_at->format('d/m/Y') : '—' }}
-                                            </span>
-                                        </td>
-
-                                        <!-- Cột 2: Thành viên -->
-                                        <td class="px-5 py-4">
-                                            <div class="flex items-center gap-3">
-                                                <!-- Letter Avatar -->
-                                                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-xs font-extrabold text-white shadow-md shadow-indigo-500/10 shrink-0">
-                                                    {{ mb_strtoupper(mb_substr($userItem->name ?: 'U', 0, 1)) }}
-                                                </div>
-                                                <div>
-                                                    <span class="font-bold text-slate-100 text-xs block leading-tight flex items-center gap-1.5">
-                                                        {{ $userItem->name }}
-                                                        @if($userItem->id === auth()->id())
-                                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">Bạn</span>
-                                                        @endif
-                                                    </span>
-                                                    <span class="text-[11px] text-slate-400 font-mono">@<span>{{ $userItem->username }}</span></span>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        <!-- Cột 3: Liên hệ -->
-                                        <td class="px-5 py-4">
-                                            <span class="text-xs text-slate-300 block font-mono">{{ $userItem->email ?: '—' }}</span>
-                                            <span class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                                                <i class="fa-solid fa-phone text-[9px] text-slate-500"></i>
-                                                {{ $userItem->phone ?: 'Chưa cập nhật' }}
-                                            </span>
-                                        </td>
-
-                                        <!-- Cột 4: Vai trò & Đối tác -->
-                                        <td class="px-5 py-4">
-                                            @php
-                                                $slug = $userItem->roleSlug();
-                                                $roleBadge = match ($slug) {
-                                                    'superadmin' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                                                    'admin' => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-                                                    'landlord' => 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-                                                    'unverified_landlord' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                                                    'manager' => 'bg-teal-500/15 text-teal-300 border-teal-500/30',
-                                                    'receptionist' => 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
-                                                    'housekeeper' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-                                                    'resident' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-                                                    default => 'bg-slate-700/30 text-slate-300 border-slate-700',
-                                                };
-                                            @endphp
-                                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold border {{ $roleBadge }} inline-flex items-center gap-1 uppercase tracking-wider">
-                                                @if($slug === 'superadmin')
-                                                    <i class="fa-solid fa-crown text-[9px]"></i>
-                                                @elseif($slug === 'admin')
-                                                    <i class="fa-solid fa-user-shield text-[9px]"></i>
-                                                @elseif(in_array($slug, ['landlord', 'unverified_landlord']))
-                                                    <i class="fa-solid fa-hotel text-[9px]"></i>
-                                                @endif
-                                                {{ $userItem->roleName() }}
-                                            </span>
-                                            @if($userItem->tenant)
-                                                <span class="text-[10px] text-slate-400 block mt-1 flex items-center gap-1 font-medium">
-                                                    <i class="fa-solid fa-building text-[9px] text-indigo-400"></i>
-                                                    {{ $userItem->tenant->name }}
-                                                </span>
-                                            @else
-                                                <span class="text-[10px] text-slate-500 block mt-1 italic">
-                                                    {{ in_array($slug, ['superadmin', 'admin', 'guest']) ? 'Toàn hệ thống' : 'Chưa gắn nhà trọ' }}
-                                                </span>
-                                            @endif
-                                        </td>
-
-                                        <!-- Cột 5: Tình trạng tài khoản -->
-                                        <td class="px-5 py-4 text-center">
-                                            @if($userItem->status === 'locked')
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Đã khóa
-                                                </span>
-                                            @elseif($userItem->status === 'pending')
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Chờ duyệt
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Hoạt động
-                                                </span>
-                                            @endif
-                                        </td>
-
-                                        <!-- Cột 6: Ghi chú / Sở thích -->
-                                        <td class="px-5 py-4 text-slate-400 text-xs italic max-w-[150px] truncate" title="{{ $userItem->like }}">
-                                            {{ $userItem->like ?: '—' }}
-                                        </td>
-
-                                        <!-- Cột 7: Phân quyền -->
-                                        <td class="px-5 py-4 text-center">
-                                            <button type="button"
-                                                    onclick="openAssignRoleModal({{ $userItem->id }}, '{{ addslashes($userItem->name) }}', '{{ $userItem->roleSlug() }}', '{{ $userItem->tenant_id }}')"
-                                                    class="mx-auto px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs font-semibold border border-indigo-500/20 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/5 active:scale-[0.97]">
-                                                <i class="fa-solid fa-user-gear"></i> Phân quyền
-                                            </button>
-                                        </td>
-
-                                        <!-- Cột 8: Hành động -->
-                                        <td class="px-5 py-4 text-right">
-                                            <div class="inline-flex gap-1.5 justify-end">
-                                                <a href="{{ route('user.readUser', ['id' => $userItem->id]) }}"
-                                                   class="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-300 hover:text-white transition-all flex items-center justify-center shadow"
-                                                   title="Xem chi tiết tài khoản">
-                                                    <i class="fa-regular fa-eye text-xs"></i>
-                                                </a>
-                                                <a href="{{ route('user.updateUser', ['id' => $userItem->id]) }}"
-                                                   class="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-xl text-indigo-400 hover:text-indigo-300 transition-all flex items-center justify-center shadow"
-                                                   title="Chỉnh sửa thông tin">
-                                                    <i class="fa-regular fa-pen-to-square text-xs"></i>
-                                                </a>
-                                                <a href="{{ route('user.deleteUser', ['id' => $userItem->id]) }}"
-                                                   onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');"
-                                                   class="p-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 rounded-xl text-rose-400 transition-all flex items-center justify-center shadow"
-                                                   title="Xóa tài khoản">
-                                                    <i class="fa-regular fa-trash-can text-xs"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="px-6 py-10 text-center text-slate-500">
-                                            <i class="fa-solid fa-user-slash text-2xl mb-2 block text-slate-600"></i>
-                                            Không tìm thấy tài khoản người dùng nào phù hợp với bộ lọc hiện tại.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    @if($users->hasPages())
-                        <div class="p-4 border-t border-slate-800/60">
-                            {{ $users->links() }}
-                        </div>
-                    @else
-                        <div class="p-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-                            <span>Hiển thị <strong class="text-slate-200">{{ $users->total() }}</strong> thành viên</span>
+                    <!-- 3. ERROR / SUCCESS NOTIFICATIONS -->
+                    @if(session('error'))
+                        <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs flex items-start gap-2.5 mb-3 text-rose-300">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs mt-0.5 shrink-0"></i>
+                            <div class="leading-relaxed">
+                                {{ session('error') }}
+                            </div>
                         </div>
                     @endif
-                </div>
-            </div>
 
-            <!-- Modal Phân Quyền Tài Khoản -->
-            <div id="assign-role-modal" class="fixed inset-0 z-50 items-center justify-center hidden transition-opacity duration-300">
-                <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm" onclick="closeAssignRoleModal()"></div>
-                <div class="bg-[#0f172a] border border-slate-800/80 rounded-3xl p-6 w-full max-w-md relative z-10 mx-4 shadow-2xl transition-all transform scale-95 duration-350">
-                    <div class="flex items-center justify-between mb-5 border-b border-slate-800/60 pb-3">
-                        <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                            <i class="fa-solid fa-user-shield text-indigo-400"></i> Phân Quyền Thành Viên
-                        </h3>
-                        <button onclick="closeAssignRoleModal()" class="w-8 h-8 rounded-lg hover:bg-slate-800/60 text-slate-400 hover:text-slate-100 flex items-center justify-center transition-all">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                    
-                    <form id="assign-role-form" method="POST" action="{{ route('user.updateRole') }}" class="space-y-4">
-                        @csrf
-                        <input type="hidden" name="user_id" id="modal-user-id">
-                        
-                        <div>
-                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Tên thành viên</label>
-                            <input type="text" id="modal-user-name" readonly class="w-full rounded-xl border border-slate-850 bg-slate-950 px-3.5 py-2.5 text-xs text-slate-400 outline-none cursor-not-allowed font-semibold">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Vai Trò</label>
-                            <select name="role_slug" id="modal-role-select" onchange="toggleTenantSelect()" class="w-full rounded-xl border border-slate-850 bg-slate-950 px-3.5 py-2.5 text-xs text-slate-200 outline-none focus:border-indigo-500/80 transition-all font-semibold font-sans">
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->slug }}">{{ $role->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div id="modal-tenant-container">
-                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">Gán nhà trọ / Tenant</label>
-                            <select name="tenant_id" id="modal-tenant-select" class="w-full rounded-xl border border-slate-850 bg-slate-950 px-3.5 py-2.5 text-xs text-slate-200 outline-none focus:border-indigo-500/80 transition-all font-semibold font-sans">
-                                <option value="">Không gán nhà trọ</option>
-                                @foreach($tenants as $tenant)
-                                    <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-[10px] text-slate-500 mt-2 leading-relaxed italic">
-                                * Chủ trọ hoặc Nhân viên quản lý bắt buộc phải được gán nhà trọ để quản trị đúng phạm vi.
-                            </p>
-                        </div>
-
-                        <div class="flex items-center gap-3 pt-4 border-t border-slate-800/60">
-                            <button type="button" onclick="closeAssignRoleModal()" class="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-350 hover:bg-slate-850 transition-all text-center">
-                                Hủy Bỏ
-                            </button>
-                            <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-550 text-xs font-semibold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all text-center active:scale-[0.98]">
-                                Cập Nhật
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <script>
-                // Modal role assign functions
-                function openAssignRoleModal(id, name, roleSlug, tenantId) {
-                    document.getElementById('modal-user-id').value = id;
-                    document.getElementById('modal-user-name').value = name;
-                    document.getElementById('modal-role-select').value = roleSlug;
-                    document.getElementById('modal-tenant-select').value = tenantId || '';
-                    
-                    toggleTenantSelect();
-                    
-                    const modal = document.getElementById('assign-role-modal');
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    
-                    // Subtle pop animation
-                    setTimeout(() => {
-                        modal.querySelector('.bg-\\[\\#0f172a\\]').classList.remove('scale-95');
-                        modal.querySelector('.bg-\\[\\#0f172a\\]').classList.add('scale-100');
-                    }, 10);
-                }
-
-                function closeAssignRoleModal() {
-                    const modal = document.getElementById('assign-role-modal');
-                    modal.querySelector('.bg-\\[\\#0f172a\\]').classList.remove('scale-100');
-                    modal.querySelector('.bg-\\[\\#0f172a\\]').classList.add('scale-95');
-                    
-                    setTimeout(() => {
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
-                    }, 150);
-                }
-
-                function toggleTenantSelect() {
-                    const roleSelect = document.getElementById('modal-role-select').value;
-                    const tenantContainer = document.getElementById('modal-tenant-container');
-                    // If the role needs a tenant assignment
-                    if (['landlord', 'unverified_landlord', 'manager', 'receptionist', 'housekeeper'].includes(roleSelect)) {
-                        tenantContainer.style.display = 'block';
-                    } else {
-                        tenantContainer.style.display = 'none';
-                    }
-                }
-
-                function filterUserList() {
-                    const searchQuery = document.getElementById('user-search').value.toLowerCase().trim();
-                    const roleFilter = document.getElementById('role-filter').value;
-                    const rows = document.querySelectorAll('.user-row');
-
-                    rows.forEach(row => {
-                        const name = row.getAttribute('data-name');
-                        const email = row.getAttribute('data-email');
-                        const phone = row.getAttribute('data-phone');
-                        const role = row.getAttribute('data-role');
-
-                        const matchesSearch = name.includes(searchQuery) || email.includes(searchQuery) || phone.includes(searchQuery);
-                        const matchesRole = roleFilter === 'all' || role === roleFilter;
-
-                        if (matchesSearch && matchesRole) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                }
-            </script>
-        </main>
-    @else
-        <main class="flex-grow flex items-center justify-center px-4 py-8 relative z-10 {{ (in_array($page, ['login', 'create']) && !Auth::check()) ? 'login-main-stage' : '' }}">
-            <div class="{{ (in_array($page, ['login', 'create']) && !Auth::check()) ? 'login-hero-shell' : (($page === 'create' || $page === 'update') ? 'register-card-upgraded' : 'w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:border-slate-700/60 transition-all duration-300') }}">
-                @if(in_array($page, ['login', 'create']) && !Auth::check())
-                    <section class="login-visual-panel">
-                        <div class="login-visual-copy">
-                            <p class="login-eyebrow">SmartRoom &amp; Renty</p>
-                            <h1>Quản lý nhà trọ rõ ràng hơn từ lần đăng nhập đầu tiên</h1>
-                            <p>Theo dõi phòng, đánh giá, hóa đơn và trải nghiệm thuê trọ trong một giao diện tối hiện đại.</p>
-                        </div>
-                        <div id="login-house-3d" class="login-house-3d" aria-hidden="true"></div>
-
-                        <!-- 3D Controls Panel -->
-                        <div class="login-3d-controls-panel glass-card p-3.5 rounded-2xl flex flex-col gap-3 relative z-10 my-3 text-slate-200">
-                            <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-350 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Thiết kế &amp; Tùy chỉnh 3D
-                                </span>
-                                <span class="text-[9px] font-extrabold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20 uppercase tracking-wide">Tương tác</span>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                <!-- Wall paint colors selector -->
-                                <div class="flex flex-col gap-1.5">
-                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Màu sơn tường</span>
-                                    <div class="flex gap-2 items-center h-full">
-                                        <button type="button" onclick="setWallTheme('slate')" class="w-6 h-6 rounded-full border-2 border-white/80 bg-[#1e293b] hover:scale-110 active:scale-95 transition-all shadow-md shadow-black/30" title="Midnight Slate"></button>
-                                        <button type="button" onclick="setWallTheme('terracotta')" class="w-6 h-6 rounded-full border-2 border-transparent bg-[#c2410c] hover:scale-110 active:scale-95 transition-all shadow-md shadow-black/30" title="Warm Clay"></button>
-                                        <button type="button" onclick="setWallTheme('moss')" class="w-6 h-6 rounded-full border-2 border-transparent bg-[#0f766e] hover:scale-110 active:scale-95 transition-all shadow-md shadow-black/30" title="Forest Green"></button>
-                                        <button type="button" onclick="setWallTheme('gold')" class="w-6 h-6 rounded-full border-2 border-transparent bg-[#d97706] hover:scale-110 active:scale-95 transition-all shadow-md shadow-black/30" title="Classic Gold"></button>
-                                    </div>
-                                </div>
-
-                                <!-- Light/Night switch -->
-                                <div class="flex flex-col gap-1.5">
-                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Ánh sáng</span>
-                                    <div class="flex gap-1">
-                                        <button type="button" id="btn-light-day" onclick="set3DLightMode('day')" class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1 flex-1 text-[10px] font-semibold" title="Day Mode">
-                                            <i class="fa-solid fa-sun text-[9px]"></i> Sáng
-                                        </button>
-                                        <button type="button" id="btn-light-night" onclick="set3DLightMode('night')" class="px-2.5 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:text-white transition-all flex items-center justify-center gap-1 flex-1 text-[10px] font-semibold" title="Night Mode">
-                                            <i class="fa-solid fa-moon text-[9px]"></i> Tối
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Camera Preset selector -->
-                                <div class="flex flex-col gap-1.5">
-                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Góc camera</span>
-                                    <div class="flex gap-1">
-                                        <button type="button" onclick="set3DCameraPreset('front')" class="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-[9px] font-bold flex-1 uppercase">Trước</button>
-                                        <button type="button" onclick="set3DCameraPreset('iso')" class="p-1.5 rounded-lg bg-indigo-500/20 border border-indigo-550/30 text-indigo-300 hover:text-white transition-all text-[9px] font-bold flex-1 uppercase">Xéo</button>
-                                        <button type="button" onclick="set3DCameraPreset('top')" class="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-all text-[9px] font-bold flex-1 uppercase">Trên</button>
-                                    </div>
-                                </div>
-
-                                <!-- Rotation Toggle -->
-                                <div class="flex flex-col gap-1.5">
-                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Tính năng</span>
-                                    <div class="flex items-center h-full">
-                                        <label class="relative inline-flex items-center cursor-pointer select-none">
-                                            <input type="checkbox" id="chk-auto-rotate" onchange="toggle3DRotation(this)" checked class="sr-only peer">
-                                            <div class="w-8 h-4 bg-slate-950 border border-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-slate-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500"></div>
-                                            <span class="ml-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tự xoay</span>
-                                        </label>
-                                    </div>
-                                </div>
+                    @if(session('success'))
+                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs flex items-start gap-2.5 mb-3 text-emerald-300">
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-xs mt-0.5 shrink-0"></i>
+                            <div class="leading-relaxed">
+                                {{ session('success') }}
                             </div>
                         </div>
+                    @endif
 
-                        <div class="login-visual-stats" aria-label="Thông tin nổi bật">
-                            <span><strong>24/7</strong> Theo dõi</span>
-                            <span><strong>3D</strong> Trực quan</span>
-                            <span><strong>Renty</strong> Review</span>
-                        </div>
-                    </section>
-                    <section class="login-card-upgraded auth-card-modern p-6 sm:p-8 flex flex-col justify-between">
-                        <div>
-                            <!-- Header / Title -->
-                            <div class="text-center mb-6">
-                                <p class="login-form-kicker flex items-center justify-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-indigo-400">
-                                    <i class="fa-solid fa-shield-halved"></i> Xác thực tài khoản
-                                </p>
-                                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">SmartRoom &amp; Renty</h2>
-                                <p class="text-xs text-slate-400 mt-1.5">Đăng nhập tài khoản hoặc đăng ký để khám phá tiện ích trọ</p>
-                            </div>
+                    <!-- 4. PANE: ĐĂNG NHẬP (MẬT KHẨU HOẶC OTP) -->
+                    <div id="auth-pane-signin" class="space-y-3">
 
-                            <!-- Auth Nav Tabs inspired by SinghDigamber react-login-signup-ui-template -->
-                            <div class="auth-tabs-nav mb-6" role="tablist">
-                                <button type="button" id="tab-btn-signin" onclick="switchAuthTab('signin')" class="auth-tab-btn active" role="tab" aria-selected="true">
-                                    <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
-                                    <span>Đăng Nhập</span>
+                        <!-- Sub-Toggle Phương Thức: Mật Khẩu vs OTP -->
+                        <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-800/80">
+                            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Phương thức</span>
+                            <div class="flex items-center gap-1 bg-slate-950/60 p-1 border border-slate-800/60 rounded-lg">
+                                <button type="button" id="method-btn-password" onclick="switchLoginMethod('password')" class="sub-tab-btn active">
+                                    Mật khẩu
                                 </button>
-                                <button type="button" id="tab-btn-signup" onclick="switchAuthTab('signup')" class="auth-tab-btn" role="tab" aria-selected="false">
-                                    <i class="fa-solid fa-user-plus text-xs"></i>
-                                    <span>Đăng Ký</span>
+                                <button type="button" id="method-btn-otp" onclick="switchLoginMethod('otp')" class="sub-tab-btn">
+                                    Mã OTP
                                 </button>
                             </div>
-
-                            <!-- PANE 1: SIGN IN FORM -->
-                            <div id="auth-panel-signin" class="auth-tab-pane active" role="tabpanel">
-                                @if(session('error'))
-                                    <div class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-xs flex items-start gap-3 mb-4 shadow-lg shadow-rose-500/5 login-error-banner">
-                                        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base mt-0.5 shrink-0"></i>
-                                        <div class="flex-grow">
-                                            <p class="font-bold text-rose-200">Đăng nhập không thành công!</p>
-                                            <p class="text-[11px] text-rose-300 mt-0.5 leading-relaxed login-error-banner-desc">{{ session('error') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if(session('success'))
-                                    <div class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-3 mb-4 shadow-lg shadow-emerald-500/5">
-                                        <i class="fa-solid fa-circle-check text-emerald-400 text-base mt-0.5 shrink-0"></i>
-                                        <div class="flex-grow">
-                                            <p class="font-bold text-emerald-200">Thành công!</p>
-                                            <p class="text-[11px] text-emerald-300/90 mt-0.5 leading-relaxed">{{ session('success') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <form id="form-signin" action="{{ route('user.authUser') }}" method="POST" class="space-y-4" onsubmit="return handleSigninSubmit(event)">
-                                    @csrf
-                                    <div class="auth-input-group">
-                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-login">
-                                             Số điện thoại hoặc Email <span class="text-rose-400 font-bold">*</span>
-                                        </label>
-                                        <div class="relative">
-                                            <i class="fa-solid fa-user-check auth-input-icon"></i>
-                                            <input type="text" 
-                                                   name="login" 
-                                                   id="signin-login" 
-                                                   class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" 
-                                                   placeholder="0901234567 hoặc user@gmail.com" 
-                                                   value="{{ old('login') }}"
-                                                   oninput="clearSigninError('signin-login')"
-                                                   onblur="validateSigninLoginBlur(this)">
-                                        </div>
-                                        <p id="signin-login-error" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                            <span id="signin-login-error-text">Vui lòng nhập tài khoản đăng nhập</span>
-                                        </p>
-                                    </div>
-
-                                    <div class="auth-input-group">
-                                        <label class="block text-xs font-semibold text-slate-300 mb-1.5" for="signin-password">
-                                            Mật khẩu <span class="text-rose-400 font-bold">*</span>
-                                        </label>
-                                        <div class="relative">
-                                            <i class="fa-solid fa-lock auth-input-icon"></i>
-                                            <input type="password" 
-                                                   name="password" 
-                                                   id="signin-password" 
-                                                   class="auth-input-field {{ session('error') ? 'border-rose-500 ring-1 ring-rose-500/40' : '' }}" 
-                                                   placeholder="••••••••"
-                                                   oninput="clearSigninError('signin-password')"
-                                                   onblur="validateSigninPasswordBlur(this)">
-                                            <button type="button" onclick="togglePasswordVisibility('signin-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu" aria-label="Hiện / Ẩn mật khẩu">
-                                                <i class="fa-solid fa-eye-slash"></i>
-                                            </button>
-                                        </div>
-                                        <p id="signin-password-error" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                                            <span id="signin-password-error-text">Vui lòng nhập mật khẩu</span>
-                                        </p>
-                                        @if(session('error'))
-                                            <p class="text-[11px] text-rose-500 font-semibold mt-1.5 flex items-center gap-1.5" id="login-error-message">
-                                                <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
-                                                <span>{{ session('error') }}</span>
-                                            </p>
-                                        @endif
-                                    </div>
-
-                                    <div class="flex items-center justify-between text-xs pt-1">
-                                        <label class="auth-checkbox-label">
-                                            <input type="checkbox" name="remember" id="signin-remember" checked>
-                                            <span>Ghi nhớ đăng nhập</span>
-                                        </label>
-                                        <a href="{{ route('password.forgot') }}" class="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
-                                            Quên mật khẩu?
-                                        </a>
-                                    </div>
-
-                                    <button type="submit" id="btn-submit-signin" class="login-submit-button w-full py-3 px-4 rounded-xl text-white font-bold text-sm transform active:scale-95 transition-all duration-200 shadow-lg shadow-indigo-500/25 mt-2 flex items-center justify-center gap-2">
-                                        <i id="signin-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
-                                        <span id="btn-submit-signin-text">Đăng Nhập</span>
-                                        <i id="signin-arrow-icon" class="fa-solid fa-arrow-right text-xs"></i>
-                                    </button>
-                                </form>
-                            </div>
-
-                            <!-- PANE 2: SIGN UP FORM (KHÁCH THUÊ) -->
-                            <div id="auth-panel-signup" class="auth-tab-pane" role="tabpanel">
-                                <form id="form-signup-guest" action="{{ route('user.postUser') }}" method="POST" class="space-y-3.5" onsubmit="return handleSignupSubmit(event)">
-                                    @csrf
-                                    
-                                    <!-- Tên đăng nhập & Họ và Tên -->
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="auth-input-group">
-                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-username">
-                                                Tên đăng nhập <span class="text-rose-400 font-bold">*</span>
-                                            </label>
-                                            <div class="relative">
-                                                <i class="fa-solid fa-user-tag auth-input-icon"></i>
-                                                <input type="text" 
-                                                       name="username" 
-                                                       id="signup-username" 
-                                                       required
-                                                       minlength="3"
-                                                       maxlength="50"
-                                                       class="auth-input-field @error('username') border-rose-500 ring-1 ring-rose-500/40 @enderror" 
-                                                       placeholder="Ví dụ: nguyenvana" 
-                                                       value="{{ old('username') }}"
-                                                       onblur="validateSignupUsernameBlur(this)">
-                                            </div>
-                                            <div id="signup-username-feedback" class="mt-1 text-[11px] {{ $errors->has('username') ? 'text-rose-400 font-semibold block' : 'hidden' }}">
-                                                @error('username')
-                                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}</span>
-                                                @else
-                                                    <span id="signup-username-msg" class="flex items-center gap-1.5"></span>
-                                                @enderror
-                                            </div>
-                                        </div>
-
-                                        <div class="auth-input-group">
-                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-name">
-                                                Họ và Tên <span class="text-rose-400 font-bold">*</span>
-                                            </label>
-                                            <div class="relative">
-                                                <i class="fa-solid fa-id-card auth-input-icon"></i>
-                                                <input type="text" name="name" id="signup-name" required class="auth-input-field @error('name') border-rose-500 ring-1 ring-rose-500/40 @enderror" placeholder="Nguyễn Văn A" value="{{ old('name') }}">
-                                            </div>
-                                            @error('name')
-                                                <p class="mt-1 text-[11px] font-semibold text-rose-400 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
-                                                </p>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <!-- Số điện thoại & Email -->
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="auth-input-group">
-                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-phone" id="signup-phone-label">
-                                                Số điện thoại <span class="text-rose-400 font-bold" id="signup-phone-badge">*</span>
-                                            </label>
-                                            <div class="relative">
-                                                <i class="fa-solid fa-phone auth-input-icon"></i>
-                                                <input type="tel" 
-                                                       name="phone" 
-                                                       id="signup-phone" 
-                                                       required
-                                                       maxlength="10" 
-                                                       pattern="^0[0-9]{9}$" 
-                                                       inputmode="numeric" 
-                                                       autocomplete="tel" 
-                                                       class="auth-input-field @error('phone') border-rose-500 ring-1 ring-rose-500/40 @enderror" 
-                                                       placeholder="0901234567" 
-                                                       value="{{ old('phone') }}"
-                                                       oninput="validatePhoneInput(this)"
-                                                       onblur="validatePhoneBlur(this)">
-                                            </div>
-                                            <div id="signup-phone-feedback" class="mt-1 text-[11px] {{ $errors->has('phone') ? 'text-rose-400 font-semibold block' : 'hidden' }}">
-                                                @error('phone')
-                                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}</span>
-                                                @else
-                                                    <span id="signup-phone-msg" class="flex items-center gap-1.5"></span>
-                                                @enderror
-                                            </div>
-                                        </div>
-
-                                        <div class="auth-input-group">
-                                            <label class="block text-xs font-semibold text-slate-300 mb-1" for="signup-email" id="signup-email-label">
-                                                Email
-                                            </label>
-                                            <div class="relative">
-                                                <i class="fa-solid fa-envelope auth-input-icon"></i>
-                                                <input type="email" 
-                                                       name="email" 
-                                                       id="signup-email" 
-                                                       class="auth-input-field @error('email') border-rose-500 ring-1 ring-rose-500/40 @enderror" 
-                                                       placeholder="nguyenvana@gmail.com" 
-                                                       value="{{ old('email') }}"
-                                                       oninput="handleEmailInput(this)"
-                                                       onblur="handleEmailBlur(this)">
-                                            </div>
-                                            <div id="signup-email-feedback" class="mt-1 text-[11px] {{ $errors->has('email') ? 'text-rose-400 font-semibold block' : 'hidden' }}">
-                                                @error('email')
-                                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}</span>
-                                                @else
-                                                    <span id="signup-email-msg" class="flex items-center gap-1.5"></span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Phương thức nhận mã OTP xác minh -->
-                                    <div class="auth-input-group">
-                                        <div class="flex items-center justify-between mb-1.5">
-                                            <label class="block text-xs font-semibold text-slate-300">
-                                                Phương thức nhận OTP xác minh <span class="text-rose-400 font-bold">*</span>
-                                            </label>
-                                            <span class="text-[10px] text-slate-500">Mã gồm 6 chữ số</span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2.5" id="signup-verification-group">
-                                            <!-- Qua SĐT (luôn khả dụng) -->
-                                            <label class="verification-pill relative flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-700/80 bg-slate-900/60 cursor-pointer transition-all hover:border-emerald-500/50" for="signup-method-phone" id="signup-pill-phone">
-                                                <input type="radio" name="verification_method" id="signup-method-phone" value="phone" {{ old('verification_method', 'phone') === 'phone' ? 'checked' : '' }} onchange="onSignupMethodChange('phone')" class="hidden">
-                                                <div class="radio-indicator w-4 h-4">
-                                                    <div class="radio-dot w-2 h-2"></div>
-                                                </div>
-                                                <div class="min-w-0">
-                                                    <span class="text-xs font-bold text-white flex items-center gap-1.5 truncate">
-                                                        <i class="fa-solid fa-phone text-emerald-400 text-xs"></i> Qua SĐT
-                                                    </span>
-                                                </div>
-                                            </label>
-
-                                            <!-- Qua Email (mờ đi nếu ô email trống) -->
-                                            <label class="verification-pill relative flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-700/80 bg-slate-900/60 cursor-pointer transition-all hover:border-indigo-500/50" for="signup-method-email" id="signup-pill-email">
-                                                <input type="radio" name="verification_method" id="signup-method-email" value="email" {{ old('verification_method') === 'email' ? 'checked' : '' }} onchange="onSignupMethodChange('email')" class="hidden">
-                                                <div class="radio-indicator w-4 h-4">
-                                                    <div class="radio-dot w-2 h-2"></div>
-                                                </div>
-                                                <div class="min-w-0">
-                                                    <span class="text-xs font-bold text-white flex items-center gap-1.5 truncate">
-                                                        <i class="fa-solid fa-envelope text-indigo-400 text-xs"></i> Qua Email
-                                                    </span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                        
-                                        <!-- Tooltip cảnh báo khi email chưa nhập hoặc chưa hợp lệ -->
-                                        <div id="email-method-hint" class="email-hint-transition text-[11px] text-amber-400/90 flex items-center gap-1.5 email-hint-hidden" aria-live="polite">
-                                            <i id="email-method-hint-icon" class="fa-solid fa-circle-info text-[10px] shrink-0"></i>
-                                            <span id="email-method-hint-text">Vui lòng nhập email để dùng phương thức này</span>
-                                        </div>
-
-                                        @error('verification_method')
-                                            <p class="mt-1 text-[11px] font-semibold text-rose-400 flex items-center gap-1.5">
-                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
-                                            </p>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Mật khẩu -->
-                                    <div class="auth-input-group">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <label class="block text-xs font-semibold text-slate-300" for="signup-password">Mật khẩu bảo vệ</label>
-                                            <span id="signup-pwd-status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tối thiểu 6 ký tự</span>
-                                        </div>
-                                        <div class="relative">
-                                            <i class="fa-solid fa-lock auth-input-icon"></i>
-                                            <input type="password" name="password" id="signup-password" oninput="evalPasswordStrength(this.value)" required class="auth-input-field @error('password') border-rose-500 ring-1 ring-rose-500/40 @enderror" placeholder="••••••••">
-                                            <button type="button" onclick="togglePasswordVisibility('signup-password', this)" class="auth-pwd-toggle" title="Hiện / Ẩn mật khẩu" aria-label="Hiện / Ẩn mật khẩu">
-                                                <i class="fa-solid fa-eye-slash"></i>
-                                            </button>
-                                        </div>
-                                        @error('password')
-                                            <p class="mt-1 text-[11px] font-semibold text-rose-400 flex items-center gap-1.5">
-                                                <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
-                                            </p>
-                                        @enderror
-                                        <!-- Password Strength Indicator -->
-                                        <div id="signup-strength-box" class="auth-strength-container mt-1.5">
-                                            <div class="auth-strength-track">
-                                                <div class="auth-strength-segment"></div>
-                                                <div class="auth-strength-segment"></div>
-                                                <div class="auth-strength-segment"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Checkbox Điều khoản -->
-                                    <div class="pt-1">
-                                        <label class="auth-checkbox-label">
-                                            <input type="checkbox" id="signup-terms" required checked>
-                                            <span class="text-[11px] leading-tight text-slate-400">Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của SmartRoom &amp; Renty</span>
-                                        </label>
-                                    </div>
-
-                                    <!-- Nút Tiếp Tục & Nhận OTP (Gradient tím-xanh đồng bộ) -->
-                                    <button type="submit" id="btn-submit-signup" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transform active:scale-95 transition-all duration-200 mt-2 flex items-center justify-center gap-2">
-                                        <span>Tiếp Tục &amp; Nhận Mã OTP</span>
-                                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                                    </button>
-                                    <p class="text-[11px] text-center text-slate-500 mt-1">Hệ thống sẽ gửi mã OTP để kích hoạt tài khoản khách thuê của bạn</p>
-                                </form>
-                            </div>
                         </div>
 
-                        <!-- Card Footer Actions -->
-                        <div class="mt-6 pt-5 border-t border-slate-800/80 text-center space-y-2.5">
-                            <div id="footer-switch-to-signup" class="text-xs text-slate-400">
-                                Chưa có tài khoản?
-                                <button type="button" onclick="switchAuthTab('signup')" class="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">
-                                    Đăng ký ngay
-                                </button>
-                            </div>
-                            <div id="footer-switch-to-signin" class="text-xs text-slate-400 hidden">
-                                Đã có tài khoản?
-                                <button type="button" onclick="switchAuthTab('signin')" class="text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors">
-                                    Quay lại Đăng nhập
-                                </button>
-                            </div>
+                        <!-- A. FORM ĐĂNG NHẬP MẬT KHẨU -->
+                        <form id="form-signin-password" action="{{ route('user.authUser') }}" method="POST" class="space-y-3" onsubmit="return handleSigninSubmit(event)">
+                            @csrf
+                            <input type="hidden" name="auth_role" id="auth-role-input" value="{{ old('auth_role', 'guest') }}">
                             <div>
-                                <a href="{{ route('landlord.register', ['reset' => 1]) }}" onclick="['input-username', 'input-fullname', 'input-phone', 'input-email', 'input-password'].forEach(id => sessionStorage.removeItem('landlord_reg_' + id)); sessionStorage.removeItem('landlord_reg_method');" class="login-register-link inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold transition-all">
-                                    <i class="fa-solid fa-house-chimney-user mr-1.5 text-indigo-300"></i> Dành cho Chủ Trọ: Đăng Ký Hệ Thống Quản Lý
-                                </a>
-                            </div>
-                            <div class="pt-1">
-                                <a href="{{ route('renty.user') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 font-medium transition-colors">
-                                    <i class="fa-solid fa-arrow-left text-[11px]"></i>
-                                    <span>Quay lại sàn thuê trọ Renty</span>
-                                </a>
-                            </div>
-                        </div>
-                    </section>
-                @elseif($page === 'create' || $page === 'update')
-                    @php $editing = $page === 'update'; @endphp
-                    <div class="register-card-header">
-                        <div>
-                            <p class="login-form-kicker">{{ $editing ? 'Cập nhật hồ sơ' : (Auth::check() ? 'Thêm thành viên mới' : 'Đăng ký tài khoản khách') }}</p>
-                            <h1>{{ $editing ? 'Chỉnh Sửa Tài Khoản' : (Auth::check() ? 'Thêm Thành Viên' : 'Đăng Ký Tài Khoản Khách') }}</h1>
-                            <p>{{ $editing ? 'Cập nhật thông tin quản trị viên #' . $user->id : (Auth::check() ? 'Tạo tài khoản mới và gán vai trò quản trị.' : 'Đăng ký tài khoản khách để tìm phòng và gửi liên hệ.') }}</p>
-                        </div>
-                        <div class="register-mini-badge" aria-hidden="true">
-                            <i class="fa-solid fa-user-tag"></i>
-                            <span>{{ $editing ? 'Admin' : (Auth::check() ? 'Thêm Mới' : 'Khách') }}</span>
-                        </div>
-                    </div>
-                    <form action="{{ $editing ? route('user.postUpdateUser') : route('user.postUser') }}" method="POST" class="register-form-grid">
-                        @csrf
-                        @if($editing)
-                            <input type="hidden" name="id" value="{{ $user->id }}">
-                        @endif
-                        <div class="register-field">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="name">Họ và Tên</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user"></i></span>
-                                <input type="text" name="name" id="name" value="{{ old('name', $editing ? $user->name : '') }}" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="Nguyễn Văn A">
-                            </div>
-                        </div>
-                        <div class="register-field">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="username">Tên đăng nhập</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user-tag"></i></span>
-                                <input type="text" name="username" id="username" value="{{ old('username', $editing ? $user->username : '') }}" required class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="username_vi_viet">
-                            </div>
-                        </div>
-                        <div class="register-field">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="phone">Số điện thoại</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-phone"></i></span>
-                                <input type="tel" name="phone" id="phone" value="{{ old('phone', $editing ? $user->phone : '') }}" required maxlength="10" pattern="^0[0-9]{9}$" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all @error('phone') border-rose-500 ring-1 ring-rose-500/40 @enderror" placeholder="0901234567">
-                            </div>
-                            @error('phone')
-                                <p class="text-xs text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $message }}
+                                <label class="block text-xs font-medium text-slate-300 mb-1" for="signin-login">
+                                    Tên tài khoản, Email hoặc Số điện thoại
+                                </label>
+                                <input type="text" 
+                                       name="login" 
+                                       id="signin-login" 
+                                       class="saas-input {{ session('error') ? 'has-error' : '' }}" 
+                                       placeholder="Tên tài khoản, email hoặc số điện thoại" 
+                                       value="{{ old('login') }}"
+                                       autocomplete="username"
+                                       oninput="clearSigninError('signin-login')"
+                                       onblur="validateSigninLoginBlur(this)">
+                                <p id="signin-login-error" class="hidden text-[11px] text-rose-400 font-medium mt-1">
+                                    <span id="signin-login-error-text">Vui lòng nhập tài khoản đăng nhập</span>
                                 </p>
-                            @enderror
-                        </div>
-                        <div class="register-field">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="email">Địa chỉ Email</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-envelope"></i></span>
-                                <input type="email" name="email" id="email" value="{{ old('email', $editing ? $user->email : '') }}" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="admin@example.com">
                             </div>
-                        </div>
-                        <div class="register-field register-field-wide">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="like">Ghi chú / Mô tả</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-heart"></i></span>
-                                <input type="text" name="like" id="like" value="{{ old('like', $editing ? $user->like : '') }}" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ Auth::check() ? 'Ghi chú công việc hoặc vai trò' : 'Ví dụ: Tìm phòng trọ khu vực Quận 10' }}">
-                            </div>
-                        </div>
-                        @if($editing)
-                            <div class="register-field">
-                                <label class="block text-xs font-semibold text-slate-300 mb-2" for="status">Tình trạng tài khoản</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-signal"></i></span>
-                                    <select name="status" id="status" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all">
-                                        <option value="active" {{ old('status', $user->status) === 'active' ? 'selected' : '' }}>Đang hoạt động</option>
-                                        <option value="locked" {{ old('status', $user->status) === 'locked' ? 'selected' : '' }}>Đã khóa</option>
-                                        <option value="pending" {{ old('status', $user->status) === 'pending' ? 'selected' : '' }}>Chờ duyệt</option>
-                                    </select>
-                                </div>
-                            </div>
-                            @if(isset($tenants))
-                                <div class="register-field">
-                                    <label class="block text-xs font-semibold text-slate-300 mb-2" for="tenant_id">Cơ sở lưu trú / Tenant</label>
-                                    <div class="relative">
-                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-building"></i></span>
-                                        <select name="tenant_id" id="tenant_id" class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all">
-                                            <option value="">Không gán cơ sở (Toàn hệ thống)</option>
-                                            @foreach($tenants as $t)
-                                                <option value="{{ $t->id }}" {{ old('tenant_id', $user->tenant_id) == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
-                        <div class="register-field register-field-wide">
-                            <label class="block text-xs font-semibold text-slate-300 mb-2" for="password">{{ $editing ? 'Mật khẩu mới (Tùy chọn)' : 'Mật khẩu' }}</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="password" id="password" {{ $editing ? '' : 'required' }} class="login-input-control w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all" placeholder="{{ $editing ? 'Để trống nếu giữ nguyên mật khẩu hiện tại' : '•••••••• (tối thiểu 6 ký tự)' }}">
-                            </div>
-                        </div>
-                        <div class="register-actions">
-                            <a href="{{ $editing ? route('user.list') : route('login') }}">{{ $editing ? 'Hủy' : 'Đăng Nhập Ngay' }}</a>
-                            <button type="submit">{{ $editing ? 'Cập Nhật' : 'Đăng Ký Tài Khoản' }}</button>
-                        </div>
-                    </form>
-                @elseif($page === 'read')
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 mb-3 shadow-inner">
-                            <i class="fa-solid fa-user-shield"></i>
-                        </div>
-                        <h1 class="text-2xl font-extrabold text-slate-100">{{ $messi->name }}</h1>
-                        <p class="text-xs text-indigo-400 mt-1 font-mono">@ {{ $messi->username }} &bull; ID: #{{ $messi->id }}</p>
-                    </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Email liên hệ</label>
-                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-mono">{{ $messi->email ?: 'Chưa cập nhật email' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Số điện thoại</label>
-                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-mono">{{ $messi->phone ?: 'Chưa cập nhật SĐT' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Vai trò hiện tại</label>
-                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-semibold text-indigo-400">
-                                {{ $messi->roleName() }}
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Trạng thái tài khoản</label>
-                            <div class="mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800">
-                                @if($messi->status === 'locked')
-                                    <span class="text-rose-400 font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> Đã khóa</span>
-                                @elseif($messi->status === 'pending')
-                                    <span class="text-amber-400 font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-clock text-[10px]"></i> Chờ duyệt</span>
-                                @else
-                                    <span class="text-emerald-400 font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-[10px]"></i> Đang hoạt động</span>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-medium text-slate-300" for="signin-password">
+                                        Mật khẩu
+                                    </label>
+                                    <a href="{{ route('password.forgot') }}" class="text-[11px] text-slate-400 hover:text-white transition-colors">
+                                        Quên mật khẩu?
+                                    </a>
+                                </div>
+                                <div class="relative">
+                                    <input type="password" 
+                                           name="password" 
+                                           id="signin-password" 
+                                           class="saas-input pr-10 {{ session('error') ? 'has-error' : '' }}" 
+                                           placeholder="••••••••"
+                                           autocomplete="current-password"
+                                           oninput="clearSigninError('signin-password')"
+                                           onblur="validateSigninPasswordBlur(this)">
+                                    <button type="button" onclick="togglePasswordVisibility('signin-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs p-1" title="Ẩn/hiện mật khẩu" aria-label="Ẩn/hiện mật khẩu">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <p id="signin-password-error" class="hidden text-[11px] text-rose-400 font-medium mt-1">
+                                    <span id="signin-password-error-text">Vui lòng nhập mật khẩu</span>
+                                </p>
+                                @if(session('error'))
+                                    <p class="text-[11px] text-rose-400 font-medium mt-1" id="login-error-message">
+                                        {{ session('error') }}
+                                    </p>
                                 @endif
                             </div>
+
+                            <div class="flex items-center pt-0.5">
+                                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-400 select-none">
+                                    <input type="checkbox" name="remember" id="signin-remember" checked class="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0 cursor-pointer">
+                                    <span>Ghi nhớ đăng nhập trên thiết bị này</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" id="btn-submit-signin" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-lg shadow-emerald-950/40 transition-all duration-200 flex items-center justify-center gap-2 mt-2.5">
+                                <i id="signin-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                                <span id="btn-submit-signin-text">Đăng nhập</span>
+                                <i class="fa-solid fa-arrow-right text-[10px] opacity-80"></i>
+                            </button>
+                        </form>
+
+                        <!-- B. FORM ĐĂNG NHẬP MÃ OTP SIÊU TỐC -->
+                        <div id="form-signin-otp" class="hidden space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1" for="otp-login-input">
+                                    Tên tài khoản, Email hoặc Số điện thoại đã đăng ký
+                                </label>
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="otp-login-input" 
+                                           class="saas-input pl-9" 
+                                           placeholder="Tên tài khoản, email hoặc số điện thoại"
+                                           autocomplete="username">
+                                    <i class="fa-solid fa-user-shield absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                                </div>
+                                <p id="otp-login-input-error" class="hidden text-[11px] text-rose-400 font-medium mt-1">
+                                    <span id="otp-login-input-error-text">Vui lòng nhập tên tài khoản, số điện thoại hoặc email</span>
+                                </p>
+                            </div>
+
+                            <!-- BOX TIỆN ÍCH OTP -->
+                            <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-300 space-y-1">
+                                <div class="flex items-center gap-2 font-semibold text-emerald-400">
+                                    <i class="fa-solid fa-bolt text-xs"></i>
+                                    <span>Đăng nhập nhanh không cần mật khẩu</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-relaxed">
+                                    Hệ thống sẽ tự động gửi mã OTP và liên kết 1 chạm về Email hoặc Số điện thoại liên kết với tài khoản của bạn.
+                                </p>
+                            </div>
+
+                            <div class="flex items-center pt-0.5">
+                                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-400 select-none">
+                                    <input type="checkbox" id="otp-remember" checked class="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0 cursor-pointer">
+                                    <span>Ghi nhớ đăng nhập trên thiết bị này</span>
+                                </label>
+                            </div>
+
+                            <button type="button" 
+                                    id="btn-send-login-otp" 
+                                    onclick="handleSendLoginOtp()" 
+                                    class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-lg shadow-emerald-950/40 transition-all duration-200 flex items-center justify-center gap-2 mt-2.5">
+                                <i id="otp-send-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                                <span id="otp-send-btn-text">Gửi mã OTP xác nhận</span>
+                                <i class="fa-solid fa-arrow-right text-[10px] opacity-80" id="otp-send-arrow"></i>
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Cơ sở lưu trú / Tenant</label>
-                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800">
-                                {{ $messi->tenant?->name ?: 'Toàn hệ thống' }}
-                            </p>
+
+                    </div>
+
+                    <!-- 5. PANE: ĐĂNG KÝ (KHÁCH THUÊ) - CÂN ĐỐI 2 CỘT TỔNG THỂ -->
+                    <div id="auth-pane-signup" class="hidden">
+                        <form id="form-signup-guest" action="{{ route('user.postUser') }}" method="POST" class="space-y-3" onsubmit="return handleSignupSubmit(event)">
+                            @csrf
+                            
+                            <!-- Hàng 1: Tên tài khoản & Họ tên (Grid 2 cột) -->
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1" for="signup-username">
+                                        Tên tài khoản <span class="text-rose-400">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           name="username" 
+                                           id="signup-username" 
+                                           required
+                                           minlength="3"
+                                           maxlength="50"
+                                           class="saas-input @error('username') has-error @enderror" 
+                                           placeholder="nguyenvana" 
+                                           value="{{ old('username') }}"
+                                           onblur="validateSignupUsernameBlur(this)">
+                                    <div id="signup-username-feedback" class="mt-1 text-[11px] {{ $errors->has('username') ? 'text-rose-400 block' : 'hidden' }}">
+                                        @error('username')
+                                            <span>{{ $message }}</span>
+                                        @else
+                                            <span id="signup-username-msg"></span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1" for="signup-name">
+                                        Họ và tên <span class="text-rose-400">*</span>
+                                    </label>
+                                    <input type="text" name="name" id="signup-name" required class="saas-input @error('name') has-error @enderror" placeholder="Nguyễn Văn A" value="{{ old('name') }}">
+                                    @error('name')
+                                        <p class="mt-1 text-[11px] text-rose-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Hàng 2: Số điện thoại & Email (Grid 2 cột) -->
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1" for="signup-phone">
+                                        Số điện thoại <span class="text-rose-400">*</span>
+                                    </label>
+                                    <input type="tel" 
+                                           name="phone" 
+                                           id="signup-phone" 
+                                           required
+                                           maxlength="10" 
+                                           pattern="^0[0-9]{9}$" 
+                                           inputmode="numeric" 
+                                           class="saas-input @error('phone') has-error @enderror" 
+                                           placeholder="0901234567" 
+                                           value="{{ old('phone') }}"
+                                           oninput="validatePhoneInput(this)"
+                                           onblur="validatePhoneBlur(this)">
+                                    <div id="signup-phone-feedback" class="mt-1 text-[11px] {{ $errors->has('phone') ? 'text-rose-400 block' : 'hidden' }}">
+                                        @error('phone')
+                                            <span>{{ $message }}</span>
+                                        @else
+                                            <span id="signup-phone-msg"></span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1" for="signup-email">
+                                        Email
+                                    </label>
+                                    <input type="email" 
+                                           name="email" 
+                                           id="signup-email" 
+                                           class="saas-input @error('email') has-error @enderror" 
+                                           placeholder="user@example.com" 
+                                           value="{{ old('email') }}"
+                                           oninput="handleEmailInput(this)"
+                                           onblur="handleEmailBlur(this)">
+                                    <div id="signup-email-feedback" class="mt-1 text-[11px] {{ $errors->has('email') ? 'text-rose-400 block' : 'hidden' }}">
+                                        @error('email')
+                                            <span>{{ $message }}</span>
+                                        @else
+                                            <span id="signup-email-msg"></span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hàng 3: Kênh nhận OTP kích hoạt -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">
+                                    Kênh nhận OTP kích hoạt
+                                </label>
+                                <div class="grid grid-cols-2 gap-2" id="signup-verification-group">
+                                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-800 bg-slate-950/60 cursor-pointer text-xs text-slate-300" for="signup-method-phone" id="signup-pill-phone">
+                                        <input type="radio" name="verification_method" id="signup-method-phone" value="phone" {{ old('verification_method', 'phone') === 'phone' ? 'checked' : '' }} onchange="onSignupMethodChange('phone')" class="accent-indigo-500">
+                                        <span>Qua tin nhắn SĐT</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-800 bg-slate-950/60 cursor-pointer text-xs text-slate-300" for="signup-method-email" id="signup-pill-email">
+                                        <input type="radio" name="verification_method" id="signup-method-email" value="email" {{ old('verification_method') === 'email' ? 'checked' : '' }} onchange="onSignupMethodChange('email')" class="accent-indigo-500">
+                                        <span>Qua Email</span>
+                                    </label>
+                                </div>
+                                <div id="email-method-hint" class="text-[11px] text-amber-400/90 mt-1 hidden" aria-live="polite">
+                                    <span id="email-method-hint-text">Vui lòng nhập email trước để nhận mã qua email</span>
+                                </div>
+                            </div>
+
+                            <!-- Hàng 4: Mật khẩu & Strength Bar -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-medium text-slate-300" for="signup-password">Mật khẩu</label>
+                                    <span id="signup-pwd-status" class="text-[10px] text-slate-500">Tối thiểu 6 ký tự</span>
+                                </div>
+                                <div class="relative">
+                                    <input type="password" name="password" id="signup-password" oninput="evalPasswordStrength(this.value)" required class="saas-input pr-10 @error('password') has-error @enderror" placeholder="••••••••">
+                                    <button type="button" onclick="togglePasswordVisibility('signup-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs p-1" title="Ẩn/hiện mật khẩu" aria-label="Ẩn/hiện mật khẩu">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <div id="signup-strength-box" class="strength-bar-track">
+                                    <div class="strength-bar-seg"></div>
+                                    <div class="strength-bar-seg"></div>
+                                    <div class="strength-bar-seg"></div>
+                                </div>
+                            </div>
+
+                            <!-- Hàng 5: Checkbox Điều khoản -->
+                            <div class="pt-0.5">
+                                <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-400 leading-tight">
+                                    <input type="checkbox" id="signup-terms" required checked class="rounded border-slate-700 bg-slate-900 text-indigo-600 mt-0.5 cursor-pointer">
+                                    <span>Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật</span>
+                                </label>
+                            </div>
+
+                            <!-- Hàng 6: Nút Submit Đăng ký -->
+                            <button type="submit" id="btn-submit-signup" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-all mt-2.5">
+                                Tiếp tục &amp; nhận mã OTP
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 6. CARD FOOTER SWITCHER (ĐĂNG KÝ KHÁCH THUÊ) -->
+                    <div class="mt-2.5 text-center text-xs text-slate-400">
+                        <div id="footer-switch-to-signup">
+                            Chưa có tài khoản?
+                            <button type="button" onclick="switchAuthMode('signup')" class="text-emerald-400 hover:text-emerald-300 font-semibold ml-1 transition-colors underline underline-offset-2">
+                                Đăng ký
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Ngày đăng ký</label>
-                            <p class="text-slate-200 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 font-mono">{{ $messi->created_at ? $messi->created_at->format('d/m/Y H:i:s') : 'Chưa rõ' }}</p>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-wider">Mô tả / Ghi chú</label>
-                            <p class="text-slate-300 mt-1 bg-slate-950/60 px-3.5 py-2.5 rounded-xl border border-slate-800 italic">{{ $messi->like ?: 'Không có ghi chú' }}</p>
+                        <div id="footer-switch-to-signin" class="hidden">
+                            Đã có tài khoản?
+                            <button type="button" onclick="switchAuthMode('signin')" class="text-emerald-400 hover:text-emerald-300 font-semibold ml-1 transition-colors underline underline-offset-2">
+                                Quay lại đăng nhập
+                            </button>
                         </div>
                     </div>
 
-                    <div class="mt-6 flex gap-3">
-                        <a href="{{ route('user.list') }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 transition-all">Quay Lại Danh Sách</a>
-                        <a href="{{ route('user.updateUser', ['id' => $messi->id]) }}" class="flex-1 py-2.5 px-4 text-center rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition-all">Chỉnh Sửa</a>
-                    </div>
-                @elseif($page === 'login' && Auth::check())
-                    @php
-                        $currentUser = Auth::user();
-                        $targetRoute = match (true) {
-                            $currentUser->isAdmin() => route('user.list'),
-                            $currentUser->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
-                            $currentUser->canAccessLandlordDashboard() => route('smartroom.admin'),
-                            $currentUser->isResident() => route('smartroom.resident'),
-                            default => route('renty.user'),
-                        };
-                        $targetLabel = match (true) {
-                            $currentUser->isAdmin() => 'Danh Sách Quản Trị Viên',
-                            $currentUser->isHousekeeper() => 'Sơ Đồ Buồng Phòng',
-                            $currentUser->canAccessLandlordDashboard() => 'Bảng Quản Trị Chủ Trọ',
-                            $currentUser->isResident() => 'Cổng Cư Dân',
-                            default => 'Trang Chủ Renty',
-                        };
-                    @endphp
-                    <div class="text-center py-4">
-                        <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 mb-4 shadow-inner">
-                            <i class="fa-solid fa-user-check"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-white">Bạn Đang Đăng Nhập</h2>
-                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                            Tài khoản: <strong class="text-indigo-300">{{ $currentUser->name ?? $currentUser->username }}</strong><br>
-                            Vai trò: <span class="px-2 py-0.5 rounded-md bg-indigo-950 border border-indigo-500/30 text-indigo-300 text-[11px] font-semibold">{{ $currentUser->roleRecord->name ?? $currentUser->role ?? 'Thành viên' }}</span>
+                    <!-- 7. PANE: ĐỐI TÁC CHỦ TRỌ (ẨN Ở FORM ĐĂNG KÝ ĐỂ TỐI ƯU DIỆN TÍCH) -->
+                    <div id="landlord-portal-box" class="mt-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-center relative overflow-hidden group {{ $page === 'create' ? 'hidden' : '' }}">
+                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-teal-500/10 pointer-events-none"></div>
+                        <p class="text-xs text-slate-200 font-bold flex items-center justify-center gap-1.5 relative z-10">
+                            <i class="fa-solid fa-hotel text-indigo-400 text-xs"></i>
+                            <span>Bạn muốn vận hành cơ sở lưu trú trên SmartRoom?</span>
                         </p>
-                        
-                        <div class="mt-6 flex flex-col gap-2.5">
-                            <a href="{{ $targetRoute }}" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2">
-                                <span>Đi Đến {{ $targetLabel }}</span>
-                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                            </a>
-                            <a href="{{ route('signout') }}" class="w-full py-2.5 px-4 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-rose-500/30 text-rose-400 text-xs font-semibold transition-all flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
-                                <span>Đăng Xuất Tài Khoản</span>
-                            </a>
-                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed relative z-10">
+                            Đăng ký cơ sở, chốt điện nước tự động, thanh toán VietQR và xác minh hồ sơ KYC Tích Xanh.
+                        </p>
+                        <a href="{{ route('landlord.register', ['reset' => 1]) }}" onclick="['input-username', 'input-fullname', 'input-phone', 'input-email', 'input-password'].forEach(id => sessionStorage.removeItem('landlord_reg_' + id)); sessionStorage.removeItem('landlord_reg_method');" class="inline-flex items-center justify-center gap-1.5 w-full mt-2 py-2 px-3 rounded-lg bg-gradient-to-r from-indigo-600 via-indigo-500 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white text-xs font-semibold shadow-md transition-all relative z-10">
+                            <span>Đăng ký cơ sở đối tác</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
-                @endif
-            </div>
-        </main>
+
+                    <!-- 8. MICRO-TRUST SECURITY BADGES -->
+                    <div class="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-center gap-4 text-[11px] text-slate-500">
+                        <span class="inline-flex items-center gap-1.5 hover:text-slate-400 transition-colors">
+                            <i class="fa-solid fa-shield-halved text-emerald-400/80 text-[10px]"></i>
+                            <span>AES-256</span>
+                        </span>
+                        <span class="text-slate-700">•</span>
+                        <span class="inline-flex items-center gap-1.5 hover:text-slate-400 transition-colors">
+                            <i class="fa-solid fa-qrcode text-indigo-400/80 text-[10px]"></i>
+                            <span>VietQR 2.0</span>
+                        </span>
+                        <span class="text-slate-700">•</span>
+                        <span class="inline-flex items-center gap-1.5 hover:text-slate-400 transition-colors">
+                            <i class="fa-solid fa-circle-check text-teal-400/80 text-[10px]"></i>
+                            <span>KYC Tích Xanh</span>
+                        </span>
+                    </div>
+
+                                </div> <!-- Đóng #auth-screen-main -->
+
+                                <!-- MÀN HÌNH 2: XÁC THỰC MÃ OTP CHUYÊN BIỆT (FULL SCREEN SLIDE TRANSITION) -->
+                                <div id="auth-screen-otp" class="auth-screen-pane screen-enter-right">
+                                    
+                                    <!-- Top: Nút quay lại & Badge bảo mật -->
+                                    <div class="flex items-center justify-between gap-2 pb-4 border-b border-slate-800/80">
+                                        <button type="button" 
+                                                onclick="exitOtpScreen()" 
+                                                class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition-colors group">
+                                            <i class="fa-solid fa-arrow-left text-[11px] group-hover:-translate-x-1 transition-transform"></i>
+                                            <span>Quay lại đăng nhập</span>
+                                        </button>
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
+                                            <i class="fa-solid fa-lock text-emerald-400 text-[10px]"></i>
+                                            <span>Bảo mật 2FA</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Center Body: Icon, Heading, Badge người nhận, 6 Digit Box -->
+                                    <div class="py-5 space-y-5 text-center my-auto">
+                                        <div class="flex flex-col items-center">
+                                            <div id="screen-otp-icon-box" class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 text-2xl shadow-xl shadow-emerald-950/40 mb-3.5">
+                                                <i class="fa-solid fa-shield-halved"></i>
+                                            </div>
+                                            <h2 class="text-xl font-bold text-white tracking-tight">Xác thực mã OTP</h2>
+                                            <p class="text-xs text-slate-400 mt-1.5">
+                                                Hệ thống đã gửi mã xác nhận 6 chữ số đến
+                                            </p>
+                                            <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950 border border-slate-800 text-xs font-mono text-emerald-300 shadow-sm max-w-[280px]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                                                <span id="screen-otp-target-text" class="truncate font-semibold"></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- HỘP NHẮC XÁC MINH 1 NHẤP QUA EMAIL -->
+                                        <div class="p-3 rounded-2xl bg-gradient-to-r from-blue-950/40 via-indigo-950/50 to-purple-950/40 border border-indigo-500/30 text-left flex items-start gap-3 shadow-lg shadow-indigo-950/30">
+                                            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 text-xs">
+                                                <i class="fa-solid fa-bolt"></i>
+                                            </div>
+                                            <div class="flex-grow min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-bold text-white">Xác minh 1 nhấp qua Email</span>
+                                                    <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">Nhanh nhất</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-300/90 mt-1 leading-relaxed">
+                                                    Bạn có thể mở hộp thư Email và bấm nút <strong class="text-cyan-200">"Đăng Nhập Nhanh Bằng 1 Chạm"</strong> để vào hệ thống ngay mà không cần nhập mã 6 số.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- 6 ô nhập mã OTP độc lập -->
+                                        <div class="pt-1">
+                                            <label class="block text-xs font-medium text-slate-400 mb-2.5">
+                                                Nhập mã xác thực (6 chữ số)
+                                            </label>
+                                            <div class="flex items-center justify-center gap-2 sm:gap-2.5" id="otp-digit-inputs">
+                                                <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-box" data-index="0" autocomplete="off">
+                                                <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-box" data-index="1" autocomplete="off">
+                                                <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-box" data-index="2" autocomplete="off">
+                                                <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-box" data-index="3" autocomplete="off">
+                                                <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-box" data-index="4" autocomplete="off">
+                                                <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-box" data-index="5" autocomplete="off">
+                                            </div>
+                                            <p id="screen-otp-error" class="hidden text-xs text-rose-400 font-medium mt-2">
+                                                <span id="screen-otp-error-text"></span>
+                                            </p>
+                                        </div>
+
+                                        <!-- Nút xác nhận & Đăng nhập -->
+                                        <div class="pt-1">
+                                            <button type="button" 
+                                                    id="btn-screen-verify-otp" 
+                                                    onclick="handleVerifyLoginOtp()" 
+                                                    class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-lg shadow-emerald-950/40 transition-all duration-200 flex items-center justify-center gap-2">
+                                                <i id="screen-otp-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                                                <span>Xác nhận &amp; Đăng nhập</span>
+                                                <i class="fa-solid fa-arrow-right text-[10px] opacity-80"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Đếm ngược & Gửi lại mã OTP -->
+                                        <div class="text-xs text-slate-400 flex items-center justify-center gap-1.5 pt-1">
+                                            <span>Chưa nhận được mã?</span>
+                                            <button type="button" 
+                                                    id="btn-screen-resend-otp" 
+                                                    onclick="handleSendLoginOtp(true)" 
+                                                    class="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:text-slate-500" 
+                                                    disabled>
+                                                <span>Gửi lại OTP</span> <span id="screen-otp-countdown" class="font-mono">(60s)</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom: Security Micro Footer -->
+                                    <div class="pt-4 border-t border-slate-800/60 flex items-center justify-center gap-4 text-[11px] text-slate-500">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <i class="fa-solid fa-shield-halved text-emerald-400/80 text-[10px]"></i>
+                                            <span>AES-256 GCM</span>
+                                        </span>
+                                        <span class="text-slate-700">•</span>
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <i class="fa-solid fa-stopwatch text-indigo-400/80 text-[10px]"></i>
+                                            <span>Hạn 5 phút</span>
+                                        </span>
+                                        <span class="text-slate-700">•</span>
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <i class="fa-solid fa-circle-check text-teal-400/80 text-[10px]"></i>
+                                            <span>Phiên an toàn</span>
+                                        </span>
+                                    </div>
+
+                                </div> <!-- Đóng #auth-screen-otp -->
+
+                            </div> <!-- Đóng .auth-screen-container -->
+                        </div> <!-- Đóng Cột Phải -->
+            </div> <!-- Đóng flex items-stretch (2 cột) -->
+        </div> <!-- Đóng #auth-card (Master Glass Card bao quanh cả 2 div) -->
+
+
+
+    </div> <!-- Đóng max-w-5xl container -->
+</main>
+
+        <footer class="py-4 text-center text-[11px] text-slate-600 relative z-10 border-t border-slate-900/60">
+            © 2026 SmartRoom &amp; Renty. Nền tảng quản lý lưu trú &amp; thuê phòng thông minh.
+        </footer>
     @endif
 
-    <footer class="py-6 text-center text-xs text-slate-600 relative z-10 border-t border-slate-950">
-        © 2026 SmartRoom & Renty. Tất cả quyền được bảo lưu.
-    </footer>
-
     <script>
+        // =========================================================
+        // TOAST NOTIFICATIONS
+        // =========================================================
         function showToast(message, type = 'info') {
             let container = document.getElementById('toast-container');
             if (!container) {
@@ -1354,85 +1133,494 @@
             }
             const card = document.createElement('div');
             card.className = `toast-card toast-${type}`;
-            let icon = 'fa-circle-info';
-            let iconBg = 'bg-sky-500/15 border-sky-500/25 text-sky-400';
-            let title = 'Thông Báo';
-            if (type === 'success') {
-                icon = 'fa-circle-check';
-                iconBg = 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400';
-                title = 'Đăng nhập thành công!';
-            } else if (type === 'error') {
-                icon = 'fa-circle-exclamation';
-                iconBg = 'bg-rose-500/15 border-rose-500/25 text-rose-400';
-                title = 'Thông Báo Lỗi';
-            }
+            let title = 'Thông báo';
+            if (type === 'success') title = 'Thành công';
+            else if (type === 'error') title = 'Lỗi';
 
             card.innerHTML = `
-                <div class="w-8 h-8 rounded-xl ${iconBg} border flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                    <i class="fa-solid ${icon} text-sm"></i>
-                </div>
                 <div class="flex-grow min-w-0">
-                    <h4 class="font-extrabold text-white text-xs tracking-wide" style="color: #ffffff !important;">${title}</h4>
-                    <p class="text-[11px] mt-0.5 leading-relaxed toast-message" style="color: #e2e8f0 !important; font-weight: 500;">${message}</p>
+                    <h4>${title}</h4>
+                    <p class="mt-0.5">${message}</p>
                 </div>
-                <button type="button" onclick="this.closest('.toast-card').remove()" class="text-slate-400 hover:text-white transition-colors shrink-0 p-1" style="color: #94a3b8;">
-                    <i class="fa-solid fa-xmark text-xs"></i>
+                <button type="button" onclick="this.closest('.toast-card').remove()" class="text-slate-500 hover:text-slate-300 text-xs shrink-0 p-1">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             `;
             container.appendChild(card);
             requestAnimationFrame(() => card.classList.add('show'));
             setTimeout(() => {
                 card.classList.remove('show');
-                setTimeout(() => card.remove(), 400);
-            }, 4500);
+                setTimeout(() => card.remove(), 350);
+            }, 4000);
         }
 
         // =========================================================
-        // SINGHDIGAMBER TEMPLATE + SMARTROOM MODERN AUTH SCRIPTS
         // =========================================================
-        function switchAuthTab(tab, updateHistory = true) {
-            const btnSignin = document.getElementById('tab-btn-signin');
-            const btnSignup = document.getElementById('tab-btn-signup');
-            const panelSignin = document.getElementById('auth-panel-signin');
-            const panelSignup = document.getElementById('auth-panel-signup');
+        // ROLE HELPER & FORM CLEANER
+        // =========================================================
+        let currentAuthRole = 'guest';
+
+        function setLoginRole(role) {
+            currentAuthRole = role;
+            const authRoleInput = document.getElementById('auth-role-input');
+            if (authRoleInput) authRoleInput.value = role;
+
+            document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+            ['signin-login-error', 'signin-password-error', 'login-error-message', 'otp-login-input-error', 'screen-otp-error'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            document.querySelectorAll('.toast-card').forEach(t => t.remove());
+
+            const screenOtp = document.getElementById('auth-screen-otp');
+            if (screenOtp && screenOtp.classList.contains('screen-visible')) {
+                exitOtpScreen();
+            }
+        }
+        window.setLoginRole = setLoginRole;
+
+        // =========================================================
+        // LOGIN METHOD TOGGLE (PASSWORD vs OTP)
+        // =========================================================
+        function switchLoginMethod(method) {
+            const btnPwd = document.getElementById('method-btn-password');
+            const btnOtp = document.getElementById('method-btn-otp');
+            const formPwd = document.getElementById('form-signin-password');
+            const formOtp = document.getElementById('form-signin-otp');
+
+            if (!btnPwd || !btnOtp || !formPwd || !formOtp) return;
+
+            // Xóa sạch lỗi khi chuyển giữa 2 tab Mật khẩu và Mã OTP
+            document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+            ['signin-login-error', 'signin-password-error', 'login-error-message', 'otp-login-input-error'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            document.querySelectorAll('.toast-card').forEach(t => t.remove());
+
+            if (method === 'password') {
+                btnPwd.classList.add('active');
+                btnOtp.classList.remove('active');
+                formPwd.classList.remove('hidden');
+                formOtp.classList.add('hidden');
+            } else {
+                btnOtp.classList.add('active');
+                btnPwd.classList.remove('active');
+                formPwd.classList.add('hidden');
+                formOtp.classList.remove('hidden');
+
+                const signinLogin = document.getElementById('signin-login');
+                const otpInput = document.getElementById('otp-login-input');
+                if (signinLogin && otpInput && !otpInput.value && signinLogin.value) {
+                    otpInput.value = signinLogin.value;
+                }
+            }
+        }
+        window.switchLoginMethod = switchLoginMethod;
+
+        // =========================================================
+        // SIGNIN / SIGNUP MODE SWITCHER
+        // =========================================================
+        function switchAuthMode(mode, updateHistory = true) {
+            const paneSignin = document.getElementById('auth-pane-signin');
+            const paneSignup = document.getElementById('auth-pane-signup');
             const footerSignup = document.getElementById('footer-switch-to-signup');
             const footerSignin = document.getElementById('footer-switch-to-signin');
+            const authHeading = document.getElementById('auth-heading');
+            const authSubheading = document.getElementById('auth-subheading');
 
-            if (!btnSignin || !btnSignup || !panelSignin || !panelSignup) return;
+            const landlordBox = document.getElementById('landlord-portal-box');
 
-            if (tab === 'signin') {
-                btnSignin.classList.add('active');
-                btnSignin.setAttribute('aria-selected', 'true');
-                btnSignup.classList.remove('active');
-                btnSignup.setAttribute('aria-selected', 'false');
-
-                panelSignin.classList.add('active');
-                panelSignup.classList.remove('active');
-
-                if (footerSignup) footerSignup.classList.remove('hidden');
-                if (footerSignin) footerSignin.classList.add('hidden');
-
-                if (updateHistory && window.history && window.history.replaceState) {
-                    window.history.replaceState({}, document.title, "{{ route('login') }}");
-                }
-            } else if (tab === 'signup') {
-                btnSignup.classList.add('active');
-                btnSignup.setAttribute('aria-selected', 'true');
-                btnSignin.classList.remove('active');
-                btnSignin.setAttribute('aria-selected', 'false');
-
-                panelSignup.classList.add('active');
-                panelSignin.classList.remove('active');
-
-                if (footerSignin) footerSignin.classList.remove('hidden');
+            if (mode === 'signup') {
+                if (paneSignin) paneSignin.classList.add('hidden');
+                if (paneSignup) paneSignup.classList.remove('hidden');
                 if (footerSignup) footerSignup.classList.add('hidden');
+                if (footerSignin) footerSignin.classList.remove('hidden');
+                if (landlordBox) landlordBox.classList.add('hidden');
+
+                if (authHeading) authHeading.textContent = 'Đăng ký tài khoản khách';
+                if (authSubheading) authSubheading.textContent = 'Tạo tài khoản để tìm phòng và đặt lịch xem trực tuyến';
 
                 if (updateHistory && window.history && window.history.replaceState) {
                     window.history.replaceState({}, document.title, "{{ route('user.createUser') }}");
                 }
+            } else {
+                if (paneSignup) paneSignup.classList.add('hidden');
+                if (paneSignin) paneSignin.classList.remove('hidden');
+                if (footerSignin) footerSignin.classList.add('hidden');
+                if (footerSignup) footerSignup.classList.remove('hidden');
+                if (landlordBox) landlordBox.classList.remove('hidden');
+
+                if (authHeading) authHeading.textContent = 'Đăng nhập tài khoản';
+                if (authSubheading) authSubheading.textContent = 'Hệ sinh thái kết nối Khách thuê và Quản trị cơ sở lưu trú thông minh';
+
+                if (updateHistory && window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, "{{ route('login') }}");
+                }
             }
         }
+        window.switchAuthMode = switchAuthMode;
 
+        // =========================================================
+        // FULL SCREEN OTP CONTROLS & TRANSITION
+        // =========================================================
+        let otpCountdownTimer = null;
+
+        function enterOtpScreen(target, countdownSeconds = 60) {
+            const screenMain = document.getElementById('auth-screen-main');
+            const screenOtp = document.getElementById('auth-screen-otp');
+            const targetText = document.getElementById('screen-otp-target-text');
+            const errEl = document.getElementById('screen-otp-error');
+
+            if (!screenMain || !screenOtp) return;
+
+            // Đảm bảo các ô số ở trạng thái ẩn ban đầu
+            screenOtp.classList.remove('digits-revealed');
+
+            // 1. Chạy animation trượt màn hình từ Screen 1 sang Screen 2
+            screenMain.classList.remove('screen-visible');
+            screenMain.classList.add('screen-exit-left');
+
+            screenOtp.classList.remove('screen-enter-right');
+            screenOtp.classList.add('screen-visible');
+
+            // Cập nhật target hiển thị
+            if (targetText) targetText.textContent = target;
+
+            // Xóa trắng 6 ô số và reset lỗi
+            const boxes = document.querySelectorAll('#otp-digit-inputs .otp-digit-box');
+            boxes.forEach(b => {
+                b.value = '';
+                b.classList.remove('filled', 'has-error');
+            });
+            if (errEl) errEl.classList.add('hidden');
+
+            // 2. CHỜ MÀN HÌNH TRƯỢT XONG HOÀN TOÀN (500ms) RỒI MỚI HIỆN CÁC Ô OTP TỪ TỪ
+            setTimeout(() => {
+                screenOtp.classList.add('digits-revealed');
+
+                // Khi chuỗi 6 ô đã lần lượt xuất hiện hoàn tất (~750ms sau), tự động focus vào ô đầu tiên
+                setTimeout(() => {
+                    const firstBox = document.querySelector('#otp-digit-inputs .otp-digit-box[data-index="0"]');
+                    if (firstBox) firstBox.focus();
+                }, 750);
+            }, 500);
+
+            // Bắt đầu đếm ngược theo thời gian thực tế còn lại
+            startOtpCountdown(countdownSeconds);
+        }
+        window.enterOtpScreen = enterOtpScreen;
+
+        function exitOtpScreen() {
+            const screenMain = document.getElementById('auth-screen-main');
+            const screenOtp = document.getElementById('auth-screen-otp');
+
+            if (!screenMain || !screenOtp) return;
+
+            // Reset trạng thái hiển thị ô số và lỗi
+            screenOtp.classList.remove('digits-revealed');
+            const screenErr = document.getElementById('screen-otp-error');
+            if (screenErr) screenErr.classList.add('hidden');
+            const boxes = document.querySelectorAll('#otp-digit-inputs .otp-digit-box');
+            boxes.forEach(b => {
+                b.value = '';
+                b.classList.remove('filled', 'has-error');
+            });
+
+            // Chuyển ngược về màn hình chính
+            screenOtp.classList.remove('screen-visible');
+            screenOtp.classList.add('screen-enter-right');
+
+            screenMain.classList.remove('screen-exit-left');
+            screenMain.classList.add('screen-visible');
+
+            // Focus lại ô nhập SĐT/Email
+            setTimeout(() => {
+                const loginInput = document.getElementById('otp-login-input');
+                if (loginInput) loginInput.focus();
+            }, 380);
+        }
+        window.exitOtpScreen = exitOtpScreen;
+
+        function handleSendLoginOtp(isResend = false) {
+            const loginInput = document.getElementById('otp-login-input');
+            const val = loginInput ? loginInput.value.trim() : '';
+            const errEl = document.getElementById('otp-login-input-error');
+            const errText = document.getElementById('otp-login-input-error-text');
+            const btnSend = document.getElementById('btn-send-login-otp');
+            const spinner = document.getElementById('otp-send-spinner');
+            const btnText = document.getElementById('otp-send-btn-text');
+            const arrowIcon = document.getElementById('otp-send-arrow');
+            const btnScreenResend = document.getElementById('btn-screen-resend-otp');
+
+            if (!val) {
+                if (isResend) {
+                    exitOtpScreen();
+                }
+                if (loginInput) loginInput.classList.add('has-error');
+                if (errText) errText.textContent = 'Vui lòng nhập tên tài khoản, email hoặc số điện thoại';
+                if (errEl) errEl.classList.remove('hidden');
+                return;
+            }
+
+            if (loginInput) loginInput.classList.remove('has-error');
+            if (errEl) errEl.classList.add('hidden');
+
+            if (isResend) {
+                if (btnScreenResend) {
+                    btnScreenResend.disabled = true;
+                }
+            } else {
+                if (btnSend) btnSend.disabled = true;
+                if (spinner) spinner.classList.remove('hidden');
+                if (arrowIcon) arrowIcon.classList.add('hidden');
+                if (btnText) btnText.textContent = 'Đang gửi...';
+            }
+
+            fetch("{{ route('user.sendLoginOtp') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ login: val, is_resend: isResend, auth_role: currentAuthRole })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Khôi phục nút gửi ở form chính
+                if (spinner) spinner.classList.add('hidden');
+                if (arrowIcon) arrowIcon.classList.remove('hidden');
+                if (btnText) btnText.textContent = 'Gửi mã OTP xác nhận';
+                if (btnSend) btnSend.disabled = false;
+
+                if (data.success) {
+                    showToast(data.message || 'Mã xác nhận đã được gửi thành công!', 'success');
+                    
+                    // Tự động nhận diện vai trò và chuyển tab mượt mà nếu đứng nhầm cổng
+                    if (data.detected_role && data.detected_role !== currentAuthRole) {
+                        setLoginRole(data.detected_role);
+                        setTimeout(() => {
+                            enterOtpScreen(data.masked_target || val, data.retry_after || 60);
+                        }, 500);
+                    } else {
+                        // KÍCH HOẠT CHUYỂN SANG MÀN HÌNH XÁC THỰC OTP CHUYÊN BIỆT
+                        enterOtpScreen(data.masked_target || val, data.retry_after || 60);
+                    }
+                } else {
+                    if (btnScreenResend) btnScreenResend.disabled = false;
+                    let displayMsg = data.message || 'Không thể gửi mã OTP';
+                    if (displayMsg.toLowerCase().includes('too many attempts')) {
+                        displayMsg = 'Bạn đã gửi yêu cầu quá nhanh. Vui lòng đợi 1 phút trước khi thử lại.';
+                    }
+                    if (isResend) {
+                        const screenErr = document.getElementById('screen-otp-error');
+                        const screenErrText = document.getElementById('screen-otp-error-text');
+                        if (screenErrText) screenErrText.textContent = displayMsg;
+                        if (screenErr) screenErr.classList.remove('hidden');
+                    } else {
+                        if (errText) errText.textContent = displayMsg;
+                        if (errEl) errEl.classList.remove('hidden');
+                        if (loginInput) loginInput.classList.add('has-error');
+                    }
+                    showToast(displayMsg, 'error');
+                }
+            })
+            .catch(() => {
+                if (spinner) spinner.classList.add('hidden');
+                if (arrowIcon) arrowIcon.classList.remove('hidden');
+                if (btnText) btnText.textContent = 'Gửi mã OTP xác nhận';
+                if (btnSend) btnSend.disabled = false;
+                if (btnScreenResend) btnScreenResend.disabled = false;
+                showToast('Lỗi kết nối máy chủ, vui lòng thử lại', 'error');
+            });
+        }
+        window.handleSendLoginOtp = handleSendLoginOtp;
+
+        function startOtpCountdown(seconds) {
+            const btnResend = document.getElementById('btn-screen-resend-otp');
+            const countdownEl = document.getElementById('screen-otp-countdown');
+
+            clearInterval(otpCountdownTimer);
+            let remaining = seconds;
+
+            if (btnResend) {
+                btnResend.disabled = true;
+            }
+            if (countdownEl) {
+                countdownEl.textContent = `(${remaining}s)`;
+            }
+
+            otpCountdownTimer = setInterval(() => {
+                remaining--;
+                if (countdownEl) {
+                    countdownEl.textContent = `(${remaining}s)`;
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(otpCountdownTimer);
+                    if (btnResend) {
+                        btnResend.disabled = false;
+                    }
+                    if (countdownEl) {
+                        countdownEl.textContent = '(Hết hạn)';
+                    }
+                }
+            }, 1000);
+        }
+
+        function handleVerifyLoginOtp() {
+            const loginInput = document.getElementById('otp-login-input');
+            const loginVal = loginInput ? loginInput.value.trim() : '';
+
+            // Gom 6 chữ số từ 6 box
+            const boxes = document.querySelectorAll('#otp-digit-inputs .otp-digit-box');
+            let codeVal = '';
+            boxes.forEach(b => codeVal += (b.value || '').trim());
+
+            const errEl = document.getElementById('screen-otp-error');
+            const errText = document.getElementById('screen-otp-error-text');
+            const btnVerify = document.getElementById('btn-screen-verify-otp');
+            const spinner = document.getElementById('screen-otp-spinner');
+
+            if (!codeVal || codeVal.length !== 6) {
+                boxes.forEach(b => b.classList.add('has-error'));
+                if (errText) errText.textContent = 'Vui lòng nhập đủ 6 chữ số mã OTP';
+                if (errEl) errEl.classList.remove('hidden');
+                
+                // Focus ô đầu tiên còn trống
+                for (let b of boxes) {
+                    if (!b.value) { b.focus(); break; }
+                }
+                return;
+            }
+
+            boxes.forEach(b => b.classList.remove('has-error'));
+            if (errEl) errEl.classList.add('hidden');
+
+            if (btnVerify) btnVerify.disabled = true;
+            if (spinner) spinner.classList.remove('hidden');
+
+            fetch("{{ route('user.loginWithOtp') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ login: loginVal, otp: codeVal, auth_role: currentAuthRole, remember: true })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (spinner) spinner.classList.add('hidden');
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || "{{ route('renty.user') }}";
+                    }, 500);
+                } else {
+                    if (btnVerify) btnVerify.disabled = false;
+                    if (errText) errText.textContent = data.message || 'Mã xác thực không chính xác';
+                    if (errEl) errEl.classList.remove('hidden');
+                    boxes.forEach(b => b.classList.add('has-error'));
+                    showToast(data.message || 'Mã xác thực không chính xác', 'error');
+                }
+            })
+            .catch(() => {
+                if (spinner) spinner.classList.add('hidden');
+                if (btnVerify) btnVerify.disabled = false;
+                showToast('Lỗi máy chủ khi xác thực OTP, vui lòng thử lại', 'error');
+            });
+        }
+        window.handleVerifyLoginOtp = handleVerifyLoginOtp;
+
+        function setupOtpDigitBoxes() {
+            const boxes = document.querySelectorAll('#otp-digit-inputs .otp-digit-box');
+            if (!boxes.length) return;
+
+            boxes.forEach((box, idx) => {
+                // Khi nhập ký tự
+                box.addEventListener('input', function(e) {
+                    const val = this.value.replace(/\D/g, '');
+                    this.value = val ? val[0] : '';
+
+                    const errEl = document.getElementById('screen-otp-error');
+                    if (errEl) errEl.classList.add('hidden');
+                    boxes.forEach(b => b.classList.remove('has-error'));
+
+                    if (this.value) {
+                        this.classList.add('filled');
+                        const next = boxes[idx + 1];
+                        if (next) {
+                            next.focus();
+                        } else {
+                            // Nếu đã là ô cuối cùng và đủ 6 số, tự động xác thực
+                            let full = '';
+                            boxes.forEach(b => full += b.value.trim());
+                            if (full.length === 6) {
+                                handleVerifyLoginOtp();
+                            }
+                        }
+                    } else {
+                        this.classList.remove('filled');
+                    }
+                });
+
+                // Xử lý phím Backspace, Enter, Mũi tên
+                box.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace') {
+                        if (!this.value) {
+                            const prev = boxes[idx - 1];
+                            if (prev) {
+                                prev.focus();
+                                prev.value = '';
+                                prev.classList.remove('filled');
+                            }
+                        } else {
+                            this.value = '';
+                            this.classList.remove('filled');
+                        }
+                        e.preventDefault();
+                    } else if (e.key === 'ArrowLeft') {
+                        const prev = boxes[idx - 1];
+                        if (prev) prev.focus();
+                    } else if (e.key === 'ArrowRight') {
+                        const next = boxes[idx + 1];
+                        if (next) next.focus();
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleVerifyLoginOtp();
+                    }
+                });
+
+                // Hỗ trợ Paste cả chuỗi OTP 6 số
+                box.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const clipText = (e.clipboardData || window.clipboardData).getData('text') || '';
+                    const digits = clipText.replace(/\D/g, '').slice(0, 6);
+                    if (!digits) return;
+
+                    boxes.forEach((b, i) => {
+                        b.value = digits[i] || '';
+                        if (digits[i]) b.classList.add('filled');
+                        else b.classList.remove('filled');
+                    });
+
+                    if (digits.length === 6) {
+                        boxes[5].focus();
+                        handleVerifyLoginOtp();
+                    } else {
+                        const nextEmpty = boxes[digits.length];
+                        if (nextEmpty) nextEmpty.focus();
+                    }
+                });
+            });
+        }
+
+        // =========================================================
+        // FORM VALIDATION & UTILITIES
+        // =========================================================
         function togglePasswordVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -1452,55 +1640,13 @@
             }
         }
 
-        function evalPasswordStrength(pwd) {
-            const box = document.getElementById('signup-strength-box');
-            const status = document.getElementById('signup-pwd-status');
-            if (!box || !status) return;
-
-            box.className = 'auth-strength-container mt-1.5';
-
-            if (!pwd || pwd.length === 0) {
-                status.textContent = 'Tối thiểu 6 ký tự';
-                status.className = 'text-[10px] font-bold text-slate-500 uppercase tracking-wider';
-                return;
-            }
-
-            let score = 0;
-            if (pwd.length >= 6) score++;
-            if (pwd.length >= 8 && /[0-9]/.test(pwd)) score++;
-            if (pwd.length >= 8 && /[^A-Za-z0-9]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
-
-            if (score <= 1) {
-                box.classList.add('strength-weak');
-                status.textContent = 'Độ mạnh: Yếu';
-                status.className = 'text-[10px] font-bold text-red-400 uppercase tracking-wider';
-            } else if (score === 2) {
-                box.classList.add('strength-medium');
-                status.textContent = 'Độ mạnh: Trung bình';
-                status.className = 'text-[10px] font-bold text-amber-400 uppercase tracking-wider';
-            } else {
-                box.classList.add('strength-strong');
-                status.textContent = 'Độ mạnh: Rất tốt';
-                status.className = 'text-[10px] font-bold text-emerald-400 uppercase tracking-wider';
-            }
-        }
-
-        // =========================================================
-        // FEAT_01_AUTH: SIGN IN CLIENT-SIDE VALIDATION & FEEDBACK
-        // =========================================================
         function clearSigninError(fieldId) {
             const input = document.getElementById(fieldId);
             const errEl = document.getElementById(fieldId + '-error');
             const serverErr = document.getElementById('login-error-message');
-            if (input) {
-                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
-            }
-            if (errEl) {
-                errEl.classList.add('hidden');
-            }
-            if (serverErr) {
-                serverErr.classList.add('hidden');
-            }
+            if (input) input.classList.remove('has-error');
+            if (errEl) errEl.classList.add('hidden');
+            if (serverErr) serverErr.classList.add('hidden');
         }
 
         function validateSigninLoginBlur(input) {
@@ -1508,7 +1654,7 @@
             const errEl = document.getElementById('signin-login-error');
             const errText = document.getElementById('signin-login-error-text');
             if (!val) {
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.add('has-error');
                 if (errText) errText.textContent = 'Vui lòng nhập tài khoản đăng nhập';
                 if (errEl) errEl.classList.remove('hidden');
                 return false;
@@ -1522,13 +1668,13 @@
             const errEl = document.getElementById('signin-password-error');
             const errText = document.getElementById('signin-password-error-text');
             if (!val) {
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.add('has-error');
                 if (errText) errText.textContent = 'Vui lòng nhập mật khẩu';
                 if (errEl) errEl.classList.remove('hidden');
                 return false;
             }
             if (val.length < 6) {
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                input.classList.add('has-error');
                 if (errText) errText.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự.';
                 if (errEl) errEl.classList.remove('hidden');
                 return false;
@@ -1538,10 +1684,13 @@
         }
 
         function handleSigninSubmit(e) {
+            e.preventDefault();
             const loginInput = document.getElementById('signin-login');
             const passwordInput = document.getElementById('signin-password');
+            const rememberInput = document.getElementById('signin-remember');
             const loginVal = loginInput ? loginInput.value.trim() : '';
             const passwordVal = passwordInput ? passwordInput.value : '';
+            const rememberVal = rememberInput ? rememberInput.checked : true;
 
             let hasError = false;
 
@@ -1568,7 +1717,6 @@
             }
 
             if (hasError) {
-                e.preventDefault();
                 if (!loginVal && !passwordVal) {
                     showToast('Vui lòng nhập tài khoản đăng nhập và mật khẩu.', 'error');
                 } else if (!loginVal) {
@@ -1581,32 +1729,102 @@
                 return false;
             }
 
-            // Hiển thị trạng thái spinner loading trên nút Đăng Nhập
             const btn = document.getElementById('btn-submit-signin');
             const spinner = document.getElementById('signin-spinner');
             const btnText = document.getElementById('btn-submit-signin-text');
-            const arrowIcon = document.getElementById('signin-arrow-icon');
-            if (btn) {
-                btn.disabled = true;
-                btn.classList.add('opacity-80', 'cursor-not-allowed');
-            }
+            if (btn) btn.disabled = true;
             if (spinner) spinner.classList.remove('hidden');
-            if (arrowIcon) arrowIcon.classList.add('hidden');
-            if (btnText) btnText.textContent = 'Đang đăng nhập...';
+            if (btnText) btnText.textContent = 'Đang xử lý...';
 
-            return true;
+            fetch("{{ route('user.authUser') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    login: loginVal,
+                    password: passwordVal,
+                    remember: rememberVal,
+                    auth_role: currentAuthRole
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Nếu phát hiện tài khoản thuộc vai trò khác với tab đang chọn -> TỰ ĐỘNG CHUYỂN TAB MƯỢT MÀ!
+                    if (data.detected_role && data.detected_role !== currentAuthRole) {
+                        setLoginRole(data.detected_role);
+                        if (data.detected_role === 'landlord') {
+                            showToast('Nhận diện tài khoản Đối tác / Quản trị viên. Đang chuyển bạn sang Cổng Chủ nhà trọ...', 'info');
+                        } else {
+                            showToast('Nhận diện tài khoản Khách thuê. Đang chuyển bạn sang Cổng Khách thuê...', 'info');
+                        }
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url || "{{ route('renty.user') }}";
+                        }, 850);
+                    } else {
+                        showToast(data.message || 'Đăng nhập thành công! Đang chuyển hướng...', 'success');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url || "{{ route('renty.user') }}";
+                        }, 400);
+                    }
+                } else {
+                    if (btn) btn.disabled = false;
+                    if (spinner) spinner.classList.add('hidden');
+                    if (btnText) btnText.textContent = 'Đăng nhập';
+                    
+                    const pwdErr = document.getElementById('signin-password-error');
+                    const pwdErrText = document.getElementById('signin-password-error-text');
+                    if (pwdErrText) pwdErrText.textContent = data.message || 'Thông tin tài khoản hoặc mật khẩu không chính xác.';
+                    if (pwdErr) pwdErr.classList.remove('hidden');
+                    if (passwordInput) passwordInput.classList.add('has-error');
+                    if (loginInput) loginInput.classList.add('has-error');
+                    showToast(data.message || 'Thông tin tài khoản hoặc mật khẩu không chính xác.', 'error');
+                }
+            })
+            .catch(() => {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.classList.add('hidden');
+                if (btnText) btnText.textContent = 'Đăng nhập';
+                showToast('Lỗi kết nối máy chủ, vui lòng thử lại.', 'error');
+            });
+
+            return false;
         }
 
-        function appendTagToLike(tag) {
-            const input = document.getElementById('signup-like');
-            if (!input) return;
-            const current = input.value.trim();
-            if (!current) {
-                input.value = tag;
-            } else if (!current.toLowerCase().includes(tag.toLowerCase())) {
-                input.value = current + ', ' + tag;
+        function evalPasswordStrength(pwd) {
+            const box = document.getElementById('signup-strength-box');
+            const status = document.getElementById('signup-pwd-status');
+            if (!box || !status) return;
+
+            box.className = 'strength-bar-track';
+
+            if (!pwd || pwd.length === 0) {
+                status.textContent = 'Tối thiểu 6 ký tự';
+                status.className = 'text-[10px] text-slate-500';
+                return;
             }
-            input.focus();
+
+            let score = 0;
+            if (pwd.length >= 6) score++;
+            if (pwd.length >= 8 && /[0-9]/.test(pwd)) score++;
+            if (pwd.length >= 8 && /[^A-Za-z0-9]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+
+            if (score <= 1) {
+                box.classList.add('strength-weak');
+                status.textContent = 'Độ mạnh: Yếu';
+                status.className = 'text-[10px] text-rose-400';
+            } else if (score === 2) {
+                box.classList.add('strength-medium');
+                status.textContent = 'Độ mạnh: Vừa';
+                status.className = 'text-[10px] text-amber-400';
+            } else {
+                box.classList.add('strength-strong');
+                status.textContent = 'Độ mạnh: Tốt';
+                status.className = 'text-[10px] text-emerald-400';
+            }
         }
 
         function validateSignupUsernameBlur(input) {
@@ -1616,22 +1834,19 @@
             if (!feedback) return;
 
             if (!val) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Vui lòng nhập tên đăng nhập (bắt buộc)';
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                if (msg) msg.textContent = 'Vui lòng nhập tên đăng nhập';
+                input.classList.add('has-error');
                 return;
             }
 
             if (!/^[a-zA-Z0-9_-]{3,50}$/.test(val)) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Tên đăng nhập từ 3–50 ký tự, chỉ gồm chữ cái, số, gạch nối (-) hoặc gạch dưới (_)';
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                if (msg) msg.textContent = 'Tên tài khoản 3–50 ký tự, chỉ gồm chữ cái, số, gạch nối hoặc gạch dưới';
+                input.classList.add('has-error');
                 return;
             }
 
-            // Gọi API kiểm tra trùng Username real-time
             fetch('/api/auth/check-availability', {
                 method: 'POST',
                 headers: {
@@ -1644,15 +1859,13 @@
             .then(res => res.json())
             .then(data => {
                 if (data.available === false) {
-                    feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ' + data.message;
-                    input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                    input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                    feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                    if (msg) msg.textContent = data.message;
+                    input.classList.add('has-error');
                 } else {
-                    feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
-                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> ' + data.message;
-                    input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                    input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                    feedback.className = 'mt-1 text-[11px] text-emerald-400 block';
+                    if (msg) msg.textContent = data.message;
+                    input.classList.remove('has-error');
                 }
             })
             .catch(() => {});
@@ -1666,28 +1879,25 @@
             if (!feedback) return;
 
             if (!val) {
-                feedback.className = 'mt-1 text-[11px] text-slate-400 hidden';
-                if (msg) msg.innerHTML = '';
-                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40', 'border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'hidden';
+                input.classList.remove('has-error');
                 return;
             }
 
             feedback.classList.remove('hidden');
 
             if (!val.startsWith('0')) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Số điện thoại phải bắt đầu bằng chữ số 0';
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                if (msg) msg.textContent = 'Số điện thoại phải bắt đầu bằng chữ số 0';
+                input.classList.add('has-error');
             } else if (val.length < 10) {
-                feedback.className = 'mt-1 text-[11px] font-medium text-amber-400 block';
-                if (msg) msg.innerHTML = `<i class="fa-solid fa-circle-info text-[10px]"></i> Số điện thoại 10 số (đã nhập ${val.length}/10 số)`;
-                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40', 'border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-amber-400 block';
+                if (msg) msg.textContent = `Số điện thoại gồm 10 số (${val.length}/10)`;
+                input.classList.remove('has-error');
             } else if (val.length === 10) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> Số điện thoại hợp lệ (10 số)';
-                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-emerald-400 block';
+                if (msg) msg.textContent = 'Số điện thoại hợp lệ';
+                input.classList.remove('has-error');
             }
         }
 
@@ -1698,22 +1908,19 @@
             if (!feedback) return;
 
             if (!val) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Vui lòng nhập số điện thoại (10 chữ số)';
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                if (msg) msg.textContent = 'Vui lòng nhập số điện thoại';
+                input.classList.add('has-error');
                 return;
             }
 
             if (!/^0[0-9]{9}$/.test(val)) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Số điện thoại phải gồm đúng 10 chữ số bắt đầu bằng số 0';
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                if (msg) msg.textContent = 'Số điện thoại phải gồm đúng 10 chữ số bắt đầu bằng số 0';
+                input.classList.add('has-error');
                 return;
             }
 
-            // Gọi API kiểm tra trùng SĐT real-time
             fetch('/api/auth/check-availability', {
                 method: 'POST',
                 headers: {
@@ -1726,25 +1933,19 @@
             .then(res => res.json())
             .then(data => {
                 if (data.available === false) {
-                    feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ' + data.message;
-                    input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                    input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                    feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                    if (msg) msg.textContent = data.message;
+                    input.classList.add('has-error');
                 } else {
-                    feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
-                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> ' + data.message;
-                    input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                    input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                    feedback.className = 'mt-1 text-[11px] text-emerald-400 block';
+                    if (msg) msg.textContent = data.message;
+                    input.classList.remove('has-error');
                 }
             })
             .catch(() => {});
         }
 
-        // =========================================================
-        // LOGIC QUẢN LÝ PHƯƠNG THỨC OTP & TRẠNG THÁI EMAIL
-        // =========================================================
         let guestEmailDebounceTimer = null;
-
         function isEmailValidFormat(email) {
             return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
         }
@@ -1752,12 +1953,9 @@
         function updateEmailOtpState() {
             const emailInput = document.getElementById('signup-email');
             const pillEmail = document.getElementById('signup-pill-email');
-            const pillPhone = document.getElementById('signup-pill-phone');
             const radioEmail = document.getElementById('signup-method-email');
             const radioPhone = document.getElementById('signup-method-phone');
             const hint = document.getElementById('email-method-hint');
-            const hintText = document.getElementById('email-method-hint-text');
-            const hintIcon = document.getElementById('email-method-hint-icon');
 
             if (!emailInput || !pillEmail || !radioEmail) return;
 
@@ -1765,61 +1963,26 @@
             const isValid = isEmailValidFormat(val);
 
             if (isValid) {
-                // Email hợp lệ: Enable phương thức nhận qua Email
                 radioEmail.disabled = false;
-                pillEmail.classList.remove('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
-                pillEmail.removeAttribute('title');
-
-                // Ẩn tooltip cảnh báo mượt mà
-                if (hint) {
-                    hint.className = 'email-hint-transition text-[11px] text-amber-400/90 flex items-center gap-1.5 email-hint-hidden';
-                }
+                pillEmail.classList.remove('opacity-40', 'cursor-not-allowed');
+                if (hint) hint.classList.add('hidden');
             } else {
-                // Email chưa hợp lệ hoặc để trống: Disable phương thức nhận qua Email
                 const wasChecked = radioEmail.checked;
                 radioEmail.disabled = true;
-                pillEmail.classList.add('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+                pillEmail.classList.add('opacity-40', 'cursor-not-allowed');
 
-                // Cập nhật nội dung tooltip chính xác
-                if (!val) {
-                    if (hintText) hintText.textContent = 'Vui lòng nhập email để dùng phương thức này';
-                    if (hintIcon) hintIcon.className = 'fa-solid fa-circle-info text-[10px] shrink-0 text-amber-400';
-                    if (hint) hint.className = 'email-hint-transition text-[11px] text-amber-400/90 flex items-center gap-1.5 email-hint-visible';
-                    pillEmail.setAttribute('title', 'Vui lòng nhập email để dùng phương thức này');
-                } else {
-                    if (hintText) hintText.textContent = 'Định dạng email chưa hợp lệ';
-                    if (hintIcon) hintIcon.className = 'fa-solid fa-circle-exclamation text-[10px] shrink-0 text-rose-400';
-                    if (hint) hint.className = 'email-hint-transition text-[11px] text-rose-400/90 flex items-center gap-1.5 email-hint-visible';
-                    pillEmail.setAttribute('title', 'Định dạng email chưa hợp lệ');
-                }
+                if (hint) hint.classList.remove('hidden');
 
-                // AUTO-SWITCH: Nếu đang chọn "Qua Email" mà email bị sửa/xóa không hợp lệ -> Tự chuyển về SĐT
-                if (wasChecked) {
-                    if (radioPhone) {
-                        radioPhone.checked = true;
-                        onSignupMethodChange('phone');
-
-                        // Hiệu ứng highlight mượt trên ô SĐT
-                        if (pillPhone) {
-                            pillPhone.classList.add('ring-2', 'ring-emerald-400/60');
-                            setTimeout(() => pillPhone.classList.remove('ring-2', 'ring-emerald-400/60'), 600);
-                        }
-
-                        // Thông báo nhỏ
-                        if (typeof showToast === 'function') {
-                            showToast('Đã chuyển sang xác minh qua SĐT vì email không hợp lệ', 'info');
-                        }
-                    }
+                if (wasChecked && radioPhone) {
+                    radioPhone.checked = true;
+                    showToast('Đã chuyển sang nhận OTP qua SĐT vì email chưa hợp lệ', 'info');
                 }
             }
         }
 
         function handleEmailInput(input) {
-            // Lắng nghe trực tiếp sự kiện input với debounce 300ms
             clearTimeout(guestEmailDebounceTimer);
-            guestEmailDebounceTimer = setTimeout(() => {
-                updateEmailOtpState();
-            }, 300);
+            guestEmailDebounceTimer = setTimeout(updateEmailOtpState, 300);
         }
 
         function handleEmailBlur(input) {
@@ -1832,19 +1995,17 @@
 
             if (!val) {
                 feedback.className = 'hidden';
-                input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40', 'border-emerald-500', 'ring-emerald-500/30');
+                input.classList.remove('has-error');
                 return;
             }
 
             if (!isEmailValidFormat(val)) {
-                feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> Địa chỉ email không đúng định dạng hợp lệ';
-                input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                if (msg) msg.textContent = 'Địa chỉ email không đúng định dạng';
+                input.classList.add('has-error');
                 return;
             }
 
-            // Gọi API kiểm tra trùng Email real-time
             fetch('/api/auth/check-availability', {
                 method: 'POST',
                 headers: {
@@ -1857,66 +2018,44 @@
             .then(res => res.json())
             .then(data => {
                 if (data.available === false) {
-                    feedback.className = 'mt-1 text-[11px] font-semibold text-rose-400 block';
-                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ' + data.message;
-                    input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                    input.classList.remove('border-emerald-500', 'ring-emerald-500/30');
+                    feedback.className = 'mt-1 text-[11px] text-rose-400 block';
+                    if (msg) msg.textContent = data.message;
+                    input.classList.add('has-error');
                 } else {
-                    feedback.className = 'mt-1 text-[11px] font-semibold text-emerald-400 block';
-                    if (msg) msg.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> ' + data.message;
-                    input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                    input.classList.add('border-emerald-500', 'ring-1', 'ring-emerald-500/30');
+                    feedback.className = 'mt-1 text-[11px] text-emerald-400 block';
+                    if (msg) msg.textContent = data.message;
+                    input.classList.remove('has-error');
                 }
             })
             .catch(() => {});
         }
 
         function onSignupMethodChange(method) {
-            const phoneInput = document.getElementById('signup-phone');
             const emailInput = document.getElementById('signup-email');
-
-            // Số điện thoại LUÔN LUÔN là bắt buộc
-            if (phoneInput) {
-                phoneInput.setAttribute('required', 'required');
-            }
-
-            if (method === 'email') {
-                if (emailInput && !emailInput.value.trim()) {
-                    emailInput.focus();
-                    showToast('Vui lòng nhập email để nhận mã OTP xác minh', 'info');
-                }
+            if (method === 'email' && emailInput && !emailInput.value.trim()) {
+                emailInput.focus();
+                showToast('Vui lòng nhập email để nhận mã OTP', 'info');
             }
         }
 
         function handleSignupSubmit(e) {
+            const usernameInput = document.getElementById('signup-username');
             const phoneInput = document.getElementById('signup-phone');
             const emailInput = document.getElementById('signup-email');
             const methodEl = document.querySelector('input[name="verification_method"]:checked');
             const method = methodEl ? methodEl.value : 'phone';
 
-            // 0. Validate Tên đăng nhập (BẮT BUỘC 3-50 ký tự)
-            const usernameInput = document.getElementById('signup-username');
             const usernameVal = usernameInput ? usernameInput.value.trim() : '';
-            if (!usernameVal) {
+            if (!usernameVal || !/^[a-zA-Z0-9_-]{3,50}$/.test(usernameVal)) {
                 e.preventDefault();
                 if (usernameInput) {
                     validateSignupUsernameBlur(usernameInput);
                     usernameInput.focus();
                 }
-                showToast('Tên đăng nhập là bắt buộc. Vui lòng nhập tên đăng nhập của bạn.', 'error');
-                return false;
-            }
-            if (!/^[a-zA-Z0-9_-]{3,50}$/.test(usernameVal)) {
-                e.preventDefault();
-                if (usernameInput) {
-                    validateSignupUsernameBlur(usernameInput);
-                    usernameInput.focus();
-                }
-                showToast('Tên đăng nhập từ 3–50 ký tự, chỉ gồm chữ cái, số, gạch nối (-) hoặc gạch dưới (_)', 'error');
+                showToast('Tên đăng nhập từ 3–50 ký tự (chữ, số, gạch nối hoặc gạch dưới)', 'error');
                 return false;
             }
 
-            // 1. Validate Số điện thoại (BẮT BUỘC 10 số bắt đầu bằng 0)
             const phoneVal = phoneInput ? phoneInput.value.trim() : '';
             if (!phoneVal || !/^0[0-9]{9}$/.test(phoneVal)) {
                 e.preventDefault();
@@ -1924,45 +2063,25 @@
                     validatePhoneBlur(phoneInput);
                     phoneInput.focus();
                 }
-                showToast('Số điện thoại là bắt buộc (phải gồm đúng 10 số bắt đầu bằng số 0)', 'error');
+                showToast('Số điện thoại là bắt buộc (10 số bắt đầu bằng số 0)', 'error');
                 return false;
             }
 
-            // 2. Validate Phương thức nhận OTP
             if (method === 'email') {
                 const emailVal = emailInput ? emailInput.value.trim() : '';
-                if (!emailVal) {
-                    e.preventDefault();
-                    if (emailInput) emailInput.focus();
-                    showToast('Bạn đã chọn nhận OTP qua Email, vui lòng nhập địa chỉ email.', 'error');
-                    return false;
-                }
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                if (!emailVal || !isEmailValidFormat(emailVal)) {
                     e.preventDefault();
                     if (emailInput) {
-                        emailInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
+                        emailInput.classList.add('has-error');
                         emailInput.focus();
                     }
-                    showToast('Địa chỉ email không đúng định dạng hợp lệ.', 'error');
-                    return false;
-                }
-            } else {
-                // Nếu điền email tùy chọn nhưng sai định dạng
-                const emailVal = emailInput ? emailInput.value.trim() : '';
-                if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-                    e.preventDefault();
-                    if (emailInput) {
-                        emailInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500/40');
-                        emailInput.focus();
-                    }
-                    showToast('Địa chỉ email tùy chọn không đúng định dạng hợp lệ.', 'error');
+                    showToast('Vui lòng nhập địa chỉ email hợp lệ để nhận OTP.', 'error');
                     return false;
                 }
             }
 
-            // 3. Validate Checkbox Điều khoản
-            const termsCheckbox = document.getElementById('signup-terms');
-            if (termsCheckbox && !termsCheckbox.checked) {
+            const terms = document.getElementById('signup-terms');
+            if (terms && !terms.checked) {
                 e.preventDefault();
                 showToast('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật.', 'error');
                 return false;
@@ -1971,39 +2090,80 @@
             return true;
         }
 
-        // Refresh page if restored from bfcache (browser back/forward) to prevent stale CSRF tokens
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted) {
-                window.location.reload();
+        // =========================================================
+        // THEME MODE TOGGLE
+        // =========================================================
+        function toggleThemeMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark') || !html.classList.contains('theme-light');
+            if (isDark) {
+                html.classList.remove('dark');
+                html.classList.add('theme-light');
+                localStorage.setItem('smartroom_theme', 'light');
+            } else {
+                html.classList.remove('theme-light');
+                html.classList.add('dark');
+                localStorage.setItem('smartroom_theme', 'dark');
             }
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const isLight = document.documentElement.classList.contains('theme-light');
+            document.querySelectorAll('[data-theme-icon]').forEach(icon => {
+                if (isLight) {
+                    icon.className = 'fa-solid fa-sun text-amber-500 text-xs';
+                } else {
+                    icon.className = 'fa-solid fa-moon text-slate-400 text-xs';
+                }
+            });
+        }
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) window.location.reload();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('smartroom_theme') === 'light') {
+                document.documentElement.classList.add('theme-light');
+            }
+            updateThemeIcons();
+
             @if(($page === 'create' && !Auth::check()) || $errors->has('phone') || $errors->has('email') || $errors->has('name') || $errors->has('password') || old('phone') || old('email'))
-                switchAuthTab('signup', false);
+                switchAuthMode('signup', false);
             @endif
 
-            // Khởi tạo trạng thái radio OTP theo email hiện tại
             updateEmailOtpState();
 
-            const checkedMethod = document.querySelector('input[name="verification_method"]:checked');
-            if (checkedMethod) {
-                onSignupMethodChange(checkedMethod.value);
+            // Keyboard & Auto-submit cho Form OTP
+            const otpLoginInput = document.getElementById('otp-login-input');
+            if (otpLoginInput) {
+                otpLoginInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSendLoginOtp();
+                    }
+                });
+                otpLoginInput.addEventListener('input', function() {
+                    const errEl = document.getElementById('otp-login-input-error');
+                    if (errEl) errEl.classList.add('hidden');
+                    this.classList.remove('has-error');
+                });
             }
-        });
 
-        @if(session('success'))
-            showToast(@json(session('success')), "success");
-        @endif
-        @if(session('error'))
-            showToast(@json(session('error')), "error");
-        @endif
-        @if($errors->any())
-            showToast(@json($errors->first()), "error");
-        @endif
+            // Khởi tạo 6 ô số OTP độc lập
+            setupOtpDigitBoxes();
+
+            @if(session('success'))
+                showToast(@json(session('success')), "success");
+            @endif
+            @if(session('error'))
+                showToast(@json(session('error')), "error");
+            @endif
+            @if($errors->any())
+                showToast(@json($errors->first()), "error");
+            @endif
+        });
     </script>
-    @if($isAdminPage)
-        </div>
-    @endif
 </body>
 </html>

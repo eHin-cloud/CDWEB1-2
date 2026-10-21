@@ -51,6 +51,17 @@ class CrudUserController extends Controller
     /**
      * User submit form login
      */
+    /**
+     * Kiểm tra tài khoản thuộc nhóm Chủ nhà trọ / Quản lý / Quản trị viên
+     */
+    protected function isLandlordOrAdminAccount(User $user): bool
+    {
+        return $user->canAccessLandlordDashboard() 
+            || $user->isAdmin() 
+            || $user->isSuperAdmin()
+            || in_array($user->role, ['landlord', 'unverified_landlord', 'manager', 'receptionist', 'admin', 'superadmin'], true);
+    }
+
     public function authUser(Request $request)
     {
         $request->validate([
@@ -82,6 +93,13 @@ class CrudUserController extends Controller
         // 3. Kiểm tra mật khẩu và đăng nhập
         if ($user && Hash::check($password, $user->password)) {
             if ($user->status === 'locked') {
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'ERR_01_13',
+                        'message' => 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.',
+                    ], 403);
+                }
                 return redirect("login")
                     ->withInput($request->only('login'))
                     ->with('error_code', 'ERR_01_13')
@@ -122,14 +140,277 @@ class CrudUserController extends Controller
                 $user->isResident() => route('smartroom.resident'),
                 default => route('renty.user'),
             };
+            $detectedRole = $this->isLandlordOrAdminAccount($user) ? 'landlord' : 'guest';
+
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đăng nhập thành công! Đang chuyển hướng...',
+                    'detected_role' => $detectedRole,
+                    'redirect_url' => $defaultRoute,
+                ]);
+            }
+
             return redirect()->intended($defaultRoute)
                 ->with('success', 'Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.');
+        }
+
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_01_01',
+                'message' => 'Thông tin tài khoản hoặc mật khẩu không chính xác.',
+            ], 422);
         }
 
         return redirect("login")
             ->withInput($request->only('login'))
             ->with('error_code', 'ERR_01_01')
             ->with('error', 'Thông tin tài khoản hoặc mật khẩu không chính xác.');
+    }
+
+    /**
+     * Gửi mã OTP đăng nhập siêu tốc không cần mật khẩu
+     */
+    public function sendLoginOtp(Request $request)
+    {
+        $login = trim((string) $request->input('login'));
+        if (empty($login)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng nhập số điện thoại hoặc email đã đăng ký.',
+            ], 422);
+        }
+
+        $user = null;
+        $isPhone = false;
+
+        $phoneBlindIndex = \App\Support\SensitiveData::blindIndex($login);
+        if ($phoneBlindIndex) {
+            $user = User::where('phone_blind_index', $phoneBlindIndex)->first();
+            if ($user) $isPhone = true;
+        }
+
+        if (!$user) {
+            $user = User::where('email', $login)
+                ->orWhere('username', $login)
+                ->first();
+            if ($user && $user->email === $login) {
+                $isPhone = false;
+            }
+        }
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản này chưa tồn tại trong hệ thống. Vui lòng đăng ký tài khoản mới.',
+            ], 404);
+        }
+
+        if ($user->status === 'locked') {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_01_13',
+                'message' => 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.',
+            ], 403);
+        }
+
+        $target = $isPhone ? ($this->normalizePhone($login) ?? $login) : ($user->email ?: $user->phone);
+        $type = 'login_otp';
+
+        $otpRes = OtpService::generateOtp($target, $type);
+        if (!$otpRes['success']) {
+            if (!empty($otpRes['cooldown']) && !$request->boolean('is_resend')) {
+                // Mã OTP đã được gửi trước đó và vẫn còn hiệu lực, cho phép người dùng vào thẳng màn hình nhập OTP
+                session([
+                    'login_otp_target' => $target,
+                    'login_otp_user_id' => $user->id,
+                ]);
+                $maskedTarget = filter_var($target, FILTER_VALIDATE_EMAIL)
+                    ? substr($target, 0, 3) . '***@' . (explode('@', $target)[1] ?? '')
+                    : substr($target, 0, 3) . '****' . substr($target, -3);
+
+                $detectedRole = $this->isLandlordOrAdminAccount($user) ? 'landlord' : 'guest';
+                return response()->json([
+                    'success' => true,
+                    'already_sent' => true,
+                    'detected_role' => $detectedRole,
+                    'message' => "Mã OTP đã được gửi đến {$maskedTarget}. Vui lòng nhập mã xác thực.",
+                    'retry_after' => $otpRes['retry_after'] ?? 60,
+                    'expires_in' => 300,
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $otpRes['message'],
+                'retry_after' => $otpRes['retry_after'] ?? null,
+            ], 429);
+        }
+
+        $otp = $otpRes['code'];
+
+        if (filter_var($target, FILTER_VALIDATE_EMAIL)) {
+            $magicLink = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'login.magic',
+                now()->addMinutes(5),
+                [
+                    'user' => $user->id,
+                    'otp' => $otp,
+                ]
+            );
+
+            try {
+                \Illuminate\Support\Facades\Mail::send('emails.quick_login_otp', [
+                    'otp' => $otp,
+                    'fullName' => $user->name ?? 'Bạn',
+                    'magicLink' => $magicLink,
+                ], function ($msg) use ($target) {
+                    $msg->to($target)->subject('SmartRoom & Renty - Mã OTP & Liên Kết Đăng Nhập Siêu Tốc');
+                });
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to send login OTP email: " . $e->getMessage());
+            }
+        } else {
+            \Illuminate\Support\Facades\Log::info("SMS Login OTP generated for {$target}: {$otp}");
+        }
+
+        session([
+            'login_otp_target' => $target,
+            'login_otp_user_id' => $user->id,
+        ]);
+
+        $maskedTarget = filter_var($target, FILTER_VALIDATE_EMAIL)
+            ? substr($target, 0, 3) . '***@' . (explode('@', $target)[1] ?? '')
+            : substr($target, 0, 3) . '****' . substr($target, -3);
+
+        $detectedRole = $this->isLandlordOrAdminAccount($user) ? 'landlord' : 'guest';
+        return response()->json([
+            'success' => true,
+            'detected_role' => $detectedRole,
+            'masked_target' => $maskedTarget,
+            'target_type' => filter_var($target, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone',
+            'message' => "Mã OTP gồm 6 chữ số đã được gửi đến {$maskedTarget}.",
+            'expires_in' => 300,
+        ]);
+    }
+
+    /**
+     * Xác thực OTP và đăng nhập vào hệ thống
+     */
+    public function loginWithOtp(Request $request)
+    {
+        $login = trim((string) $request->input('login'));
+        $otp = trim((string) $request->input('otp'));
+        $remember = (bool) $request->input('remember', true);
+
+        if (empty($login) || empty($otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng nhập tài khoản và mã OTP xác nhận.',
+            ], 422);
+        }
+
+        $user = null;
+        $phoneBlindIndex = \App\Support\SensitiveData::blindIndex($login);
+        if ($phoneBlindIndex) {
+            $user = User::where('phone_blind_index', $phoneBlindIndex)->first();
+        }
+        if (!$user) {
+            $user = User::where('email', $login)
+                ->orWhere('username', $login)
+                ->first();
+        }
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản không tồn tại.',
+            ], 404);
+        }
+
+        if ($user->status === 'locked') {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'ERR_01_13',
+                'message' => 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.',
+            ], 403);
+        }
+
+        $target = session('login_otp_target');
+        if (!$target) {
+            $target = $user->email ?: $user->phone;
+        }
+
+        $verifyRes = OtpService::verifyOtp($target, 'login_otp', $otp);
+        if (!$verifyRes['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $verifyRes['message'],
+            ], 422);
+        }
+
+        Auth::login($user, $remember);
+        session()->forget(['login_otp_target', 'login_otp_user_id']);
+
+        $defaultRoute = match (true) {
+            $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
+            $user->isAdmin() => route('user.list'),
+            $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
+            $user->canAccessLandlordDashboard() => route('admin.dashboard'),
+            $user->isResident() => route('smartroom.resident'),
+            default => route('renty.user'),
+        };
+
+        $detectedRole = $this->isLandlordOrAdminAccount($user) ? 'landlord' : 'guest';
+        return response()->json([
+            'success' => true,
+            'message' => 'Đăng nhập thành công! Đang chuyển hướng...',
+            'detected_role' => $detectedRole,
+            'redirect_url' => $defaultRoute,
+        ]);
+    }
+
+    /**
+     * Đăng nhập trực tiếp 1 chạm qua Signed Magic Link trong email
+     */
+    public function loginWithMagicLink(Request $request)
+    {
+        if (!$request->hasValidSignature()) {
+            return redirect()->route('login')->with('error', 'Liên kết đăng nhập nhanh không hợp lệ hoặc đã hết hạn (quá 5 phút). Vui lòng yêu cầu mã mới.');
+        }
+
+        $userId = $request->query('user');
+        $otp = (string) $request->query('otp');
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Tài khoản không tồn tại trong hệ thống.');
+        }
+
+        if ($user->status === 'locked') {
+            return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.');
+        }
+
+        $target = $user->email ?: $user->phone;
+        $verifyRes = OtpService::verifyOtp($target, 'login_otp', $otp);
+        if (!$verifyRes['success']) {
+            return redirect()->route('login')->with('error', $verifyRes['message'] ?? 'Liên kết đăng nhập đã hết hiệu lực.');
+        }
+
+        Auth::login($user, true);
+        session()->forget(['login_otp_target', 'login_otp_user_id']);
+
+        $defaultRoute = match (true) {
+            $user->isSuperAdmin() => route('admin.superadmin.dashboard'),
+            $user->isAdmin() => route('user.list'),
+            $user->isHousekeeper() => route('smartroom.admin.housekeeping.matrix'),
+            $user->canAccessLandlordDashboard() => route('admin.dashboard'),
+            $user->isResident() => route('smartroom.resident'),
+            default => route('renty.user'),
+        };
+
+        return redirect($defaultRoute)->with('success', 'Đăng nhập thành công qua liên kết xác thực 1 chạm!');
     }
 
     /**
@@ -773,8 +1054,18 @@ class CrudUserController extends Controller
     /**
      * FEAT_01_AUTH: Giao diện Quên Mật Khẩu qua OTP Email
      */
-    public function showForgotPassword()
+    public function showForgotPassword(Request $request)
     {
+        if ($request->has('reset')) {
+            session()->forget([
+                'forgot_pwd_email',
+                'forgot_pwd_otp',
+                'forgot_pwd_expires',
+                'forgot_pwd_step',
+            ]);
+            return redirect()->route('password.forgot');
+        }
+
         return view('login.forgot_password', [
             'email' => session('forgot_pwd_email'),
             'step' => session('forgot_pwd_step', 1),
@@ -881,6 +1172,48 @@ class CrudUserController extends Controller
 
         return redirect()->route('password.forgot')
             ->with('success', 'Mã OTP mới đã được gửi lại vào email của bạn.');
+    }
+
+    /**
+     * Xác thực nhanh mã OTP khôi phục mật khẩu trước khi cho phép đặt mật khẩu mới
+     */
+    public function verifyForgotPasswordOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|digits:6',
+        ], [
+            'otp.required' => 'Vui lòng nhập đủ 6 chữ số mã OTP.',
+            'otp.digits' => 'Mã xác thực OTP phải gồm đúng 6 chữ số.',
+        ]);
+
+        $storedOtp = session('forgot_pwd_otp');
+        $expires = session('forgot_pwd_expires');
+
+        if (!$storedOtp || !$expires) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phiên làm việc đã hết hạn. Vui lòng gửi lại mã OTP mới.',
+            ], 422);
+        }
+
+        if (now()->timestamp > $expires) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã OTP đã hết hạn. Vui lòng bấm "Gửi lại mã".',
+            ], 422);
+        }
+
+        if (trim($request->otp) !== (string)$storedOtp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Xác thực mã OTP thành công!',
+        ]);
     }
 
     /**

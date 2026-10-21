@@ -318,7 +318,11 @@
 
     <!-- Sidebar Footer (Cố định ở đáy) -->
     <div class="sidebar-footer p-3 border-t border-slate-900 shrink-0 bg-[#0d121f]">
-        <a href="javascript:void(0)" onclick="if(typeof switchTab==='function'){switchTab('profile-section')}else{window.location.href='{{ route('smartroom.admin', ['tab' => 'profile-section']) }}'}" class="sidebar-user flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800/60 hover:border-indigo-500/40 transition-colors group cursor-pointer" title="Xem hồ sơ & cài đặt tài khoản">
+        @if($isAdmin || $user?->isSuperAdmin())
+            <a href="{{ $user?->isSuperAdmin() ? route('admin.superadmin.dashboard') : route('user.list') }}" class="sidebar-user flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800/60 hover:border-indigo-500/40 transition-colors group cursor-pointer" title="Bảng điều khiển quản trị nền tảng">
+        @else
+            <a href="javascript:void(0)" onclick="if(typeof switchTab==='function'){switchTab('profile-section')}else{window.location.href='{{ route('smartroom.admin', ['tab' => 'profile-section']) }}'}" class="sidebar-user flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800/60 hover:border-indigo-500/40 transition-colors group cursor-pointer" title="Xem hồ sơ & cài đặt tài khoản">
+        @endif
             <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-indigo-900/80 to-violet-900/80 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300 text-xs shrink-0 shadow-sm overflow-hidden">
                 @if(!empty($user?->avatar))
                     <img src="{{ $user->avatar_url }}" alt="{{ $userName }}" class="header-avatar-img w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">

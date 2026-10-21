@@ -46,7 +46,10 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 });
 
 Route::get('login', [CrudUserController::class, 'login'])->name('login');
+Route::get('login/magic-link', [CrudUserController::class, 'loginWithMagicLink'])->name('login.magic');
 Route::post('login', [CrudUserController::class, 'authUser'])->middleware('throttle:30,1')->name('user.authUser');
+Route::post('login/send-otp', [CrudUserController::class, 'sendLoginOtp'])->middleware('throttle:30,1')->name('user.sendLoginOtp');
+Route::post('login/verify-otp', [CrudUserController::class, 'loginWithOtp'])->middleware('throttle:10,1')->name('user.loginWithOtp');
 
 Route::get('register', [CrudUserController::class, 'createUser'])->name('register');
 Route::post('register', [CrudUserController::class, 'postUser'])->middleware('throttle:10,1')->name('register.post');
@@ -62,6 +65,7 @@ Route::post('tenant/onboarding/preferences', [CrudUserController::class, 'savePr
 Route::get('forgot-password', [CrudUserController::class, 'showForgotPassword'])->name('password.forgot');
 Route::post('forgot-password/send-otp', [CrudUserController::class, 'sendForgotPasswordOtp'])->middleware('throttle:5,1')->name('password.sendOtp');
 Route::post('forgot-password/resend-otp', [CrudUserController::class, 'resendForgotPasswordOtp'])->middleware('throttle:5,1')->name('password.resendOtp');
+Route::post('forgot-password/verify-otp', [CrudUserController::class, 'verifyForgotPasswordOtp'])->middleware('throttle:10,1')->name('password.verifyOtp');
 Route::post('forgot-password/reset', [CrudUserController::class, 'resetPasswordWithOtp'])->middleware('throttle:10,1')->name('password.resetWithOtp');
 
 Route::get('landlord/register', [LandlordOnboardingController::class, 'create'])->name('landlord.register');

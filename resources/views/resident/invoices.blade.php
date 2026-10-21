@@ -28,10 +28,17 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    <a href="{{ route('renty.user') }}" 
+                       class="group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-extrabold text-white transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50 border border-white/20 overflow-hidden"
+                       style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #9333ea 100%);"
+                       title="Quay về Renty - Sàn tìm phòng trọ">
+                        <i class="fa-solid fa-compass text-[11px] text-cyan-200 group-hover:rotate-45 transition-transform duration-300"></i>
+                        <span>Về <span class="text-cyan-200 font-black">Renty</span></span>
+                    </a>
                     <span class="text-xs text-indigo-400 font-bold bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-xl">
                         P.{{ $room->room_number }}
                     </span>
-                    <a href="{{ route('signout') }}" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold">
+                    <a href="{{ route('signout') }}" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold" title="Đăng xuất">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     </a>
                 </div>
