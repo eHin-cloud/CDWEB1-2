@@ -242,6 +242,116 @@
             color: #0f172a !important;
         }
 
+        /* Đồng bộ giao diện Thanh Tìm Kiếm Hero & Filter Tags khi đổi Light Mode (theme-light) */
+        .theme-light #hero-search-box-container,
+        html.theme-light #hero-search-box-container,
+        body.theme-light #hero-search-box-container {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+        }
+
+        .theme-light #hero-search-box-container:focus-within,
+        html.theme-light #hero-search-box-container:focus-within,
+        body.theme-light #hero-search-box-container:focus-within {
+            border-color: #10b981 !important;
+            box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.2), 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+        }
+
+        .theme-light #hero-search-box-container .fa-location-dot,
+        html.theme-light #hero-search-box-container .fa-location-dot,
+        body.theme-light #hero-search-box-container .fa-location-dot {
+            color: #059669 !important;
+        }
+
+        .theme-light #hero-search-input,
+        html.theme-light #hero-search-input,
+        body.theme-light #hero-search-input {
+            background-color: transparent !important;
+            background: transparent !important;
+            color: #0f172a !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .theme-light #hero-search-input::placeholder,
+        html.theme-light #hero-search-input::placeholder,
+        body.theme-light #hero-search-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        .theme-light #hero-search-clear-btn,
+        html.theme-light #hero-search-clear-btn,
+        body.theme-light #hero-search-clear-btn {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+
+        .theme-light #hero-search-clear-btn:hover,
+        html.theme-light #hero-search-clear-btn:hover,
+        body.theme-light #hero-search-clear-btn:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* Nút tìm kiếm Glassmorphism xanh lá dịu mắt, đồng bộ toàn diện với giao diện */
+        .hero-search-btn-glass,
+        #btn-hero-search-submit {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(13, 148, 136, 0.95)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            color: #ffffff !important;
+        }
+
+        .hero-search-btn-glass:hover,
+        #btn-hero-search-submit:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(20, 184, 166, 1)) !important;
+            border-color: rgba(255, 255, 255, 0.38) !important;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.45) !important;
+            transform: translateY(-0.5px);
+        }
+
+        .theme-light .hero-search-btn-glass,
+        html.theme-light #btn-hero-search-submit,
+        body.theme-light #btn-hero-search-submit {
+            background: linear-gradient(135deg, #059669, #0d9488) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
+            color: #ffffff !important;
+        }
+
+        .theme-light .hero-search-btn-glass:hover,
+        html.theme-light #btn-hero-search-submit:hover,
+        body.theme-light #btn-hero-search-submit:hover {
+            background: linear-gradient(135deg, #047857, #0f766e) !important;
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
+        }
+
+        .theme-light #hero-quick-tags span,
+        html.theme-light #hero-quick-tags span,
+        body.theme-light #hero-quick-tags span {
+            color: #64748b !important;
+        }
+
+        .theme-light #hero-quick-tags .quick-filter-tag,
+        html.theme-light #hero-quick-tags .quick-filter-tag,
+        body.theme-light #hero-quick-tags .quick-filter-tag {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .theme-light #hero-quick-tags .quick-filter-tag:hover,
+        html.theme-light #hero-quick-tags .quick-filter-tag:hover,
+        body.theme-light #hero-quick-tags .quick-filter-tag:hover {
+            background-color: #ecfdf5 !important;
+            border-color: #10b981 !important;
+            color: #059669 !important;
+        }
+
         @keyframes heroTextGlow {
             0% { background-position: 0% 50%; }
             100% { background-position: 100% 50%; }
@@ -460,14 +570,16 @@
                     </p>
                     
                     <!-- Integrated Search Bar (FEAT_04_LANDING - STT 1: search_box) -->
-                    <div class="relative w-full max-w-2xl mb-2 group/search z-50" id="hero-search-wrapper">
+                    <div class="relative w-full max-w-2xl mb-2 z-50" id="hero-search-wrapper">
                         <label for="hero-search-input" class="sr-only">Khu vực tìm kiếm</label>
-                        <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-10 group-hover/search:opacity-25 blur-sm transition duration-300"></div>
                         
-                        <!-- Wrapper định vị chuẩn cho Search Input -->
-                        <div class="relative w-full z-50">
-                            <form onsubmit="submitHeroSearch(event)" class="relative flex items-center bg-slate-950/90 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md transition-all" id="hero-search-box-container">
-                                <i class="fa-solid fa-location-dot pl-4 text-emerald-400"></i>
+                        <!-- Wrapper định vị chuẩn cho Search Input kèm Quầng sáng ôm sát form -->
+                        <div class="relative w-full z-50 group/search-box">
+                            <!-- Quầng sáng xanh dịu nhẹ ôm sát form tìm kiếm, không lan ra ngoài -->
+                            <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/30 via-teal-500/25 to-emerald-400/25 rounded-2xl opacity-20 group-hover/search-box:opacity-50 blur-sm transition duration-300 pointer-events-none"></div>
+
+                            <form onsubmit="submitHeroSearch(event)" class="relative flex items-center bg-slate-950/90 border border-slate-800/80 hover:border-emerald-500/40 focus-within:border-emerald-400/70 rounded-2xl overflow-hidden backdrop-blur-xl transition-all shadow-lg shadow-black/30" id="hero-search-box-container">
+                                <i class="fa-solid fa-location-dot pl-4 text-emerald-400/90 text-sm"></i>
                                 <input 
                                     type="text" 
                                     id="hero-search-input" 
@@ -479,10 +591,10 @@
                                     class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" 
                                     placeholder="Nhập quận, huyện, tên đường..."
                                 >
-                                <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-2 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
+                                <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-2 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800/80 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
-                                <button type="submit" id="btn-hero-search-submit" class="mr-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" title="Tìm kiếm">
+                                <button type="submit" id="btn-hero-search-submit" class="mr-2 px-3.5 py-2 rounded-xl text-white font-extrabold text-xs active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer hero-search-btn-glass" title="Tìm kiếm">
                                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                                     <span class="hidden sm:inline">Tìm</span>
                                 </button>
@@ -648,13 +760,13 @@
                 </div>
             </div>
 
-            <!-- Hàng 1: 3 Cột (Khoảng giá - Điểm đánh giá - Khoảng cách) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <!-- Cột 1: KHOẢNG GIÁ (VNĐ) -->
+            <!-- Hàng 1: 4 Cột theo Spec FEAT_21_SMART_SEARCH (Khoảng giá - Diện tích - Loại phòng & Đánh giá - Khoảng cách) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                <!-- Cột 1: KHOẢNG GIÁ (VNĐ) - Spec STT 1: range_price -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">KHOẢNG GIÁ (VNĐ)</label>
-                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2.5 py-1 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 text-xs focus:border-emerald-500 focus:outline-none transition-colors">
+                        <select id="filter-price" onchange="handlePricePresetChange(this.value)" class="px-2 py-1 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 text-[11px] focus:border-emerald-500 focus:outline-none transition-colors">
                             <option value="all">Mức giá gợi ý ⌵</option>
                             <option value="3000000">Dưới 3 triệu</option>
                             <option value="4000000">Dưới 4 triệu</option>
@@ -662,32 +774,64 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="text" inputmode="numeric" id="filter-price-min" name="min_price" data-field="range_price" oninput="debouncedFilterItems()" placeholder="0 đ (Tối thiểu: vd 20000)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <input type="text" inputmode="numeric" id="filter-price-min" name="min_price" data-field="range_price" oninput="debouncedFilterItems()" placeholder="0 đ" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                         <span class="text-slate-600 text-sm font-bold">-</span>
-                        <input type="text" inputmode="numeric" id="filter-price-max" name="max_price" data-field="range_price" oninput="debouncedFilterItems()" placeholder="10.000.000 đ (Tối đa)" class="w-1/2 px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <input type="text" inputmode="numeric" id="filter-price-max" name="max_price" data-field="range_price" oninput="debouncedFilterItems()" placeholder="10.000.000 đ" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
                     </div>
-                    <!-- Lỗi viền đỏ và text lỗi chuẩn Hình 21.3 & DoD 1 -->
+                    <!-- Lỗi viền đỏ và text lỗi chuẩn ERR_21_01 & ERR_21_03 -->
                     <div id="filter-price-error" class="hidden text-xs text-rose-400 font-bold mt-2 flex items-center gap-1.5 animate-shake">
                         <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
-                        <span id="filter-price-error-text">Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)</span>
+                        <span id="filter-price-error-text">Giá tối thiểu không thể lớn hơn giá tối đa.</span>
+                    </div>
+                </div>
+
+                <!-- Cột 2: DIỆN TÍCH (m²) - Spec ERR_21_02 & ERR_21_03 -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">DIỆN TÍCH (m²)</label>
+                        <select id="filter-area-preset" onchange="handleAreaPresetChange(this.value)" class="px-2 py-1 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 text-[11px] focus:border-emerald-500 focus:outline-none transition-colors">
+                            <option value="all">Mức diện tích ⌵</option>
+                            <option value="20">Dưới 20m²</option>
+                            <option value="30">Dưới 30m²</option>
+                            <option value="50">Dưới 50m²</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" inputmode="numeric" id="filter-area-min" name="min_area" data-field="range_area" oninput="debouncedFilterItems()" placeholder="0 m²" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                        <span class="text-slate-600 text-sm font-bold">-</span>
+                        <input type="text" inputmode="numeric" id="filter-area-max" name="max_area" data-field="range_area" oninput="debouncedFilterItems()" placeholder="100 m²" class="w-1/2 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-all placeholder-slate-500 font-medium">
+                    </div>
+                    <!-- Lỗi viền đỏ diện tích ERR_21_02 & ERR_21_03 -->
+                    <div id="filter-area-error" class="hidden text-xs text-rose-400 font-bold mt-2 flex items-center gap-1.5 animate-shake">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                        <span id="filter-area-error-text">Diện tích tối thiểu không thể lớn hơn diện tích tối đa.</span>
                     </div>
                 </div>
                 
-                <!-- Cột 2: ĐIỂM ĐÁNH GIÁ TỐI THIỂU -->
+                <!-- Cột 3: LOẠI PHÒNG & ĐIỂM ĐÁNH GIÁ - Spec: room_type -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">ĐIỂM ĐÁNH GIÁ TỐI THIỂU</label>
-                    <select id="filter-rating" onchange="filterItems()" class="w-full px-3.5 py-2.5 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors font-medium">
-                        <option value="all">Mọi điểm số</option>
-                        <option value="4.5">Từ 4.5⭐ trở lên</option>
-                        <option value="4.0">Từ 4.0⭐ trở lên</option>
-                        <option value="3.5">Từ 3.5⭐ trở lên</option>
-                    </select>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">LOẠI PHÒNG & ĐÁNH GIÁ</label>
+                    <div class="flex items-center gap-2">
+                        <select id="filter-room-type" name="room_type" onchange="filterItems()" class="w-1/2 px-2.5 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors font-medium">
+                            <option value="">Tất cả loại phòng</option>
+                            <option value="Studio">Studio</option>
+                            <option value="KTX">KTX</option>
+                            <option value="Phòng trọ giá rẻ">Phòng giá rẻ</option>
+                            <option value="Chung cư mini">Chung cư mini</option>
+                        </select>
+                        <select id="filter-rating" onchange="filterItems()" class="w-1/2 px-2.5 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 rounded-xl text-slate-200 text-xs focus:border-emerald-500 focus:outline-none transition-colors font-medium">
+                            <option value="all">Mọi điểm số</option>
+                            <option value="4.5">Từ 4.5⭐</option>
+                            <option value="4.0">Từ 4.0⭐</option>
+                            <option value="3.5">Từ 3.5⭐</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- Cột 3: KHOẢNG CÁCH ĐẾN TRƯỜNG/TIỆN ÍCH -->
+                <!-- Cột 4: KHOẢNG CÁCH ĐẾN TRƯỜNG/TIỆN ÍCH -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">KHOẢNG CÁCH ĐẾN TRƯỜNG/TIỆN ÍCH</label>
-                    <div class="slider-container relative mt-2 mb-1 px-1">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">KHOẢNG CÁCH (0 - 3KM)</label>
+                    <div class="slider-container relative mt-1 mb-1 px-1">
                         <input 
                             type="range" 
                             id="distance-slider" 
@@ -708,10 +852,10 @@
                         </div>
                     </div>
                     <!-- Feedback Box -->
-                    <div class="feedback-box mt-3 px-3 py-2 bg-[#0a0e17] border border-slate-800 rounded-xl flex items-center gap-2 text-slate-300 text-xs">
+                    <div class="feedback-box mt-2 px-2.5 py-1.5 bg-[#0a0e17] border border-slate-800 rounded-xl flex items-center gap-1.5 text-slate-300 text-[11px]">
                         <i class="fa-solid fa-location-dot text-slate-400 text-xs shrink-0"></i>
-                        <span id="distance-feedback" class="text-xs text-slate-300 font-medium">
-                            Tìm phòng trong bán kính dưới 3km từ Đại học Bách Khoa
+                        <span id="distance-feedback" class="text-[11px] text-slate-300 font-medium truncate">
+                            Dưới 3km từ ĐH Bách Khoa
                         </span>
                     </div>
                 </div>
@@ -749,6 +893,14 @@
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
                             <input type="checkbox" id="tag-fridge" name="chkAmenities[]" value="fridge" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
                             <span>Tủ lạnh</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-wifi" name="chkAmenities[]" value="wifi" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Wifi</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0e17] border border-slate-800 text-xs font-semibold text-slate-300 cursor-pointer hover:border-slate-700 transition-colors">
+                            <input type="checkbox" id="tag-elevator" name="chkAmenities[]" value="elevator" onchange="filterItems()" class="rounded border-slate-700 text-emerald-500 focus:ring-0 focus:ring-offset-0 bg-slate-900 w-4 h-4">
+                            <span>Thang máy</span>
                         </label>
                     </div>
                 </div>

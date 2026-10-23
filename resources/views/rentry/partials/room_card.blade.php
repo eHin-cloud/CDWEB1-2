@@ -18,6 +18,8 @@
      data-loft="{{ $room['loft'] }}" 
      data-balcony="{{ $room['balcony'] }}" 
      data-wc="{{ $room['wc'] }}"
+     data-area="{{ $room['area'] ?? 25 }}"
+     data-room-type="{{ $room['room_type'] ?? '' }}"
      data-distance="{{ $room['distance'] }}" 
      data-area-name="{{ $room['area_name'] }}"
      data-status="{{ $room['status'] }}"

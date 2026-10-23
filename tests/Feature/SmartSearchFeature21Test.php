@@ -5,12 +5,12 @@ namespace Tests\Feature;
 use App\Models\Building;
 use App\Models\Room;
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class SmartSearchFeature21Test extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected Tenant $tenant;
     protected Building $building;

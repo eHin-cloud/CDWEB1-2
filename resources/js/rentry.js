@@ -1890,11 +1890,21 @@ function filterItems(options = {}) {
     const priceErrorEl = document.getElementById('filter-price-error');
     const priceErrorTextEl = document.getElementById('filter-price-error-text');
 
+    // Kiểm tra khoảng diện tích Min - Max (Spec FEAT_21 ERR_21_02 & ERR_21_03)
+    const minAreaInput = document.getElementById('filter-area-min');
+    const maxAreaInput = document.getElementById('filter-area-max');
+    const areaErrorEl = document.getElementById('filter-area-error');
+    const areaErrorTextEl = document.getElementById('filter-area-error-text');
+
     const rawMin = minPriceInput ? minPriceInput.value.trim() : '';
     const rawMax = maxPriceInput ? maxPriceInput.value.trim() : '';
+    const rawMinArea = minAreaInput ? minAreaInput.value.trim() : '';
+    const rawMaxArea = maxAreaInput ? maxAreaInput.value.trim() : '';
     const isDigitsOnly = val => /^\d+$/.test(val);
 
-    // Bẫy lỗi ERR_21_03: Giá phòng chỉ được nhập số
+    let hasFormatError = false;
+
+    // Bẫy lỗi ERR_21_03: Giá phòng và diện tích chỉ được nhập số
     if ((rawMin !== '' && !isDigitsOnly(rawMin)) || (rawMax !== '' && !isDigitsOnly(rawMax))) {
         if (rawMin !== '' && !isDigitsOnly(rawMin) && minPriceInput) {
             minPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
@@ -1906,26 +1916,63 @@ function filterItems(options = {}) {
             priceErrorTextEl.textContent = 'Giá phòng và diện tích chỉ được nhập số.';
         }
         if (priceErrorEl) priceErrorEl.classList.remove('hidden');
-        return;
+        hasFormatError = true;
     }
+
+    if ((rawMinArea !== '' && !isDigitsOnly(rawMinArea)) || (rawMaxArea !== '' && !isDigitsOnly(rawMaxArea))) {
+        if (rawMinArea !== '' && !isDigitsOnly(rawMinArea) && minAreaInput) {
+            minAreaInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        }
+        if (rawMaxArea !== '' && !isDigitsOnly(rawMaxArea) && maxAreaInput) {
+            maxAreaInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        }
+        if (areaErrorTextEl) {
+            areaErrorTextEl.textContent = 'Giá phòng và diện tích chỉ được nhập số.';
+        }
+        if (areaErrorEl) areaErrorEl.classList.remove('hidden');
+        hasFormatError = true;
+    }
+
+    if (hasFormatError) return;
 
     const minPriceVal = rawMin !== '' ? parseInt(rawMin, 10) : null;
     const maxPriceVal = rawMax !== '' ? parseInt(rawMax, 10) : null;
+    const minAreaVal = rawMinArea !== '' ? parseFloat(rawMinArea) : null;
+    const maxAreaVal = rawMaxArea !== '' ? parseFloat(rawMaxArea) : null;
 
-    // Bẫy lỗi ERR_21_01: Min > Max
+    let hasRangeError = false;
+
+    // Bẫy lỗi ERR_21_01: Min Price > Max Price
     if (minPriceVal !== null && maxPriceVal !== null && minPriceVal > maxPriceVal) {
         if (minPriceInput) minPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
         if (maxPriceInput) maxPriceInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
         if (priceErrorTextEl) {
-            priceErrorTextEl.textContent = 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa)';
+            priceErrorTextEl.textContent = 'Giá tối thiểu không thể lớn hơn giá tối đa.';
         }
         if (priceErrorEl) priceErrorEl.classList.remove('hidden');
-        return; // Dừng lọc khi khoảng giá không hợp lệ
+        hasRangeError = true;
     } else {
         if (minPriceInput) minPriceInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
         if (maxPriceInput) maxPriceInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
         if (priceErrorEl) priceErrorEl.classList.add('hidden');
     }
+
+    // Bẫy lỗi ERR_21_02: Min Area > Max Area
+    if (minAreaVal !== null && maxAreaVal !== null && minAreaVal > maxAreaVal) {
+        if (minAreaInput) minAreaInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (maxAreaInput) maxAreaInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (areaErrorTextEl) {
+            areaErrorTextEl.textContent = 'Diện tích tối thiểu không thể lớn hơn diện tích tối đa.';
+        }
+        if (areaErrorEl) areaErrorEl.classList.remove('hidden');
+        hasRangeError = true;
+    } else {
+        if (minAreaInput) minAreaInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (maxAreaInput) maxAreaInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        if (areaErrorEl) areaErrorEl.classList.add('hidden');
+    }
+
+    if (hasRangeError) return; // Dừng lọc khi khoảng giá hoặc diện tích không hợp lệ
 
     const petEl = document.getElementById('tag-pets');
     const petChecked = petEl ? petEl.checked : false;
@@ -2031,6 +2078,9 @@ function filterItems(options = {}) {
             matchesDistance = distance <= filterDistance;
         }
 
+        const wifiChecked = document.getElementById('tag-wifi')?.checked || false;
+        const elevatorChecked = document.getElementById('tag-elevator')?.checked || false;
+
         let matchesTags = true;
         if (petChecked && !pets) matchesTags = false;
         if (loftChecked && !loft) matchesTags = false;
@@ -2039,6 +2089,26 @@ function filterItems(options = {}) {
         if (acChecked && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
         if (washerChecked && !searchableText.includes('may giat')) matchesTags = false;
         if (fridgeChecked && !searchableText.includes('tu lanh')) matchesTags = false;
+        if (wifiChecked && !searchableText.includes('wifi')) matchesTags = false;
+        if (elevatorChecked && !(searchableText.includes('thang may') || searchableText.includes('thang máy'))) matchesTags = false;
+
+        // Lọc diện tích (Spec FEAT_21: range_area)
+        const roomArea = parseFloat(card.getAttribute('data-area') || 0);
+        let matchesArea = true;
+        if (minAreaVal !== null) {
+            matchesArea = matchesArea && (roomArea >= minAreaVal);
+        }
+        if (maxAreaVal !== null) {
+            matchesArea = matchesArea && (roomArea <= maxAreaVal);
+        }
+
+        // Lọc loại phòng (Spec FEAT_21: room_type)
+        const cardRoomType = (card.getAttribute('data-room-type') || '').toLowerCase();
+        const selectedRoomType = (document.getElementById('filter-room-type')?.value || '').toLowerCase().trim();
+        let matchesRoomType = true;
+        if (selectedRoomType !== '') {
+            matchesRoomType = cardRoomType.includes(selectedRoomType) || searchableText.includes(selectedRoomType);
+        }
 
         let matchesLocation = true;
         if (parsedSearch.locations && parsedSearch.locations.length > 0) {
@@ -2050,7 +2120,7 @@ function filterItems(options = {}) {
             matchesStatus = false;
         }
 
-        if (matchesQuery && matchesPrice && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus) {
+        if (matchesQuery && matchesPrice && matchesArea && matchesRoomType && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus) {
             matches.push(card);
             showMarker(card.getAttribute('data-room-id'));
         } else {
@@ -2089,13 +2159,8 @@ function filterItems(options = {}) {
         const emptyCodeTextEl = document.getElementById('smart-search-empty-code-text') || document.getElementById('smart-search-empty-code');
         const q = (query || '').trim();
         if (emptyCodeTextEl) {
-            if (q) {
-                emptyCodeTextEl.textContent = `Không tìm thấy kết quả phù hợp cho "${q}"`;
-                if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.';
-            } else {
-                emptyCodeTextEl.textContent = 'Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn';
-                if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.';
-            }
+            emptyCodeTextEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn (Mã: ERR_21_04)';
+            if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
         }
 
         // Hiển thị gợi ý từ đã gõ sai ngay trên phần bộ lọc và trong empty state
@@ -2652,6 +2717,26 @@ function handlePricePresetChange(preset) {
 }
 window.handlePricePresetChange = handlePricePresetChange;
 
+function handleAreaPresetChange(preset) {
+    const minInput = document.getElementById('filter-area-min');
+    const maxInput = document.getElementById('filter-area-max');
+    const areaSelect = document.getElementById('filter-area-preset');
+
+    if (minInput) minInput.value = '';
+    if (maxInput) {
+        maxInput.value = preset !== 'all' ? preset : '';
+    }
+
+    // Xóa lỗi viền đỏ nếu có
+    const areaErrorEl = document.getElementById('filter-area-error');
+    if (minInput) minInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    if (maxInput) maxInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    if (areaErrorEl) areaErrorEl.classList.add('hidden');
+
+    filterItems();
+}
+window.handleAreaPresetChange = handleAreaPresetChange;
+
 function resetAllFilters() {
     // 0. Khôi phục lại HTML phòng gốc nếu từng bị API ghi đè
     const roomsGrid = document.getElementById('rooms-grid');
@@ -2695,6 +2780,26 @@ function resetAllFilters() {
     }
     if (priceErrorEl) priceErrorEl.classList.add('hidden');
 
+    // 2.1 Reset khoảng diện tích
+    const filterArea = document.getElementById('filter-area-preset');
+    const minAreaInput = document.getElementById('filter-area-min');
+    const maxAreaInput = document.getElementById('filter-area-max');
+    const areaErrorEl = document.getElementById('filter-area-error');
+    if (filterArea) filterArea.value = 'all';
+    if (minAreaInput) {
+        minAreaInput.value = '';
+        minAreaInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    }
+    if (maxAreaInput) {
+        maxAreaInput.value = '';
+        maxAreaInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+    }
+    if (areaErrorEl) areaErrorEl.classList.add('hidden');
+
+    // 2.2 Reset loại phòng
+    const roomTypeSelect = document.getElementById('filter-room-type');
+    if (roomTypeSelect) roomTypeSelect.value = '';
+
     // 3. Reset đánh giá
     const filterRating = document.getElementById('filter-rating');
     if (filterRating) filterRating.value = 'all';
@@ -2709,7 +2814,7 @@ function resetAllFilters() {
     }
 
     // 5. Reset các tiện ích checkbox & visual buttons
-    ['pets', 'loft', 'balcony', 'wc', 'ac', 'washer', 'fridge'].forEach(key => {
+    ['pets', 'loft', 'balcony', 'wc', 'ac', 'washer', 'fridge', 'wifi', 'elevator'].forEach(key => {
         const checkbox = document.getElementById(`tag-${key}`);
         if (checkbox) checkbox.checked = false;
         const vbtn = document.getElementById(`vbtn-${key}`);

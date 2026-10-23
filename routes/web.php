@@ -571,6 +571,7 @@ $rentyRooms = function ($filterEmpty = true) {
             'address' => $address,
             'area_name' => $areaName,
             'area' => $area,
+            'room_type' => $room->room_type ?? ($loft ? 'Studio' : (($num % 4 == 0) ? 'KTX' : (($num % 4 == 1) ? 'Chung cư mini' : 'Phòng trọ giá rẻ'))),
             'location_description' => $locationDescription,
             'scenery_description' => $sceneryDescription,
             'space_description' => $spaceDescription,
