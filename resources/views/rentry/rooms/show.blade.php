@@ -134,6 +134,191 @@
                 box-shadow: 0 10px 35px rgba(6, 182, 212, 0.12);
             }
         }
+
+        /* =========================================================
+           ROOM DETAIL: LANDLORD OWNER CARD & BOOKING SIDEBAR (LIGHT THEME)
+           ========================================================= */
+        html.theme-light .booking-sidebar-card,
+        body.theme-light .booking-sidebar-card {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        html.theme-light .landlord-owner-title,
+        body.theme-light .landlord-owner-title {
+            color: #0f172a !important;
+        }
+
+        html.theme-light .landlord-owner-pill,
+        body.theme-light .landlord-owner-pill {
+            background-color: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #2563eb !important;
+            font-weight: 700 !important;
+        }
+
+        html.theme-light .landlord-owner-card,
+        body.theme-light .landlord-owner-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f5f3ff 100%) !important;
+            background-color: #ffffff !important;
+            border: 1.5px solid #c7d2fe !important;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.12), 0 4px 6px -2px rgba(99, 102, 241, 0.05) !important;
+        }
+
+        html.theme-light .landlord-owner-badge,
+        body.theme-light .landlord-owner-badge {
+            background-color: #ede9fe !important;
+            border-color: #c4b5fd !important;
+            color: #4338ca !important;
+            font-weight: 800 !important;
+        }
+
+        html.theme-light .landlord-owner-sub,
+        body.theme-light .landlord-owner-sub {
+            color: #64748b !important;
+            font-weight: 600 !important;
+        }
+
+        html.theme-light .landlord-owner-text,
+        body.theme-light .landlord-owner-text {
+            color: #1e293b !important;
+            font-weight: 500 !important;
+            line-height: 1.6 !important;
+        }
+
+        html.theme-light .landlord-owner-name,
+        body.theme-light .landlord-owner-name {
+            color: #4338ca !important;
+            font-weight: 800 !important;
+        }
+
+        html.theme-light .landlord-owner-divider,
+        body.theme-light .landlord-owner-divider {
+            border-top-color: #e0e7ff !important;
+        }
+
+        html.theme-light .landlord-owner-primary-btn,
+        body.theme-light .landlord-owner-primary-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #0d9488 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.35) !important;
+        }
+        html.theme-light .landlord-owner-primary-btn:hover,
+        body.theme-light .landlord-owner-primary-btn:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #0f766e 100%) !important;
+            box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.45) !important;
+        }
+
+        html.theme-light .landlord-owner-secondary-btn,
+        body.theme-light .landlord-owner-secondary-btn {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.theme-light .landlord-owner-secondary-btn:hover,
+        body.theme-light .landlord-owner-secondary-btn:hover {
+            background-color: #f8fafc !important;
+            border-color: #6366f1 !important;
+            color: #4338ca !important;
+        }
+        html.theme-light .landlord-owner-secondary-btn i,
+        body.theme-light .landlord-owner-secondary-btn i {
+            color: #4f46e5 !important;
+        }
+
+        /* Superadmin card in Light Mode */
+        html.theme-light .admin-auditor-title,
+        body.theme-light .admin-auditor-title {
+            color: #0f172a !important;
+        }
+        html.theme-light .admin-auditor-pill,
+        body.theme-light .admin-auditor-pill {
+            background-color: #fef3c7 !important;
+            border-color: #fde68a !important;
+            color: #b45309 !important;
+        }
+        html.theme-light .admin-auditor-card,
+        body.theme-light .admin-auditor-card {
+            background: linear-gradient(145deg, #ffffff 0%, #fffbeb 100%) !important;
+            border: 1.5px solid #fde68a !important;
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.1) !important;
+        }
+        html.theme-light .admin-auditor-badge,
+        body.theme-light .admin-auditor-badge {
+            background-color: #fef3c7 !important;
+            border-color: #fde68a !important;
+            color: #92400e !important;
+        }
+        html.theme-light .admin-auditor-sub,
+        body.theme-light .admin-auditor-sub {
+            color: #64748b !important;
+        }
+        html.theme-light .admin-auditor-text,
+        body.theme-light .admin-auditor-text {
+            color: #1e293b !important;
+        }
+        html.theme-light .admin-auditor-name,
+        body.theme-light .admin-auditor-name {
+            color: #b45309 !important;
+        }
+        html.theme-light .admin-auditor-box,
+        body.theme-light .admin-auditor-box {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .admin-auditor-box .text-slate-400,
+        body.theme-light .admin-auditor-box .text-slate-400 {
+            color: #475569 !important;
+        }
+        html.theme-light .admin-auditor-box .text-slate-200,
+        body.theme-light .admin-auditor-box .text-slate-200 {
+            color: #0f172a !important;
+        }
+        html.theme-light .admin-auditor-secondary-btn,
+        body.theme-light .admin-auditor-secondary-btn {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+        html.theme-light .admin-auditor-toggle-btn,
+        body.theme-light .admin-auditor-toggle-btn {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+
+        /* Booking Guest Form in Light Mode */
+        html.theme-light .booking-sidebar-card h2,
+        body.theme-light .booking-sidebar-card h2 {
+            color: #0f172a !important;
+        }
+        html.theme-light .booking-sidebar-card label,
+        body.theme-light .booking-sidebar-card label {
+            color: #334155 !important;
+        }
+        html.theme-light .booking-sidebar-card input:not([type="submit"]):not([type="button"]),
+        body.theme-light .booking-sidebar-card input:not([type="submit"]):not([type="button"]),
+        html.theme-light .booking-sidebar-card textarea,
+        body.theme-light .booking-sidebar-card textarea {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .booking-sidebar-card input::placeholder,
+        body.theme-light .booking-sidebar-card input::placeholder,
+        html.theme-light .booking-sidebar-card textarea::placeholder,
+        body.theme-light .booking-sidebar-card textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.theme-light .booking-sidebar-card input[type="datetime-local"],
+        body.theme-light .booking-sidebar-card input[type="datetime-local"] {
+            color-scheme: light !important;
+        }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen overflow-x-hidden selection:bg-emerald-500 selection:text-white">
@@ -571,7 +756,7 @@
                 </section>
 
                 <!-- Liên hệ & Hẹn lịch xem trọ (Spec UI STT 4 - Action Buttons: btnBooking) -->
-                <section class="tilt-element p-6 rounded-2xl bg-slate-900/30 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <section class="booking-sidebar-card tilt-element p-6 rounded-2xl bg-slate-900/30 border border-slate-800/80 backdrop-blur-md relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                     <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-500/30 to-transparent"></div>
                     
                     @php
@@ -585,26 +770,26 @@
                     @if($isSuperAdmin)
                         <!-- DÀNH RIÊNG CHO SUPERADMIN: Khung Kiểm Duyệt Quản Trị Viên Sàn -->
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-sm font-extrabold text-slate-100 flex items-center gap-2">
+                            <h2 class="admin-auditor-title text-sm font-extrabold text-slate-100 flex items-center gap-2">
                                 <i class="fa-solid fa-shield-halved text-amber-400"></i> Quản trị viên sàn Renty
                             </h2>
-                            <span class="text-[10px] text-amber-400 font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25">Superadmin</span>
+                            <span class="admin-auditor-pill text-[10px] text-amber-400 font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25">Superadmin</span>
                         </div>
 
-                        <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-950/30 via-slate-900/60 to-purple-950/30 border border-amber-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-2xl">
+                        <div class="admin-auditor-card p-5 rounded-2xl bg-gradient-to-br from-amber-950/30 via-slate-900/60 to-purple-950/30 border border-amber-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-2xl">
                             <div class="flex items-center justify-between">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 font-extrabold uppercase text-[10px] tracking-wider border border-amber-500/30">
+                                <span class="admin-auditor-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 font-extrabold uppercase text-[10px] tracking-wider border border-amber-500/30">
                                     <i class="fa-solid fa-user-shield text-[10px] text-amber-400"></i> Chế độ kiểm duyệt
                                 </span>
-                                <span class="text-[10px] text-slate-400 font-medium">Toàn sàn</span>
+                                <span class="admin-auditor-sub text-[10px] text-slate-400 font-medium">Toàn sàn</span>
                             </div>
 
-                            <p class="text-slate-300 text-xs leading-relaxed">
-                                Bạn đang xem tin đăng với tư cách <span class="text-amber-300 font-bold">{{ $currentUser->name }}</span> (Quản trị viên tối cao).
+                            <p class="admin-auditor-text text-slate-300 text-xs leading-relaxed">
+                                Bạn đang xem tin đăng với tư cách <span class="admin-auditor-name text-amber-300 font-bold">{{ $currentUser->name }}</span> (Quản trị viên tối cao).
                             </p>
 
                             <!-- Đối soát thông tin phòng & chủ trọ -->
-                            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2 text-[11px]">
+                            <div class="admin-auditor-box p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2 text-[11px]">
                                 <div class="flex justify-between items-center text-slate-400">
                                     <span>Cơ sở sở hữu:</span>
                                     <span class="text-slate-200 font-bold truncate max-w-[150px]">{{ $room['tenant_name'] ?? 'Hệ thống SmartRoom' }}</span>
@@ -628,10 +813,10 @@
                                 <a href="{{ route('user.list') }}" class="w-full py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-600/20 active:scale-95 text-xs">
                                     <i class="fa-solid fa-users-gear"></i> Quản lý tài khoản sàn
                                 </a>
-                                <a href="{{ route('admin.verifications.index') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
+                                <a href="{{ route('admin.verifications.index') }}" class="admin-auditor-secondary-btn w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
                                     <i class="fa-solid fa-id-card-clip text-amber-400"></i> Xét duyệt KYC chủ trọ
                                 </a>
-                                <button type="button" onclick="document.getElementById('superadmin-guest-preview')?.classList.toggle('hidden');" class="w-full py-2 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-center flex items-center justify-center gap-1.5 transition-all border border-slate-800 text-[11px] cursor-pointer">
+                                <button type="button" onclick="document.getElementById('superadmin-guest-preview')?.classList.toggle('hidden');" class="admin-auditor-toggle-btn w-full py-2 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-center flex items-center justify-center gap-1.5 transition-all border border-slate-800 text-[11px] cursor-pointer">
                                     <i class="fa-solid fa-eye text-[10px]"></i> Bật / Tắt mô phỏng Khách thuê
                                 </button>
                             </div>
@@ -652,27 +837,27 @@
                     @elseif($isRoomOwner)
                         <!-- Dành riêng cho Chủ trọ sở hữu phòng này -->
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-sm font-extrabold text-slate-100 flex items-center gap-2">
+                            <h2 class="landlord-owner-title text-sm font-extrabold text-slate-100 flex items-center gap-2">
                                 <i class="fa-solid fa-crown text-amber-400"></i> Quản lý phòng của bạn
                             </h2>
-                            <span class="text-[10px] text-indigo-400 font-semibold px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">Chủ sở hữu</span>
+                            <span class="landlord-owner-pill text-[10px] text-indigo-400 font-semibold px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">Chủ sở hữu</span>
                         </div>
 
-                        <div class="p-5 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-xl">
+                        <div class="landlord-owner-card p-5 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 text-xs text-slate-300 space-y-3.5 animate-fade-in shadow-xl">
                             <div class="flex items-center justify-between">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-extrabold uppercase text-[10px] tracking-wider border border-indigo-500/30">
+                                <span class="landlord-owner-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-extrabold uppercase text-[10px] tracking-wider border border-indigo-500/30">
                                     <i class="fa-solid fa-user-check text-[10px] text-amber-400"></i> Bạn là chủ phòng này
                                 </span>
-                                <span class="text-[10px] text-slate-400 font-medium">Bảng điều khiển</span>
+                                <span class="landlord-owner-sub text-[10px] text-slate-400 font-medium">Bảng điều khiển</span>
                             </div>
-                            <p class="text-slate-300 text-xs leading-relaxed">
-                                Bạn đang xem tin đăng phòng của chính mình với tư cách <span class="text-indigo-200 font-bold">{{ $currentUser->name }}</span>. Khách tìm phòng trên Renty sẽ liên hệ qua form này khi họ truy cập.
+                            <p class="landlord-owner-text text-slate-300 text-xs leading-relaxed">
+                                Bạn đang xem tin đăng phòng của chính mình với tư cách <span class="landlord-owner-name text-indigo-200 font-bold">{{ $currentUser->name }}</span>. Khách tìm phòng trên Renty sẽ liên hệ qua form này khi họ truy cập.
                             </p>
-                            <div class="pt-2 border-t border-indigo-500/20 flex flex-col gap-2.5">
-                                <a href="{{ route('admin.rooms.edit', $room['id']) }}" class="w-full py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 active:scale-95 text-xs">
+                            <div class="landlord-owner-divider pt-2 border-t border-indigo-500/20 flex flex-col gap-2.5">
+                                <a href="{{ route('admin.rooms.edit', $room['id']) }}" class="landlord-owner-primary-btn w-full py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 active:scale-95 text-xs">
                                     <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa phòng này
                                 </a>
-                                <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
+                                <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="landlord-owner-secondary-btn w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-center flex items-center justify-center gap-2 transition-all border border-slate-700/80 active:scale-95 text-xs">
                                     <i class="fa-solid fa-clipboard-list text-indigo-400"></i> Xem danh sách khách đặt lịch
                                 </a>
                             </div>

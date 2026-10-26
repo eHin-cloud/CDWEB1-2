@@ -22,6 +22,16 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        (function() {
+            var saved = localStorage.getItem('smartroom_theme') || localStorage.getItem('renty_theme_mode');
+            if (saved === 'light') {
+                document.documentElement.classList.add('theme-light');
+            } else {
+                document.documentElement.classList.remove('theme-light');
+            }
+        })();
+    </script>
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
 
     <style>
@@ -326,101 +336,386 @@
             pointer-events: auto;
         }
 
-        /* ===== LIGHT MODE STYLING CHO ĐĂNG KÝ CHỦ TRỌ ===== */
+        /* Nút chuyển đổi Theme Sáng / Tối */
+        .theme-toggle-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 0.75rem;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .theme-toggle-button:hover {
+            background: rgba(30, 41, 59, 0.9);
+            color: #f8fafc;
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: scale(1.04);
+        }
+
+        /* ===== LIGHT MODE STYLING TOÀN DIỆN CHO ĐĂNG KÝ CHỦ TRỌ ===== */
         html.theme-light body, body.theme-light {
-            background-color: #f1f5f9 !important;
+            background-color: #f8fafc !important;
             color: #0f172a !important;
         }
-        html.theme-light header .text-white, body.theme-light header .text-white {
+
+        /* 1. Ambient Glow & Hiệu ứng nền */
+        html.theme-light .ambient-mesh-1 {
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, rgba(99, 102, 241, 0) 70%) !important;
+            opacity: 0.6 !important;
+        }
+        html.theme-light .ambient-mesh-2 {
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0) 70%) !important;
+            opacity: 0.6 !important;
+        }
+
+        /* 2. Top Navigation Header */
+        html.theme-light header .text-white, 
+        body.theme-light header .text-white {
             color: #0f172a !important;
         }
-        html.theme-light .theme-toggle-button, body.theme-light .theme-toggle-button {
+        html.theme-light .theme-toggle-button, 
+        body.theme-light .theme-toggle-button {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #475569 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.theme-light .theme-toggle-button:hover,
+        body.theme-light .theme-toggle-button:hover {
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light header a.bg-slate-900\/60,
+        body.theme-light header a.bg-slate-900\/60 {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
             color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
         }
-        html.theme-light .glass-panel, body.theme-light .glass-panel {
-            background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.1) !important;
+        html.theme-light header a.bg-slate-900\/60:hover,
+        body.theme-light header a.bg-slate-900\/60:hover {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
             color: #0f172a !important;
         }
-        html.theme-light .glass-panel-subtle, body.theme-light .glass-panel-subtle {
+        html.theme-light header a.bg-slate-900\/60 i {
+            color: #64748b !important;
+        }
+
+        /* 3. Khung Panel Thủy Tinh (Glass Panel) */
+        html.theme-light .glass-panel, 
+        body.theme-light .glass-panel {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.6) !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .glass-panel-subtle, 
+        body.theme-light .glass-panel-subtle {
+            background: #ffffff !important;
+            border: 1.5px solid #e2e8f0 !important;
             box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.05) !important;
             color: #0f172a !important;
         }
-        html.theme-light h1.text-white, body.theme-light h1.text-white,
-        html.theme-light h2.text-white, body.theme-light h2.text-white,
-        html.theme-light h4.text-white, body.theme-light h4.text-white,
-        html.theme-light .glass-panel-subtle .text-white, body.theme-light .glass-panel-subtle .text-white {
+
+        /* 4. Cột Trái: Giới thiệu & Lộ trình */
+        html.theme-light a.bg-slate-900\/80,
+        body.theme-light a.bg-slate-900\/80 {
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light a.bg-slate-900\/80:hover,
+        body.theme-light a.bg-slate-900\/80:hover {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
             color: #0f172a !important;
         }
-        html.theme-light .text-slate-400, body.theme-light .text-slate-400 {
+        html.theme-light a.bg-slate-900\/80 i {
+            color: #64748b !important;
+        }
+
+        html.theme-light .bg-indigo-500\/10,
+        body.theme-light .bg-indigo-500\/10 {
+            background: rgba(99, 102, 241, 0.08) !important;
+            border-color: rgba(99, 102, 241, 0.25) !important;
+            color: #4f46e5 !important;
+        }
+
+        html.theme-light h1.text-white, 
+        body.theme-light h1.text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light h1 span.bg-clip-text {
+            background-image: linear-gradient(135deg, #059669 0%, #0d9488 50%, #4f46e5 100%) !important;
+        }
+        html.theme-light p.text-slate-400,
+        body.theme-light p.text-slate-400 {
             color: #475569 !important;
             font-weight: 500 !important;
         }
-        html.theme-light .text-slate-500, body.theme-light .text-slate-500 {
-            color: #334155 !important;
-            font-weight: 500 !important;
-        }
-        html.theme-light .text-slate-300, body.theme-light .text-slate-300 {
+
+        html.theme-light .glass-panel-subtle h4.text-white,
+        body.theme-light .glass-panel-subtle h4.text-white {
             color: #0f172a !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light .glass-panel-subtle p.text-slate-400,
+        body.theme-light .glass-panel-subtle p.text-slate-400 {
+            color: #64748b !important;
+        }
+        html.theme-light .border-slate-800\/80,
+        body.theme-light .border-slate-800\/80 {
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .glass-panel-subtle span.text-white,
+        body.theme-light .glass-panel-subtle span.text-white {
+            color: #0f172a !important;
+        }
+
+        /* 5. Cột Phải: Form Đăng Ký Chủ Cơ Sở */
+        html.theme-light h2.text-white, 
+        body.theme-light h2.text-white {
+            color: #0f172a !important;
+        }
+
+        /* Stepper 3 bước */
+        html.theme-light .text-indigo-300,
+        body.theme-light .text-indigo-300 {
+            color: #4338ca !important;
             font-weight: 700 !important;
         }
-        html.theme-light .onboarding-input, body.theme-light .onboarding-input,
-        html.theme-light .onboarding-textarea, body.theme-light .onboarding-textarea {
+        html.theme-light .bg-indigo-500\/40,
+        body.theme-light .bg-indigo-500\/40 {
+            background-color: #c7d2fe !important;
+        }
+        html.theme-light .bg-slate-900,
+        body.theme-light .bg-slate-900 {
+            background-color: #f1f5f9 !important;
+        }
+        html.theme-light .border-slate-700,
+        body.theme-light .border-slate-700 {
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light .bg-slate-800,
+        body.theme-light .bg-slate-800 {
+            background-color: #e2e8f0 !important;
+        }
+
+        /* Form Card Wrapper */
+        html.theme-light .bg-slate-900\/60, 
+        body.theme-light .bg-slate-900\/60 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+        }
+        html.theme-light label.text-slate-300,
+        body.theme-light label.text-slate-300 {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+        }
+
+        /* Form Inputs & Textarea */
+        html.theme-light .onboarding-input, 
+        body.theme-light .onboarding-input,
+        html.theme-light .onboarding-textarea, 
+        body.theme-light .onboarding-textarea {
             background: #ffffff !important;
             border: 1.5px solid #cbd5e1 !important;
             color: #0f172a !important;
             font-weight: 600 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
         }
-        html.theme-light .onboarding-input:hover, body.theme-light .onboarding-input:hover,
-        html.theme-light .onboarding-textarea:hover, body.theme-light .onboarding-textarea:hover {
+        html.theme-light .onboarding-input:hover, 
+        body.theme-light .onboarding-input:hover,
+        html.theme-light .onboarding-textarea:hover, 
+        body.theme-light .onboarding-textarea:hover {
             border-color: #94a3b8 !important;
-            background: #f8fafc !important;
+            background: #ffffff !important;
         }
-        html.theme-light .onboarding-input:focus, body.theme-light .onboarding-input:focus,
-        html.theme-light .onboarding-textarea:focus, body.theme-light .onboarding-textarea:focus {
+        html.theme-light .onboarding-input:focus, 
+        body.theme-light .onboarding-input:focus,
+        html.theme-light .onboarding-textarea:focus, 
+        body.theme-light .onboarding-textarea:focus {
             border-color: #4f46e5 !important;
             background: #ffffff !important;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
         }
-        html.theme-light .onboarding-input::placeholder, body.theme-light .onboarding-input::placeholder,
-        html.theme-light .onboarding-textarea::placeholder, body.theme-light .onboarding-textarea::placeholder {
-            color: #64748b !important;
+        html.theme-light .onboarding-input::placeholder, 
+        body.theme-light .onboarding-input::placeholder,
+        html.theme-light .onboarding-textarea::placeholder, 
+        body.theme-light .onboarding-textarea::placeholder {
+            color: #94a3b8 !important;
+            font-weight: 400 !important;
             opacity: 1 !important;
         }
-        html.theme-light .form-input-icon, body.theme-light .form-input-icon {
+        html.theme-light .form-input-icon, 
+        body.theme-light .form-input-icon {
             color: #64748b !important;
         }
-        html.theme-light .verification-option, body.theme-light .verification-option {
-            background: #f8fafc !important;
+        html.theme-light .form-input-shell:focus-within .form-input-icon {
+            color: #4f46e5 !important;
+        }
+
+        /* Hints & Feedbacks */
+        html.theme-light #landlord-username-hint,
+        body.theme-light #landlord-username-hint {
+            color: #64748b !important;
+        }
+        html.theme-light .text-slate-500, 
+        body.theme-light .text-slate-500 {
+            color: #64748b !important;
+        }
+
+        /* Nhóm Phương Thức OTP (Khắc phục triệt để lỗi màu đen khi checked) */
+        html.theme-light #verification-method-group,
+        body.theme-light #verification-method-group,
+        html.theme-light .bg-slate-950\/70,
+        body.theme-light .bg-slate-950\/70 {
+            background-color: #f1f5f9 !important;
             border-color: #cbd5e1 !important;
         }
-        html.theme-light .verification-option:hover, body.theme-light .verification-option:hover {
-            border-color: #94a3b8 !important;
-        }
-        html.theme-light .verification-option span.text-white, body.theme-light .verification-option span.text-white {
-            color: #0f172a !important;
-            font-weight: 700 !important;
-        }
-        html.theme-light .bg-slate-900\/60, body.theme-light .bg-slate-900\/60 {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-        }
-        html.theme-light .border-slate-800, body.theme-light .border-slate-800 {
+        html.theme-light .border-slate-800, 
+        body.theme-light .border-slate-800 {
             border-color: #e2e8f0 !important;
         }
-        html.theme-light .auth-pwd-toggle, body.theme-light .auth-pwd-toggle {
+        html.theme-light .verification-option, 
+        body.theme-light .verification-option {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+        }
+        html.theme-light .verification-option:hover, 
+        body.theme-light .verification-option:hover {
+            border-color: #cbd5e1 !important;
+            background: #f8fafc !important;
+        }
+        html.theme-light .verification-option span.text-white, 
+        body.theme-light .verification-option span.text-white {
+            color: #334155 !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .verification-option .radio-indicator,
+        body.theme-light .verification-option .radio-indicator {
+            border-color: #94a3b8 !important;
+            background: #ffffff !important;
+        }
+
+        /* Khi radio được CHỌN trong Light Mode */
+        html.theme-light .verification-option:has(input:checked),
+        body.theme-light .verification-option:has(input:checked) {
+            background: #ffffff !important;
+            box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+        }
+        html.theme-light .verification-option:has(input[value="phone"]:checked),
+        body.theme-light .verification-option:has(input[value="phone"]:checked) {
+            border-color: #10b981 !important;
+            background: #f0fdf4 !important;
+        }
+        html.theme-light .verification-option:has(input[value="email"]:checked),
+        body.theme-light .verification-option:has(input[value="email"]:checked) {
+            border-color: #6366f1 !important;
+            background: #eef2ff !important;
+        }
+        html.theme-light .verification-option:has(input:checked) span.text-white,
+        body.theme-light .verification-option:has(input:checked) span.text-white {
+            color: #0f172a !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light #landlord-email-method-hint {
+            color: #b45309 !important;
+        }
+        html.theme-light #landlord-email-method-hint i {
+            color: #d97706 !important;
+        }
+
+        /* Độ mạnh mật khẩu & Nút xem mật khẩu */
+        html.theme-light .auth-pwd-toggle, 
+        body.theme-light .auth-pwd-toggle {
             color: #64748b !important;
         }
-        html.theme-light .auth-pwd-toggle:hover, body.theme-light .auth-pwd-toggle:hover {
+        html.theme-light .auth-pwd-toggle:hover, 
+        body.theme-light .auth-pwd-toggle:hover {
             color: #0f172a !important;
         }
-        html.theme-light .ambient-mesh-1, html.theme-light .ambient-mesh-2 {
-            opacity: 0.3 !important;
+        html.theme-light .auth-strength-segment {
+            background: #e2e8f0;
+            opacity: 1;
+        }
+
+        /* Khối thông báo chú thích hồ sơ */
+        html.theme-light .bg-indigo-500\/5,
+        body.theme-light .bg-indigo-500\/5 {
+            background-color: #eef2ff !important;
+            border-color: #c7d2fe !important;
+            color: #3730a3 !important;
+        }
+        html.theme-light .bg-indigo-500\/5 span,
+        body.theme-light .bg-indigo-500\/5 span {
+            color: #3730a3 !important;
+            font-weight: 500 !important;
+        }
+        html.theme-light .bg-indigo-500\/5 i,
+        body.theme-light .bg-indigo-500\/5 i {
+            color: #4f46e5 !important;
+        }
+
+        /* Nút quay lại trang đăng nhập ở chân form */
+        html.theme-light a.bg-slate-900\/90,
+        body.theme-light a.bg-slate-900\/90 {
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light a.bg-slate-900\/90:hover,
+        body.theme-light a.bg-slate-900\/90:hover {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light a.bg-slate-900\/90 i {
+            color: #64748b !important;
+        }
+
+        /* Liên kết chân trang form */
+        html.theme-light a.text-indigo-400,
+        body.theme-light a.text-indigo-400 {
+            color: #4f46e5 !important;
+        }
+        html.theme-light a.text-emerald-400,
+        body.theme-light a.text-emerald-400 {
+            color: #059669 !important;
+        }
+        html.theme-light span.text-slate-600,
+        body.theme-light span.text-slate-600 {
+            color: #cbd5e1 !important;
+        }
+
+        /* 6. Chân Trang Toàn Cục */
+        html.theme-light footer,
+        body.theme-light footer {
+            border-color: #e2e8f0 !important;
+            color: #64748b !important;
+        }
+
+        /* 7. Thông báo Toast */
+        html.theme-light .toast-card,
+        body.theme-light .toast-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.12) !important;
+        }
+        html.theme-light .toast-card .toast-message,
+        body.theme-light .toast-card .toast-message {
+            color: #0f172a !important;
         }
     </style>
 </head>
@@ -793,6 +1088,35 @@
 
     <!-- INTERACTIVE SCRIPTS -->
     <script>
+        // =========================================================
+        // QUẢN LÝ CHẾ ĐỘ SÁNG / TỐI (LIGHT / DARK THEME)
+        // =========================================================
+        function toggleThemeMode() {
+            const html = document.documentElement;
+            const isDark = !html.classList.contains('theme-light');
+            if (isDark) {
+                html.classList.add('theme-light');
+                localStorage.setItem('smartroom_theme', 'light');
+                localStorage.setItem('renty_theme_mode', 'light');
+            } else {
+                html.classList.remove('theme-light');
+                localStorage.setItem('smartroom_theme', 'dark');
+                localStorage.setItem('renty_theme_mode', 'dark');
+            }
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const isLight = document.documentElement.classList.contains('theme-light');
+            document.querySelectorAll('[data-theme-icon]').forEach(icon => {
+                if (isLight) {
+                    icon.className = 'fa-solid fa-sun text-amber-500 text-xs';
+                } else {
+                    icon.className = 'fa-solid fa-moon text-slate-400 text-xs';
+                }
+            });
+        }
+
         function togglePasswordVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -1165,6 +1489,7 @@
 
         // Client-side validation for required fields
         document.addEventListener('DOMContentLoaded', function() {
+            updateThemeIcons();
             const form = document.querySelector('form[action="{{ route('landlord.register.store') }}"]');
             if (!form) return;
 

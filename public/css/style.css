@@ -1044,29 +1044,56 @@ body.theme-flipping header::after {
 .theme-switch-sun {
     color: #f59e0b;
     opacity: 0;
-    transform: rotate(110deg) scale(0.45);
+    transform: rotate(-110deg) scale(0.45);
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.85));
 }
 
 .theme-switch-moon {
-    color: #334155;
+    color: #38bdf8;
     opacity: 1;
     transform: rotate(0) scale(1);
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));
+}
+
+.renty-theme-switch .theme-switch-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #090e17, #131c2e);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 16px rgba(0, 0, 0, 0.4);
+    transition: background 0.42s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.42s ease;
+}
+
+.renty-theme-switch .theme-switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 35% 28%, #f8fafc, #94a3b8 70%);
+    color: #0f172a;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+    transition:
+        transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+        background 0.42s ease,
+        color 0.42s ease,
+        box-shadow 0.42s ease;
 }
 
 .renty-theme-switch.is-light .theme-switch-track {
-    background: linear-gradient(135deg, #bae6fd, #fef3c7 58%, #ffffff);
-    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.28), 0 0 24px rgba(251, 191, 36, 0.18);
-}
-
-.renty-theme-switch.is-light .theme-switch-track::before {
-    opacity: 0;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.25);
 }
 
 .renty-theme-switch.is-light .theme-switch-knob {
     transform: translateX(24px);
-    background: radial-gradient(circle at 35% 32%, #fff7ed, #fbbf24 72%);
-    color: #92400e;
-    box-shadow: 0 8px 22px rgba(245, 158, 11, 0.28);
+    background: radial-gradient(circle at 35% 32%, #ffffff, #f59e0b 72%);
+    color: #78350f;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.8);
 }
 
 .renty-theme-switch.is-light .theme-switch-sun {
@@ -1076,7 +1103,7 @@ body.theme-flipping header::after {
 
 .renty-theme-switch.is-light .theme-switch-moon {
     opacity: 0;
-    transform: rotate(-110deg) scale(0.45);
+    transform: rotate(110deg) scale(0.45);
 }
 
 .renty-theme-switch.is-animating .theme-switch-knob {
@@ -1186,12 +1213,22 @@ html.theme-light .bg-slate-950,
 html.theme-light .bg-slate-900,
 html.theme-light .bg-slate-800,
 html.theme-light .bg-slate-700,
+html.theme-light .bg-slate-950\/95,
+html.theme-light .bg-slate-950\/90,
+html.theme-light .bg-slate-950\/85,
+html.theme-light .bg-slate-950\/80,
+html.theme-light .bg-slate-950\/75,
+html.theme-light .bg-slate-950\/70,
 html.theme-light .bg-slate-950\/60,
 html.theme-light .bg-slate-950\/50,
 html.theme-light .bg-slate-950\/40,
 html.theme-light .bg-slate-950\/30,
 html.theme-light .bg-slate-950\/20,
 html.theme-light .bg-slate-950\/10,
+html.theme-light .bg-slate-900\/95,
+html.theme-light .bg-slate-900\/90,
+html.theme-light .bg-slate-900\/85,
+html.theme-light .bg-slate-900\/80,
 html.theme-light .bg-slate-900\/70,
 html.theme-light .bg-slate-900\/60,
 html.theme-light .bg-slate-900\/50,
@@ -1236,12 +1273,22 @@ body.theme-light .bg-slate-950,
 body.theme-light .bg-slate-900,
 body.theme-light .bg-slate-800,
 body.theme-light .bg-slate-700,
+body.theme-light .bg-slate-950\/95,
+body.theme-light .bg-slate-950\/90,
+body.theme-light .bg-slate-950\/85,
+body.theme-light .bg-slate-950\/80,
+body.theme-light .bg-slate-950\/75,
+body.theme-light .bg-slate-950\/70,
 body.theme-light .bg-slate-950\/60,
 body.theme-light .bg-slate-950\/50,
 body.theme-light .bg-slate-950\/40,
 body.theme-light .bg-slate-950\/30,
 body.theme-light .bg-slate-950\/20,
 body.theme-light .bg-slate-950\/10,
+body.theme-light .bg-slate-900\/95,
+body.theme-light .bg-slate-900\/90,
+body.theme-light .bg-slate-900\/85,
+body.theme-light .bg-slate-900\/80,
 body.theme-light .bg-slate-900\/70,
 body.theme-light .bg-slate-900\/60,
 body.theme-light .bg-slate-900\/50,
@@ -1381,10 +1428,65 @@ body.theme-light .text-sky-100\/75 {
     color: #0369a1 !important; /* sky-700 */
 }
 
+html.theme-light .text-indigo-300,
+html.theme-light .text-indigo-200,
+html.theme-light .text-indigo-100,
+body.theme-light .text-indigo-300,
+body.theme-light .text-indigo-200,
+body.theme-light .text-indigo-100 {
+    color: #4338ca !important; /* indigo-700: đậm nét trên nền sáng */
+}
+
+html.theme-light .text-purple-300,
+html.theme-light .text-purple-200,
+html.theme-light .text-purple-100,
+body.theme-light .text-purple-300,
+body.theme-light .text-purple-200,
+body.theme-light .text-purple-100 {
+    color: #6b21a8 !important; /* purple-800 */
+}
+
+html.theme-light .text-rose-300,
+html.theme-light .text-rose-200,
+html.theme-light .text-rose-100,
+body.theme-light .text-rose-300,
+body.theme-light .text-rose-200,
+body.theme-light .text-rose-100 {
+    color: #be123c !important; /* rose-700 */
+}
+
+html.theme-light .text-teal-300,
+html.theme-light .text-teal-200,
+html.theme-light .text-teal-100,
+body.theme-light .text-teal-300,
+body.theme-light .text-teal-200,
+body.theme-light .text-teal-100 {
+    color: #0f766e !important; /* teal-700 */
+}
+
+html.theme-light .text-emerald-300,
+html.theme-light .text-emerald-200,
+html.theme-light .text-emerald-100,
+body.theme-light .text-emerald-300,
+body.theme-light .text-emerald-200,
+body.theme-light .text-emerald-100 {
+    color: #047857 !important; /* emerald-700 */
+}
+
+html.theme-light .text-blue-300,
+html.theme-light .text-blue-200,
+html.theme-light .text-blue-100,
+body.theme-light .text-blue-300,
+body.theme-light .text-blue-200,
+body.theme-light .text-blue-100 {
+    color: #1d4ed8 !important; /* blue-700 */
+}
+
 /* Light mode overrides for hover backgrounds in tables and lists */
 html.theme-light .hover\:bg-slate-800\/50:hover,
 html.theme-light .hover\:bg-slate-800\/60:hover,
 html.theme-light .hover\:bg-slate-900\/30:hover,
+html.theme-light .hover\:bg-slate-900\/40:hover,
 html.theme-light .hover\:bg-slate-900\/50:hover,
 html.theme-light .hover\:bg-slate-900\/60:hover,
 html.theme-light .hover\:bg-slate-900:hover,
@@ -1393,6 +1495,7 @@ html.theme-light .hover\:bg-slate-800:hover,
 body.theme-light .hover\:bg-slate-800\/50:hover,
 body.theme-light .hover\:bg-slate-800\/60:hover,
 body.theme-light .hover\:bg-slate-900\/30:hover,
+body.theme-light .hover\:bg-slate-900\/40:hover,
 body.theme-light .hover\:bg-slate-900\/50:hover,
 body.theme-light .hover\:bg-slate-900\/60:hover,
 body.theme-light .hover\:bg-slate-900:hover,
@@ -1405,26 +1508,42 @@ body.theme-light .hover\:border-slate-800:hover {
     border-color: rgba(203, 213, 225, 0.86) !important;
 }
 
-
 html.theme-light aside,
 body.theme-light aside {
-    background: rgba(255, 255, 255, 0.9) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
     border-color: rgba(203, 213, 225, 0.86) !important;
 }
 
+/* Table header & borders trong Light mode: Không để thead bị đen thui */
 html.theme-light table,
-html.theme-light thead,
+body.theme-light table {
+    border-color: rgba(203, 213, 225, 0.86) !important;
+}
+
+html.theme-light table thead,
+body.theme-light table thead,
+html.theme-light thead.bg-slate-900\/90,
+body.theme-light thead.bg-slate-900\/90,
+html.theme-light thead.bg-slate-900,
+body.theme-light thead.bg-slate-900 {
+    background-color: #f1f5f9 !important; /* Nền xám sáng thanh lịch */
+    border-bottom: 1px solid #cbd5e1 !important;
+}
+
+html.theme-light table thead th,
+body.theme-light table thead th,
+html.theme-light thead th {
+    color: #1e293b !important; /* Chữ tiêu đề cột đậm nét, cực rõ ràng */
+    font-weight: 700 !important;
+}
+
 html.theme-light tbody,
 html.theme-light tr,
 html.theme-light td,
-html.theme-light th,
-body.theme-light table,
-body.theme-light thead,
 body.theme-light tbody,
 body.theme-light tr,
-body.theme-light td,
-body.theme-light th {
-    border-color: rgba(203, 213, 225, 0.86) !important;
+body.theme-light td {
+    border-color: rgba(226, 232, 240, 0.85) !important;
 }
 
 html.theme-light .text-slate-100,
@@ -1433,16 +1552,118 @@ html.theme-light .text-slate-300,
 body.theme-light .text-slate-100,
 body.theme-light .text-slate-200,
 body.theme-light .text-slate-300 {
-    color: #1e293b !important;
+    color: #0f172a !important; /* slate-900 đậm rõ nét */
 }
 
+/* Tăng cường độ tương phản văn bản phụ trên nền sáng (WCAG AA) */
 html.theme-light .text-slate-400,
+body.theme-light .text-slate-400 {
+    color: #475569 !important; /* slate-600 */
+}
+
 html.theme-light .text-slate-500,
+body.theme-light .text-slate-500 {
+    color: #334155 !important; /* slate-700: tránh mờ nhạt */
+}
+
 html.theme-light .text-slate-600,
-body.theme-light .text-slate-400,
-body.theme-light .text-slate-500,
 body.theme-light .text-slate-600 {
-    color: #64748b !important;
+    color: #1e293b !important; /* slate-800 */
+}
+
+/* Nút bấm hành động quản trị (Action Buttons) */
+html.theme-light .bg-indigo-500\/10,
+body.theme-light .bg-indigo-500\/10 {
+    background-color: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    color: #4338ca !important;
+}
+html.theme-light .hover\:bg-indigo-500\/20:hover,
+body.theme-light .hover\:bg-indigo-500\/20:hover {
+    background-color: #e0e7ff !important;
+}
+
+html.theme-light .bg-rose-500\/10,
+body.theme-light .bg-rose-500\/10 {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    color: #be123c !important;
+}
+html.theme-light .hover\:bg-rose-500\/20:hover,
+body.theme-light .hover\:bg-rose-500\/20:hover {
+    background-color: #ffe4e6 !important;
+}
+
+html.theme-light table button.bg-slate-800,
+body.theme-light table button.bg-slate-800,
+html.theme-light table a.bg-slate-800,
+body.theme-light table a.bg-slate-800 {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+}
+html.theme-light table button.bg-slate-800:hover,
+body.theme-light table button.bg-slate-800:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Badges trạng thái & vai trò */
+html.theme-light .bg-emerald-500\/15,
+body.theme-light .bg-emerald-500\/15 {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #047857 !important;
+}
+html.theme-light .bg-amber-500\/15,
+body.theme-light .bg-amber-500\/15 {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #b45309 !important;
+}
+html.theme-light .bg-rose-500\/15,
+body.theme-light .bg-rose-500\/15 {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    color: #be123c !important;
+}
+html.theme-light .bg-slate-700\/30,
+body.theme-light .bg-slate-700\/30 {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+}
+html.theme-light .bg-purple-500\/15,
+body.theme-light .bg-purple-500\/15 {
+    background-color: #faf5ff !important;
+    border-color: #e9d5ff !important;
+    color: #7e22ce !important;
+}
+html.theme-light .bg-blue-500\/15,
+body.theme-light .bg-blue-500\/15 {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #1d4ed8 !important;
+}
+html.theme-light .bg-cyan-500\/15,
+body.theme-light .bg-cyan-500\/15 {
+    background-color: #ecfeff !important;
+    border-color: #a5f3fc !important;
+    color: #0e7490 !important;
+}
+html.theme-light .bg-teal-500\/15,
+body.theme-light .bg-teal-500\/15 {
+    background-color: #f0fdfa !important;
+    border-color: #99f6e4 !important;
+    color: #0f766e !important;
+}
+
+/* Avatar trong bảng: Nền sáng nhẹ, chữ nổi bật */
+html.theme-light td .w-9.h-9.bg-gradient-to-tr,
+body.theme-light td .w-9.h-9.bg-gradient-to-tr {
+    background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%) !important;
+    border-color: #c7d2fe !important;
+    color: #4338ca !important;
 }
 
 html.theme-light .bg-clip-text.text-transparent:not(.renty-brand-text):not(.app-brand-text):not(.hero-title-accent),
@@ -2844,6 +3065,16 @@ body.renty-map-mode main {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Fullscreen mode for Map Explorer (Hides header, expands to 100vh) */
+body.renty-map-mode.renty-map-fullscreen header {
+    display: none !important;
+}
+
+body.renty-map-mode.renty-map-fullscreen main {
+    height: 100vh !important;
+    border-top: none !important;
+}
+
 /* Split-screen columns with smooth transition */
 .renty-split-left {
     width: 0;
@@ -2880,6 +3111,29 @@ body.renty-map-mode .renty-split-right {
     /* Make list column 50% width */
     height: 100%;
     overflow-y: auto;
+}
+
+#renty-interactive-map {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#renty-interactive-map .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    background: #090d16 !important;
+}
+
+.renty-new-badge {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    color: #ffffff;
+}
+html.theme-fire .renty-new-badge,
+body.theme-fire .renty-new-badge {
+    background: linear-gradient(135deg, #dc2626, #f97316);
 }
 
 /* Staggered card fade-in keyframes for premium transitions */
@@ -4190,66 +4444,6 @@ body.theme-light .room-status-empty {
 }
 .renty-chatbot-send-btn:active { transform: scale(0.94); }
 
-/* ── UI Error & Validation (FEAT_22) ─────────────────────────────────── */
-.renty-chatbot-input-wrapper {
-    display: flex;
-    flex-direction: column;
-}
-.renty-chat-error-text {
-    font-size: 11px;
-    font-weight: 600;
-    color: #ef4444;
-    padding: 6px 16px 2px 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    animation: cbMsgIn 0.25s ease-out;
-}
-.renty-chat-error-text.hidden {
-    display: none !important;
-}
-
-@keyframes rentyInputShake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-6px); }
-    40%, 80% { transform: translateX(6px); }
-}
-
-.renty-input-shake {
-    animation: rentyInputShake 0.4s ease-in-out !important;
-    border-color: #ef4444 !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
-}
-
-.renty-cb-msg-error .renty-cb-msg-icon {
-    background: #ef4444 !important;
-    color: #fff !important;
-}
-.renty-cb-msg-error .renty-cb-bubble {
-    border-color: rgba(239, 68, 68, 0.4) !important;
-    background: rgba(239, 68, 68, 0.1) !important;
-    color: #fca5a5 !important;
-}
-.renty-cb-retry-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 8px;
-    padding: 4px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(239, 68, 68, 0.5);
-    background: rgba(239, 68, 68, 0.2);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.renty-cb-retry-btn:hover {
-    background: #ef4444;
-    color: #fff;
-}
-
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
     .renty-chatbot-panel {
@@ -4495,12 +4689,36 @@ body.theme-light #renty-hero-section .text-slate-500 {
 
 html.theme-light #renty-hero-section .group\/search > div:nth-child(2),
 body.theme-light #renty-hero-section .group\/search > div:nth-child(2) {
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
+
+/* Hero Search Bar Container Light Mode */
+html.theme-light #hero-search-box-container,
+body.theme-light #hero-search-box-container {
     background-color: #ffffff !important;
-    border-color: rgba(203, 213, 225, 0.8) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.theme-light #hero-search-box-container:focus-within,
+body.theme-light #hero-search-box-container:focus-within {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 10px 25px -5px rgba(15, 23, 42, 0.1) !important;
+}
+
+html.theme-light #hero-search-box-container .fa-location-dot,
+body.theme-light #hero-search-box-container .fa-location-dot {
+    color: #059669 !important;
 }
 
 html.theme-light #hero-search-input,
 body.theme-light #hero-search-input {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
     color: #0f172a !important;
 }
 
@@ -4509,25 +4727,177 @@ body.theme-light #hero-search-input::placeholder {
     color: #94a3b8 !important;
 }
 
+html.theme-light #hero-search-clear-btn,
+body.theme-light #hero-search-clear-btn {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+html.theme-light #hero-search-clear-btn:hover,
+body.theme-light #hero-search-clear-btn:hover {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+.hero-search-btn-glass,
+#btn-hero-search-submit {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(13, 148, 136, 0.95)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    color: #ffffff !important;
+}
+
+.hero-search-btn-glass:hover,
+#btn-hero-search-submit:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(20, 184, 166, 1)) !important;
+    border-color: rgba(255, 255, 255, 0.38) !important;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.45) !important;
+    transform: translateY(-0.5px);
+}
+
+.theme-light .hero-search-btn-glass,
+html.theme-light #btn-hero-search-submit,
+body.theme-light #btn-hero-search-submit {
+    background: linear-gradient(135deg, #059669, #0d9488) !important;
+    background-color: #059669 !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
+    color: #ffffff !important;
+}
+
+.theme-light .hero-search-btn-glass:hover,
+html.theme-light #btn-hero-search-submit:hover,
+body.theme-light #btn-hero-search-submit:hover {
+    background: linear-gradient(135deg, #047857, #0f766e) !important;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+html.theme-light #btn-hero-search-submit i,
+html.theme-light #btn-hero-search-submit span,
+body.theme-light #btn-hero-search-submit i,
+body.theme-light #btn-hero-search-submit span {
+    color: #ffffff !important;
+}
+
+html.theme-light #hero-quick-tags span,
+body.theme-light #hero-quick-tags span {
+    color: #64748b !important;
+}
+
+html.theme-light #hero-quick-tags .quick-filter-tag,
+body.theme-light #hero-quick-tags .quick-filter-tag {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+html.theme-light #hero-quick-tags .quick-filter-tag:hover,
+body.theme-light #hero-quick-tags .quick-filter-tag:hover {
+    background-color: #ecfdf5 !important;
+    border-color: #10b981 !important;
+    color: #059669 !important;
+}
+
 html.theme-light #renty-hero-section .border-t,
 body.theme-light #renty-hero-section .border-t {
     border-top-color: rgba(226, 232, 240, 0.8) !important;
 }
 
-html.theme-light #renty-hero-section button,
-body.theme-light #renty-hero-section button {
+html.theme-light #renty-hero-section button:not(#btn-hero-search-submit):not(#hero-search-clear-btn),
+body.theme-light #renty-hero-section button:not(#btn-hero-search-submit):not(#hero-search-clear-btn) {
     background-color: #ffffff !important;
     border-color: rgba(203, 213, 225, 0.8) !important;
     color: #475569 !important;
 }
 
-html.theme-light #renty-hero-section button:hover,
-body.theme-light #renty-hero-section button:hover {
+html.theme-light #renty-hero-section button:not(#btn-hero-search-submit):not(#hero-search-clear-btn):hover,
+body.theme-light #renty-hero-section button:not(#btn-hero-search-submit):not(#hero-search-clear-btn):hover {
     background-color: #f8fafc !important;
     border-color: rgba(13, 148, 136, 0.3) !important;
     color: #0d9488 !important;
 }
 
+/* Light mode for Empty State */
+html.theme-light #smart-search-empty-state,
+body.theme-light #smart-search-empty-state {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.06) !important;
+}
+
+html.theme-light #smart-search-empty-state > div:first-child,
+body.theme-light #smart-search-empty-state > div:first-child {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15) !important;
+}
+
+html.theme-light #smart-search-empty-state > div:first-child i,
+body.theme-light #smart-search-empty-state > div:first-child i {
+    color: #059669 !important;
+}
+
+html.theme-light #smart-search-empty-title,
+body.theme-light #smart-search-empty-title {
+    color: #0f172a !important;
+}
+
+html.theme-light #smart-search-empty-code,
+html.theme-light #smart-search-empty-state p,
+body.theme-light #smart-search-empty-code,
+body.theme-light #smart-search-empty-state p {
+    color: #475569 !important;
+}
+
+html.theme-light #smart-search-empty-did-you-mean,
+body.theme-light #smart-search-empty-did-you-mean {
+    background-color: #ecfdf5 !important;
+    border-color: #6ee7b7 !important;
+    color: #065f46 !important;
+}
+
+html.theme-light #smart-search-empty-did-you-mean strong,
+body.theme-light #smart-search-empty-did-you-mean strong {
+    color: #047857 !important;
+}
+
+html.theme-light #btnExploreEmpty,
+body.theme-light #btnExploreEmpty {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+}
+
+html.theme-light #btnExploreEmpty i,
+body.theme-light #btnExploreEmpty i {
+    color: #ffffff !important;
+}
+
+html.theme-light #btnResetFilterEmpty,
+body.theme-light #btnResetFilterEmpty {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.theme-light #btnResetFilterEmpty:hover,
+body.theme-light #btnResetFilterEmpty:hover {
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light #btnResetFilterEmpty i,
+body.theme-light #btnResetFilterEmpty i {
+    color: #64748b !important;
+}
 /* Stat Cards in Bento Box 2 */
 html.theme-light #renty-hero-section .space-y-4 > div,
 body.theme-light #renty-hero-section .space-y-4 > div {
@@ -5470,205 +5840,9 @@ body.theme-light .renty-chatbot-mascot {
     cursor: pointer;
 }
 
-.auth-checkbox-label:hover {
-    color: #e2e8f0;
-}
-
-:root, [data-duo="violet-mint"] {
-    --duo-1: #8b5cf6;
-    --duo-2: #10b981;
-    --duo-gradient: linear-gradient(135deg, #8b5cf6 0%, #10b981 100%);
-    --duo-glow: 0 4px 20px rgba(139, 92, 246, 0.4);
-    --duo-border: rgba(139, 92, 246, 0.35);
-    --duo-soft: rgba(139, 92, 246, 0.12);
-}
-
-[data-duo="ice-fire"] {
-    --duo-1: #0284c7;
-    --duo-2: #f97316;
-    --duo-gradient: linear-gradient(135deg, #0284c7 0%, #f97316 100%);
-    --duo-glow: 0 4px 20px rgba(249, 115, 22, 0.4);
-    --duo-border: rgba(2, 132, 199, 0.35);
-    --duo-soft: rgba(2, 132, 199, 0.12);
-}
-
-[data-duo="pink-cyan"] {
-    --duo-1: #f43f5e;
-    --duo-2: #06b6d4;
-    --duo-gradient: linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%);
-    --duo-glow: 0 4px 20px rgba(244, 63, 94, 0.4);
-    --duo-border: rgba(244, 63, 94, 0.35);
-    --duo-soft: rgba(244, 63, 94, 0.12);
-}
-
-[data-duo="amber-blue"] {
-    --duo-1: #f59e0b;
-    --duo-2: #3b82f6;
-    --duo-gradient: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
-    --duo-glow: 0 4px 20px rgba(245, 158, 11, 0.4);
-    --duo-border: rgba(245, 158, 11, 0.35);
-    --duo-soft: rgba(245, 158, 11, 0.12);
-}
-
-[data-duo] #admin-sidebar .sidebar-brand div {
-    background: var(--duo-gradient) !important;
-    box-shadow: var(--duo-glow) !important;
-}
-
-[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] {
-    background: linear-gradient(90deg, var(--duo-soft), transparent) !important;
-    color: var(--duo-1) !important;
-    border-color: var(--duo-border) !important;
-}
-
-[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] i {
-    color: var(--duo-2) !important;
-}
-
-[data-duo] #admin-sidebar .sidebar-user > div:first-child {
-    background: var(--duo-gradient) !important;
-    color: #ffffff !important;
-    border-color: transparent !important;
-    box-shadow: var(--duo-glow) !important;
-}
-
-[data-duo] .bg-indigo-600 {
-    background: var(--duo-gradient) !important;
-    border: none !important;
-    box-shadow: var(--duo-glow) !important;
-}
-
-[data-duo] .text-indigo-400 {
-    color: var(--duo-1) !important;
-}
-[data-duo] .text-indigo-500 {
-    color: var(--duo-2) !important;
-}
-
-[data-duo] .border-indigo-500 {
-    border-color: var(--duo-1) !important;
-}
-[data-duo] .focus\:border-indigo-500:focus {
-    border-color: var(--duo-2) !important;
-}
-[data-duo] .focus\:ring-indigo-500\/40:focus {
-    --tw-ring-color: var(--duo-border) !important;
-}
-
-/* Logo Renty: Màu bên ngoài thay đổi linh hoạt theo theme Duo Accent, icon kính lúp + vị trí bản đồ bên trong giữ màu xanh */
-.renty-logo-badge {
-    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
-    box-shadow: var(--duo-glow, 0 4px 18px rgba(16, 185, 129, 0.4)) !important;
-}
-
-.theme-light .renty-logo-badge {
-    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
-    box-shadow: var(--duo-glow, 0 4px 12px rgba(5, 150, 105, 0.3)) !important;
-}
-
-.renty-logo-badge i,
-.renty-logo-icon {
-    color: #10b981 !important;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 6px rgba(16, 185, 129, 0.8)) !important;
-}
-
-        /* ============================================================ */
-    /* ÁNH LỬA XANH CHÁY NHẸ BẬP BÙNG QUANH VIỀN BANNER (TÍCH XANH) */
-    /* ============================================================ */
-    .verified-flame-banner {
-        position: relative !important;
-        border-radius: 1rem 1rem 0 0 !important;
-        /* Ánh lửa xanh nhẹ bập bùng quanh viền, KHÔNG xoay vòng, KHÔNG che ảnh */
-        border: 1.5px solid rgba(56, 189, 248, 0.75) !important;
-        animation: blueFlameNaturalFlicker 2.2s ease-in-out infinite !important;
-    }
-
-    @keyframes blueFlameNaturalFlicker {
-        0% {
-            box-shadow: 
-                0 0 5px rgba(56, 189, 248, 0.65),
-                0 0 11px rgba(14, 165, 233, 0.35),
-                0 0 18px rgba(2, 132, 199, 0.15);
-            border-color: rgba(56, 189, 248, 0.7);
-        }
-        18% {
-            box-shadow: 
-                0 0 8px rgba(56, 189, 248, 0.85),
-                0 0 16px rgba(14, 165, 233, 0.45),
-                0 0 24px rgba(2, 132, 199, 0.22);
-            border-color: rgba(125, 211, 252, 0.9);
-        }
-        35% {
-            box-shadow: 
-                0 0 4px rgba(56, 189, 248, 0.55),
-                0 0 9px rgba(14, 165, 233, 0.28),
-                0 0 16px rgba(2, 132, 199, 0.12);
-            border-color: rgba(56, 189, 248, 0.6);
-        }
-        52% {
-            box-shadow: 
-                0 0 9px rgba(56, 189, 248, 0.95),
-                0 0 18px rgba(14, 165, 233, 0.5),
-                0 0 28px rgba(2, 132, 199, 0.25);
-            border-color: rgba(186, 230, 253, 1);
-        }
-        70% {
-            box-shadow: 
-                0 0 6px rgba(56, 189, 248, 0.7),
-                0 0 13px rgba(14, 165, 233, 0.38),
-                0 0 20px rgba(2, 132, 199, 0.18);
-            border-color: rgba(56, 189, 248, 0.75);
-        }
-        85% {
-            box-shadow: 
-                0 0 8px rgba(56, 189, 248, 0.8),
-                0 0 15px rgba(14, 165, 233, 0.42),
-                0 0 23px rgba(2, 132, 199, 0.2);
-            border-color: rgba(125, 211, 252, 0.85);
-        }
-        100% {
-            box-shadow: 
-                0 0 5px rgba(56, 189, 248, 0.65),
-                0 0 11px rgba(14, 165, 233, 0.35),
-                0 0 18px rgba(2, 132, 199, 0.15);
-            border-color: rgba(56, 189, 248, 0.7);
-        }
-    }
-
-    /* Khi rê chuột: ngọn lửa bùng sáng nhẹ hơn */
-    .room-item-card:hover .verified-flame-banner {
-        box-shadow: 
-            0 0 12px rgba(56, 189, 248, 1),
-            0 0 24px rgba(14, 165, 233, 0.6),
-            0 0 36px rgba(2, 132, 199, 0.3) !important;
-        border-color: #38bdf8 !important;
-        transition: box-shadow 0.25s ease, border-color 0.25s ease;
-    }
-
-    /* Huy hiệu Tích Xanh ánh lửa rực rỡ */
-    .verified-flame-badge {
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(56, 189, 248, 0.2)) !important;
-        border: 1px solid rgba(56, 189, 248, 0.75) !important;
-        color: #e0f2fe !important;
-        box-shadow: 0 0 8px rgba(56, 189, 248, 0.5), 0 0 14px rgba(14, 165, 233, 0.25) !important;
-        animation: blueFlameBadgeGlow 2.5s ease-in-out infinite alternate !important;
-    }
-    .verified-flame-badge i {
-        color: #38bdf8 !important;
-        filter: drop-shadow(0 0 4px #00f2fe) !important;
-    }
-
-    @keyframes blueFlameBadgeGlow {
-        0% {
-            box-shadow: 0 0 5px rgba(56, 189, 248, 0.35);
-        }
-        100% {
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 18px rgba(14, 165, 233, 0.35);
-        }
-    }
-
 /* ==========================================================================
    LIGHT MODE OVERRIDES FOR AUTH & ONBOARDING (ĐĂNG NHẬP, ĐĂNG KÝ, CHỦ TRỌ)
+   Khắc phục toàn bộ tình trạng chữ mờ, nền tối lẫn lộn khi ở chế độ Light
    ========================================================================== */
 html.theme-light .auth-card-modern,
 body.theme-light .auth-card-modern,
@@ -5906,6 +6080,264 @@ body.theme-light .chip-button:hover {
     color: #3730a3 !important;
 }
 
+/* ==========================================================================
+   SMARTROOM DUAL-TONE (DOUBLE MÀU) ACCENT SYSTEM
+   Nền tảng chính là Light & Dark chuẩn.
+   Điểm nhấn là 4 cặp màu kép thời thượng:
+   1. violet-mint: Tím Thạch Anh & Xanh Bạc Hà (Cyberpunk Neon)
+   2. ice-fire: Hàn Băng Tuyết & Hỏa Diễm Rực Lửa (Băng & Hỏa)
+   3. pink-cyan: Hồng Neon & Xanh Lam Điện Tử (Synthwave Wave)
+   4. amber-blue: Cam Hổ Phách & Xanh Biển Sâu (Sunset Horizon)
+   ========================================================================== */
+
+:root, [data-duo="violet-mint"] {
+    --duo-1: #8b5cf6;
+    --duo-2: #10b981;
+    --duo-gradient: linear-gradient(135deg, #8b5cf6 0%, #10b981 100%);
+    --duo-glow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    --duo-border: rgba(139, 92, 246, 0.35);
+    --duo-soft: rgba(139, 92, 246, 0.12);
+}
+
+[data-duo="ice-fire"] {
+    --duo-1: #0284c7;
+    --duo-2: #f97316;
+    --duo-gradient: linear-gradient(135deg, #0284c7 0%, #f97316 100%);
+    --duo-glow: 0 4px 20px rgba(249, 115, 22, 0.4);
+    --duo-border: rgba(2, 132, 199, 0.35);
+    --duo-soft: rgba(2, 132, 199, 0.12);
+}
+
+[data-duo="pink-cyan"] {
+    --duo-1: #f43f5e;
+    --duo-2: #06b6d4;
+    --duo-gradient: linear-gradient(135deg, #f43f5e 0%, #06b6d4 100%);
+    --duo-glow: 0 4px 20px rgba(244, 63, 94, 0.4);
+    --duo-border: rgba(244, 63, 94, 0.35);
+    --duo-soft: rgba(244, 63, 94, 0.12);
+}
+
+[data-duo="amber-blue"] {
+    --duo-1: #f59e0b;
+    --duo-2: #3b82f6;
+    --duo-gradient: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
+    --duo-glow: 0 4px 20px rgba(245, 158, 11, 0.4);
+    --duo-border: rgba(245, 158, 11, 0.35);
+    --duo-soft: rgba(245, 158, 11, 0.12);
+}
+
+/* Áp dụng double màu vào các thành phần chính của Admin */
+[data-duo] #admin-sidebar .sidebar-brand div {
+    background: var(--duo-gradient) !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] #admin-sidebar a[class*="text-indigo-400"],
+[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] {
+    background: linear-gradient(90deg, var(--duo-soft), transparent) !important;
+    color: var(--duo-1) !important;
+    border-color: var(--duo-border) !important;
+}
+
+[data-duo] #admin-sidebar a[class*="text-indigo-400"] i,
+[data-duo] #admin-sidebar .sidebar-nav-link[class*="text-indigo-400"] i {
+    color: var(--duo-2) !important;
+}
+
+[data-duo] #admin-sidebar .sidebar-user > div:first-child {
+    background: var(--duo-gradient) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] .bg-indigo-600 {
+    background: var(--duo-gradient) !important;
+    border: none !important;
+    box-shadow: var(--duo-glow) !important;
+}
+
+[data-duo] .text-indigo-400 {
+    color: var(--duo-1) !important;
+}
+[data-duo] .text-indigo-500 {
+    color: var(--duo-2) !important;
+}
+
+[data-duo] .border-indigo-500 {
+    border-color: var(--duo-1) !important;
+}
+[data-duo] .focus\:border-indigo-500:focus {
+    border-color: var(--duo-2) !important;
+}
+[data-duo] .focus\:ring-indigo-500\/40:focus {
+    --tw-ring-color: var(--duo-border) !important;
+}
+
+/* Logo Renty: Màu bên ngoài thay đổi linh hoạt theo theme Duo Accent, icon kính lúp + vị trí bản đồ bên trong giữ màu xanh */
+.renty-logo-badge {
+    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+    box-shadow: var(--duo-glow, 0 4px 18px rgba(16, 185, 129, 0.4)) !important;
+}
+
+.theme-light .renty-logo-badge {
+    background: var(--duo-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+    box-shadow: var(--duo-glow, 0 4px 12px rgba(5, 150, 105, 0.3)) !important;
+}
+
+.renty-logo-badge i,
+.renty-logo-icon {
+    color: #10b981 !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 6px rgba(16, 185, 129, 0.8)) !important;
+}
+
+        /* ============================================================ */
+    /* ÁNH LỬA XANH CHÁY NHẸ BẬP BÙNG QUANH VIỀN THẺ PHÒNG HÌNH CHỮ NHẬT */
+    /* ============================================================ */
+    .room-item-card.verified-flame-card,
+    .verified-flame-card,
+    .verified-flame-banner {
+        position: relative !important;
+        /* Ánh lửa xanh nhẹ bập bùng ôm trọn viền hình chữ nhật của thẻ */
+        border: 1.5px solid rgba(56, 189, 248, 0.75) !important;
+        animation: blueFlameNaturalFlicker 2.2s ease-in-out infinite !important;
+        transition: transform var(--transition-normal, 0.25s), box-shadow 0.25s ease, border-color 0.25s ease !important;
+    }
+
+    @keyframes blueFlameNaturalFlicker {
+        0% {
+            box-shadow: 
+                0 0 5px rgba(56, 189, 248, 0.65),
+                0 0 11px rgba(14, 165, 233, 0.35),
+                0 0 18px rgba(2, 132, 199, 0.15);
+            border-color: rgba(56, 189, 248, 0.7);
+        }
+        18% {
+            box-shadow: 
+                0 0 8px rgba(56, 189, 248, 0.85),
+                0 0 16px rgba(14, 165, 233, 0.45),
+                0 0 24px rgba(2, 132, 199, 0.22);
+            border-color: rgba(125, 211, 252, 0.9);
+        }
+        35% {
+            box-shadow: 
+                0 0 4px rgba(56, 189, 248, 0.55),
+                0 0 9px rgba(14, 165, 233, 0.28),
+                0 0 16px rgba(2, 132, 199, 0.12);
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+        52% {
+            box-shadow: 
+                0 0 9px rgba(56, 189, 248, 0.95),
+                0 0 18px rgba(14, 165, 233, 0.5),
+                0 0 28px rgba(2, 132, 199, 0.25);
+            border-color: rgba(186, 230, 253, 1);
+        }
+        70% {
+            box-shadow: 
+                0 0 6px rgba(56, 189, 248, 0.7),
+                0 0 13px rgba(14, 165, 233, 0.38),
+                0 0 20px rgba(2, 132, 199, 0.18);
+            border-color: rgba(56, 189, 248, 0.75);
+        }
+        85% {
+            box-shadow: 
+                0 0 8px rgba(56, 189, 248, 0.8),
+                0 0 15px rgba(14, 165, 233, 0.42),
+                0 0 23px rgba(2, 132, 199, 0.2);
+            border-color: rgba(125, 211, 252, 0.85);
+        }
+        100% {
+            box-shadow: 
+                0 0 5px rgba(56, 189, 248, 0.65),
+                0 0 11px rgba(14, 165, 233, 0.35),
+                0 0 18px rgba(2, 132, 199, 0.15);
+            border-color: rgba(56, 189, 248, 0.7);
+        }
+    }
+
+    /* Khi rê chuột: ngọn lửa bùng sáng nhẹ hơn */
+    .room-item-card.verified-flame-card:hover,
+    .room-item-card:hover .verified-flame-banner {
+        box-shadow: 
+            0 0 12px rgba(56, 189, 248, 1),
+            0 0 24px rgba(14, 165, 233, 0.6),
+            0 0 36px rgba(2, 132, 199, 0.3) !important;
+        border-color: #38bdf8 !important;
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    /* Huy hiệu Tích Xanh ánh lửa rực rỡ */
+    .verified-flame-badge {
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(56, 189, 248, 0.2)) !important;
+        border: 1px solid rgba(56, 189, 248, 0.75) !important;
+        color: #e0f2fe !important;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.5), 0 0 14px rgba(14, 165, 233, 0.25) !important;
+        animation: blueFlameBadgeGlow 2.5s ease-in-out infinite alternate !important;
+    }
+    .verified-flame-badge i {
+        color: #38bdf8 !important;
+        filter: drop-shadow(0 0 4px #00f2fe) !important;
+    }
+
+    @keyframes blueFlameBadgeGlow {
+        0% {
+            box-shadow: 0 0 5px rgba(56, 189, 248, 0.35);
+        }
+        100% {
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 18px rgba(14, 165, 233, 0.35);
+        }
+    }
+
+/* ===== LIGHT MODE STYLING CHO AUTH & ONBOARDING & VERIFY ===== */
+html.theme-light .auth-card-modern, body.theme-light .auth-card-modern,
+html.theme-light .login-card-upgraded, body.theme-light .login-card-upgraded,
+html.theme-light .register-card-upgraded, body.theme-light .register-card-upgraded,
+html.theme-light .glass-panel, body.theme-light .glass-panel,
+html.theme-light .glass-panel-subtle, body.theme-light .glass-panel-subtle,
+html.theme-light .glass-card, body.theme-light .glass-card {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.1) !important;
+    color: #0f172a !important;
+}
+
+html.theme-light .onboarding-input, body.theme-light .onboarding-input,
+html.theme-light .onboarding-textarea, body.theme-light .onboarding-textarea,
+html.theme-light .auth-input-field, body.theme-light .auth-input-field,
+html.theme-light .login-input-control, body.theme-light .login-input-control {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.theme-light .onboarding-input:hover, body.theme-light .onboarding-input:hover,
+html.theme-light .onboarding-textarea:hover, body.theme-light .onboarding-textarea:hover,
+html.theme-light .auth-input-field:hover, body.theme-light .auth-input-field:hover,
+html.theme-light .login-input-control:hover, body.theme-light .login-input-control:hover {
+    border-color: #94a3b8 !important;
+    background: #f8fafc !important;
+}
+
+html.theme-light .onboarding-input:focus, body.theme-light .onboarding-input:focus,
+html.theme-light .onboarding-textarea:focus, body.theme-light .onboarding-textarea:focus,
+html.theme-light .auth-input-field:focus, body.theme-light .auth-input-field:focus,
+html.theme-light .login-input-control:focus, body.theme-light .login-input-control:focus {
+    border-color: #4f46e5 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+html.theme-light .onboarding-input::placeholder, body.theme-light .onboarding-input::placeholder,
+html.theme-light .onboarding-textarea::placeholder, body.theme-light .onboarding-textarea::placeholder,
+html.theme-light .auth-input-field::placeholder, body.theme-light .auth-input-field::placeholder,
+html.theme-light .login-input-control::placeholder, body.theme-light .login-input-control::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+}
+
 html.theme-light .otp-box, body.theme-light .otp-box {
     background: #ffffff !important;
     border: 2px solid #cbd5e1 !important;
@@ -5921,20 +6353,21 @@ html.theme-light .otp-box::placeholder, body.theme-light .otp-box::placeholder {
     opacity: 0.6 !important;
 }
 
-html.theme-light .glass-panel-subtle, body.theme-light .glass-panel-subtle {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.05) !important;
-    color: #0f172a !important;
+html.theme-light .form-input-icon, body.theme-light .form-input-icon,
+html.theme-light .auth-input-icon, body.theme-light .auth-input-icon {
+    color: #64748b !important;
 }
 
+html.theme-light .verification-option, body.theme-light .verification-option,
 html.theme-light .verification-pill, body.theme-light .verification-pill {
     background: #f8fafc !important;
     border-color: #cbd5e1 !important;
 }
+html.theme-light .verification-option:hover, body.theme-light .verification-option:hover,
 html.theme-light .verification-pill:hover, body.theme-light .verification-pill:hover {
     border-color: #94a3b8 !important;
 }
+html.theme-light .verification-option span.text-white, body.theme-light .verification-option span.text-white,
 html.theme-light .verification-pill span.text-white, body.theme-light .verification-pill span.text-white {
     color: #0f172a !important;
     font-weight: 700 !important;
@@ -5963,101 +6396,817 @@ html.theme-light .verification-pill span.text-white, body.theme-light .verificat
     color: #ffffff !important;
 }
 
-/* Đồng bộ giao diện Thanh Tìm Kiếm Hero & Filter Tags khi đổi Light Mode (theme-light) */
-html.theme-light #hero-search-box-container,
-body.theme-light #hero-search-box-container {
+/* =========================================================
+   LIGHT THEME: HOUSEKEEPING MATRIX (FEAT_18)
+   ========================================================= */
+html.theme-light .grid.grid-cols-2 > div:nth-child(1),
+body.theme-light .grid.grid-cols-2 > div:nth-child(1) {
     background-color: #ffffff !important;
-    border-color: #cbd5e1 !important;
-    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+    border-color: #e2e8f0 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(1) .text-white,
+body.theme-light .grid.grid-cols-2 > div:nth-child(1) .text-white {
+    color: #0f172a !important;
 }
 
-html.theme-light #hero-search-box-container:focus-within,
-body.theme-light #hero-search-box-container:focus-within {
-    border-color: #10b981 !important;
-    box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.2), 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+html.theme-light .grid.grid-cols-2 > div:nth-child(2),
+body.theme-light .grid.grid-cols-2 > div:nth-child(2) {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(2) span,
+html.theme-light .grid.grid-cols-2 > div:nth-child(2) div,
+body.theme-light .grid.grid-cols-2 > div:nth-child(2) span,
+body.theme-light .grid.grid-cols-2 > div:nth-child(2) div {
+    color: #dc2626 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(2) .text-\[10px\],
+body.theme-light .grid.grid-cols-2 > div:nth-child(2) .text-\[10px\] {
+    color: #ef4444 !important;
 }
 
-html.theme-light #hero-search-box-container .fa-location-dot,
-body.theme-light #hero-search-box-container .fa-location-dot {
+html.theme-light .grid.grid-cols-2 > div:nth-child(3),
+body.theme-light .grid.grid-cols-2 > div:nth-child(3) {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(3) span,
+html.theme-light .grid.grid-cols-2 > div:nth-child(3) div,
+body.theme-light .grid.grid-cols-2 > div:nth-child(3) span,
+body.theme-light .grid.grid-cols-2 > div:nth-child(3) div {
+    color: #d97706 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(3) .text-\[10px\],
+body.theme-light .grid.grid-cols-2 > div:nth-child(3) .text-\[10px\] {
+    color: #b45309 !important;
+}
+
+html.theme-light .grid.grid-cols-2 > div:nth-child(4),
+body.theme-light .grid.grid-cols-2 > div:nth-child(4) {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(4) span,
+html.theme-light .grid.grid-cols-2 > div:nth-child(4) div,
+body.theme-light .grid.grid-cols-2 > div:nth-child(4) span,
+body.theme-light .grid.grid-cols-2 > div:nth-child(4) div {
     color: #059669 !important;
 }
-
-html.theme-light #hero-search-input,
-body.theme-light #hero-search-input {
-    background-color: transparent !important;
-    background: transparent !important;
-    color: #0f172a !important;
-    border: none !important;
-    box-shadow: none !important;
+html.theme-light .grid.grid-cols-2 > div:nth-child(4) .text-\[10px\],
+body.theme-light .grid.grid-cols-2 > div:nth-child(4) .text-\[10px\] {
+    color: #047857 !important;
 }
 
-html.theme-light #hero-search-input::placeholder,
-body.theme-light #hero-search-input::placeholder {
-    color: #94a3b8 !important;
+html.theme-light .grid.grid-cols-2 > div:nth-child(5),
+body.theme-light .grid.grid-cols-2 > div:nth-child(5) {
+    background-color: #f0fdfa !important;
+    border-color: #99f6e4 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(5) span,
+html.theme-light .grid.grid-cols-2 > div:nth-child(5) div,
+body.theme-light .grid.grid-cols-2 > div:nth-child(5) span,
+body.theme-light .grid.grid-cols-2 > div:nth-child(5) div {
+    color: #0d9488 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(5) .text-\[10px\],
+body.theme-light .grid.grid-cols-2 > div:nth-child(5) .text-\[10px\] {
+    color: #0f766e !important;
 }
 
-html.theme-light #hero-search-clear-btn,
-body.theme-light #hero-search-clear-btn {
-    background-color: #f1f5f9 !important;
+html.theme-light .grid.grid-cols-2 > div:nth-child(6),
+body.theme-light .grid.grid-cols-2 > div:nth-child(6) {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-slate-400,
+body.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-slate-400 {
+    color: #475569 !important;
+}
+html.theme-light #stat-out-of-service,
+body.theme-light #stat-out-of-service {
+    color: #334155 !important;
+}
+html.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-\[10px\],
+body.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-\[10px\] {
     color: #64748b !important;
 }
 
-html.theme-light #hero-search-clear-btn:hover,
-body.theme-light #hero-search-clear-btn:hover {
+html.theme-light main > .bg-\[\#0f1423\],
+body.theme-light main > .bg-\[\#0f1423\] {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.05) !important;
+}
+html.theme-light #status-filter-group span,
+body.theme-light #status-filter-group span {
+    color: #475569 !important;
+}
+
+html.theme-light .status-filter-btn.bg-slate-800\/60,
+body.theme-light .status-filter-btn.bg-slate-800\/60 {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+}
+html.theme-light .status-filter-btn.bg-slate-800\/60:hover,
+body.theme-light .status-filter-btn.bg-slate-800\/60:hover {
     background-color: #e2e8f0 !important;
     color: #0f172a !important;
 }
 
-.hero-search-btn-glass,
-#btn-hero-search-submit {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(13, 148, 136, 0.95)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+html.theme-light .status-filter-btn.bg-red-500\/10,
+body.theme-light .status-filter-btn.bg-red-500\/10 {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}
+html.theme-light .status-filter-btn.bg-amber-500\/10,
+body.theme-light .status-filter-btn.bg-amber-500\/10 {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #d97706 !important;
+}
+html.theme-light .status-filter-btn.bg-emerald-500\/10,
+body.theme-light .status-filter-btn.bg-emerald-500\/10 {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #059669 !important;
+}
+html.theme-light .status-filter-btn.bg-teal-500\/10,
+body.theme-light .status-filter-btn.bg-teal-500\/10 {
+    background-color: #f0fdfa !important;
+    border-color: #99f6e4 !important;
+    color: #0d9488 !important;
+}
+
+html.theme-light #filter-building,
+body.theme-light #filter-building {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+html.theme-light #search-room-input,
+body.theme-light #search-room-input {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+html.theme-light #search-room-input::placeholder,
+body.theme-light #search-room-input::placeholder {
+    color: #94a3b8 !important;
+}
+html.theme-light button[title="Tải lại ma trận"],
+body.theme-light button[title="Tải lại ma trận"] {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+html.theme-light button[title="Tải lại ma trận"]:hover,
+body.theme-light button[title="Tải lại ma trận"]:hover {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+/* =========================================================
+   LIGHT THEME: GLASS-CARD & BUILDINGS TEXT-WHITE OVERRIDES
+   ========================================================= */
+html.theme-light .glass-card .text-white,
+body.theme-light .glass-card .text-white,
+html.theme-light .glass-card h3.text-white,
+body.theme-light .glass-card h3.text-white,
+html.theme-light .glass-card span.text-white,
+body.theme-light .glass-card span.text-white,
+html.theme-light .glass-card div.text-white,
+body.theme-light .glass-card div.text-white,
+html.theme-light .glass-card strong.text-white,
+body.theme-light .glass-card strong.text-white {
+    color: #0f172a !important;
+}
+
+html.theme-light .glass-card h3:hover,
+body.theme-light .glass-card h3:hover,
+html.theme-light .glass-card:hover h3,
+body.theme-light .glass-card:hover h3 {
+    color: #4f46e5 !important;
+}
+
+html.theme-light .floors-pill,
+body.theme-light .floors-pill,
+html.theme-light .floors-pill span,
+body.theme-light .floors-pill span {
     color: #ffffff !important;
 }
 
-.hero-search-btn-glass:hover,
-#btn-hero-search-submit:hover {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(20, 184, 166, 1)) !important;
-    border-color: rgba(255, 255, 255, 0.38) !important;
-    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.45) !important;
-    transform: translateY(-0.5px);
+/* =========================================================
+   LIGHT THEME: GOOGLE MAPS PRO HUD BAR ENHANCEMENTS
+   ========================================================= */
+html.theme-light .gm-pro-hud,
+body.theme-light .gm-pro-hud {
+    background: rgba(255, 255, 255, 0.96) !important;
+    background-color: #ffffff !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-top: 2px solid #ffffff !important;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
 }
 
-.theme-light .hero-search-btn-glass,
-html.theme-light #btn-hero-search-submit,
-body.theme-light #btn-hero-search-submit {
-    background: linear-gradient(135deg, #059669, #0d9488) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
-    color: #ffffff !important;
+html.theme-light .gm-pro-hud .gm-city-switcher,
+body.theme-light .gm-pro-hud .gm-city-switcher,
+html.theme-light .gm-pro-hud div[class*="bg-slate-900"],
+body.theme-light .gm-pro-hud div[class*="bg-slate-900"] {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
 }
 
-.theme-light .hero-search-btn-glass:hover,
-html.theme-light #btn-hero-search-submit:hover,
-body.theme-light #btn-hero-search-submit:hover {
-    background: linear-gradient(135deg, #047857, #0f766e) !important;
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
+html.theme-light .gm-pro-hud .gm-city-tab:not(.active),
+body.theme-light .gm-pro-hud .gm-city-tab:not(.active) {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+}
+html.theme-light .gm-pro-hud .gm-city-tab:not(.active):hover,
+body.theme-light .gm-pro-hud .gm-city-tab:not(.active):hover {
+    color: #0f172a !important;
+    background-color: #e2e8f0 !important;
 }
 
-html.theme-light #hero-quick-tags span,
-body.theme-light #hero-quick-tags span {
+html.theme-light #gm-search-input,
+body.theme-light #gm-search-input {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #cbd5e1 !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.theme-light #gm-search-input:focus,
+body.theme-light #gm-search-input:focus {
+    border-color: #0284c7 !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+html.theme-light #gm-search-input::placeholder,
+body.theme-light #gm-search-input::placeholder {
+    color: #64748b !important;
+}
+html.theme-light #gm-search-engine-wrapper .fa-magnifying-glass,
+body.theme-light #gm-search-engine-wrapper .fa-magnifying-glass {
+    color: #0284c7 !important;
+}
+
+html.theme-light #gm-search-autocomplete,
+body.theme-light #gm-search-autocomplete {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.theme-light .gm-pro-hud .gm-layer-container,
+body.theme-light .gm-pro-hud .gm-layer-container {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap),
+body.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap) {
+    color: #475569 !important;
+    background: transparent !important;
+}
+html.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap):hover,
+body.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap):hover {
+    color: #0f172a !important;
+    background: #e2e8f0 !important;
+}
+
+html.theme-light .gm-pro-hud .gm-action-btn,
+body.theme-light .gm-pro-hud .gm-action-btn,
+html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"],
+body.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"],
+html.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"],
+body.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"],
+html.theme-light .gm-pro-hud #gm-fullscreen-btn,
+body.theme-light .gm-pro-hud #gm-fullscreen-btn,
+html.theme-light .gm-pro-hud #gm-hud-toggle-btn,
+body.theme-light .gm-pro-hud #gm-hud-toggle-btn {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+html.theme-light .gm-pro-hud .gm-action-btn:hover,
+body.theme-light .gm-pro-hud .gm-action-btn:hover,
+html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"]:hover,
+body.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"]:hover,
+html.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"]:hover,
+body.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"]:hover,
+html.theme-light .gm-pro-hud #gm-fullscreen-btn:hover,
+body.theme-light .gm-pro-hud #gm-fullscreen-btn:hover,
+html.theme-light .gm-pro-hud #gm-hud-toggle-btn:hover,
+body.theme-light .gm-pro-hud #gm-hud-toggle-btn:hover {
+    background: #f8fafc !important;
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+html.theme-light .gm-pro-hud .gm-action-btn i,
+body.theme-light .gm-pro-hud .gm-action-btn i,
+html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"] i,
+body.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"] i,
+html.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"] i,
+body.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"] i,
+html.theme-light .gm-pro-hud #gm-fullscreen-btn i,
+body.theme-light .gm-pro-hud #gm-fullscreen-btn i,
+html.theme-light .gm-pro-hud #gm-hud-toggle-btn i,
+body.theme-light .gm-pro-hud #gm-hud-toggle-btn i {
+    color: #334155 !important;
+}
+
+html.theme-light .gm-pro-hud .gm-campus-label,
+body.theme-light .gm-pro-hud .gm-campus-label {
+    color: #0284c7 !important;
+    font-weight: 800 !important;
+}
+
+html.theme-light .gm-pro-hud .gm-scroll-btn,
+body.theme-light .gm-pro-hud .gm-scroll-btn,
+html.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"],
+body.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+html.theme-light .gm-pro-hud .gm-scroll-btn:hover,
+body.theme-light .gm-pro-hud .gm-scroll-btn:hover,
+html.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"]:hover,
+body.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"]:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light .gm-pro-hud .gm-campus-chip:not(.active),
+body.theme-light .gm-pro-hud .gm-campus-chip:not(.active) {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.theme-light .gm-pro-hud .gm-campus-chip:not(.active):hover,
+body.theme-light .gm-pro-hud .gm-campus-chip:not(.active):hover {
+    background: #f8fafc !important;
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+}
+
+html.theme-light .gm-pro-hud #radius_slider_wrapper,
+body.theme-light .gm-pro-hud #radius_slider_wrapper {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+html.theme-light .gm-pro-hud #radius_slider_wrapper label,
+body.theme-light .gm-pro-hud #radius_slider_wrapper label {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+html.theme-light .gm-pro-hud #radius_slider_wrapper label i,
+body.theme-light .gm-pro-hud #radius_slider_wrapper label i {
+    color: #059669 !important;
+}
+html.theme-light .gm-pro-hud #range_radius,
+body.theme-light .gm-pro-hud #range_radius {
+    background-color: #e2e8f0 !important;
+}
+html.theme-light .gm-pro-hud #range_radius_val,
+body.theme-light .gm-pro-hud #range_radius_val {
+    color: #059669 !important;
+    font-weight: 800 !important;
+}
+html.theme-light .gm-pro-hud .gm-radius-chip:not(.active),
+body.theme-light .gm-pro-hud .gm-radius-chip:not(.active) {
+    color: #475569 !important;
+    background: #f1f5f9 !important;
+}
+html.theme-light .gm-pro-hud .gm-radius-chip:not(.active):hover,
+body.theme-light .gm-pro-hud .gm-radius-chip:not(.active):hover {
+    color: #0f172a !important;
+    background: #e2e8f0 !important;
+}
+
+html.theme-light .gm-pro-hud .border-white\/10,
+body.theme-light .gm-pro-hud .border-white\/10 {
+    border-color: #e2e8f0 !important;
+}
+
+/* =========================================================
+   LIGHT THEME: ROOM DETAIL LANDLORD OWNER CARD
+   ========================================================= */
+html.theme-light .landlord-owner-card,
+body.theme-light .landlord-owner-card {
+    background-color: rgba(245, 247, 255, 0.95) !important;
+    border-color: rgba(199, 210, 254, 0.9) !important;
+    color: #334155 !important;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.12) !important;
+}
+
+html.theme-light .landlord-owner-card .text-slate-300,
+body.theme-light .landlord-owner-card .text-slate-300,
+html.theme-light .landlord-owner-card p,
+body.theme-light .landlord-owner-card p {
+    color: #334155 !important;
+}
+
+html.theme-light .landlord-owner-card .text-indigo-200,
+body.theme-light .landlord-owner-card .text-indigo-200 {
+    color: #4338ca !important;
+}
+
+html.theme-light .landlord-owner-card .border-indigo-500\/20,
+body.theme-light .landlord-owner-card .border-indigo-500\/20 {
+    border-color: rgba(199, 210, 254, 0.7) !important;
+}
+
+html.theme-light .landlord-owner-card a.bg-slate-900,
+body.theme-light .landlord-owner-card a.bg-slate-900 {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+html.theme-light .landlord-owner-card a.bg-slate-900:hover,
+body.theme-light .landlord-owner-card a.bg-slate-900:hover {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+}
+
+/* =========================================================
+   LIGHT THEME: ACTIVITY LOG METADATA CHIPS & SCROLLBAR
+   ========================================================= */
+html.theme-light .activity-meta-chip,
+body.theme-light .activity-meta-chip {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+}
+
+html.theme-light ::-webkit-scrollbar-track,
+body.theme-light ::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+}
+html.theme-light ::-webkit-scrollbar-thumb,
+body.theme-light ::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+}
+
+/* =========================================================
+   LIGHT THEME: PROPERTY BANNER CARD & BUILDING FILTER BAR
+   ========================================================= */
+html.theme-light .property-banner-card,
+body.theme-light .property-banner-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    border-color: rgba(226, 232, 240, 0.85) !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.theme-light .building-filter-bar,
+body.theme-light .building-filter-bar {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .building-filter-bar .building-tab-btn:not(.bg-indigo-600),
+body.theme-light .building-filter-bar .building-tab-btn:not(.bg-indigo-600) {
+    color: #475569 !important;
+}
+
+html.theme-light .building-filter-bar .building-tab-btn:not(.bg-indigo-600):hover,
+body.theme-light .building-filter-bar .building-tab-btn:not(.bg-indigo-600):hover {
+    color: #0f172a !important;
+    background-color: #e2e8f0 !important;
+}
+
+/* =========================================================
+   LIGHT THEME: SSE REALTIME RECONNECT BADGE
+   ========================================================= */
+html.theme-light #sse-reconnect-badge,
+body.theme-light #sse-reconnect-badge {
+    background-color: #fffbeb !important;
+    border-color: #fcd34d !important;
+    color: #b45309 !important;
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.18) !important;
+}
+
+html.theme-light #sse-reconnect-badge i,
+body.theme-light #sse-reconnect-badge i {
+    color: #d97706 !important;
+}
+
+/* =========================================================
+   LIGHT THEME: ADMIN ACCENT PICKER DROPDOWN
+   ========================================================= */
+html.theme-light #admin-accent-btn,
+body.theme-light #admin-accent-btn {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+html.theme-light #admin-accent-btn:hover,
+body.theme-light #admin-accent-btn:hover {
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light #admin-accent-dropdown,
+body.theme-light #admin-accent-dropdown {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.theme-light #admin-accent-dropdown .text-slate-400,
+body.theme-light #admin-accent-dropdown .text-slate-400 {
     color: #64748b !important;
 }
 
-html.theme-light #hero-quick-tags .quick-filter-tag,
-body.theme-light #hero-quick-tags .quick-filter-tag {
-    background-color: #ffffff !important;
-    border-color: #cbd5e1 !important;
-    color: #334155 !important;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+html.theme-light #admin-accent-dropdown .duo-color-btn,
+body.theme-light #admin-accent-dropdown .duo-color-btn {
+    border-color: transparent !important;
 }
 
-html.theme-light #hero-quick-tags .quick-filter-tag:hover,
-body.theme-light #hero-quick-tags .quick-filter-tag:hover {
-    background-color: #ecfdf5 !important;
-    border-color: #10b981 !important;
-    color: #059669 !important;
+html.theme-light #admin-accent-dropdown .duo-color-btn:hover,
+body.theme-light #admin-accent-dropdown .duo-color-btn:hover {
+    background-color: #f1f5f9 !important;
+}
+
+html.theme-light #admin-accent-dropdown .duo-color-btn .text-slate-200,
+body.theme-light #admin-accent-dropdown .duo-color-btn .text-slate-200 {
+    color: #0f172a !important;
+}
+
+html.theme-light #admin-accent-dropdown .duo-color-btn .text-slate-400,
+body.theme-light #admin-accent-dropdown .duo-color-btn .text-slate-400 {
+    color: #64748b !important;
+}
+
+html.theme-light #admin-accent-dropdown .duo-color-btn.ring-2,
+body.theme-light #admin-accent-dropdown .duo-color-btn.ring-2 {
+    background-color: #f8fafc !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35) !important;
+}
+
+/* =========================================================
+   LIGHT THEME: ADMIN NOTIFICATION DROPDOWN
+   ========================================================= */
+html.theme-light #admin-notification-btn,
+body.theme-light #admin-notification-btn {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+html.theme-light #admin-notification-btn:hover,
+body.theme-light #admin-notification-btn:hover {
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light #admin-notification-dropdown,
+body.theme-light #admin-notification-dropdown {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.theme-light #admin-notification-dropdown .border-slate-800,
+body.theme-light #admin-notification-dropdown .border-slate-800,
+html.theme-light #admin-notification-dropdown .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]),
+body.theme-light #admin-notification-dropdown .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light #admin-notification-dropdown h3.text-slate-100,
+body.theme-light #admin-notification-dropdown h3.text-slate-100 {
+    color: #0f172a !important;
+}
+
+html.theme-light #admin-notification-dropdown a:hover,
+body.theme-light #admin-notification-dropdown a:hover {
+    background-color: #f8fafc !important;
+}
+
+html.theme-light #admin-notification-dropdown .text-slate-200,
+body.theme-light #admin-notification-dropdown .text-slate-200 {
+    color: #0f172a !important;
+}
+
+html.theme-light #admin-notification-dropdown .text-slate-400,
+body.theme-light #admin-notification-dropdown .text-slate-400 {
+    color: #64748b !important;
+}
+
+html.theme-light #admin-notification-dropdown .bg-slate-950\/60,
+body.theme-light #admin-notification-dropdown .bg-slate-950\/60 {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* =========================================================
+   ROOM DETAIL: LANDLORD OWNER CARD & BOOKING SIDEBAR (LIGHT THEME)
+   ========================================================= */
+html.theme-light .booking-sidebar-card,
+body.theme-light .booking-sidebar-card {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.theme-light .landlord-owner-title,
+body.theme-light .landlord-owner-title {
+    color: #0f172a !important;
+}
+
+html.theme-light .landlord-owner-pill,
+body.theme-light .landlord-owner-pill {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #2563eb !important;
+    font-weight: 700 !important;
+}
+
+html.theme-light .landlord-owner-card,
+body.theme-light .landlord-owner-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f5f3ff 100%) !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #c7d2fe !important;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.12), 0 4px 6px -2px rgba(99, 102, 241, 0.05) !important;
+}
+
+html.theme-light .landlord-owner-badge,
+body.theme-light .landlord-owner-badge {
+    background-color: #ede9fe !important;
+    border-color: #c4b5fd !important;
+    color: #4338ca !important;
+    font-weight: 800 !important;
+}
+
+html.theme-light .landlord-owner-sub,
+body.theme-light .landlord-owner-sub {
+    color: #64748b !important;
+    font-weight: 600 !important;
+}
+
+html.theme-light .landlord-owner-text,
+body.theme-light .landlord-owner-text {
+    color: #1e293b !important;
+    font-weight: 500 !important;
+    line-height: 1.6 !important;
+}
+
+html.theme-light .landlord-owner-name,
+body.theme-light .landlord-owner-name {
+    color: #4338ca !important;
+    font-weight: 800 !important;
+}
+
+html.theme-light .landlord-owner-divider,
+body.theme-light .landlord-owner-divider {
+    border-top-color: #e0e7ff !important;
+}
+
+html.theme-light .landlord-owner-primary-btn,
+body.theme-light .landlord-owner-primary-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.35) !important;
+}
+html.theme-light .landlord-owner-primary-btn:hover,
+body.theme-light .landlord-owner-primary-btn:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #0f766e 100%) !important;
+    box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.45) !important;
+}
+
+html.theme-light .landlord-owner-secondary-btn,
+body.theme-light .landlord-owner-secondary-btn {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+html.theme-light .landlord-owner-secondary-btn:hover,
+body.theme-light .landlord-owner-secondary-btn:hover {
+    background-color: #f8fafc !important;
+    border-color: #6366f1 !important;
+    color: #4338ca !important;
+}
+html.theme-light .landlord-owner-secondary-btn i,
+body.theme-light .landlord-owner-secondary-btn i {
+    color: #4f46e5 !important;
+}
+
+/* Superadmin card in Light Mode */
+html.theme-light .admin-auditor-title,
+body.theme-light .admin-auditor-title {
+    color: #0f172a !important;
+}
+html.theme-light .admin-auditor-pill,
+body.theme-light .admin-auditor-pill {
+    background-color: #fef3c7 !important;
+    border-color: #fde68a !important;
+    color: #b45309 !important;
+}
+html.theme-light .admin-auditor-card,
+body.theme-light .admin-auditor-card {
+    background: linear-gradient(145deg, #ffffff 0%, #fffbeb 100%) !important;
+    border: 1.5px solid #fde68a !important;
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.1) !important;
+}
+html.theme-light .admin-auditor-badge,
+body.theme-light .admin-auditor-badge {
+    background-color: #fef3c7 !important;
+    border-color: #fde68a !important;
+    color: #92400e !important;
+}
+html.theme-light .admin-auditor-sub,
+body.theme-light .admin-auditor-sub {
+    color: #64748b !important;
+}
+html.theme-light .admin-auditor-text,
+body.theme-light .admin-auditor-text {
+    color: #1e293b !important;
+}
+html.theme-light .admin-auditor-name,
+body.theme-light .admin-auditor-name {
+    color: #b45309 !important;
+}
+html.theme-light .admin-auditor-box,
+body.theme-light .admin-auditor-box {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+html.theme-light .admin-auditor-box .text-slate-400,
+body.theme-light .admin-auditor-box .text-slate-400 {
+    color: #475569 !important;
+}
+html.theme-light .admin-auditor-box .text-slate-200,
+body.theme-light .admin-auditor-box .text-slate-200 {
+    color: #0f172a !important;
+}
+html.theme-light .admin-auditor-secondary-btn,
+body.theme-light .admin-auditor-secondary-btn {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+html.theme-light .admin-auditor-toggle-btn,
+body.theme-light .admin-auditor-toggle-btn {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+}
+
+/* Booking Guest Form in Light Mode */
+html.theme-light .booking-sidebar-card h2,
+body.theme-light .booking-sidebar-card h2 {
+    color: #0f172a !important;
+}
+html.theme-light .booking-sidebar-card label,
+body.theme-light .booking-sidebar-card label {
+    color: #334155 !important;
+}
+html.theme-light .booking-sidebar-card input:not([type="submit"]):not([type="button"]),
+body.theme-light .booking-sidebar-card input:not([type="submit"]):not([type="button"]),
+html.theme-light .booking-sidebar-card textarea,
+body.theme-light .booking-sidebar-card textarea {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+html.theme-light .booking-sidebar-card input::placeholder,
+body.theme-light .booking-sidebar-card input::placeholder,
+html.theme-light .booking-sidebar-card textarea::placeholder,
+body.theme-light .booking-sidebar-card textarea::placeholder {
+    color: #94a3b8 !important;
+}
+html.theme-light .booking-sidebar-card input[type="datetime-local"],
+body.theme-light .booking-sidebar-card input[type="datetime-local"] {
+    color-scheme: light !important;
 }

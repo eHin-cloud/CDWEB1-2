@@ -28,22 +28,44 @@
 
 ### 1. Tính năng 01: Đăng ký & Đăng nhập hệ thống (Xác thực OTP & Mật khẩu) (`FEAT_01_AUTH`)
 * **Mã nguồn thực tế**:
-  * Web Controller: `app/Http/Controllers/CrudUserController.php` (`login`, `authUser`, `createUser`, `postUser`, `showVerifyOtp`, `verifyGuestOtp`, `sendGuestOtp`)
-  * API Controller: `app/Http/Controllers/Api/AuthController.php` (`login`, `register`, `profile`, `logout`, `checkAvailability`, `verifyOtp`)
+  * Web Controller: `app/Http/Controllers/CrudUserController.php` (`login`, `authUser`, `createUser`, `postUser`, `sendLoginOtp`, `loginWithOtp`, `loginWithMagicLink`, `showForgotPassword`, `sendForgotPasswordOtp`, `resendForgotPasswordOtp`, `verifyForgotPasswordOtp`, `resetPasswordWithOtp`, `showVerifyOtp`, `verifyGuestOtp`, `sendGuestOtp`)
+  * API Controller: `app/Http/Controllers/Api/AuthController.php` (`login`, `register`, `profile`, `logout`, `checkAvailability`, `verifyOtp`, `forgotPasswordSendOtp`, `forgotPasswordReset`)
   * Onboarding Controller: `app/Http/Controllers/LandlordOnboardingController.php` (`create`, `store`, `showVerifyForm`, `sendOtp`, `verifyOtp`)
   * Services: `app/Services/OtpService.php`, `app/Support/SensitiveData.php`
   * Models: `app/Models/User.php`, `app/Models/Role.php`, `app/Models/NotificationLog.php`, `app/Models/OtpCode.php`
   * Routes:
-    * Web: `GET /login`, `POST /login`, `GET /register`, `POST /register`, `GET /create`, `POST /create`, `GET /guest/verify`, `POST /guest/verify-otp`, `POST /guest/send-otp`, `GET /landlord/register`, `POST /landlord/register`, `GET /signout`
-    * API: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/otp/verify`, `GET /api/auth/profile`, `POST /api/auth/logout`, `POST /api/auth/check-availability`
-  * Views: `resources/views/login/login.blade.php`, `resources/views/landlord/register.blade.php`, `resources/views/login/guest_verify.blade.php`
+    * Web: 
+      - Đăng nhập & Đăng ký: `GET /login`, `POST /login`, `GET /register`, `POST /register`, `GET /create`, `POST /create`, `GET /landlord/register`, `POST /landlord/register`, `GET /signout`
+      - Đăng nhập OTP & Magic Link: `POST /login/send-otp`, `POST /login/verify-otp`, `GET /login/magic`
+      - Xác thực khách thuê: `GET /guest/verify`, `POST /guest/verify-otp`, `POST /guest/send-otp`
+      - Khôi phục mật khẩu: `GET /forgot-password`, `POST /forgot-password/send-otp`, `POST /forgot-password/resend-otp`, `POST /forgot-password/verify-otp`, `POST /forgot-password/reset`
+    * API: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/otp/verify`, `POST /api/auth/password/forgot`, `POST /api/auth/password/reset`, `GET /api/auth/profile`, `POST /api/auth/logout`, `POST /api/auth/check-availability`
+  * Views: `resources/views/login/login.blade.php`, `resources/views/login/forgot_password.blade.php`, `resources/views/landlord/register.blade.php`, `resources/views/login/guest_verify.blade.php`, `resources/views/emails/quick_login_otp.blade.php`, `resources/views/emails/forgot_password_otp.blade.php`
   * Tests: `tests/Feature/AuthFeature01Test.php`
 * **Đối soát với đặc tả**:
-  * ✅ Endpoints & Middleware: Cung cấp đầy đủ cả Web Route lẫn REST API `/api/auth/login`, `/api/auth/register`, `/api/auth/otp/verify`, áp dụng Rate Limiting `throttle:5,1`, `throttle:10,1` và `throttle:30,1` chống tấn công dò mật khẩu (Brute-force).
+  * ✅ Endpoints & Middleware: Cung cấp đầy đủ cả Web Route lẫn REST API `/api/auth/login`, `/api/auth/register`, `/api/auth/otp/verify`, `/api/auth/password/forgot`, `/api/auth/password/reset`, áp dụng Rate Limiting `throttle:5,1`, `throttle:10,1` và `throttle:30,1` chống tấn công dò mật khẩu (Brute-force).
   * ✅ Điều hướng phân quyền thông minh: Sau khi đăng nhập thành công, tự động điều hướng đúng phân hệ: Khách thuê vào `/renty`, Chủ trọ vào `/smartroom/admin`, Cư dân vào `/smartroom/resident`, Superadmin vào `/dashboard` hoặc `/list`.
+  * ✅ Luồng Đăng nhập siêu tốc bằng OTP & Magic Link 1 chạm (Passwordless Login): Cho phép người dùng đăng nhập bằng mã OTP 6 số hoặc nhấp trực tiếp vào liên kết Signed Magic Link (thời hạn 5 phút) được gửi tự động qua email mà không cần nhập mật khẩu.
+  * ✅ Luồng Khôi phục mật khẩu đa bước (Password Recovery Wizard): Quy trình 3 bước trực quan: (1) Nhập email -> (2) Nhập mã OTP xác thực 6 số -> (3) Đặt lại mật khẩu mới có xác nhận trùng khớp và kiểm tra độ mạnh.
   * ✅ Luồng xác thực OTP đa kênh: Hỗ trợ tạo và gửi mã xác thực OTP ngẫu nhiên 6 chữ số có thời hạn (TTL 5 phút) qua Email và SMS/Zalo, lưu vết kiểm toán vào bảng `notification_logs` và `otp_codes`.
   * ✅ Bảo mật dữ liệu & HMAC Blind Index: Mật khẩu mã hóa chuẩn một chiều `bcrypt`/`Hash::make`; số điện thoại được mã hóa và đối soát bảo mật thông qua hàm Blind Index `SensitiveData::blindIndex($phone)` chống lộ dữ liệu nhạy cảm.
-  * ✅ Kịch bản xử lý lỗi (`ERR_01_01` -> `ERR_01_12`): Xử lý trọn vẹn lỗi bỏ trống trường, SĐT sai định dạng regex `^(0[3|5|7|8|9])[0-9]{8}$`, mật khẩu dưới 6 ký tự, email không hợp lệ, tài khoản bị khóa `locked` (HTTP 403), mã OTP sai hoặc hết hạn.
+  * ✅ Kịch bản xử lý lỗi (`ERR_01_01` -> `ERR_01_18`): Xử lý trọn vẹn lỗi bỏ trống trường, SĐT sai định dạng regex, mật khẩu dưới 6 ký tự, email không hợp lệ, tài khoản bị khóa `locked` (HTTP 403), mã OTP sai hoặc hết hạn, mật khẩu xác nhận không khớp.
+
+#### Hợp Đồng Dữ Liệu Bổ Sung (API Contract & Input Specification)
+##### 1. Đăng Nhập Bằng OTP (Passwordless Login)
+| Tên Field | Kiểu dữ liệu | Bắt buộc | Quy tắc & Ràng buộc chính | Mô tả |
+| :--- | :---: | :---: | :--- | :--- |
+| `login` | string | Có | Tồn tại trong CSDL qua Phone hoặc Email/Username | Số điện thoại hoặc Email tài khoản cần đăng nhập |
+| `otp` | string | Có (khi verify) | Đúng 6 chữ số (`digits:6`) | Mã OTP xác thực nhận qua Email/SMS |
+| `remember` | boolean | Không | `true`/`false` (mặc định `true`) | Duy trì phiên đăng nhập |
+
+##### 2. Khôi Phục Mật Khẩu (Forgot Password)
+| Tên Field | Kiểu dữ liệu | Bắt buộc | Quy tắc & Ràng buộc chính | Mô tả |
+| :--- | :---: | :---: | :--- | :--- |
+| `email` | string | Có | `email`, `max:150`, phải tồn tại và `status != 'locked'` | Địa chỉ email tài khoản cần khôi phục |
+| `otp` | string | Có | Đúng 6 chữ số (`digits:6`), còn hiệu lực trong 5 phút | Mã OTP xác thực gửi về email |
+| `password` | string | Có | `min:6`, `max:100`, `confirmed` | Mật khẩu mới cần thiết lập |
+| `password_confirmation` | string | Có | Trùng khớp 100% với `password` | Xác nhận mật khẩu mới |
 
 #### Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)
 | Nguyên nhân / Kịch bản lỗi | Mã lỗi | Message cụ thể (nguyên văn) | Giao diện & Hiệu ứng phản hồi |
@@ -57,9 +79,15 @@
 | Để trống số điện thoại | **`ERR_01_07`** | `Vui lòng nhập số điện thoại (bắt buộc).` | Bôi đỏ viền ô input Số điện thoại |
 | Số điện thoại không đúng 10 số | **`ERR_01_08`** | `Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (ví dụ: 0988123456).` | Bôi đỏ ô input Số điện thoại |
 | Số điện thoại đã tồn tại | **`ERR_01_09`** | `Số điện thoại này đã được đăng ký tài khoản trong hệ thống.` | Bôi đỏ ô input Số điện thoại, hiện thông báo trùng |
-| Nhập sai mã OTP | **`ERR_01_10`** | `Mã xác thực OTP không chính xác. Bạn còn lại X lần thử.` | Bôi đỏ 6 ô nhập mã OTP, hiệu ứng rung lắc (shake animation) |
+| Nhập sai mã OTP | **`ERR_01_10`** | `Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại.` | Bôi đỏ các ô nhập mã OTP, hiệu ứng rung lắc (shake animation) |
 | Mã OTP đã hết hạn (quá 5 phút) | **`ERR_01_11`** | `Mã xác thực OTP đã hết hiệu lực (quá 5 phút). Vui lòng bấm Gửi lại mã.` | Bôi đỏ ô OTP, hiển thị nút Gửi lại mã OTP |
 | Đăng nhập / Đăng ký thành công | **`ERR_01_12`** | `Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.` | Hiển thị thông báo Toast màu xanh lá (Success) và chuyển hướng |
+| Tài khoản bị khóa bởi quản trị viên | **`ERR_01_13`** | `Tài khoản của bạn đã bị khóa bởi Quản trị viên hệ thống.` | Hiển thị Toast cảnh báo màu đỏ đậm và chặn đăng nhập |
+| Tài khoản không tồn tại khi gửi OTP | **`ERR_01_14`** | `Tài khoản này chưa tồn tại trong hệ thống. Vui lòng đăng ký tài khoản mới.` | Hiển thị thông báo đỏ dưới ô SĐT/Email |
+| Gửi OTP quá nhanh (Rate Limit) | **`ERR_01_15`** | `Vui lòng chờ X giây trước khi yêu cầu mã OTP tiếp theo.` | Hiển thị đồng hồ đếm ngược và vô hiệu hóa nút gửi lại |
+| Email chưa đăng ký khi quên mật khẩu | **`ERR_01_16`** | `Địa chỉ email này chưa được đăng ký trong hệ thống.` | Bôi đỏ ô Email, hiển thị thông báo lỗi |
+| Xác nhận mật khẩu mới không khớp | **`ERR_01_17`** | `Xác nhận mật khẩu không trùng khớp.` / `Mật khẩu mới phải có tối thiểu 6 ký tự.` | Bôi đỏ viền ô nhập lại mật khẩu kèm thông báo đỏ |
+| Đặt lại mật khẩu thành công | **`ERR_01_18`** | `Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.` | Thông báo Toast xanh lá và chuyển hướng về màn hình Đăng nhập |
 
 #### Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)
 * **Hình 1.1: Giao diện Form Đăng nhập hệ thống chuẩn**

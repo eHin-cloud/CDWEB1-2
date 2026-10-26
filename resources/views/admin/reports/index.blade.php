@@ -24,6 +24,23 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #080b11; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
+        /* Light Mode styling */
+        html.theme-light input[type="month"],
+        body.theme-light input[type="month"],
+        html.theme-light input[type="date"],
+        body.theme-light input[type="date"] {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+            color-scheme: light !important;
+        }
+        html.theme-light input[type="month"]::-webkit-calendar-picker-indicator,
+        body.theme-light input[type="month"]::-webkit-calendar-picker-indicator {
+            filter: none !important;
+            opacity: 0.8;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white overflow-hidden">
@@ -41,7 +58,7 @@
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>
                 <form method="GET" action="{{ route('admin.reports.index') }}" class="flex items-center gap-2">
-                    <input type="month" name="billing_month" value="{{ $billingMonth }}" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                    <input type="month" name="billing_month" value="{{ $billingMonth ?: now()->format('Y-m') }}" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500" title="Chọn tháng báo cáo">
                     <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2">
                         <i class="fa-solid fa-filter"></i> Lọc
                     </button>

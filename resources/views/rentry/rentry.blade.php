@@ -379,6 +379,137 @@
             filter: none !important;
         }
 
+        /* Đồng bộ giao diện màu sắc Light Mode cho Hero Search */
+        html.theme-light #renty-hero-section .group\/search > div:nth-child(2),
+        body.theme-light #renty-hero-section .group\/search > div:nth-child(2) {
+            background-color: transparent !important;
+            border-color: transparent !important;
+        }
+        html.theme-light #hero-search-box-container,
+        body.theme-light #hero-search-box-container {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+        }
+        html.theme-light #hero-search-box-container:focus-within,
+        body.theme-light #hero-search-box-container:focus-within {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 10px 25px -5px rgba(15, 23, 42, 0.1) !important;
+        }
+        html.theme-light #hero-search-box-container .fa-location-dot,
+        body.theme-light #hero-search-box-container .fa-location-dot {
+            color: #059669 !important;
+        }
+        html.theme-light #hero-search-input,
+        body.theme-light #hero-search-input {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #hero-search-input::placeholder,
+        body.theme-light #hero-search-input::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.theme-light #hero-search-clear-btn,
+        body.theme-light #hero-search-clear-btn {
+            background-color: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #64748b !important;
+        }
+        html.theme-light #hero-search-clear-btn:hover,
+        body.theme-light #hero-search-clear-btn:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #btn-hero-search-submit,
+        body.theme-light #btn-hero-search-submit {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+            background-color: #059669 !important;
+            color: #ffffff !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+        }
+        html.theme-light #btn-hero-search-submit:hover,
+        body.theme-light #btn-hero-search-submit:hover {
+            background: linear-gradient(135deg, #047857 0%, #0f766e 100%) !important;
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4) !important;
+        }
+        html.theme-light #btn-hero-search-submit i,
+        html.theme-light #btn-hero-search-submit span,
+        body.theme-light #btn-hero-search-submit i,
+        body.theme-light #btn-hero-search-submit span {
+            color: #ffffff !important;
+        }
+
+        /* Đồng bộ Empty State trong Light Mode */
+        html.theme-light #smart-search-empty-state,
+        body.theme-light #smart-search-empty-state {
+            background: rgba(255, 255, 255, 0.92) !important;
+            border-color: rgba(226, 232, 240, 0.95) !important;
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.06) !important;
+        }
+        html.theme-light #smart-search-empty-state > div:first-child,
+        body.theme-light #smart-search-empty-state > div:first-child {
+            background-color: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15) !important;
+        }
+        html.theme-light #smart-search-empty-state > div:first-child i,
+        body.theme-light #smart-search-empty-state > div:first-child i {
+            color: #059669 !important;
+        }
+        html.theme-light #smart-search-empty-title,
+        body.theme-light #smart-search-empty-title {
+            color: #0f172a !important;
+        }
+        html.theme-light #smart-search-empty-code,
+        html.theme-light #smart-search-empty-state p,
+        body.theme-light #smart-search-empty-code,
+        body.theme-light #smart-search-empty-state p {
+            color: #475569 !important;
+        }
+        html.theme-light #smart-search-empty-did-you-mean,
+        body.theme-light #smart-search-empty-did-you-mean {
+            background-color: #ecfdf5 !important;
+            border-color: #6ee7b7 !important;
+            color: #065f46 !important;
+        }
+        html.theme-light #smart-search-empty-did-you-mean strong,
+        body.theme-light #smart-search-empty-did-you-mean strong {
+            color: #047857 !important;
+        }
+        html.theme-light #btnExploreEmpty,
+        body.theme-light #btnExploreEmpty {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+        }
+        html.theme-light #btnExploreEmpty i,
+        body.theme-light #btnExploreEmpty i {
+            color: #ffffff !important;
+        }
+        html.theme-light #btnResetFilterEmpty,
+        body.theme-light #btnResetFilterEmpty {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
+        }
+        html.theme-light #btnResetFilterEmpty:hover,
+        body.theme-light #btnResetFilterEmpty:hover {
+            background-color: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #btnResetFilterEmpty i,
+        body.theme-light #btnResetFilterEmpty i {
+            color: #64748b !important;
+        }
+
         /* Badge phòng đã xem */
         .viewed-room-strip {
             display: none !important;
@@ -502,6 +633,216 @@
         }
         input[type=number] { 
             -moz-appearance: textfield; 
+        }
+
+        /* =========================================================
+           LIGHT THEME: GOOGLE MAPS PRO HUD BAR ENHANCEMENTS
+           ========================================================= */
+        html.theme-light .gm-pro-hud,
+        body.theme-light .gm-pro-hud {
+            background: rgba(255, 255, 255, 0.96) !important;
+            background-color: #ffffff !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-top: 2px solid #ffffff !important;
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-city-switcher,
+        body.theme-light .gm-pro-hud .gm-city-switcher,
+        html.theme-light .gm-pro-hud div[class*="bg-slate-900"],
+        body.theme-light .gm-pro-hud div[class*="bg-slate-900"] {
+            background: #f1f5f9 !important;
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-city-tab:not(.active),
+        body.theme-light .gm-pro-hud .gm-city-tab:not(.active) {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            background: transparent !important;
+        }
+        html.theme-light .gm-pro-hud .gm-city-tab:not(.active):hover,
+        body.theme-light .gm-pro-hud .gm-city-tab:not(.active):hover {
+            color: #0f172a !important;
+            background-color: #e2e8f0 !important;
+        }
+
+        html.theme-light #gm-search-input,
+        body.theme-light #gm-search-input {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1.5px solid #cbd5e1 !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light #gm-search-input:focus,
+        body.theme-light #gm-search-input:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+        }
+        html.theme-light #gm-search-input::placeholder,
+        body.theme-light #gm-search-input::placeholder {
+            color: #64748b !important;
+        }
+        html.theme-light #gm-search-engine-wrapper .fa-magnifying-glass,
+        body.theme-light #gm-search-engine-wrapper .fa-magnifying-glass {
+            color: #0284c7 !important;
+        }
+
+        html.theme-light #gm-search-autocomplete,
+        body.theme-light #gm-search-autocomplete {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-layer-container,
+        body.theme-light .gm-pro-hud .gm-layer-container {
+            background: #f1f5f9 !important;
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap),
+        body.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap) {
+            color: #475569 !important;
+            background: transparent !important;
+        }
+        html.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap):hover,
+        body.theme-light .gm-pro-hud button[onclick*="setRentyMapLayer"]:not(#gm-layer-roadmap):hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-action-btn,
+        body.theme-light .gm-pro-hud .gm-action-btn,
+        html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"],
+        body.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"],
+        html.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"],
+        body.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"],
+        html.theme-light .gm-pro-hud #gm-fullscreen-btn,
+        body.theme-light .gm-pro-hud #gm-fullscreen-btn,
+        html.theme-light .gm-pro-hud #gm-hud-toggle-btn,
+        body.theme-light .gm-pro-hud #gm-hud-toggle-btn {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #1e293b !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        }
+        html.theme-light .gm-pro-hud .gm-action-btn:hover,
+        body.theme-light .gm-pro-hud .gm-action-btn:hover,
+        html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"]:hover,
+        body.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"]:hover,
+        html.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"]:hover,
+        body.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"]:hover,
+        html.theme-light .gm-pro-hud #gm-fullscreen-btn:hover,
+        body.theme-light .gm-pro-hud #gm-fullscreen-btn:hover,
+        html.theme-light .gm-pro-hud #gm-hud-toggle-btn:hover,
+        body.theme-light .gm-pro-hud #gm-hud-toggle-btn:hover {
+            background: #f8fafc !important;
+            background-color: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .gm-pro-hud .gm-action-btn i,
+        body.theme-light .gm-pro-hud .gm-action-btn i,
+        html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"] i,
+        body.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"] i,
+        html.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"] i,
+        body.theme-light .gm-pro-hud button[onclick*="resetRentyMapView"] i,
+        html.theme-light .gm-pro-hud #gm-fullscreen-btn i,
+        body.theme-light .gm-pro-hud #gm-fullscreen-btn i,
+        html.theme-light .gm-pro-hud #gm-hud-toggle-btn i,
+        body.theme-light .gm-pro-hud #gm-hud-toggle-btn i {
+            color: #334155 !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-campus-label,
+        body.theme-light .gm-pro-hud .gm-campus-label {
+            color: #0284c7 !important;
+            font-weight: 800 !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-scroll-btn,
+        body.theme-light .gm-pro-hud .gm-scroll-btn,
+        html.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"],
+        body.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"] {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #1e293b !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+        }
+        html.theme-light .gm-pro-hud .gm-scroll-btn:hover,
+        body.theme-light .gm-pro-hud .gm-scroll-btn:hover,
+        html.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"]:hover,
+        body.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"]:hover {
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light .gm-pro-hud .gm-campus-chip:not(.active),
+        body.theme-light .gm-pro-hud .gm-campus-chip:not(.active) {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #1e293b !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light .gm-pro-hud .gm-campus-chip:not(.active):hover,
+        body.theme-light .gm-pro-hud .gm-campus-chip:not(.active):hover {
+            background: #f8fafc !important;
+            border-color: #0284c7 !important;
+            color: #0284c7 !important;
+        }
+
+        html.theme-light .gm-pro-hud #radius_slider_wrapper,
+        body.theme-light .gm-pro-hud #radius_slider_wrapper {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+        }
+        html.theme-light .gm-pro-hud #radius_slider_wrapper label,
+        body.theme-light .gm-pro-hud #radius_slider_wrapper label {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light .gm-pro-hud #radius_slider_wrapper label i,
+        body.theme-light .gm-pro-hud #radius_slider_wrapper label i {
+            color: #059669 !important;
+        }
+        html.theme-light .gm-pro-hud #range_radius,
+        body.theme-light .gm-pro-hud #range_radius {
+            background-color: #e2e8f0 !important;
+        }
+        html.theme-light .gm-pro-hud #range_radius_val,
+        body.theme-light .gm-pro-hud #range_radius_val {
+            color: #059669 !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light .gm-pro-hud .gm-radius-chip:not(.active),
+        body.theme-light .gm-pro-hud .gm-radius-chip:not(.active) {
+            color: #475569 !important;
+            background: #f1f5f9 !important;
+        }
+        html.theme-light .gm-pro-hud .gm-radius-chip:not(.active):hover,
+        body.theme-light .gm-pro-hud .gm-radius-chip:not(.active):hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+        }
+
+        html.theme-light .gm-pro-hud .border-white\/10,
+        body.theme-light .gm-pro-hud .border-white\/10 {
+            border-color: #e2e8f0 !important;
         }
     </style>
 </head>
@@ -956,13 +1297,12 @@
             </div>
 
             <!-- Floating Google Maps Pro HUD Control Bar (Hiệu ứng Liquid Glass lỏng trong suốt, Search Box giữ bình thường) -->
-            <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] rounded-2xl p-2.5 flex flex-col gap-2 transition-all duration-300"
-                 style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.45) 45%, rgba(15, 23, 42, 0.70) 100%) !important; backdrop-filter: blur(24px) saturate(200%) contrast(95%) !important; -webkit-backdrop-filter: blur(24px) saturate(200%) contrast(95%) !important; border: 1px solid rgba(255, 255, 255, 0.22) !important; border-top: 1.5px solid rgba(255, 255, 255, 0.45) !important; box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 0 15px rgba(255, 255, 255, 0.05) !important;">
+            <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] rounded-2xl p-2.5 flex flex-col gap-2 transition-all duration-300">
                 
                 <!-- Row 1: City Tabs + Smart Search Engine + Compact Map Controls (Khóa cứng 1 dòng, không bao giờ nhảy xuống) -->
                 <div class="flex items-center gap-2 w-full flex-nowrap">
                     <!-- City Switcher Tabs -->
-                    <div class="flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[11px] font-bold shrink-0">
+                    <div class="gm-city-switcher flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[11px] font-bold shrink-0">
                         <button type="button" onclick="switchMapCity('all', this)" id="city-tab-all" class="gm-city-tab active px-2 py-1 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm">
                             🌐 Toàn quốc
                         </button>
@@ -979,7 +1319,6 @@
                         <form onsubmit="onMapSearchSubmit(event)" class="w-full flex items-center relative">
                             <input type="text" id="gm-search-input" autocomplete="off"
                                 placeholder="Tìm mọi địa điểm du lịch, đường phố, trường học, trọ..." 
-                                style="background-color: #0f172a !important; opacity: 1 !important;"
                                 class="w-full pl-8 pr-12 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 transition-all font-medium truncate shadow-inner">
                             <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-sky-400 text-[11px]"></i>
                             
@@ -1002,7 +1341,7 @@
                     <!-- Right Controls: Layer + GPS + Compass + Collapse -->
                     <div class="flex items-center gap-1 shrink-0">
                         <!-- Layer Buttons -->
-                        <div class="flex items-center gap-0.5 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[10px] font-bold">
+                        <div class="gm-layer-container flex items-center gap-0.5 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[10px] font-bold">
                             <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="w-6 h-6 rounded-lg bg-blue-600 text-white font-bold transition-all flex items-center justify-center" title="Đường phố">
                                 <i class="fa-solid fa-map"></i>
                             </button>
@@ -1015,16 +1354,16 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <button type="button" onclick="locateUserRentyMap()" title="Định vị GPS" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="locateUserRentyMap()" title="Định vị GPS" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-crosshairs"></i>
                         </button>
-                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-compass"></i>
                         </button>
-                        <button type="button" onclick="toggleRentyMapFullscreen()" id="gm-fullscreen-btn" title="Toàn màn hình (Esc)" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="toggleRentyMapFullscreen()" id="gm-fullscreen-btn" title="Toàn màn hình (Esc)" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-expand" id="gm-fullscreen-icon"></i>
                         </button>
-                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Tiện ích & Lọc" class="w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Tiện ích & Lọc" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-chevron-down transition-transform duration-200" id="gm-hud-toggle-icon"></i>
                         </button>
                     </div>
@@ -1032,12 +1371,12 @@
 
                 <!-- Row 2: Campus Quick Chips + Navigation Arrows + Radius Selector -->
                 <div class="flex items-center justify-between gap-1.5 pt-1 border-t border-white/10">
-                    <span class="text-[10px] font-bold text-sky-400 flex items-center gap-1 shrink-0 mr-0.5">
+                    <span class="gm-campus-label text-[10px] font-bold text-sky-400 flex items-center gap-1 shrink-0 mr-0.5">
                         <i class="fa-solid fa-graduation-cap"></i> Trường:
                     </span>
 
                     <!-- Nút trượt trái -->
-                    <button type="button" onclick="scrollCampusBar(-160)" class="w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang trái">
+                    <button type="button" onclick="scrollCampusBar(-160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang trái">
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
 
@@ -1091,7 +1430,7 @@
                     </div>
 
                     <!-- Nút trượt phải -->
-                    <button type="button" onclick="scrollCampusBar(160)" class="w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang phải">
+                    <button type="button" onclick="scrollCampusBar(160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang phải">
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
 

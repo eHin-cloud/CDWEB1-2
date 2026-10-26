@@ -70,6 +70,8 @@ Route::delete('/renty/room-alerts/{id}', [RoomAlertController::class, 'destroy']
 // FEAT_07_CONTACT: Tiếp nhận & Quản lý yêu cầu hẹn xem phòng
 Route::post('/renty/contact-requests', [\App\Http\Controllers\AdminDashboardController::class, 'storeContactRequest'])->middleware('throttle:15,1')->name('api.renty.contact_requests.store');
 Route::post('/renty/contact-request', [\App\Http\Controllers\AdminDashboardController::class, 'storeContactRequest'])->middleware('throttle:15,1');
+Route::post('/renty/newsletter/subscribe', [\App\Http\Controllers\Api\VisitorController::class, 'subscribeNewsletter'])->middleware('throttle:10,1');
+
 
 // IoT Smart Metering Ingestion & Realtime Telemetry APIs
 Route::post('/v1/iot/telemetry', [\App\Http\Controllers\IotMeteringController::class, 'ingest']);

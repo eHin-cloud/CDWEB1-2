@@ -48,6 +48,122 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #4f46e5;
         }
+
+        /* =========================================================
+           LIGHT THEME (GIAO DIỆN SÁNG) CHO QUẢN LÝ CƠ SỞ LƯU TRÚ
+           ========================================================= */
+        html.theme-light body,
+        body.theme-light {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light header,
+        body.theme-light header {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+        html.theme-light header h2,
+        body.theme-light header h2 {
+            color: #0f172a !important;
+        }
+
+        /* Thẻ glass-card ở giao diện sáng */
+        html.theme-light .glass-card,
+        body.theme-light .glass-card {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02) !important;
+            color: #0f172a !important;
+        }
+
+        /* SỐ LIỆU & TIÊU ĐỀ TRONG GLASS-CARD: KHÔNG BỊ TRẮNG TRÊN TRẮNG */
+        html.theme-light .glass-card .text-white,
+        body.theme-light .glass-card .text-white,
+        html.theme-light .glass-card h3.text-white,
+        body.theme-light .glass-card h3.text-white,
+        html.theme-light .glass-card div.text-white,
+        body.theme-light .glass-card div.text-white,
+        html.theme-light .glass-card span.text-white,
+        body.theme-light .glass-card span.text-white,
+        html.theme-light .glass-card strong.text-white,
+        body.theme-light .glass-card strong.text-white {
+            color: #0f172a !important;
+        }
+
+        /* Hover tên tòa nhà */
+        html.theme-light .glass-card h3:hover,
+        body.theme-light .glass-card h3:hover,
+        html.theme-light .glass-card:hover h3,
+        body.theme-light .glass-card:hover h3 {
+            color: #4f46e5 !important;
+        }
+
+        /* Khung thống kê số phòng bên trong card */
+        html.theme-light .glass-card .bg-slate-900\/60,
+        body.theme-light .glass-card .bg-slate-900\/60 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .glass-card .border-slate-800,
+        body.theme-light .glass-card .border-slate-800 {
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Badge số tầng trên nền ảnh tối: LUÔN GIỮ CHỮ TRẮNG RÕ NÉT */
+        html.theme-light .floors-pill,
+        body.theme-light .floors-pill,
+        html.theme-light .floors-pill span,
+        body.theme-light .floors-pill span {
+            color: #ffffff !important;
+        }
+
+        /* Chip tiện ích */
+        html.theme-light .glass-card .bg-slate-800\/80,
+        body.theme-light .glass-card .bg-slate-800\/80 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+
+        /* Form tìm kiếm & lọc cơ sở */
+        html.theme-light input[name="search"],
+        body.theme-light input[name="search"],
+        html.theme-light select[name="status"],
+        body.theme-light select[name="status"] {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light input[name="search"]::placeholder,
+        body.theme-light input[name="search"]::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        /* Nút Lọc */
+        html.theme-light button[type="submit"].bg-slate-800,
+        body.theme-light button[type="submit"].bg-slate-800 {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light button[type="submit"].bg-slate-800:hover,
+        body.theme-light button[type="submit"].bg-slate-800:hover {
+            background-color: #e2e8f0 !important;
+        }
+
+        /* Nút chỉnh sửa */
+        html.theme-light .glass-card a.bg-slate-800,
+        body.theme-light .glass-card a.bg-slate-800 {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.theme-light .glass-card a.bg-slate-800:hover,
+        body.theme-light .glass-card a.bg-slate-800:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
     </style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
@@ -121,7 +237,7 @@
                             <i class="fa-solid fa-building text-base"></i>
                         </div>
                     </div>
-                    <div class="text-3xl font-extrabold text-white">{{ $totalBuildings }}</div>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ $totalBuildings }}</div>
                     <p class="text-xs text-slate-400 mt-1">Cơ sở / Tòa nhà đang quản lý</p>
                 </div>
 
@@ -132,7 +248,7 @@
                             <i class="fa-solid fa-door-open text-base"></i>
                         </div>
                     </div>
-                    <div class="text-3xl font-extrabold text-white">{{ $totalRooms }}</div>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ $totalRooms }}</div>
                     <p class="text-xs text-slate-400 mt-1">Phòng trên toàn hệ thống cơ sở</p>
                 </div>
 
@@ -146,7 +262,7 @@
                     @php
                         $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
                     @endphp
-                    <div class="text-3xl font-extrabold text-white">{{ $occupancyRate }}%</div>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-white">{{ $occupancyRate }}%</div>
                     <p class="text-xs text-slate-400 mt-1">{{ $occupiedRooms }} / {{ $totalRooms }} phòng đang có khách thuê</p>
                 </div>
             </div>
@@ -227,16 +343,16 @@
                                 </div>
 
                                 <!-- Floors Pill -->
-                                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                                <div class="floors-pill absolute bottom-3 left-3 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 text-xs font-semibold text-white flex items-center gap-1.5">
                                     <i class="fa-solid fa-stairs text-indigo-400 text-xs"></i>
-                                    <span>{{ $b->total_floors ?? 1 }} Tầng</span>
+                                    <span class="text-white !text-white">{{ $b->total_floors ?? 1 }} Tầng</span>
                                 </div>
                             </div>
 
                             <!-- Content -->
                             <div class="p-5 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <h3 class="text-base font-bold text-white mb-2 line-clamp-1 group-hover:text-indigo-400 transition" title="{{ $b->name }}">
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition" title="{{ $b->name }}">
                                         {{ $b->name }}
                                     </h3>
 
@@ -281,7 +397,7 @@
                                     <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between text-xs mb-4">
                                         <div>
                                             <span class="text-slate-400 block text-[11px]">Tổng phòng</span>
-                                            <span class="font-bold text-white text-sm">{{ $b->rooms_count ?? 0 }}</span>
+                                            <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $b->rooms_count ?? 0 }}</span>
                                         </div>
                                         <div class="border-l border-slate-800 pl-3">
                                             <span class="text-slate-400 block text-[11px]">Đang thuê</span>

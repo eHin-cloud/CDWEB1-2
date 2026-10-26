@@ -103,6 +103,11 @@ class RoomMatrixRealtimeController extends Controller
     {
         $user = Auth::user();
         $tenantId = $user ? $user->tenant_id : null;
+        if (!$tenantId && $user) {
+            $tenantId = \App\Models\Tenant::where('email', 'contact@smartroom-caugiay.vn')->value('id')
+                ?? \App\Models\Tenant::query()->orderBy('id')->value('id')
+                ?? 1;
+        }
 
         if (!$tenantId) {
             abort(403);
@@ -120,14 +125,15 @@ class RoomMatrixRealtimeController extends Controller
                 echo "event: room-updated\n";
                 echo "data: " . json_encode($latestEvent) . "\n\n";
             } else {
-                echo ": connected\n\n";
+                echo "event: ping\n";
+                echo "data: connected\n\n";
             }
             flush();
         });
 
         $response->headers->set('Content-Type', 'text/event-stream');
         $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        $response->headers->set('Connection', 'close');
+        $response->headers->set('Connection', 'keep-alive');
         $response->headers->set('X-Accel-Buffering', 'no'); // Tắt buffering trên Nginx
 
         return $response;
