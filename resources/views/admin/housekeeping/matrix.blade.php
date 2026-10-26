@@ -187,6 +187,287 @@
         :is(html.sidebar-collapsed, body.sidebar-collapsed) #sidebar-toggle i {
             transform: rotate(180deg) !important;
         }
+
+        /* =========================================================
+           LIGHT THEME (GIAO DIỆN SÁNG) CHO MA TRẬN BUỒNG PHÒNG & LỄ TÂN
+           ========================================================= */
+        html.theme-light body,
+        body.theme-light {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light header,
+        body.theme-light header {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+        html.theme-light header h2,
+        body.theme-light header h2 {
+            color: #0f172a !important;
+        }
+
+        /* 1. KPI Summary Cards */
+        html.theme-light .grid.grid-cols-2 > div,
+        body.theme-light .grid.grid-cols-2 > div {
+            box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02) !important;
+        }
+
+        /* Thẻ Tất cả phòng */
+        html.theme-light .grid.grid-cols-2 > div:nth-child(1),
+        body.theme-light .grid.grid-cols-2 > div:nth-child(1) {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(1) .text-white,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(1) .text-white {
+            color: #0f172a !important;
+        }
+
+        /* Thẻ Cần dọn (Dirty - Đỏ) */
+        html.theme-light .grid.grid-cols-2 > div:nth-child(2),
+        body.theme-light .grid.grid-cols-2 > div:nth-child(2) {
+            background-color: #fef2f2 !important;
+            border-color: #fecaca !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(2) span,
+        html.theme-light .grid.grid-cols-2 > div:nth-child(2) div,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(2) span,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(2) div {
+            color: #dc2626 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(2) .text-\[10px\],
+        body.theme-light .grid.grid-cols-2 > div:nth-child(2) .text-\[10px\] {
+            color: #ef4444 !important;
+        }
+
+        /* Thẻ Đang dọn (Cleaning - Vàng cam) */
+        html.theme-light .grid.grid-cols-2 > div:nth-child(3),
+        body.theme-light .grid.grid-cols-2 > div:nth-child(3) {
+            background-color: #fffbeb !important;
+            border-color: #fde68a !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(3) span,
+        html.theme-light .grid.grid-cols-2 > div:nth-child(3) div,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(3) span,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(3) div {
+            color: #d97706 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(3) .text-\[10px\],
+        body.theme-light .grid.grid-cols-2 > div:nth-child(3) .text-\[10px\] {
+            color: #b45309 !important;
+        }
+
+        /* Thẻ Đã dọn (Clean - Xanh lục) */
+        html.theme-light .grid.grid-cols-2 > div:nth-child(4),
+        body.theme-light .grid.grid-cols-2 > div:nth-child(4) {
+            background-color: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(4) span,
+        html.theme-light .grid.grid-cols-2 > div:nth-child(4) div,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(4) span,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(4) div {
+            color: #059669 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(4) .text-\[10px\],
+        body.theme-light .grid.grid-cols-2 > div:nth-child(4) .text-\[10px\] {
+            color: #047857 !important;
+        }
+
+        /* Thẻ Nghiệm thu đạt (Inspected - Xanh ngọc) */
+        html.theme-light .grid.grid-cols-2 > div:nth-child(5),
+        body.theme-light .grid.grid-cols-2 > div:nth-child(5) {
+            background-color: #f0fdfa !important;
+            border-color: #99f6e4 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(5) span,
+        html.theme-light .grid.grid-cols-2 > div:nth-child(5) div,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(5) span,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(5) div {
+            color: #0d9488 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(5) .text-\[10px\],
+        body.theme-light .grid.grid-cols-2 > div:nth-child(5) .text-\[10px\] {
+            color: #0f766e !important;
+        }
+
+        /* Thẻ Tạm dừng (Out of service - Xám than) */
+        html.theme-light .grid.grid-cols-2 > div:nth-child(6),
+        body.theme-light .grid.grid-cols-2 > div:nth-child(6) {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-slate-400,
+        body.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-slate-400 {
+            color: #475569 !important;
+        }
+        html.theme-light #stat-out-of-service,
+        body.theme-light #stat-out-of-service {
+            color: #334155 !important;
+        }
+        html.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-\[10px\],
+        body.theme-light .grid.grid-cols-2 > div:nth-child(6) .text-\[10px\] {
+            color: #64748b !important;
+        }
+
+        /* 2. Thanh Công Cụ Bộ Lọc & Tìm Kiếm */
+        html.theme-light main > .bg-\[\#0f1423\],
+        body.theme-light main > .bg-\[\#0f1423\] {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.05) !important;
+        }
+        html.theme-light #status-filter-group span,
+        body.theme-light #status-filter-group span {
+            color: #475569 !important;
+        }
+
+        /* Nút trạng thái All inactive */
+        html.theme-light .status-filter-btn.bg-slate-800\/60,
+        body.theme-light .status-filter-btn.bg-slate-800\/60 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        html.theme-light .status-filter-btn.bg-slate-800\/60:hover,
+        body.theme-light .status-filter-btn.bg-slate-800\/60:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* Nút Cần dọn inactive */
+        html.theme-light .status-filter-btn.bg-red-500\/10,
+        body.theme-light .status-filter-btn.bg-red-500\/10 {
+            background-color: #fef2f2 !important;
+            border-color: #fecaca !important;
+            color: #dc2626 !important;
+        }
+        /* Nút Đang dọn inactive */
+        html.theme-light .status-filter-btn.bg-amber-500\/10,
+        body.theme-light .status-filter-btn.bg-amber-500\/10 {
+            background-color: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #d97706 !important;
+        }
+        /* Nút Đã xong inactive */
+        html.theme-light .status-filter-btn.bg-emerald-500\/10,
+        body.theme-light .status-filter-btn.bg-emerald-500\/10 {
+            background-color: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+            color: #059669 !important;
+        }
+        /* Nút Nghiệm thu inactive */
+        html.theme-light .status-filter-btn.bg-teal-500\/10,
+        body.theme-light .status-filter-btn.bg-teal-500\/10 {
+            background-color: #f0fdfa !important;
+            border-color: #99f6e4 !important;
+            color: #0d9488 !important;
+        }
+
+        /* Select tòa nhà, input tìm mã phòng và nút reload */
+        html.theme-light #filter-building,
+        body.theme-light #filter-building {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #search-room-input,
+        body.theme-light #search-room-input {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #search-room-input::placeholder,
+        body.theme-light #search-room-input::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.theme-light button[title="Tải lại ma trận"],
+        body.theme-light button[title="Tải lại ma trận"] {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #475569 !important;
+        }
+        html.theme-light button[title="Tải lại ma trận"]:hover,
+        body.theme-light button[title="Tải lại ma trận"]:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* 3. Room Matrix Cards */
+        html.theme-light .room-card,
+        body.theme-light .room-card {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.05) !important;
+        }
+        html.theme-light .room-card.bg-red-950\/10,
+        body.theme-light .room-card.bg-red-950\/10 {
+            background-color: #fff8f8 !important;
+            border-color: #fca5a5 !important;
+        }
+        html.theme-light .room-card.bg-amber-950\/10,
+        body.theme-light .room-card.bg-amber-950\/10 {
+            background-color: #fffdf5 !important;
+            border-color: #fcd34d !important;
+        }
+        html.theme-light .room-card.bg-emerald-950\/10,
+        body.theme-light .room-card.bg-emerald-950\/10 {
+            background-color: #f6fef9 !important;
+            border-color: #86efac !important;
+        }
+        html.theme-light .room-card.bg-teal-950\/10,
+        body.theme-light .room-card.bg-teal-950\/10 {
+            background-color: #f0fdfa !important;
+            border-color: #5eead4 !important;
+        }
+        html.theme-light .room-card.bg-slate-900\/30,
+        body.theme-light .room-card.bg-slate-900\/30 {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        html.theme-light .room-card .font-mono.text-white,
+        body.theme-light .room-card .font-mono.text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .room-card .border-b,
+        html.theme-light .room-card .border-t,
+        body.theme-light .room-card .border-b,
+        body.theme-light .room-card .border-t {
+            border-color: #f1f5f9 !important;
+        }
+        html.theme-light .room-card .bg-slate-800,
+        body.theme-light .room-card .bg-slate-800 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        html.theme-light .room-card p,
+        body.theme-light .room-card p {
+            color: #475569 !important;
+        }
+        html.theme-light .room-card .text-slate-200,
+        html.theme-light .room-card .text-slate-300,
+        body.theme-light .room-card .text-slate-200,
+        body.theme-light .room-card .text-slate-300 {
+            color: #0f172a !important;
+        }
+        html.theme-light .room-card .text-slate-400,
+        body.theme-light .room-card .text-slate-400 {
+            color: #64748b !important;
+        }
+        html.theme-light .room-card button.bg-slate-800,
+        body.theme-light .room-card button.bg-slate-800 {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.theme-light .room-card button.bg-slate-800:hover,
+        body.theme-light .room-card button.bg-slate-800:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
     </style>
 </head>
 <body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-teal-500 selection:text-white overflow-hidden">

@@ -146,11 +146,21 @@
                 </div>
                 <div class="sidebar-group-divider hidden my-2 border-t border-slate-800/60"></div>
                 <div class="space-y-0.5">
+                    <!-- 1. Bảng điều khiển thống kê doanh thu độc lập (FEAT_30 Dashboard) -->
                     <a href="{{ route('admin.dashboard') }}" 
-                       data-section="dashboard-section" 
-                       class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ (request()->routeIs('admin.dashboard') || ($isDashboardRoute && $currentTab === 'dashboard-section')) ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}">
+                       class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ request()->routeIs('admin.dashboard*') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}"
+                       title="Bảng điều khiển tổng quan phòng & doanh thu">
                         <i class="fa-solid fa-chart-pie w-5 text-center text-[15px]"></i>
-                        <span class="truncate">Tổng Quan</span>
+                        <span class="truncate">Dashboard Doanh Thu</span>
+                    </a>
+
+                    <!-- 2. Bảng tổng quan điều hành vận hành SmartRoom Hub -->
+                    <a href="{{ route('smartroom.admin') }}?tab=dashboard-section" 
+                       data-section="dashboard-section" 
+                       class="sidebar-nav-link w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border {{ ($isDashboardRoute && $currentTab === 'dashboard-section') ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/10' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border-transparent hover:border-slate-800' }}"
+                       title="Tổng quan điều hành phòng & cảnh báo cư dân">
+                        <i class="fa-solid fa-gauge-high w-5 text-center text-[15px]"></i>
+                        <span class="truncate">Tổng Quan Vận Hành</span>
                     </a>
                     
                     @if($isLandlord)

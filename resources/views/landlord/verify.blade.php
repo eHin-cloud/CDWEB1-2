@@ -38,6 +38,16 @@
             }
         }
     </script>
+    <script>
+        (function() {
+            var saved = localStorage.getItem('smartroom_theme') || localStorage.getItem('renty_theme_mode');
+            if (saved === 'light') {
+                document.documentElement.classList.add('theme-light');
+            } else {
+                document.documentElement.classList.remove('theme-light');
+            }
+        })();
+    </script>
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
 
     <style>
@@ -109,9 +119,30 @@
         .toast-error { border-color: rgba(244, 63, 94, 0.4); background: rgba(54, 10, 20, 0.95); }
         .toast-info { border-color: rgba(99, 102, 241, 0.4); background: rgba(20, 25, 60, 0.95); }
 
+        /* Nút chuyển đổi Theme Sáng / Tối */
+        .theme-toggle-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 0.75rem;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .theme-toggle-button:hover {
+            background: rgba(30, 41, 59, 0.9);
+            color: #f8fafc;
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: scale(1.04);
+        }
+
         /* ===== LIGHT MODE STYLING CHO XÁC THỰC OTP CHỦ TRỌ ===== */
         html.theme-light body, body.theme-light {
-            background-color: #f1f5f9 !important;
+            background-color: #f8fafc !important;
             background-image: none !important;
             color: #0f172a !important;
         }
@@ -120,16 +151,45 @@
         }
         html.theme-light .theme-toggle-button, body.theme-light .theme-toggle-button {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #475569 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.theme-light .theme-toggle-button:hover, body.theme-light .theme-toggle-button:hover {
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light header a.bg-slate-900\/60, body.theme-light header a.bg-slate-900\/60 {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
             color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light header a.bg-slate-900\/60:hover, body.theme-light header a.bg-slate-900\/60:hover {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        html.theme-light a.bg-slate-900\/80, body.theme-light a.bg-slate-900\/80 {
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light a.bg-slate-900\/80:hover, body.theme-light a.bg-slate-900\/80:hover {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
         }
         html.theme-light .glass-card, body.theme-light .glass-card {
             background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.1) !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08) !important;
             color: #0f172a !important;
         }
         html.theme-light h1.text-white, body.theme-light h1.text-white,
+        html.theme-light h2.text-white, body.theme-light h2.text-white,
+        html.theme-light h3.text-white, body.theme-light h3.text-white,
         html.theme-light h4.text-white, body.theme-light h4.text-white,
         html.theme-light .glass-card .text-white, body.theme-light .glass-card .text-white {
             color: #0f172a !important;
@@ -139,12 +199,12 @@
             font-weight: 500 !important;
         }
         html.theme-light .text-slate-500, body.theme-light .text-slate-500 {
-            color: #334155 !important;
+            color: #64748b !important;
             font-weight: 500 !important;
         }
         html.theme-light .text-slate-300, body.theme-light .text-slate-300 {
-            color: #0f172a !important;
-            font-weight: 700 !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
         }
         html.theme-light .otp-box, body.theme-light .otp-box {
             background: #ffffff !important;
@@ -162,6 +222,18 @@
         }
         html.theme-light .ambient-glow {
             opacity: 0.15 !important;
+        }
+        html.theme-light footer, body.theme-light footer {
+            border-color: #e2e8f0 !important;
+            color: #64748b !important;
+        }
+        html.theme-light .toast-card, body.theme-light .toast-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.12) !important;
+        }
+        html.theme-light .toast-card .toast-message, body.theme-light .toast-card .toast-message {
+            color: #0f172a !important;
         }
     </style>
 </head>
@@ -531,6 +603,39 @@
                 setTimeout(() => toast.remove(), 400);
             }, 4500);
         }
+
+        // =========================================================
+        // QUẢN LÝ CHẾ ĐỘ SÁNG / TỐI (LIGHT / DARK THEME)
+        // =========================================================
+        function toggleThemeMode() {
+            const html = document.documentElement;
+            const isDark = !html.classList.contains('theme-light');
+            if (isDark) {
+                html.classList.add('theme-light');
+                localStorage.setItem('smartroom_theme', 'light');
+                localStorage.setItem('renty_theme_mode', 'light');
+            } else {
+                html.classList.remove('theme-light');
+                localStorage.setItem('smartroom_theme', 'dark');
+                localStorage.setItem('renty_theme_mode', 'dark');
+            }
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const isLight = document.documentElement.classList.contains('theme-light');
+            document.querySelectorAll('[data-theme-icon]').forEach(icon => {
+                if (isLight) {
+                    icon.className = 'fa-solid fa-sun text-amber-500 text-xs';
+                } else {
+                    icon.className = 'fa-solid fa-moon text-slate-400 text-xs';
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateThemeIcons();
+        });
 
         @if(session('success'))
             showToast(@json(session('success')), "success");

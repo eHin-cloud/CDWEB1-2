@@ -173,16 +173,16 @@
                                         @if($residentName || $billingMonth || $equipmentName || $paymentMethod)
                                             <div class="mt-3 flex flex-wrap gap-2 text-xs">
                                                 @if($residentName)
-                                                    <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">Cư dân: {{ $residentName }}</span>
+                                                    <span class="activity-meta-chip px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">Cư dân: {{ $residentName }}</span>
                                                 @endif
                                                 @if($billingMonth)
-                                                    <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">Kỳ: {{ $billingMonth }}</span>
+                                                    <span class="activity-meta-chip px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">Kỳ: {{ $billingMonth }}</span>
                                                 @endif
                                                 @if($equipmentName)
-                                                    <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">Thiết bị: {{ $equipmentName }}</span>
+                                                    <span class="activity-meta-chip px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">Thiết bị: {{ $equipmentName }}</span>
                                                 @endif
                                                 @if($paymentMethod)
-                                                    <span class="px-2.5 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">Thanh toán: {{ strtoupper($paymentMethod) }}</span>
+                                                    <span class="activity-meta-chip px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">Thanh toán: {{ strtoupper($paymentMethod) }}</span>
                                                 @endif
                                             </div>
                                         @endif

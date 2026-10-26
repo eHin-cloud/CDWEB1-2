@@ -3538,7 +3538,7 @@ function showCommentsAlert() {
     }
 }
 
-function subscribeNewsletter() {
+async function subscribeNewsletter() {
     const emailInput = document.getElementById('footer-newsletter-email');
     if (!emailInput) return;
     const email = emailInput.value.trim();
@@ -3557,24 +3557,74 @@ function subscribeNewsletter() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (typeof showCustomAlert === 'function') {
-            showCustomAlert('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.', 'warning');
+            showCustomAlert('Địa chỉ email không đúng định dạng. Vui lòng kiểm tra lại.', 'warning');
         } else if (typeof window.showRentyToast === 'function') {
-            window.showRentyToast('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.', 'warning', 'Cảnh báo');
+            window.showRentyToast('Địa chỉ email không đúng định dạng. Vui lòng kiểm tra lại.', 'warning', 'Cảnh báo');
         } else {
-            alert('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.');
+            alert('Địa chỉ email không đúng định dạng. Vui lòng kiểm tra lại.');
         }
         emailInput.focus();
         return;
     }
 
-    if (typeof showCustomAlert === 'function') {
-        showCustomAlert('Đăng ký nhận tin tức phòng trọ mới thành công!', 'success');
-    } else if (typeof window.showRentyToast === 'function') {
-        window.showRentyToast('Đăng ký nhận tin tức phòng trọ mới thành công!', 'success', 'Thành công!');
-    } else {
-        alert('Đăng ký nhận tin tức phòng trọ mới thành công!');
+    const btn = document.getElementById('btn-footer-newsletter');
+    const spinner = document.getElementById('footer-newsletter-spinner');
+    const btnText = document.getElementById('btn-footer-newsletter-text');
+
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.classList.remove('hidden');
+    if (btnText) btnText.textContent = 'Đang gửi...';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    try {
+        const response = await fetch('/renty/newsletter/subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ email: email })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            const successMsg = data.message || ('Đăng ký thành công! Hệ thống đã gửi email xác nhận đến ' + email);
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert(successMsg, 'success');
+            } else if (typeof window.showRentyToast === 'function') {
+                window.showRentyToast(successMsg, 'success', 'Thành công!');
+            } else {
+                alert(successMsg);
+            }
+            emailInput.value = '';
+        } else {
+            const errorMsg = data.message || 'Không thể đăng ký lúc này. Vui lòng thử lại sau.';
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert(errorMsg, 'error');
+            } else if (typeof window.showRentyToast === 'function') {
+                window.showRentyToast(errorMsg, 'error', 'Lỗi');
+            } else {
+                alert(errorMsg);
+            }
+        }
+    } catch (err) {
+        console.error('Newsletter subscribe error:', err);
+        const networkError = 'Lỗi kết nối mạng khi gửi yêu cầu. Vui lòng thử lại.';
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert(networkError, 'error');
+        } else if (typeof window.showRentyToast === 'function') {
+            window.showRentyToast(networkError, 'error', 'Lỗi mạng');
+        } else {
+            alert(networkError);
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+        if (btnText) btnText.textContent = 'Đang ký';
     }
-    emailInput.value = '';
 }
 
 // Bind functions to window so inline onclick event handlers can call them

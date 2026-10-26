@@ -1811,7 +1811,7 @@
             <!-- SECTION 2: VISUAL ROOM MAP -->
             <section id="room-map-section" class="tab-content hidden space-y-8 animate-fade-in">
                 <!-- PROPERTY LOCATION & BUILDING INFO BANNER -->
-                <div class="glass-card rounded-2xl p-5 border border-slate-800/80 bg-gradient-to-r from-slate-900/90 via-[#0d121f]/95 to-indigo-950/40 relative overflow-hidden shadow-xl">
+                <div class="glass-card property-banner-card rounded-2xl p-5 border border-slate-800/80 bg-gradient-to-r from-slate-900/90 via-[#0d121f]/95 to-indigo-950/40 relative overflow-hidden shadow-xl">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                         <div class="flex items-start gap-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 text-xl shadow-lg shadow-indigo-500/10">
@@ -1848,7 +1848,7 @@
                             </a>
 
                             @if(isset($buildings) && $buildings->count() > 1)
-                                <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
+                                <div class="building-filter-bar flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
                                     <button type="button" onclick="filterByBuilding('all', this)" class="building-tab-btn px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold transition-all">
                                         Tất cả tòa
                                     </button>
@@ -11103,6 +11103,8 @@
         }
 
         let matrixEventSource = null;
+        let sseErrorCount = 0;
+
         function showSseWarning() {
             const badge = document.getElementById('sse-reconnect-badge');
             if (badge) {
@@ -11127,9 +11129,15 @@
                 }
                 matrixEventSource = new EventSource("{{ route('admin.rooms.matrix.stream') }}");
                 matrixEventSource.onopen = function () {
+                    sseErrorCount = 0;
                     hideSseWarning();
                 };
+                matrixEventSource.addEventListener('ping', function () {
+                    sseErrorCount = 0;
+                    hideSseWarning();
+                });
                 matrixEventSource.addEventListener('room-updated', function (e) {
+                    sseErrorCount = 0;
                     hideSseWarning();
                     try {
                         const roomData = JSON.parse(e.data);
@@ -11141,10 +11149,16 @@
                     }
                 });
                 matrixEventSource.onerror = function () {
-                    showSseWarning();
+                    sseErrorCount++;
+                    // Chỉ hiển thị thông báo nếu thiết bị thực sự offline hoặc gặp lỗi liên tiếp
+                    if (!navigator.onLine || sseErrorCount >= 3) {
+                        showSseWarning();
+                    }
                 };
             } catch (err) {
-                showSseWarning();
+                if (!navigator.onLine) {
+                    showSseWarning();
+                }
             }
         }
 

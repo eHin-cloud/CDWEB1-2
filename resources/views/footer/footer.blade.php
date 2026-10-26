@@ -54,9 +54,10 @@
                     Nhận thông báo qua email ngay khi có phòng mới đầy đủ tiện ích trong khu vực bạn quan tâm.
                 </p>
                 <div class="flex gap-2">
-                    <input type="email" id="footer-newsletter-email" placeholder="Email của bạn..." class="px-3.5 py-2 w-full bg-[#121214] border border-slate-800 rounded-xl text-xs text-slate-250 placeholder-slate-600 focus:outline-none focus:border-teal-500/50 transition-colors">
-                    <button type="button" onclick="subscribeNewsletter()" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-teal-600/10 whitespace-nowrap">
-                        Đăng ký
+                    <input type="email" id="footer-newsletter-email" onkeydown="if(event.key === 'Enter') subscribeNewsletter()" placeholder="Email của bạn..." class="px-3.5 py-2 w-full bg-[#121214] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-teal-500/60 transition-colors">
+                    <button type="button" id="btn-footer-newsletter" onclick="subscribeNewsletter()" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-teal-600/20 whitespace-nowrap flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i id="footer-newsletter-spinner" class="fa-solid fa-spinner fa-spin text-xs hidden"></i>
+                        <span id="btn-footer-newsletter-text">Đăng ký</span>
                     </button>
                 </div>
             </div>

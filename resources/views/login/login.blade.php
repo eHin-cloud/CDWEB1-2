@@ -319,21 +319,137 @@
         .strength-medium .strength-bar-seg:nth-child(2) { background: #f59e0b; }
         .strength-strong .strength-bar-seg { background: #10b981; }
 
-        /* Light Mode Overrides */
+        /* ========================================================= */
+        /* COMPREHENSIVE BALANCED LIGHT MODE (GIAO DIỆN SÁNG CHUẨN ĐẸP) */
+        /* ========================================================= */
         html.theme-light body, body.theme-light {
-            background-color: #f8fafc !important;
+            background-color: #f1f5f9 !important;
             color: #0f172a !important;
         }
-        html.theme-light .ambient-bg {
-            background-color: #f8fafc !important;
-            background-image: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.08), transparent 70%) !important;
+
+        /* 1. Backdrop & Hiệu ứng phát quang nhẹ nhàng */
+        html.theme-light .split-ambient-bg {
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 50%, #f1f5f9 100%) !important;
         }
+        html.theme-light .glow-sphere-left-green {
+            background: radial-gradient(circle at 45% 50%, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.05) 45%, transparent 75%) !important;
+            filter: blur(70px) !important;
+        }
+        html.theme-light .glow-sphere-right-dark {
+            background: radial-gradient(circle at 55% 50%, rgba(99, 102, 241, 0.12) 0%, rgba(79, 70, 229, 0.04) 45%, transparent 75%) !important;
+            filter: blur(70px) !important;
+        }
+        html.theme-light .cyber-grid-overlay {
+            background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px) !important;
+        }
+
+        /* 2. Top Header */
+        html.theme-light header {
+            background: rgba(255, 255, 255, 0.88) !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        }
+        html.theme-light header a,
+        html.theme-light header button {
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+            background: #ffffff !important;
+        }
+        html.theme-light header a:hover,
+        html.theme-light header button:hover {
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+            background: #f8fafc !important;
+        }
+
+        /* 3. Master Card (.saas-card) */
         html.theme-light .saas-card {
             background: #ffffff !important;
-            border-color: #e2e8f0 !important;
-            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.07) !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.6) !important;
         }
+        html.theme-light .saas-card.role-guest-mode {
+            border-color: rgba(16, 185, 129, 0.4) !important;
+            box-shadow: 0 20px 45px -12px rgba(16, 185, 129, 0.12), 0 0 0 1px rgba(16, 185, 129, 0.25) !important;
+        }
+        html.theme-light .saas-card.role-landlord-mode {
+            border-color: rgba(99, 102, 241, 0.4) !important;
+            box-shadow: 0 20px 45px -12px rgba(99, 102, 241, 0.12), 0 0 0 1px rgba(99, 102, 241, 0.25) !important;
+        }
+
+        /* 4. Cột Trái: Hero Showcase */
+        html.theme-light .auth-hero-showcase {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .auth-hero-showcase h1,
+        html.theme-light .auth-hero-showcase h2,
+        html.theme-light .auth-hero-showcase h3,
+        html.theme-light .auth-hero-showcase .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light .auth-hero-showcase p,
+        html.theme-light .auth-hero-showcase .text-slate-300,
+        html.theme-light .auth-hero-showcase .text-slate-300\/90 {
+            color: #475569 !important;
+        }
+        html.theme-light .auth-hero-showcase .text-slate-400 {
+            color: #64748b !important;
+        }
+        html.theme-light .auth-hero-showcase .bg-slate-900\/60,
+        html.theme-light .auth-hero-showcase .bg-slate-900\/40 {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04) !important;
+        }
+        html.theme-light .auth-hero-showcase .border-slate-800\/80,
+        html.theme-light .auth-hero-showcase .border-t {
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .auth-hero-showcase .border-slate-900 {
+            border-color: #ffffff !important;
+        }
+        html.theme-light .auth-hero-showcase .text-slate-200 {
+            color: #0f172a !important;
+        }
+        html.theme-light #hero-pill-badge {
+            background: rgba(99, 102, 241, 0.08) !important;
+            border-color: rgba(99, 102, 241, 0.25) !important;
+        }
+        html.theme-light #hero-role-tag {
+            color: #4f46e5 !important;
+        }
+
+        /* 5. Cột Phải: Form & Inputs */
+        html.theme-light #auth-right-col {
+            background: #ffffff !important;
+        }
+        html.theme-light #auth-heading,
+        html.theme-light #auth-right-col h1,
+        html.theme-light #auth-right-col h2 {
+            color: #0f172a !important;
+        }
+        html.theme-light #auth-subheading {
+            color: #64748b !important;
+        }
+        html.theme-light #auth-right-col label.text-slate-300,
+        html.theme-light #auth-right-col .text-slate-300,
+        html.theme-light #auth-right-col .text-slate-200 {
+            color: #334155 !important;
+        }
+        html.theme-light #auth-right-col .text-slate-400 {
+            color: #64748b !important;
+        }
+        html.theme-light #auth-right-col .text-slate-500 {
+            color: #64748b !important;
+        }
+        html.theme-light #auth-right-col .border-slate-800\/80,
+        html.theme-light #auth-right-col .border-slate-800\/60,
+        html.theme-light #auth-right-col .border-slate-800 {
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Segmented control chuyển đổi vai trò Khách thuê vs Chủ trọ */
         html.theme-light .segmented-control {
             background: #f1f5f9 !important;
             border-color: #e2e8f0 !important;
@@ -341,23 +457,202 @@
         html.theme-light .segmented-btn {
             color: #64748b !important;
         }
-        html.theme-light .segmented-btn.active {
+        html.theme-light .segmented-btn.active.role-guest-active {
             background: #ffffff !important;
-            color: #0f172a !important;
-            border-color: #cbd5e1 !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            color: #059669 !important;
+            border-color: rgba(16, 185, 129, 0.4) !important;
+            box-shadow: 0 2px 6px -1px rgba(16, 185, 129, 0.15) !important;
+        }
+        html.theme-light .segmented-btn.active.role-landlord-active {
+            background: #ffffff !important;
+            color: #4f46e5 !important;
+            border-color: rgba(99, 102, 241, 0.4) !important;
+            box-shadow: 0 2px 6px -1px rgba(99, 102, 241, 0.15) !important;
+        }
+
+        /* Method Toggle (Mật khẩu vs OTP) */
+        html.theme-light #auth-pane-signin .bg-slate-950\/60 {
+            background: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .sub-tab-btn {
+            color: #64748b !important;
         }
         html.theme-light .sub-tab-btn.active {
-            background: #e2e8f0 !important;
+            background: #ffffff !important;
             color: #0f172a !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
         }
-        html.theme-light .cyber-grid-overlay {
-            background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px) !important;
-        }
+
+        /* Ô nhập liệu Input */
         html.theme-light .saas-input {
             background: #ffffff !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
+        }
+        html.theme-light .saas-input::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.theme-light .saas-input:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+            background: #ffffff !important;
+        }
+        html.theme-light .saas-input.has-error {
+            border-color: #f43f5e !important;
+            background: #fff1f2 !important;
+        }
+
+        /* Box tiện ích đăng nhập OTP */
+        html.theme-light #form-signin-otp .bg-slate-900\/60 {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Form đăng ký: Radio kênh nhận OTP */
+        html.theme-light #signup-verification-group label {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+        html.theme-light #signup-verification-group label:hover {
+            border-color: #cbd5e1 !important;
+            background: #ffffff !important;
+        }
+
+        /* Hộp đăng ký cơ sở đối tác chủ trọ */
+        html.theme-light #landlord-portal-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
+            border-color: #dbeafe !important;
+        }
+        html.theme-light #landlord-portal-box .text-slate-200 {
+            color: #1e3a8a !important;
+        }
+        html.theme-light #landlord-portal-box .text-slate-400 {
+            color: #475569 !important;
+        }
+
+        /* 6. Màn hình OTP chuyên biệt (Screen 2) */
+        html.theme-light #auth-screen-otp {
+            background: #ffffff !important;
+        }
+        html.theme-light #auth-screen-otp h2 {
+            color: #0f172a !important;
+        }
+        html.theme-light #auth-screen-otp .bg-slate-900 {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light #auth-screen-otp .bg-slate-950 {
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        html.theme-light #screen-otp-target-text {
+            color: #047857 !important;
+        }
+        html.theme-light #auth-screen-otp .from-blue-950\/40 {
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%) !important;
+            border-color: #bae6fd !important;
+            box-shadow: 0 4px 12px -2px rgba(186, 230, 253, 0.4) !important;
+        }
+        html.theme-light #auth-screen-otp .from-blue-950\/40 .text-white {
+            color: #0c4a6e !important;
+        }
+        html.theme-light #auth-screen-otp .from-blue-950\/40 .text-slate-300\/90 {
+            color: #334155 !important;
+        }
+        html.theme-light #auth-screen-otp .from-blue-950\/40 .text-cyan-200 {
+            color: #0284c7 !important;
+        }
+        html.theme-light .otp-digit-box {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light .otp-digit-box:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+            background: #ffffff !important;
+        }
+
+        /* 7. Footer & Micro Badges */
+        html.theme-light footer {
+            color: #94a3b8 !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light .text-slate-700 {
+            color: #cbd5e1 !important;
+        }
+
+        /* 8. Admin Shell Overrides (Khi vào các trang admin /list, /read, /update) */
+        html.theme-light #admin-shell {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #admin-shell .bg-slate-900\/40,
+        html.theme-light #admin-shell .bg-slate-900\/35,
+        html.theme-light #admin-shell .bg-slate-900\/30 {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05), 0 2px 6px -2px rgba(0, 0, 0, 0.03) !important;
+        }
+        html.theme-light #admin-shell h1,
+        html.theme-light #admin-shell h2,
+        html.theme-light #admin-shell h3 {
+            color: #0f172a !important;
+        }
+        html.theme-light #admin-shell .bg-gradient-to-r.from-white.to-slate-400 {
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        html.theme-light #admin-shell .text-slate-100,
+        html.theme-light #admin-shell .text-slate-200 {
+            color: #0f172a !important;
+        }
+        html.theme-light #admin-shell .text-slate-300,
+        html.theme-light #admin-shell .text-slate-400 {
+            color: #475569 !important;
+        }
+        html.theme-light #admin-shell .text-slate-500 {
+            color: #64748b !important;
+        }
+        html.theme-light #admin-shell .border-slate-800,
+        html.theme-light #admin-shell .border-slate-800\/80,
+        html.theme-light #admin-shell .border-slate-800\/40,
+        html.theme-light #admin-shell .divide-slate-800\/40 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light #admin-shell input,
+        html.theme-light #admin-shell select {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.theme-light #admin-shell input::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.theme-light #admin-shell table thead tr {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.theme-light #admin-shell table thead th {
+            color: #475569 !important;
+        }
+        html.theme-light #admin-shell table tbody tr:hover {
+            background: #f1f5f9 !important;
+        }
+
+        /* 9. Animated Brand Typography in Light Mode */
+        html.theme-light .animated-brand-smartroom {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 35%, #2563eb 70%, #059669 100%) !important;
+            background-size: 250% 250% !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            filter: drop-shadow(0 1px 2px rgba(99, 102, 241, 0.2)) !important;
+        }
+        html.theme-light .animated-brand-amp {
+            color: #7c3aed !important;
         }
 
         /* Hero Showcase Responsive Display (Tránh xung đột với class .hidden !important toàn cục) */

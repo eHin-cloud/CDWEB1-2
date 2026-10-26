@@ -635,4 +635,61 @@ class VisitorController extends Controller
             'insight' => $insight
         ]);
     }
+
+    /**
+     * Đăng ký nhận tin phòng trọ mới và gửi email xác nhận tự động qua hệ thống mail đã setup
+     */
+    public function subscribeNewsletter(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|max:150',
+        ], [
+            'email.required' => 'Vui lòng nhập địa chỉ email của bạn.',
+            'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
+            'email.max' => 'Địa chỉ email không được vượt quá 150 ký tự.',
+        ]);
+
+        $email = trim(strtolower($validated['email']));
+        $mailSent = false;
+        $errorDetail = null;
+
+        try {
+            \Illuminate\Support\Facades\Mail::send('emails.newsletter_confirmation', [
+                'email' => $email,
+            ], function ($message) use ($email) {
+                $message->to($email)
+                    ->subject('SmartRoom & Renty - Xác Nhận Đăng Ký Nhận Tin Phòng Mới');
+            });
+            $mailSent = true;
+            \Illuminate\Support\Facades\Log::info("Newsletter confirmation email sent successfully to: {$email}");
+        } catch (\Throwable $e) {
+            $errorDetail = $e->getMessage();
+            \Illuminate\Support\Facades\Log::error("Failed to send newsletter email to {$email}: " . $errorDetail);
+        }
+
+        // Lưu vết kiểm toán vào bảng NotificationLog
+        try {
+            \App\Models\NotificationLog::create([
+                'type' => 'newsletter_subscribe',
+                'channel' => 'email',
+                'recipient_contact' => $email,
+                'recipient_name' => explode('@', $email)[0],
+                'subject' => 'SmartRoom & Renty - Xác Nhận Đăng Ký Nhận Tin Phòng Mới',
+                'message' => 'Người dùng đăng ký nhận bản tin phòng trọ mới trên sàn Renty.',
+                'status' => $mailSent ? 'sent' : 'failed',
+                'sent_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // Không chặn phản hồi nếu NotificationLog có cấu hình khác
+        }
+
+        return response()->json([
+            'success' => true,
+            'mail_sent' => $mailSent,
+            'message' => $mailSent 
+                ? 'Đăng ký thành công! Hệ thống đã gửi email xác nhận đến ' . $email . '. Vui lòng kiểm tra hộp thư của bạn.'
+                : 'Đăng ký nhận tin thành công! Chúng tôi đã ghi nhận email ' . $email . ' của bạn.',
+        ]);
+    }
 }
+

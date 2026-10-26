@@ -378,6 +378,8 @@ Route::post('/smartroom/contract/{id}/send-otp', [AdminDashboardController::clas
 Route::post('/smartroom/contract/{id}/lessor-sign', [AdminDashboardController::class, 'signLessorContract'])->name('smartroom.contract.lessor_sign');
 Route::post('/renty/contact-request', [AdminDashboardController::class, 'storeContactRequest'])->name('renty.contact_request.store');
 Route::post('/renty/contact-requests', [AdminDashboardController::class, 'storeContactRequest']);
+Route::post('/renty/newsletter/subscribe', [\App\Http\Controllers\Api\VisitorController::class, 'subscribeNewsletter'])->middleware('throttle:10,1')->name('renty.newsletter.subscribe');
+
 
 $rentyRooms = function ($filterEmpty = true) {
     $user = auth()->user();
