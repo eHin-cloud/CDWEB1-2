@@ -3,86 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thống Kê Hệ Thống - SmartRoom Console</title>
+    <title>Thống Kê Toàn Hệ Thống - Superadmin Console | SmartRoom & Renty</title>
+    @include('admin.partials.theme-head-script')
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #030712; /* slate-950 */
+        .panel, .glass-panel { 
+            background: rgba(13, 18, 31, 0.75); 
+            border: 1px solid rgba(30, 41, 59, 0.85); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.45);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(51, 65, 85, 0.5);
+        .glass-header { 
+            background: rgba(8, 11, 17, 0.85); 
+            backdrop-filter: blur(12px); 
         }
-        .glass-panel:hover {
-            border-color: rgba(244, 63, 94, 0.4);
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #080b11; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
+        /* Light Mode High Contrast Enhancements (Đồng bộ chuẩn Superadmin) */
+        html.theme-light body, body.theme-light { 
+            background: #f3f7fb !important; 
+            color: #0f172a !important; 
         }
-        .glow-circle {
-            filter: blur(140px);
-            opacity: 0.12;
-            pointer-events: none;
+        html.theme-light .panel, body.theme-light .panel,
+        html.theme-light .glass-panel, body.theme-light .glass-panel { 
+            background: #ffffff !important; 
+            border-color: #e2e8f0 !important; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important; 
+        }
+        html.theme-light .glass-header, body.theme-light .glass-header { 
+            background: rgba(255, 255, 255, 0.95) !important; 
+            border-color: #e2e8f0 !important; 
+        }
+        html.theme-light .text-white, body.theme-light .text-white { 
+            color: #0f172a !important; 
+        }
+        html.theme-light .text-slate-100, body.theme-light .text-slate-100 { 
+            color: #0f172a !important; 
+        }
+        html.theme-light .text-slate-200, body.theme-light .text-slate-200 { 
+            color: #1e293b !important; 
+        }
+        html.theme-light .text-slate-300, body.theme-light .text-slate-300 { 
+            color: #334155 !important; 
+        }
+        html.theme-light .text-slate-400, body.theme-light .text-slate-400 { 
+            color: #64748b !important; 
+        }
+        html.theme-light .nav-tabs-wrapper {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.theme-light .nav-tab-inactive {
+            color: #475569 !important;
+        }
+        html.theme-light .nav-tab-inactive:hover {
+            color: #0f172a !important;
+            background-color: #e2e8f0 !important;
+        }
+        html.theme-light .metric-subtext {
+            color: #64748b !important;
         }
     </style>
 </head>
-<body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white overflow-hidden">
+<body class="bg-[#080b11] text-slate-100 min-h-screen selection:bg-rose-500 selection:text-white overflow-hidden font-sans">
     @include('admin.partials.sidebar')
 
     <div id="admin-shell" class="ml-64 min-w-0 flex flex-col h-screen overflow-y-auto relative z-10 transition-[margin-left] duration-200">
-        <!-- Background Elements -->
-        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-rose-600 glow-circle"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-pink-600 glow-circle"></div>
-
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 relative z-10 flex-grow">
-        <!-- Header Section -->
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-6 border-b border-slate-900">
-            <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20">
-                        System Analytics
-                    </span>
+        
+        <!-- SUPERADMIN STANDARDIZED TOPBAR -->
+        <header class="h-16 border-b border-slate-900 glass-header flex items-center justify-between px-6 lg:px-8 sticky top-0 z-20">
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.superadmin.dashboard') }}" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-all text-xs" title="Quay lại Superadmin Console">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[11px] font-extrabold tracking-wider uppercase">
+                    <i class="fa-solid fa-chart-pie text-[10px]"></i> FEAT_20_ANALYTICS
+                </span>
+                <div>
+                    <h1 class="text-base font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
+                        Báo Cáo Thống Kê & Phân Tích Hệ Thống
+                    </h1>
                 </div>
-                <h1 class="text-3xl font-extrabold tracking-tight text-white mt-2 flex items-center gap-3">
-                    <i class="fa-solid fa-shield-halved text-rose-400"></i> Giám Sát & Bảo Mật
-                </h1>
-                <p class="text-xs text-slate-400">
-                    Phân tích số liệu tăng trưởng, hóa đơn doanh thu và trạng thái vận hành toàn bộ hệ thống.
-                </p>
             </div>
             
             <div class="flex items-center gap-3">
-                <a href="{{ route('user.list') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:border-indigo-500/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                    <i class="fa-solid fa-users-gear text-indigo-400"></i>
-                    Quản lý thành viên
+                <a href="{{ route('admin.superadmin.dashboard') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all hidden sm:flex items-center gap-2">
+                    <i class="fa-solid fa-crown text-amber-400"></i>
+                    <span>Superadmin Console</span>
                 </a>
+                <a href="{{ route('admin.audit-logs') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all hidden md:flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                    <span>Nhật Ký Kiểm Toán</span>
+                </a>
+                @include('admin.partials.accent-picker')
+                <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
+                    <i class="fa-solid fa-moon" data-theme-icon></i>
+                </button>
+                <div class="text-xs font-semibold text-slate-400 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl hidden lg:flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    {{ now()->format('d/m/Y H:i') }}
+                </div>
             </div>
         </header>
 
-        <!-- Navigation Tabs -->
-        <div class="flex flex-wrap items-center gap-2 mb-8 bg-slate-900/40 p-1.5 rounded-xl border border-slate-800/80 max-w-max">
-            <a href="{{ route('admin.verifications.index') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.verifications.index') ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                <i class="fa-solid fa-file-signature text-sky-400"></i> Duyệt Hồ Sơ
-            </a>
-            <a href="{{ route('admin.audit-logs') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.audit-logs') ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                <i class="fa-solid fa-shield-halved text-indigo-400"></i> Nhật Ký Audit
-            </a>
-            <a href="{{ route('admin.analytics') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.analytics') ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                <i class="fa-solid fa-chart-pie text-pink-400"></i> Thống Kê Hệ Thống
-            </a>
-        </div>
+        <!-- MAIN CONTENT AREA -->
+        <main class="p-6 lg:p-8 space-y-6 flex-grow">
+            <!-- Header Title Card -->
+            <div class="panel rounded-2xl p-6 border border-rose-500/20 bg-gradient-to-r from-rose-950/20 via-slate-900/60 to-purple-950/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                        <i class="fa-solid fa-shield-halved text-rose-400"></i> Giám Sát Tăng Trưởng & Chỉ Số Vận Hành
+                    </h2>
+                    <p class="text-xs text-slate-400">
+                        Tổng hợp số liệu thời gian thực về phân bổ phòng trọ, doanh thu hóa đơn thực thu và tốc độ gia nhập của chủ trọ, cư dân toàn sàn.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('user.list') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-2.5 text-xs font-bold text-slate-200 hover:text-white hover:border-indigo-500/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <i class="fa-solid fa-users-gear text-indigo-400"></i>
+                        Quản lý người dùng
+                    </a>
+                </div>
+            </div>
 
-        <!-- Metric Ribbon -->
-        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="glass-panel rounded-2xl p-5 flex items-center gap-4 transition-all duration-300">
-                <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 text-lg">
+            <!-- Navigation Tabs -->
+            <div class="flex flex-wrap items-center gap-2 nav-tabs-wrapper bg-slate-900/40 p-1.5 rounded-xl border border-slate-800/80 max-w-max">
+                <a href="{{ route('admin.verifications.index') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.verifications.index') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'nav-tab-inactive text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                    <i class="fa-solid fa-file-signature text-emerald-400"></i> Duyệt Hồ Sơ KYC
+                </a>
+                <a href="{{ route('admin.kyc.pending') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.kyc.pending') ? 'bg-amber-500 text-slate-950 font-extrabold shadow-lg shadow-amber-500/20' : 'nav-tab-inactive text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                    <i class="fa-solid fa-hourglass-half text-amber-400"></i> Chờ Duyệt (Pending)
+                </a>
+                <a href="{{ route('admin.audit-logs') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.audit-logs') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'nav-tab-inactive text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                    <i class="fa-solid fa-shield-halved text-indigo-400"></i> Nhật Ký Kiểm Toán
+                </a>
+                <a href="{{ route('admin.analytics') }}" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {{ request()->routeIs('admin.analytics') ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/20' : 'nav-tab-inactive text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                    <i class="fa-solid fa-chart-pie text-rose-300"></i> Thống Kê Hệ Thống
+                </a>
+            </div>
+
+            <!-- Metric Ribbon -->
+            <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="panel rounded-2xl p-5 flex items-center gap-4 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 text-lg shrink-0">
                     <i class="fa-solid fa-door-closed"></i>
                 </div>
                 <div>
