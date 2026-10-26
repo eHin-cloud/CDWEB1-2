@@ -73,6 +73,12 @@ class RoomSeeder extends Seeder
         ];
 
         foreach ($areas as $area) {
+            // Nếu tenant đã có các tòa nhà và phòng từ FullDemoSeeder (như Cầu Giấy), bỏ qua để giữ nguyên 2 tòa A/B chuẩn 30 phòng
+            $existingTenant = Tenant::where('email', $area['tenant']['email'])->first();
+            if ($existingTenant && $existingTenant->rooms()->count() >= 10) {
+                continue;
+            }
+
             $tenant = Tenant::updateOrCreate(
                 ['email' => $area['tenant']['email']],
                 [
