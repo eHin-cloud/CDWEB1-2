@@ -761,11 +761,12 @@
                                 </div>
                                 @endif
 
-                                @if($room->inspection_notes)
-                                <p class="text-[11px] text-slate-400 italic line-clamp-1 mt-1 bg-slate-900/60 px-2 py-1 rounded-lg border border-slate-800">
-                                    <i class="fa-solid fa-comment-dots mr-1 text-slate-500"></i> {{ $room->inspection_notes }}
-                                </p>
-                                @endif
+                                <div id="inspection-notes-{{ $room->id }}" 
+                                     class="{{ $room->inspection_notes ? '' : 'hidden ' }}text-[11px] text-slate-300 italic mt-1.5 bg-slate-900/70 px-2.5 py-1.5 rounded-lg border border-slate-800/80 flex items-start gap-1.5 break-words whitespace-normal leading-relaxed"
+                                     title="{{ $room->inspection_notes ?? '' }}">
+                                    <i class="fa-solid fa-comment-dots text-slate-400 shrink-0 mt-0.5 text-[11px]"></i>
+                                    <span class="flex-1" id="inspection-notes-text-{{ $room->id }}">{{ $room->inspection_notes ?? '' }}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -1769,6 +1770,22 @@
             const staffNameEl = document.getElementById('staff-name-' + roomData.id);
             if (staffNameEl) {
                 staffNameEl.textContent = assignedStaffName;
+            }
+
+            // 4b. Cập nhật ghi chú nghiệm thu / dọn phòng đầy đủ
+            const notesEl = document.getElementById('inspection-notes-' + roomData.id);
+            const notesTextEl = document.getElementById('inspection-notes-text-' + roomData.id);
+            if (notesEl && notesTextEl) {
+                const noteVal = roomData.inspection_notes || (roomData.room && roomData.room.inspection_notes) || '';
+                if (noteVal && noteVal.trim() !== '') {
+                    notesTextEl.textContent = noteVal;
+                    notesEl.setAttribute('title', noteVal);
+                    notesEl.classList.remove('hidden');
+                } else {
+                    notesTextEl.textContent = '';
+                    notesEl.removeAttribute('title');
+                    notesEl.classList.add('hidden');
+                }
             }
 
             // 5. Cập nhật các nút bấm thao tác (Action Buttons) theo vai trò

@@ -889,34 +889,45 @@ class AdminDashboardController extends Controller
     public function getUtilityVietQr($id)
     {
         $tenantId = $this->currentTenantId();
-        $record = UtilityRecord::with('room')->where('tenant_id', $tenantId)->find($id);
+        $record = UtilityRecord::with(['room.residents'])->where('tenant_id', $tenantId)->find($id);
 
         if (!$record) {
-            $bill = Bill::with('room')->where('tenant_id', $tenantId)->findOrFail($id);
+            $bill = Bill::with(['room.residents'])->where('tenant_id', $tenantId)->findOrFail($id);
             $room = $bill->room;
-            $totalAmount = $bill->total_amount;
+            $resident = $room?->residents?->first();
+            $totalAmount = (int) $bill->total_amount;
             $billingMonth = $bill->billing_month;
-            $vietqrUrl = $bill->vietqr_url;
+            $monthNum = explode('-', (string) $billingMonth)[1] ?? date('m');
+            $description = "Thanh toan Phong " . ($room->room_number ?? $room->id) . " thang {$monthNum}";
+            $vietqrUrl = $bill->vietqr_url ?: ("https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($description));
         } else {
             $room = $record->room;
+            $resident = $room?->residents?->first();
             $elecUsed = max(0, $record->new_electricity - $record->old_electricity);
             $waterUsed = max(0, $record->new_water - $record->old_water);
-            $totalAmount = ($room->price ?? 0) + ($elecUsed * $record->electricity_price) + ($waterUsed * $record->water_price) + 150000;
+            $totalAmount = (int) (($room->price ?? 0) + ($elecUsed * $record->electricity_price) + ($waterUsed * $record->water_price) + 150000);
             $billingMonth = $record->billing_month;
-            $monthNum = explode('-', $billingMonth)[1];
-            $addInfo = "Thanh toan Phong " . ($room->room_number ?? $room->id) . " thang {$monthNum}";
-            $vietqrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($addInfo);
+            $monthNum = explode('-', (string) $billingMonth)[1] ?? date('m');
+            $description = "Thanh toan Phong " . ($room->room_number ?? $room->id) . " thang {$monthNum}";
+            $vietqrUrl = "https://img.vietqr.io/image/VCB-1051572297-compact.png?amount={$totalAmount}&addInfo=" . rawurlencode($description);
         }
 
         return response()->json([
             'success' => true,
             'vietqr_url' => $vietqrUrl,
+            'qr_url' => $vietqrUrl,
             'room_number' => $room->room_number ?? null,
+            'resident_name' => $resident?->name ?? 'Cư dân',
             'total_amount' => $totalAmount,
+            'amount' => $totalAmount,
             'formatted_amount' => number_format($totalAmount, 0, ',', '.') . ' đ',
             'bank_name' => 'Vietcombank (VCB)',
+            'bank_id' => 'Vietcombank (VCB)',
             'account_number' => '1051572297',
+            'account_no' => '1051572297',
             'account_holder' => 'CHỦ TRỌ',
+            'account_name' => 'CHỦ TRỌ',
+            'description' => $description,
         ]);
     }
 

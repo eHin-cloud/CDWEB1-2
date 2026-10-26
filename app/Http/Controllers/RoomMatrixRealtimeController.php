@@ -118,6 +118,8 @@ class RoomMatrixRealtimeController extends Controller
                 ob_end_clean();
             }
 
+            echo "retry: 15000\n";
+
             $cacheKey = "room_matrix_latest_event_{$tenantId}";
             $latestEvent = Cache::get($cacheKey);
 

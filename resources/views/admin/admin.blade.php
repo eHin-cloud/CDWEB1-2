@@ -2014,159 +2014,6 @@
                     <span id="sse-reconnect-text">Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...</span>
                 </div>
 
-                <!-- MODAL CẢNH BÁO XUNG ĐỘT NGHIỆP VỤ (ERR_13_02) -->
-                <div id="modal-conflict-warning" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden items-center justify-center p-4">
-                    <div class="w-full max-w-md bg-[#0a0f1d] border border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
-                        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-1">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <div class="text-center space-y-2">
-                            <h3 class="text-lg font-black text-white">Cảnh Báo Xung Đột Nghiệp Vụ</h3>
-                            <p id="modal-conflict-message" class="text-sm font-medium text-slate-300 leading-relaxed">
-                                Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.
-                            </p>
-                        </div>
-                        <div class="pt-3 flex justify-center">
-                            <button type="button" onclick="closeConflictModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all shadow-lg shadow-amber-600/30">
-                                Đã hiểu và Đóng
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MODAL SỰ CỐ KHẨN CẤP AI (ERR_14_06) -->
-                <div id="modal-ai-emergency-ticket" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden items-center justify-center p-4">
-                    <div class="w-full max-w-md bg-[#13070a] border border-rose-500/50 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
-                        <div class="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 text-2xl mx-auto mb-1 animate-bounce">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <div class="text-center space-y-2">
-                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                Ưu tiên xử lý khẩn cấp (Emergency)
-                            </span>
-                            <h3 class="text-lg font-black text-white">Cảnh Báo Sự Cố Kỹ Thuật Khẩn Cấp</h3>
-                            <p id="modal-ai-emergency-message" class="text-sm font-semibold text-rose-200 leading-relaxed">
-                                Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!
-                            </p>
-                            <p class="text-xs text-slate-400 mt-2">Đội ngũ kỹ thuật viên tòa nhà đang được điều động ưu tiên đến hiện trường. Vui lòng ngắt nguồn điện/khóa van nước an toàn.</p>
-                        </div>
-                        <div class="pt-3 flex justify-center gap-2">
-                            <button type="button" onclick="closeAiEmergencyModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30">
-                                Đã hiểu & Xác nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ROOM DETAIL MODAL (CENTERED & FITS CONTENT) -->
-                <div id="room-detail-modal" onclick="closeRoomDetail()" class="fixed inset-0 z-50 bg-[#04060b]/80 backdrop-blur-md hidden flex items-center justify-center p-4 sm:p-6 transition-all duration-200">
-                    <div onclick="event.stopPropagation()" class="w-full max-w-md bg-[#0a0f1d] border border-slate-800/80 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto space-y-4 animate-fade-in border-t border-t-indigo-500/30">
-                        <button type="button" onclick="closeRoomDetail()" class="absolute top-5 right-5 w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all shadow-sm">
-                            <i class="fa-solid fa-xmark text-sm"></i>
-                        </button>
-                        
-                        <div class="space-y-4">
-                            <!-- Room Head -->
-                            <div class="pr-8">
-                                <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold uppercase" id="modal-room-status-badge">Đã thuê</span>
-                                <h2 class="text-2xl font-extrabold text-slate-100 mt-2" id="modal-room-title">Phòng 202</h2>
-                            </div>
-
-                            <!-- Vị trí cơ sở lưu trú cụ thể của phòng -->
-                            <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1.5">
-                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
-                                    <span class="flex items-center gap-1.5 uppercase tracking-wider text-indigo-400">
-                                        <i class="fa-solid fa-building"></i> Cơ sở & Vị trí cụ thể
-                                    </span>
-                                    <a id="modal-room-maps-link" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-[11px] font-bold transition-colors">
-                                        <i class="fa-brands fa-google text-[10px]"></i> Bản đồ <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                                    </a>
-                                </div>
-                                <div class="text-xs font-bold text-slate-200" id="modal-room-building-name">-</div>
-                                <div class="text-xs text-slate-400 flex items-start gap-1.5">
-                                    <i class="fa-solid fa-location-dot text-rose-400 text-xs shrink-0 mt-0.5"></i>
-                                    <span id="modal-room-building-address">-</span>
-                                </div>
-                            </div>
-
-                            <!-- Housekeeping Quick Action Selector -->
-                            <div class="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2.5">
-                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
-                                    <span class="flex items-center gap-1.5 uppercase tracking-wider text-slate-300">
-                                        <i class="fa-solid fa-broom text-amber-400"></i> Housekeeping / Dọn buồng
-                                    </span>
-                                    <span id="quick-status-loading" class="text-indigo-400 hidden">
-                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
-                                    </span>
-                                </div>
-                                <div class="grid grid-cols-3 gap-2 text-xs">
-                                    <button type="button" onclick="setQuickRoomStatus('empty')" id="btn-quick-empty" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 border-slate-800 bg-slate-900/50">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
-                                        <span class="text-[11px]">Đã dọn xong</span>
-                                    </button>
-                                    <button type="button" onclick="setQuickRoomStatus('cleaning')" id="btn-quick-cleaning" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-orange-500 hover:bg-orange-500/10 text-orange-400 border-slate-800 bg-slate-900/50">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></span>
-                                        <span class="text-[11px]">Cần dọn dẹp</span>
-                                    </button>
-                                    <button type="button" onclick="setQuickRoomStatus('maintenance')" id="btn-quick-maintenance" class="py-2 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-1 hover:border-slate-500 hover:bg-slate-500/10 text-slate-400 border-slate-800 bg-slate-900/50">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500 shadow-sm shadow-slate-500/50"></span>
-                                        <span class="text-[11px]">Bảo trì</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Resident details (chỉ hiện khi phòng có người ở) -->
-                            <div class="space-y-2 hidden" id="modal-resident-details">
-                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin cư dân</h3>
-                                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-2">
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Họ tên:</span> <strong class="text-slate-200" id="modal-resident-name">-</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Số điện thoại:</span> <strong class="text-slate-200" id="modal-resident-phone">-</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Bắt đầu ở:</span> <strong class="text-slate-200">01/03/2025</strong></div>
-                                </div>
-                            </div>
-
-                            <!-- Billing summary (chỉ hiện khi phòng có hóa đơn) -->
-                            <div class="space-y-2 hidden" id="modal-billing-details">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hóa đơn tháng gần nhất</h3>
-                                    <span class="text-[10px] text-amber-400 font-bold" id="modal-bill-status">Chưa thanh toán</span>
-                                </div>
-                                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-2">
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền thuê phòng:</span> <strong class="text-slate-200" id="modal-bill-rent">0đ</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền điện:</span> <strong class="text-slate-200" id="modal-bill-electric">0đ</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Tiền nước:</span> <strong class="text-slate-200" id="modal-bill-water">0đ</strong></div>
-                                    <div class="flex justify-between text-xs"><span class="text-slate-500">Dịch vụ (Mạng, vệ sinh):</span> <strong class="text-slate-200">150.000đ</strong></div>
-                                    <hr class="border-slate-800/60 my-2">
-                                    <div class="flex justify-between text-sm"><strong class="text-indigo-400">Tổng thanh toán:</strong> <strong class="text-indigo-400 font-extrabold" id="modal-bill-total">0đ</strong></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action buttons -->
-                        <div class="space-y-2.5 pt-3 border-t border-slate-800/60">
-                            <form id="modal-pay-form" action="" method="POST" class="hidden">
-                                @csrf
-                            </form>
-                            <form id="modal-notify-form" action="" method="POST" class="hidden">
-                                @csrf
-                            </form>
-                            <button id="modal-btn-pay" onclick="submitModalPay()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 transition-all hidden">
-                                <i class="fa-solid fa-circle-check"></i> Xác nhận đã đóng tiền
-                            </button>
-                            <button id="modal-btn-action" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all hidden">
-                                <i class="fa-solid fa-bell-slash"></i> Gửi nhắc nợ qua Zalo/Mail
-                            </button>
-                            <button id="modal-btn-qr" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
-                                <i class="fa-solid fa-qrcode text-indigo-400"></i> Xem mã VietQR hóa đơn
-                            </button>
-                            <button id="modal-btn-print" onclick="printModalInvoice()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
-                                <i class="fa-solid fa-print text-indigo-400"></i> In hóa đơn / Xuất PDF
-                            </button>
-                            <button type="button" onclick="closeRoomDetail()" class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-semibold text-slate-400 bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 hover:border-slate-700 transition-all">
-                                Đóng lại
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -4818,6 +4665,195 @@
         </div>
     </div>
 
+    <!-- MODAL CẢNH BÁO XUNG ĐỘT NGHIỆP VỤ (ERR_13_02) -->
+    <div id="modal-conflict-warning" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-md bg-[#0a0f1d] border border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl mx-auto mb-1">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="text-center space-y-2">
+                <h3 class="text-lg font-black text-white">Cảnh Báo Xung Đột Nghiệp Vụ</h3>
+                <p id="modal-conflict-message" class="text-sm font-medium text-slate-300 leading-relaxed">
+                    Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.
+                </p>
+            </div>
+            <div class="pt-3 flex justify-center">
+                <button type="button" onclick="closeConflictModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-all shadow-lg shadow-amber-600/30">
+                    Đã hiểu và Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SỰ CỐ KHẨN CẤP AI (ERR_14_06) -->
+    <div id="modal-ai-emergency-ticket" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-md bg-[#13070a] border border-rose-500/50 rounded-3xl p-6 sm:p-7 shadow-2xl relative my-auto animate-fade-in space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 text-2xl mx-auto mb-1 animate-bounce">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="text-center space-y-2">
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    Ưu tiên xử lý khẩn cấp (Emergency)
+                </span>
+                <h3 class="text-lg font-black text-white">Cảnh Báo Sự Cố Kỹ Thuật Khẩn Cấp</h3>
+                <p id="modal-ai-emergency-message" class="text-sm font-semibold text-rose-200 leading-relaxed">
+                    Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!
+                </p>
+                <p class="text-xs text-slate-400 mt-2">Đội ngũ kỹ thuật viên tòa nhà đang được điều động ưu tiên đến hiện trường. Vui lòng ngắt nguồn điện/khóa van nước an toàn.</p>
+            </div>
+            <div class="pt-3 flex justify-center gap-2">
+                <button type="button" onclick="closeAiEmergencyModal()" class="w-full py-3 px-5 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30">
+                    Đã hiểu & Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROOM DETAIL MODAL (CENTERED & COMPACT BALANCED 2-COL) -->
+    <div id="room-detail-modal" onclick="closeRoomDetail()" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 transition-all duration-200">
+        <div id="room-detail-modal-box" onclick="event.stopPropagation()" class="w-full max-w-2xl lg:max-w-3xl bg-[#0a0f1d] border border-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto animate-fade-in border-t border-t-indigo-500/30">
+            <!-- Close button -->
+            <button type="button" onclick="closeRoomDetail()" class="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all shadow-sm z-10" title="Đóng">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            
+            <!-- Room Head -->
+            <div class="flex items-center gap-3 pr-10 mb-4 pb-3 border-b border-slate-800/60">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 text-lg">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold uppercase" id="modal-room-status-badge">Đã thuê</span>
+                        <span class="text-xs text-slate-400 font-semibold" id="modal-room-price-display"></span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-100 tracking-tight" id="modal-room-title">Phòng 101</h2>
+                </div>
+            </div>
+
+            <!-- Content Grid: Dynamic 1 or 2 columns based on occupancy -->
+            <div id="modal-content-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- CỘT 1: VỊ TRÍ, HOUSEKEEPING & CƯ DÂN -->
+                <div class="space-y-3 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <!-- Vị trí cơ sở lưu trú cụ thể của phòng -->
+                        <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                                <span class="flex items-center gap-1.5 uppercase tracking-wider text-indigo-400">
+                                    <i class="fa-solid fa-building"></i> Cơ sở &amp; Vị trí
+                                </span>
+                                <a id="modal-room-maps-link" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-[11px] font-bold transition-colors">
+                                    <i class="fa-brands fa-google text-[10px]"></i> Bản đồ <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                            <div class="text-xs font-bold text-slate-200 truncate" id="modal-room-building-name">-</div>
+                            <div class="text-xs text-slate-400 flex items-start gap-1.5">
+                                <i class="fa-solid fa-location-dot text-rose-400 text-xs shrink-0 mt-0.5"></i>
+                                <span id="modal-room-building-address" class="line-clamp-2">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Resident details (chỉ hiện khi phòng có người ở) -->
+                        <div class="space-y-1.5 hidden" id="modal-resident-details">
+                            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-user text-indigo-400"></i> Thông tin cư dân
+                            </h3>
+                            <div class="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-1.5 text-xs">
+                                <div class="flex justify-between"><span class="text-slate-400">Họ tên:</span> <strong class="text-slate-200 font-bold" id="modal-resident-name">-</strong></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Số điện thoại:</span> <strong class="text-slate-200 font-bold" id="modal-resident-phone">-</strong></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Bắt đầu ở:</span> <strong class="text-slate-300">01/03/2025</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Housekeeping Quick Action Selector -->
+                        <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                                <span class="flex items-center gap-1.5 uppercase tracking-wider text-slate-300">
+                                    <i class="fa-solid fa-broom text-amber-400"></i> Housekeeping / Dọn buồng
+                                </span>
+                                <span id="quick-status-loading" class="text-indigo-400 hidden">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1.5 text-xs">
+                                <button type="button" onclick="setQuickRoomStatus('empty')" id="btn-quick-empty" class="py-1.5 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-0.5 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 border-slate-800 bg-slate-900/50">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+                                    <span class="text-[10px]">Đã dọn</span>
+                                </button>
+                                <button type="button" onclick="setQuickRoomStatus('cleaning')" id="btn-quick-cleaning" class="py-1.5 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-0.5 hover:border-orange-500 hover:bg-orange-500/10 text-orange-400 border-slate-800 bg-slate-900/50">
+                                    <span class="w-2 h-2 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></span>
+                                    <span class="text-[10px]">Cần dọn</span>
+                                </button>
+                                <button type="button" onclick="setQuickRoomStatus('maintenance')" id="btn-quick-maintenance" class="py-1.5 px-2 rounded-xl font-bold border transition-all text-center flex flex-col items-center gap-0.5 hover:border-slate-500 hover:bg-slate-500/10 text-slate-400 border-slate-800 bg-slate-900/50">
+                                    <span class="w-2 h-2 rounded-full bg-slate-500 shadow-sm shadow-slate-500/50"></span>
+                                    <span class="text-[10px]">Bảo trì</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nút Đóng khi ở chế độ 1 cột (phòng trống) -->
+                    <div id="modal-col1-close-btn" class="hidden pt-1">
+                        <button type="button" onclick="closeRoomDetail()" class="w-full py-2 px-4 rounded-xl text-xs font-semibold text-slate-400 bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-slate-700 transition-all">
+                            Đóng lại
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CỘT 2: HÓA ĐƠN & THAO TÁC NGHIỆP VỤ -->
+                <div id="modal-col-billing-actions" class="space-y-3 flex flex-col justify-between">
+                    <!-- Billing summary (chỉ hiện khi phòng có hóa đơn) -->
+                    <div class="space-y-1.5 hidden" id="modal-billing-details">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-invoice-dollar text-amber-400"></i> Hóa đơn gần nhất
+                            </h3>
+                            <span class="text-[10px] text-amber-400 font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20" id="modal-bill-status">Chưa thanh toán</span>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-1.5 text-xs">
+                            <div class="flex justify-between"><span class="text-slate-400">Tiền thuê phòng:</span> <strong class="text-slate-200" id="modal-bill-rent">0đ</strong></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Tiền điện:</span> <strong class="text-slate-200" id="modal-bill-electric">0đ</strong></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Tiền nước:</span> <strong class="text-slate-200" id="modal-bill-water">0đ</strong></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Dịch vụ (Mạng, rác):</span> <strong class="text-slate-200">150.000đ</strong></div>
+                            <hr class="border-slate-800/60 my-1">
+                            <div class="flex justify-between text-xs items-baseline"><strong class="text-indigo-400">Tổng thanh toán:</strong> <strong class="text-indigo-400 font-black text-sm" id="modal-bill-total">0đ</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="space-y-2 pt-1 border-t border-slate-800/60">
+                        <form id="modal-pay-form" action="" method="POST" class="hidden">
+                            @csrf
+                        </form>
+                        <form id="modal-notify-form" action="" method="POST" class="hidden">
+                            @csrf
+                        </form>
+                        <button id="modal-btn-pay" onclick="submitModalPay()" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-all hidden">
+                            <i class="fa-solid fa-circle-check"></i> Xác nhận đã đóng tiền
+                        </button>
+                        <button id="modal-btn-zalo-personal" type="button" onclick="openRoomZaloPersonalChat()" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/20 transition-all hidden" title="Mở khung chat Zalo giữa bạn và khách trọ">
+                            <i class="fa-solid fa-comment-dots"></i> Nhắn Zalo Cá Nhân Cho Khách (zalo.me)
+                        </button>
+                        <button id="modal-btn-action" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all hidden">
+                            <i class="fa-solid fa-bell-slash"></i> Gửi nhắc nợ qua Zalo/Mail
+                        </button>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="modal-btn-qr" class="w-full flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-[11px] font-bold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
+                                <i class="fa-solid fa-qrcode text-indigo-400"></i> Xem VietQR
+                            </button>
+                            <button id="modal-btn-print" onclick="printModalInvoice()" class="w-full flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-[11px] font-bold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all hidden">
+                                <i class="fa-solid fa-print text-indigo-400"></i> In hóa đơn
+                            </button>
+                        </div>
+                        <button type="button" onclick="closeRoomDetail()" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-slate-400 bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 hover:border-slate-700 transition-all">
+                            Đóng lại
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JS Logic -->
     <script>
         function openConfirmOfflineSignModal(contract) {
@@ -6479,6 +6515,15 @@
             const payBtn = document.getElementById('modal-btn-pay');
             const printBtn = document.getElementById('modal-btn-print');
             const qrBtn = document.getElementById('modal-btn-qr');
+            const modalBox = document.getElementById('room-detail-modal-box');
+            const colBillingActions = document.getElementById('modal-col-billing-actions');
+            const col1CloseBtn = document.getElementById('modal-col1-close-btn');
+            const contentGrid = document.getElementById('modal-content-grid');
+            const priceDisplay = document.getElementById('modal-room-price-display');
+
+            if (priceDisplay) {
+                priceDisplay.textContent = rent ? `${rent}/tháng` : '';
+            }
             
             if(status === 'empty' || status === 'cleaning' || status === 'maintenance') {
                 resDetails.classList.add('hidden');
@@ -6487,12 +6532,38 @@
                 payBtn.classList.add('hidden');
                 printBtn.classList.add('hidden');
                 if (qrBtn) qrBtn.classList.add('hidden');
+                const zaloPersonalBtn = document.getElementById('modal-btn-zalo-personal');
+                if (zaloPersonalBtn) zaloPersonalBtn.classList.add('hidden');
                 currentBillId = null;
+
+                // Che do phong trong: co gon 1 cot vua van
+                if (modalBox) {
+                    modalBox.classList.remove('max-w-2xl', 'lg:max-w-3xl');
+                    modalBox.classList.add('max-w-md');
+                }
+                if (contentGrid) {
+                    contentGrid.classList.remove('md:grid-cols-2');
+                    contentGrid.classList.add('grid-cols-1');
+                }
+                if (colBillingActions) colBillingActions.classList.add('hidden');
+                if (col1CloseBtn) col1CloseBtn.classList.remove('hidden');
             } else {
                 resDetails.classList.remove('hidden');
                 billDetails.classList.remove('hidden');
                 actionBtn.classList.remove('hidden');
                 if (qrBtn) qrBtn.classList.remove('hidden');
+
+                // Che do da thue/no phi: 2 cot can doi, vua van tam mat
+                if (modalBox) {
+                    modalBox.classList.remove('max-w-md');
+                    modalBox.classList.add('max-w-2xl', 'lg:max-w-3xl');
+                }
+                if (contentGrid) {
+                    contentGrid.classList.remove('grid-cols-1');
+                    contentGrid.classList.add('grid-cols-1', 'md:grid-cols-2');
+                }
+                if (colBillingActions) colBillingActions.classList.remove('hidden');
+                if (col1CloseBtn) col1CloseBtn.classList.add('hidden');
                 
                 document.getElementById('modal-resident-name').textContent = name;
                 document.getElementById('modal-resident-phone').textContent = phone;
@@ -6525,9 +6596,12 @@
                 if(status === 'overdue') {
                     billStatusBadge.textContent = 'Chưa thanh toán';
                     billStatusBadge.className = 'text-[10px] text-amber-400 font-bold px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded';
-                    actionBtn.innerHTML = '<i class="fa-solid fa-bell"></i> Gửi nhắc nợ Zalo & SMS';
-                    actionBtn.className = "w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-600/30 transition-all cursor-pointer";
+                    actionBtn.innerHTML = '<i class="fa-solid fa-bell"></i> Soạn tin nhắc nợ / Cổng ZNS & SMS';
+                    actionBtn.className = "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 shadow-md shadow-amber-600/20 transition-all cursor-pointer";
                     
+                    const zaloPersonalBtn = document.getElementById('modal-btn-zalo-personal');
+                    if (zaloPersonalBtn) zaloPersonalBtn.classList.remove('hidden');
+
                     if (latestBillId && latestBillId !== 'null') {
                         payBtn.classList.remove('hidden');
                         document.getElementById('modal-pay-form').action = `/smartroom/admin/utility/${latestBillId}/pay`;
@@ -6543,9 +6617,11 @@
                     billStatusBadge.textContent = 'Đã thanh toán';
                     billStatusBadge.className = 'text-[10px] text-emerald-400 font-bold px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded';
                     actionBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã đóng tiền tháng này';
-                    actionBtn.className = "w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-slate-500 bg-slate-900 border border-slate-800 cursor-not-allowed";
+                    actionBtn.className = "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-slate-500 bg-slate-900 border border-slate-800 cursor-not-allowed";
                     payBtn.classList.add('hidden');
                     actionBtn.onclick = null;
+                    const zaloPersonalBtn = document.getElementById('modal-btn-zalo-personal');
+                    if (zaloPersonalBtn) zaloPersonalBtn.classList.add('hidden');
                 }
             }
 
@@ -9527,6 +9603,8 @@
             }
         });
 
+        let currentQrAccountNo = '1051572297';
+
         function showVietQR(billId) {
             if (!canReceiveOnlinePayments) {
                 return requireKycForOnlinePayments();
@@ -9537,31 +9615,58 @@
             document.getElementById('qr-modal-content').classList.add('hidden');
             qrModal.classList.remove('hidden');
 
-            fetch(`/api/utility-bill/${billId}/qr`)
-                .then(res => res.json())
+            const endpoint = `/smartroom/admin/utility/${billId}/vietqr`;
+
+            fetch(endpoint, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    if (data.success) {
-                        document.getElementById('qr-modal-room').textContent = `Phòng ${data.room_number}`;
-                        document.getElementById('qr-modal-tenant').textContent = data.resident_name;
-                        document.getElementById('qr-modal-amount').textContent = data.amount.toLocaleString('vi-VN') + "đ";
-                        document.getElementById('qr-modal-bank').textContent = `${data.bank_id} - ${data.account_no}`;
-                        document.getElementById('qr-modal-name').textContent = data.account_name;
-                        document.getElementById('qr-modal-desc').textContent = decodeURIComponent(data.description);
-                        document.getElementById('qr-modal-image').src = data.qr_url;
-                        
-                        document.getElementById('qr-modal-download').href = data.qr_url;
+                    if (data && data.success) {
+                        const qrUrl = data.qr_url || data.vietqr_url;
+                        const roomNum = data.room_number || currentActiveRoomNumber || 'N/A';
+                        const resident = data.resident_name || 'Khách thuê / Cư dân';
+                        const totalAmt = data.amount || data.total_amount || 0;
+                        const formattedAmt = data.formatted_amount || (Number(totalAmt).toLocaleString('vi-VN') + " đ");
+                        const bankName = data.bank_name || data.bank_id || 'Vietcombank (VCB)';
+                        const accNo = data.account_no || data.account_number || '1051572297';
+                        const accName = data.account_name || data.account_holder || 'CHỦ TRỌ';
+                        const desc = data.description ? decodeURIComponent(data.description) : `Thanh toan Phong ${roomNum}`;
+
+                        currentQrAccountNo = accNo;
+
+                        document.getElementById('qr-modal-room').textContent = `Phòng ${roomNum}`;
+                        document.getElementById('qr-modal-tenant').textContent = resident;
+                        document.getElementById('qr-modal-amount').textContent = formattedAmt;
+                        document.getElementById('qr-modal-bank').textContent = `${bankName} - ${accNo}`;
+                        document.getElementById('qr-modal-name').textContent = accName;
+                        document.getElementById('qr-modal-desc').textContent = desc;
+                        document.getElementById('qr-modal-image').src = qrUrl;
+                        document.getElementById('qr-modal-download').href = qrUrl;
                         
                         document.getElementById('qr-modal-loading').classList.add('hidden');
                         document.getElementById('qr-modal-content').classList.remove('hidden');
                     } else {
-                        alert("Không thể tải mã QR: " + (data.error || "Lỗi không xác định"));
-                        qrModal.classList.add('hidden');
+                        const currentCard = document.querySelector(`.room-card[data-latest-bill-id="${billId}"]`);
+                        const roomNum = currentCard ? currentCard.getAttribute('data-room-number') : (currentActiveRoomNumber || '201');
+                        const amount = currentCard ? currentCard.getAttribute('data-total-bill') : '0';
+                        showVietQRFallback(roomNum, amount);
                     }
                 })
                 .catch(err => {
-                    alert("Có lỗi xảy ra khi kết nối API!");
-                    console.error(err);
-                    qrModal.classList.add('hidden');
+                    console.warn("Chuyển sang cơ chế tạo mã VietQR dự phòng:", err);
+                    const currentCard = document.querySelector(`.room-card[data-latest-bill-id="${billId}"]`);
+                    const roomNum = currentCard ? currentCard.getAttribute('data-room-number') : (currentActiveRoomNumber || '201');
+                    const amount = currentCard ? currentCard.getAttribute('data-total-bill') : '0';
+                    showVietQRFallback(roomNum, amount);
                 });
         }
 
@@ -9571,31 +9676,80 @@
             }
 
             const qrModal = document.getElementById('vietqr-modal');
-            document.getElementById('qr-modal-loading').classList.add('hidden');
-            document.getElementById('qr-modal-content').classList.remove('hidden');
             qrModal.classList.remove('hidden');
 
-            const amt = parseInt(amount) || 0;
+            const amt = parseInt(String(amount).replace(/\D/g, '')) || 0;
             const bankId = 'VCB';
+            const bankName = 'Vietcombank (VCB)';
             const accountNo = '1051572297';
-            const accountName = 'CHU TRO';
-            const desc = `Thanh toan Phong ${roomNum} coc hoac tien phong`;
+            const accountName = 'CHỦ TRỌ';
+            const desc = `Thanh toan Phong ${roomNum}`;
             const qrUrl = `https://img.vietqr.io/image/VCB-1051572297-compact.png?amount=${amt}&addInfo=${encodeURIComponent(desc)}`;
+
+            currentQrAccountNo = accountNo;
 
             document.getElementById('qr-modal-room').textContent = `Phòng ${roomNum}`;
             document.getElementById('qr-modal-tenant').textContent = 'Khách mới / Cư dân';
-            document.getElementById('qr-modal-amount').textContent = amt.toLocaleString('vi-VN') + "đ";
-            document.getElementById('qr-modal-bank').textContent = `${bankId} - ${accountNo}`;
+            document.getElementById('qr-modal-amount').textContent = amt.toLocaleString('vi-VN') + " đ";
+            document.getElementById('qr-modal-bank').textContent = `${bankName} - ${accountNo}`;
             document.getElementById('qr-modal-name').textContent = accountName;
             document.getElementById('qr-modal-desc').textContent = desc;
             document.getElementById('qr-modal-image').src = qrUrl;
             document.getElementById('qr-modal-download').href = qrUrl;
+
+            document.getElementById('qr-modal-loading').classList.add('hidden');
+            document.getElementById('qr-modal-content').classList.remove('hidden');
         }
 
         let activeMessageType = 'zalo';
         let currentRecipientPhone = '';
         let currentRecipientName = '';
         let currentMsgType = 'contract'; // 'contract' or 'debt'
+
+        function openRoomZaloPersonalChat() {
+            const card = currentActiveRoomId ? document.getElementById('room-card-' + currentActiveRoomId) : null;
+            const phone = card ? card.getAttribute('data-resident-phone') : currentRecipientPhone;
+            const name = card ? card.getAttribute('data-resident-name') : currentRecipientName;
+            const roomNum = currentActiveRoomNumber || (card ? card.getAttribute('data-room-number') : '');
+            const total = card ? card.getAttribute('data-total-bill') : '';
+            
+            if (!phone) {
+                alert("Khách trọ chưa có số điện thoại hợp lệ để mở Zalo!");
+                return;
+            }
+
+            const messageText = `Kính gửi anh/chị ${name || 'cư dân'}, Ban quản lý thông báo tiền phòng và hóa đơn dịch vụ tháng này của Phòng ${roomNum} chưa được thanh toán với tổng số tiền là ${total || 'tiền phòng'}. Vui lòng chuyển khoản thanh toán sớm giúp mình nhé. Trân trọng cảm ơn!`;
+
+            openPersonalZaloChat(phone, messageText);
+        }
+
+        function openPersonalZaloChat(phone = null, messageText = null) {
+            const targetPhone = phone || document.getElementById('msg-phone-input')?.value || currentRecipientPhone;
+            const targetMsg = messageText || document.getElementById('msg-text-input')?.value;
+
+            if (!targetPhone) {
+                alert("Vui lòng nhập hoặc chọn số điện thoại khách trọ để mở Zalo!");
+                return;
+            }
+
+            let cleanPhone = String(targetPhone).replace(/\D/g, '');
+            if (cleanPhone.startsWith('84') && cleanPhone.length === 11) {
+                cleanPhone = '0' + cleanPhone.substring(2);
+            }
+
+            if (targetMsg && navigator.clipboard) {
+                navigator.clipboard.writeText(targetMsg).then(() => {
+                    if (window.showAdminToast) {
+                        window.showAdminToast("Đã tự động sao chép nội dung nhắc nợ! Đang mở Zalo cá nhân, bạn chỉ cần nhấn Ctrl + V để dán và gửi.", "success", "Mở Chat Zalo Cá Nhân");
+                    } else {
+                        alert("Đã sao chép nội dung nhắc nợ! Đang mở Zalo, bạn chỉ cần nhấn Ctrl + V để dán và gửi.");
+                    }
+                }).catch(() => {});
+            }
+
+            const zaloUrl = `https://zalo.me/${cleanPhone}`;
+            window.open(zaloUrl, '_blank');
+        }
         
         function openSendMsgModal(phone, name, messageText, msgType) {
             currentRecipientPhone = phone;
@@ -9737,10 +9891,11 @@
         }
 
         function copyBankAccount() {
-            navigator.clipboard.writeText('9999888889999').then(() => {
+            const accNo = currentQrAccountNo || '1051572297';
+            navigator.clipboard.writeText(accNo).then(() => {
                 const btn = document.getElementById('qr-modal-copy');
                 const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-450"></i> Đã sao chép!';
+                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Đã sao chép!';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                 }, 2000);
@@ -10268,9 +10423,9 @@
     </script>
 
     <!-- VIETQR POPUP MODAL -->
-    <div id="vietqr-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-md bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 shadow-2xl relative animate-fade-in">
-            <button onclick="closeVietQRModal()" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+    <div id="vietqr-modal" onclick="closeVietQRModal()" class="fixed inset-0 z-[110] bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="w-full max-w-md bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 shadow-2xl relative animate-fade-in border-t border-t-indigo-500/30">
+            <button type="button" onclick="closeVietQRModal()" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
@@ -10315,7 +10470,7 @@
     </div>
 
     <!-- ZALO / SMS SEND MESSAGE PHONE MODAL -->
-    <div id="send-msg-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div id="send-msg-modal" class="fixed inset-0 z-[110] bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="w-full max-w-3xl bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative animate-fade-in">
             <button onclick="closeSendMsgModal()" class="absolute top-6 right-6 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all z-30">
                 <i class="fa-solid fa-xmark"></i>
@@ -10434,13 +10589,31 @@
                         <textarea id="msg-text-input" oninput="updateMessagePreview()" rows="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed" placeholder="Soạn nội dung tin nhắn..."></textarea>
                     </div>
 
+                    <!-- Direct Personal Zalo Action (Chu tro nhan cho khach tro) -->
+                    <div class="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-500/30 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-blue-300">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-check text-blue-400"></i> Nhắn từ Zalo Cá Nhân của bạn (Chủ trọ):
+                            </span>
+                            <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Miễn phí 100%</span>
+                        </div>
+                        <button type="button" onclick="openPersonalZaloChat()" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-comment-dots text-sm"></i>
+                            <span>Mở Khung Chat Zalo Với Khách Trọ (zalo.me)</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </button>
+                        <p class="text-[10px] text-slate-400 leading-normal">
+                            💡 Khi bấm, hệ thống sẽ <strong>tự động sao chép</strong> tin nhắn ở trên vào clipboard. Khi Zalo mở ra, bạn chỉ cần nhấn <strong class="text-white">Ctrl + V</strong> (Dán) rồi bấm gửi.
+                        </p>
+                    </div>
+
                     <!-- Action buttons -->
-                    <div class="flex items-center gap-3 pt-2">
-                        <button onclick="closeSendMsgModal()" class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl text-xs font-bold transition-all">
+                    <div class="flex items-center gap-3 pt-1">
+                        <button onclick="closeSendMsgModal()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl text-xs font-bold transition-all">
                             Hủy bỏ
                         </button>
-                        <button id="msg-send-btn" onclick="triggerSendMessage()" class="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center">
-                            <i class="fa-solid fa-paper-plane mr-2"></i> Gửi Tin Ngay
+                        <button id="msg-send-btn" onclick="triggerSendMessage()" class="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> Gửi Tin Cổng ZNS/SMS
                         </button>
                     </div>
                 </div>
@@ -10884,6 +11057,20 @@
                     if (payBtn) payBtn.classList.add('hidden');
                     if (printBtn) printBtn.classList.add('hidden');
                     if (qrBtn) qrBtn.classList.add('hidden');
+                    const modalBox = document.getElementById('room-detail-modal-box');
+                    const contentGrid = document.getElementById('modal-content-grid');
+                    const colBillingActions = document.getElementById('modal-col-billing-actions');
+                    const col1CloseBtn = document.getElementById('modal-col1-close-btn');
+                    if (modalBox) {
+                        modalBox.classList.remove('max-w-2xl', 'lg:max-w-3xl');
+                        modalBox.classList.add('max-w-md');
+                    }
+                    if (contentGrid) {
+                        contentGrid.classList.remove('md:grid-cols-2');
+                        contentGrid.classList.add('grid-cols-1');
+                    }
+                    if (colBillingActions) colBillingActions.classList.add('hidden');
+                    if (col1CloseBtn) col1CloseBtn.classList.remove('hidden');
                 } else if (roomData.has_resident) {
                     if (resDetails) resDetails.classList.remove('hidden');
                     const resNameEl = document.getElementById('modal-resident-name');
@@ -10894,6 +11081,20 @@
                     if (resPhoneEl && roomData.resident_phone) {
                         resPhoneEl.textContent = roomData.resident_phone;
                     }
+                    const modalBox = document.getElementById('room-detail-modal-box');
+                    const contentGrid = document.getElementById('modal-content-grid');
+                    const colBillingActions = document.getElementById('modal-col-billing-actions');
+                    const col1CloseBtn = document.getElementById('modal-col1-close-btn');
+                    if (modalBox) {
+                        modalBox.classList.remove('max-w-md');
+                        modalBox.classList.add('max-w-2xl', 'lg:max-w-3xl');
+                    }
+                    if (contentGrid) {
+                        contentGrid.classList.remove('grid-cols-1');
+                        contentGrid.classList.add('grid-cols-1', 'md:grid-cols-2');
+                    }
+                    if (colBillingActions) colBillingActions.classList.remove('hidden');
+                    if (col1CloseBtn) col1CloseBtn.classList.add('hidden');
                 }
             }
 
@@ -11081,6 +11282,7 @@
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (res.ok) {
+                    hideSseWarning();
                     const json = await res.json();
                     if (json && json.success) {
                         if (json.has_new && Array.isArray(json.tickets)) {
@@ -11103,6 +11305,8 @@
         }
 
         let matrixEventSource = null;
+        let sseReconnectTimer = null;
+        let sseConsecutiveErrors = 0;
         let sseErrorCount = 0;
 
         function showSseWarning() {
@@ -11114,6 +11318,12 @@
         }
 
         function hideSseWarning() {
+            if (sseReconnectTimer) {
+                clearTimeout(sseReconnectTimer);
+                sseReconnectTimer = null;
+            }
+            sseErrorCount = 0;
+            sseConsecutiveErrors = 0;
             const badge = document.getElementById('sse-reconnect-badge');
             if (badge) {
                 badge.classList.add('hidden');
@@ -11130,14 +11340,17 @@
                 matrixEventSource = new EventSource("{{ route('admin.rooms.matrix.stream') }}");
                 matrixEventSource.onopen = function () {
                     sseErrorCount = 0;
+                    sseConsecutiveErrors = 0;
                     hideSseWarning();
                 };
                 matrixEventSource.addEventListener('ping', function () {
                     sseErrorCount = 0;
+                    sseConsecutiveErrors = 0;
                     hideSseWarning();
                 });
                 matrixEventSource.addEventListener('room-updated', function (e) {
                     sseErrorCount = 0;
+                    sseConsecutiveErrors = 0;
                     hideSseWarning();
                     try {
                         const roomData = JSON.parse(e.data);
@@ -11150,9 +11363,33 @@
                 });
                 matrixEventSource.onerror = function () {
                     sseErrorCount++;
-                    // Chỉ hiển thị thông báo nếu thiết bị thực sự offline hoặc gặp lỗi liên tiếp
-                    if (!navigator.onLine || sseErrorCount >= 3) {
+                    // Nếu mất mạng hoàn toàn -> lập tức hiện cảnh báo
+                    if (!navigator.onLine) {
                         showSseWarning();
+                        return;
+                    }
+
+                    // Nếu vẫn online: Server-Sent Events khi server đóng chu kỳ stream (Connection: close)
+                    // sẽ kích hoạt onerror rồi tự động chuyển sang CONNECTING để kết nối lại sau chu kỳ retry.
+                    // Đây là cơ chế stream hoạt động bình thường, không phải lỗi mạng.
+                    sseConsecutiveErrors++;
+
+                    if (matrixEventSource.readyState === EventSource.CLOSED) {
+                        if (!sseReconnectTimer) {
+                            sseReconnectTimer = setTimeout(() => {
+                                sseReconnectTimer = null;
+                                connectMatrixSSE();
+                            }, 5000);
+                        }
+                    } else if (matrixEventSource.readyState === EventSource.CONNECTING) {
+                        if (!sseReconnectTimer && (sseConsecutiveErrors >= 3 || sseErrorCount >= 3)) {
+                            sseReconnectTimer = setTimeout(() => {
+                                sseReconnectTimer = null;
+                                if (matrixEventSource && matrixEventSource.readyState !== EventSource.OPEN && !navigator.onLine) {
+                                    showSseWarning();
+                                }
+                            }, 20000);
+                        }
                     }
                 };
             } catch (err) {
@@ -11205,10 +11442,14 @@
                             applyRoomCardUpdate(json.event);
                         }
                     } else {
-                        showSseWarning();
+                        if (!navigator.onLine) {
+                            showSseWarning();
+                        }
                     }
                 } catch (e) {
-                    showSseWarning();
+                    if (!navigator.onLine) {
+                        showSseWarning();
+                    }
                 }
             }, 25000);
         }
