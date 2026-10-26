@@ -9,6 +9,9 @@ use App\Models\ContactRequest;
 use App\Models\Contract;
 use App\Models\ElectricWaterLog;
 use App\Models\Equipment;
+use App\Models\HotelBooking;
+use App\Models\HotelFolioItem;
+use App\Models\HousekeepingLog;
 use App\Models\LandlordProfile;
 use App\Models\LandlordVerificationDocument;
 use App\Models\LandlordVerificationRequest;
@@ -85,6 +88,10 @@ class FullDemoSeeder extends Seeder
             $this->seedNotifications($tenant, $rooms, $residents);
             $this->seedActivityLogs($tenant, $landlord, $rooms, $residents, $equipment);
 
+            if ($tenantIndex === 0) {
+                $this->seedHotelBookingsAndLogs($tenant, $rooms);
+            }
+
             // Tạo thêm tài khoản Manager cho từng Tenant
             $this->seedManager($tenant, $tenantIndex);
         }
@@ -98,6 +105,9 @@ class FullDemoSeeder extends Seeder
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
+        HotelFolioItem::truncate();
+        HotelBooking::truncate();
+        HousekeepingLog::truncate();
         RoomEquipment::truncate();
         Equipment::truncate();
         ElectricWaterLog::truncate();
@@ -130,6 +140,8 @@ class FullDemoSeeder extends Seeder
             'landlord' => ['name' => 'Chủ trọ / Quản lý', 'description' => 'Quản lý phòng, cư dân, hợp đồng, hóa đơn và thiết bị.'],
             'unverified_landlord' => ['name' => 'Chủ trọ chưa xác minh', 'description' => 'Chủ trọ mới đăng ký, chờ admin xác minh tài khoản.'],
             'manager' => ['name' => 'Nhân viên quản lý', 'description' => 'Nhân viên do chủ trọ bổ nhiệm để quản lý tòa nhà.'],
+            'receptionist' => ['name' => 'Nhân viên lễ tân', 'description' => 'Check-in, Check-out, quản lý dịch vụ phát sinh Folio.'],
+            'housekeeper' => ['name' => 'Nhân viên buồng phòng', 'description' => 'Cập nhật trạng thái phòng Sạch/Bẩn/Đang dọn.'],
             'resident' => ['name' => 'Cư dân thuê phòng', 'description' => 'Xem hóa đơn, hợp đồng và gửi yêu cầu báo hỏng.'],
             'guest' => ['name' => 'Khách tìm phòng', 'description' => 'Tìm kiếm phòng và gửi yêu cầu tư vấn.'],
         ];
@@ -237,6 +249,57 @@ class FullDemoSeeder extends Seeder
             }
         }
 
+        // Tạo sẵn nhân viên Lễ tân & Buồng phòng cho Tenant 1 (SmartRoom Cầu Giấy)
+        if ($tenantIndex === 0) {
+            $recRole = $this->roles['receptionist'] ?? Role::where('slug', 'receptionist')->first();
+            $hkRole = $this->roles['housekeeper'] ?? Role::where('slug', 'housekeeper')->first();
+
+            User::updateOrCreate(
+                ['username' => 'letan1_1'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'role_id' => $recRole?->id,
+                    'name' => 'Lê Thị Thu Thảo (Lễ Tân)',
+                    'phone' => '0961000001',
+                    'email' => 'letan1@demo.smartroom.local',
+                    'password' => Hash::make('123456'),
+                    'role' => 'receptionist',
+                    'status' => 'active',
+                    'like' => 'Lễ Tân 1 Cầu Giấy',
+                ]
+            );
+
+            User::updateOrCreate(
+                ['username' => 'buongphong1_1'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'role_id' => $hkRole?->id,
+                    'name' => 'Nguyễn Văn Dũng (Buồng Phòng 1)',
+                    'phone' => '0951000001',
+                    'email' => 'buongphong1@demo.smartroom.local',
+                    'password' => Hash::make('123456'),
+                    'role' => 'housekeeper',
+                    'status' => 'active',
+                    'like' => 'Buồng Phòng 1 Cầu Giấy',
+                ]
+            );
+
+            User::updateOrCreate(
+                ['username' => 'buongphong1_2'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'role_id' => $hkRole?->id,
+                    'name' => 'Trần Thị Lan (Buồng Phòng 2)',
+                    'phone' => '0951000002',
+                    'email' => 'buongphong2@demo.smartroom.local',
+                    'password' => Hash::make('123456'),
+                    'role' => 'housekeeper',
+                    'status' => 'active',
+                    'like' => 'Buồng Phòng 2 Cầu Giấy',
+                ]
+            );
+        }
+
         return $landlord1;
     }
 
@@ -249,23 +312,60 @@ class FullDemoSeeder extends Seeder
     {
         $rooms = [];
 
+        $bp1 = User::where(fn ($q) => $q->where('tenant_id', $tenant->id)->orWhereNull('tenant_id'))
+            ->whereIn('username', ['buongphong1_1', 'buongphong1'])
+            ->first();
+        $bp2 = User::where(fn ($q) => $q->where('tenant_id', $tenant->id)->orWhereNull('tenant_id'))
+            ->whereIn('username', ['buongphong1_2', 'buongphong2'])
+            ->first();
+        $lt1 = User::where(fn ($q) => $q->where('tenant_id', $tenant->id)->orWhereNull('tenant_id'))
+            ->whereIn('username', ['letan1_1', 'letan1'])
+            ->first();
+
         foreach ($blueprint['buildings'] as $buildingData) {
             $building = Building::updateOrCreate(
                 ['tenant_id' => $tenant->id, 'name' => $buildingData['name']],
                 [
                     'address' => $buildingData['address'],
                     'description' => $buildingData['description'],
+                    'property_type' => 'hotel',
+                    'checkin_time' => '14:00:00',
+                    'checkout_time' => '12:00:00',
                 ]
             );
 
             foreach ($buildingData['rooms'] as $roomData) {
                 $media = $this->mediaForRoom($buildingData['name'], (string) $roomData['room_number']);
+
+                $staffId = null;
+                if (!empty($roomData['staff_slot'])) {
+                    $staffId = $roomData['staff_slot'] === 1 ? ($bp1?->id) : ($bp2?->id);
+                }
+
+                $inspectedBy = null;
+                $inspectedAt = null;
+                if (($roomData['housekeeping_status'] ?? '') === 'inspected') {
+                    $inspectedBy = $lt1?->id;
+                    $inspectedAt = Carbon::now()->subMinutes(rand(30, 240));
+                }
+
                 $room = Room::updateOrCreate(
                     ['building_id' => $building->id, 'room_number' => $roomData['room_number']],
                     [
                         'tenant_id' => $tenant->id,
                         'floor' => $roomData['floor'],
                         'status' => $roomData['status'],
+                        'housekeeping_status' => $roomData['housekeeping_status'] ?? 'clean',
+                        'cleaning_status' => $roomData['cleaning_status'] ?? 'clean',
+                        'priority' => $roomData['priority'] ?? 'normal',
+                        'inspection_notes' => $roomData['inspection_notes'] ?? null,
+                        'rental_type' => $roomData['rental_type'] ?? 'month',
+                        'price_per_day' => $roomData['price_per_day'] ?? null,
+                        'price_per_hour' => $roomData['price_per_hour'] ?? null,
+                        'price_extra_hour' => $roomData['price_extra_hour'] ?? null,
+                        'assigned_staff_id' => $staffId,
+                        'inspected_by' => $inspectedBy,
+                        'inspected_at' => $inspectedAt,
                         'room_type' => $roomData['room_type'],
                         'price' => $roomData['price'],
                         'area' => $roomData['area'],
@@ -283,6 +383,112 @@ class FullDemoSeeder extends Seeder
         }
 
         return $rooms;
+    }
+
+    private function seedHotelBookingsAndLogs(Tenant $tenant, array $rooms): void
+    {
+        // 1. Booking P.102 thuê theo giờ
+        $room102A = collect($rooms)->first(fn ($r) => $r->room_number === '102' && str_contains($r->building?->name ?? '', 'Tòa A'));
+        if ($room102A) {
+            $booking102 = HotelBooking::updateOrCreate(
+                ['booking_code' => 'HB-CG102'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'room_id' => $room102A->id,
+                    'guest_name' => 'Lê Hoàng Long',
+                    'guest_phone' => '0933888999',
+                    'guest_cccd' => '001098054321',
+                    'rental_type' => 'hour',
+                    'check_in_at' => Carbon::now()->subMinutes(210),
+                    'unit_rate' => 100000,
+                    'deposit_amount' => 50000,
+                    'status' => 'checked_in',
+                    'payment_status' => 'unpaid',
+                    'note' => 'Khách thuê theo giờ, yêu cầu phòng yên tĩnh.',
+                ]
+            );
+
+            HotelFolioItem::updateOrCreate(
+                ['booking_id' => $booking102->id, 'item_name' => 'Nước tăng lực RedBull lon'],
+                ['item_type' => 'minibar', 'quantity' => 2, 'unit_price' => 25000, 'subtotal' => 50000]
+            );
+        }
+
+        // 2. Booking P.201 Tòa B thuê theo ngày
+        $room201B = collect($rooms)->first(fn ($r) => $r->room_number === '201' && str_contains($r->building?->name ?? '', 'Tòa B'));
+        if ($room201B) {
+            $booking201 = HotelBooking::updateOrCreate(
+                ['booking_code' => 'HB-CG201'],
+                [
+                    'tenant_id' => $tenant->id,
+                    'room_id' => $room201B->id,
+                    'guest_name' => 'Đặng Quốc Tuấn',
+                    'guest_phone' => '0912345678',
+                    'guest_cccd' => '001095012345',
+                    'rental_type' => 'day',
+                    'check_in_at' => Carbon::now()->subHours(24),
+                    'expected_check_out_at' => Carbon::now()->addHours(2),
+                    'unit_rate' => 500000,
+                    'deposit_amount' => 200000,
+                    'status' => 'checked_in',
+                    'payment_status' => 'unpaid',
+                    'note' => 'Khách VIP nhận phòng hôm qua, yêu cầu thêm 1 thùng nước khoáng Aquafina.',
+                ]
+            );
+
+            HotelFolioItem::updateOrCreate(
+                ['booking_id' => $booking201->id, 'item_name' => 'Bia Tiger lon 330ml'],
+                ['item_type' => 'minibar', 'quantity' => 2, 'unit_price' => 25000, 'subtotal' => 50000]
+            );
+            HotelFolioItem::updateOrCreate(
+                ['booking_id' => $booking201->id, 'item_name' => 'Nước khoáng Lavie 500ml'],
+                ['item_type' => 'minibar', 'quantity' => 2, 'unit_price' => 10000, 'subtotal' => 20000]
+            );
+            HotelFolioItem::updateOrCreate(
+                ['booking_id' => $booking201->id, 'item_name' => 'Snack khoai tây Pringles'],
+                ['item_type' => 'minibar', 'quantity' => 1, 'unit_price' => 45000, 'subtotal' => 45000]
+            );
+            HotelFolioItem::updateOrCreate(
+                ['booking_id' => $booking201->id, 'item_name' => 'Mua hộ 1 thùng nước suối Aquafina 24 chai'],
+                ['item_type' => 'service', 'quantity' => 1, 'unit_price' => 120000, 'subtotal' => 120000]
+            );
+        }
+
+        // 3. Lịch sử dọn phòng mẫu
+        $room204A = collect($rooms)->first(fn ($r) => $r->room_number === '204' && str_contains($r->building?->name ?? '', 'Tòa A'));
+        $bp1 = User::whereIn('username', ['buongphong1_1', 'buongphong1'])->first();
+        $lt1 = User::whereIn('username', ['letan1_1', 'letan1'])->first();
+
+        if ($room204A && $bp1) {
+            HousekeepingLog::updateOrCreate(
+                ['tenant_id' => $tenant->id, 'room_id' => $room204A->id, 'action' => 'clean_done'],
+                [
+                    'user_id' => $bp1->id,
+                    'assigned_staff_id' => $bp1->id,
+                    'from_status' => 'cleaning',
+                    'to_status' => 'clean',
+                    'priority' => 'normal',
+                    'notes' => 'Nhân viên Buồng Phòng đã hoàn tất vệ sinh và khử khuẩn phòng 204.',
+                    'created_at' => Carbon::now()->subMinutes(60),
+                ]
+            );
+        }
+
+        $room205A = collect($rooms)->first(fn ($r) => $r->room_number === '205' && str_contains($r->building?->name ?? '', 'Tòa A'));
+        if ($room205A && $lt1 && $bp1) {
+            HousekeepingLog::updateOrCreate(
+                ['tenant_id' => $tenant->id, 'room_id' => $room205A->id, 'action' => 'inspect_passed'],
+                [
+                    'user_id' => $lt1->id,
+                    'assigned_staff_id' => $bp1->id,
+                    'from_status' => 'clean',
+                    'to_status' => 'inspected',
+                    'priority' => 'normal',
+                    'notes' => 'Lễ Tân đã kiểm tra nghiệm thu phòng 205 đạt chuẩn đón khách.',
+                    'created_at' => Carbon::now()->subMinutes(30),
+                ]
+            );
+        }
     }
 
     private function seedResidents(Tenant $tenant, array $rooms, int $tenantIndex): array
@@ -599,7 +805,6 @@ class FullDemoSeeder extends Seeder
                     ['room_id' => $room->id, 'phone' => '0555' . str_pad((string) ($tenantIndex * 100 + $index), 6, '0', STR_PAD_LEFT)],
                     [
                         'name' => 'Khách cần tư vấn ' . $room->room_number,
-                        'appointment_time' => Carbon::now()->addDays($index + 1)->setHour(9 + ($index % 8))->setMinute(0),
                         'message' => 'Tôi muốn xem phòng và hỏi về chi phí cọc.',
                         'status' => $index % 2 === 0 ? 'pending' : 'processed',
                     ]
@@ -893,24 +1098,20 @@ class FullDemoSeeder extends Seeder
                 'name' => 'Chung cư mini ' . $buildingName . ' - Tòa A',
                 'address' => $address1,
                 'description' => 'Chung cư mini ' . $buildingName . ' - Tòa A hiện đại, thang máy, an ninh 24/7, khóa vân tay, giờ giấc tự do.',
-                'rooms' => $this->roomBlueprints($basePrice, 'Chung cư mini ' . $buildingName . ' - Tòa A'),
+                'rooms' => $this->roomBlueprints($basePrice, 'Chung cư mini ' . $buildingName . ' - Tòa A', 'A'),
             ],
             [
                 'code' => $code . 'B',
                 'name' => 'Chung cư mini ' . $buildingName . ' - Tòa B',
                 'address' => $address2,
                 'description' => 'Chung cư mini ' . $buildingName . ' - Tòa B cao cấp, ban công thoáng mát, đầy đủ nội thất tiện nghi khép kín.',
-                'rooms' => $this->roomBlueprints($basePrice + 300000, 'Chung cư mini ' . $buildingName . ' - Tòa B'),
+                'rooms' => $this->roomBlueprints($basePrice + 300000, 'Chung cư mini ' . $buildingName . ' - Tòa B', 'B'),
             ],
         ];
     }
 
-    private function roomBlueprints(int $basePrice, string $buildingTitle = ''): array
+    private function roomBlueprints(int $basePrice, string $buildingTitle = '', string $buildingCode = 'A'): array
     {
-        $statuses = [
-            'occupied', 'occupied', 'overdue', 'empty', 'maintenance', 'occupied',
-            'empty', 'occupied', 'empty', 'occupied', 'empty', 'occupied'
-        ];
         $amenitiesPool = [
             ['điều hòa', 'nóng lạnh', 'wifi', 'cho nuôi thú cưng', 'gác lửng', 'wc khép kín', 'tủ lạnh'],
             ['điều hòa', 'nóng lạnh', 'ban công', 'wc khép kín', 'tủ quần áo', 'máy giặt'],
@@ -923,23 +1124,74 @@ class FullDemoSeeder extends Seeder
             ['điều hòa', 'gác lửng', 'wc khép kín', 'ban công'],
             ['điều hòa', 'nóng lạnh', 'cho nuôi thú cưng', 'wifi', 'tủ quần áo'],
             ['nóng lạnh', 'wifi', 'gác lửng', 'điều hòa', 'wc khép kín'],
-            ['điều hòa', 'ban công', 'wc khép kín', 'nóng lạnh', 'máy giặt']
+            ['điều hòa', 'ban công', 'wc khép kín', 'nóng lạnh', 'máy giặt'],
+            ['điều hòa', 'nóng lạnh', 'wifi', 'tủ lạnh', 'ban công'],
+            ['điều hòa', 'nóng lạnh', 'gác lửng', 'wc khép kín', 'tủ quần áo'],
+            ['điều hòa', 'nóng lạnh', 'ban công', 'máy giặt', 'khóa thông minh'],
         ];
 
-        return collect(['101', '102', '201', '202', '301', '302', '401', '402', '501', '502', '601', '602'])
-            ->map(function (string $roomNumber, int $index) use ($basePrice, $statuses, $amenitiesPool, $buildingTitle) {
-                return [
-                    'room_number' => $roomNumber,
-                    'floor' => (int) substr($roomNumber, 0, 1),
-                    'status' => $statuses[$index],
-                    'room_type' => ['standard', 'deluxe', 'vip', 'studio'][$index % 4],
-                    'price' => $basePrice + ($index * 150000),
-                    'area' => 22 + ($index * 2),
-                    'amenities' => $amenitiesPool[$index % count($amenitiesPool)],
-                    'description' => ($buildingTitle ?: 'Chung cư mini') . ' - Phòng ' . $roomNumber . ' khép kín, an ninh tuyệt đối.',
-                ];
-            })
-            ->all();
+        // 15 phòng trải dài từ Tầng 1 đến Tầng 6
+        // [room_number, floor, status, hk_status, priority, rental_type, day_price, hr_price, room_type, notes, staff_slot]
+        $specsA = [
+            ['101', 1, 'empty', 'inspected', 'normal', 'day', 450000, 120000, 'standard', 'Lễ tân đã nghiệm thu: phòng thơm mát, sẵn sàng đón khách.', 1],
+            ['102', 1, 'occupied', 'inspected', 'normal', 'hour', 450000, 100000, 'deluxe', 'Khách thuê theo giờ, phòng sạch sẽ tiện nghi.', 2],
+            ['201', 2, 'overdue', 'inspected', 'normal', 'month', null, null, 'vip', 'Cư dân đang nợ phí tháng hiện tại.', 1],
+            ['202', 2, 'cleaning', 'dirty', 'urgent', 'day', 420000, 110000, 'standard', 'Khách vừa check-out lúc 12:00, cần dọn gấp đón khách mới.', null],
+            ['203', 2, 'cleaning', 'cleaning', 'high', 'day', 420000, 110000, 'standard', 'Nhân viên đang thay drap giường, hút bụi và khử khuẩn phòng.', 1],
+            ['204', 2, 'empty', 'clean', 'normal', 'day', 450000, 120000, 'deluxe', 'Buồng phòng đã dọn xong, chờ Lễ tân nghiệm thu.', 1],
+            ['205', 2, 'empty', 'inspected', 'normal', 'day', 520000, 150000, 'vip', 'Đã nghiệm thu đạt chuẩn đón khách, minibar nguyên tem.', 2],
+            ['301', 3, 'maintenance', 'out_of_service', 'low', 'day', 480000, 130000, 'deluxe', 'Bảo trì hệ thống điều hòa và kiểm tra thiết bị.', null],
+            ['302', 3, 'occupied', 'inspected', 'normal', 'month', null, null, 'standard', 'Khách đang ở ổn định, phòng sạch sẽ.', 2],
+            ['401', 4, 'occupied', 'inspected', 'normal', 'month', null, null, 'studio', 'Khách đang ở ổn định, phòng sạch sẽ.', 1],
+            ['402', 4, 'empty', 'dirty', 'normal', 'day', 480000, 120000, 'standard', 'Cần vệ sinh định kỳ và lau cửa kính ban công.', 1],
+            ['403', 4, 'empty', 'clean', 'normal', 'day', 500000, 130000, 'vip', 'Đã dọn dẹp vệ sinh xong, chờ Lễ tân kiểm tra.', 1],
+            ['501', 5, 'occupied', 'inspected', 'normal', 'month', null, null, 'studio', 'Khách đang ở ổn định, phòng sạch sẽ.', 2],
+            ['502', 5, 'occupied', 'cleaning', 'normal', 'day', 550000, 140000, 'deluxe', 'Khách đang ở yêu cầu dọn phòng giữa kỳ.', 2],
+            ['601', 6, 'occupied', 'inspected', 'normal', 'month', null, null, 'vip', 'Khách VIP đang ở, phòng sạch sẽ.', 1],
+        ];
+
+        $specsB = [
+            ['101', 1, 'occupied', 'inspected', 'normal', 'month', null, null, 'standard', 'Khách đang ở ổn định, phòng sạch sẽ.', 1],
+            ['102', 1, 'occupied', 'inspected', 'normal', 'month', null, null, 'deluxe', 'Khách đang ở ổn định, phòng sạch sẽ.', 2],
+            ['201', 2, 'overdue', 'inspected', 'normal', 'month', null, null, 'vip', 'Cư dân đang nợ phí dịch vụ điện nước.', 2],
+            ['202', 2, 'empty', 'dirty', 'high', 'day', 420000, 110000, 'standard', 'Khách vừa trả phòng, cần dọn dẹp khử khuẩn đón khách.', null],
+            ['203', 2, 'occupied', 'cleaning', 'normal', 'day', 450000, 120000, 'standard', 'Nhân viên buồng phòng đang dọn dẹp theo yêu cầu.', 2],
+            ['204', 2, 'empty', 'clean', 'normal', 'day', 480000, 120000, 'deluxe', 'Đã dọn xong lúc 09:30, chờ kiểm tra nghiệm thu.', 2],
+            ['205', 2, 'empty', 'inspected', 'normal', 'day', 520000, 140000, 'vip', 'Đã nghiệm thu đạt chuẩn, sẵn sàng nhận phòng.', 1],
+            ['301', 3, 'maintenance', 'out_of_service', 'low', 'day', 480000, 130000, 'deluxe', 'Bảo trì hệ thống khóa thông minh SmartLock.', null],
+            ['302', 3, 'occupied', 'inspected', 'normal', 'month', null, null, 'standard', 'Khách đang ở ổn định, phòng sạch sẽ.', 1],
+            ['401', 4, 'occupied', 'inspected', 'normal', 'month', null, null, 'studio', 'Khách đang ở ổn định, phòng sạch sẽ.', 2],
+            ['402', 4, 'empty', 'dirty', 'normal', 'day', 460000, 120000, 'standard', 'Phòng trống cần vệ sinh định kỳ.', 2],
+            ['403', 4, 'empty', 'clean', 'normal', 'day', 490000, 130000, 'vip', 'Đã dọn xong, chờ nghiệm thu đạt chuẩn.', 2],
+            ['501', 5, 'occupied', 'inspected', 'normal', 'month', null, null, 'studio', 'Khách đang ở ổn định, phòng sạch sẽ.', 1],
+            ['502', 5, 'occupied', 'inspected', 'normal', 'month', null, null, 'deluxe', 'Khách đang ở ổn định, phòng sạch sẽ.', 2],
+            ['601', 6, 'occupied', 'inspected', 'normal', 'month', null, null, 'vip', 'Khách đang ở ổn định, phòng sạch sẽ.', 1],
+        ];
+
+        $specs = $buildingCode === 'B' ? $specsB : $specsA;
+
+        return collect($specs)->map(function ($spec, $index) use ($basePrice, $amenitiesPool, $buildingTitle) {
+            [$roomNumber, $floor, $status, $hkStatus, $priority, $rentalType, $dayPrice, $hrPrice, $roomType, $notes, $staffSlot] = $spec;
+            return [
+                'room_number' => $roomNumber,
+                'floor' => (int) $floor,
+                'status' => $status,
+                'housekeeping_status' => $hkStatus,
+                'cleaning_status' => $hkStatus === 'out_of_service' ? 'out_of_service' : ($hkStatus === 'dirty' ? 'dirty' : ($hkStatus === 'cleaning' ? 'cleaning' : 'clean')),
+                'priority' => $priority,
+                'rental_type' => $rentalType,
+                'price_per_day' => $dayPrice,
+                'price_per_hour' => $hrPrice,
+                'price_extra_hour' => $hrPrice ? 30000 : null,
+                'inspection_notes' => $notes,
+                'staff_slot' => $staffSlot,
+                'room_type' => $roomType,
+                'price' => $basePrice + ($index * 120000),
+                'area' => 24 + (($index % 6) * 3),
+                'amenities' => $amenitiesPool[$index % count($amenitiesPool)],
+                'description' => ($buildingTitle ?: 'Chung cư mini') . ' - Phòng ' . $roomNumber . ' khép kín, tiện nghi, an ninh 24/7.',
+            ];
+        })->all();
     }
 
     private function residentNames(): array
