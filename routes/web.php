@@ -466,6 +466,11 @@ $rentyRooms = function ($filterEmpty = true) {
         $loft = $amenities->contains(fn ($item) => str_contains($item, 'gác') || str_contains($item, 'gac')) || (($num % 3) != 2);
         $balcony = $amenities->contains(fn ($item) => str_contains($item, 'ban công') || str_contains($item, 'ban cong')) || (($num % 4) != 0);
         $wc = $amenities->contains(fn ($item) => str_contains($item, 'khép kín') || str_contains($item, 'wc') || str_contains($item, 'vệ sinh')) || (($num % 5) != 3);
+        $descLower = mb_strtolower((string) ($room->description ?? ''));
+        $ac = $amenities->contains(fn ($item) => in_array($item, ['ac', 'air_conditioner', 'máy lạnh', 'may lanh', 'điều hòa', 'dieu hoa'], true)) || str_contains($descLower, 'máy lạnh') || str_contains($descLower, 'điều hòa');
+        $washer = $amenities->contains(fn ($item) => in_array($item, ['washer', 'washing_machine', 'máy giặt', 'may giat'], true)) || str_contains($descLower, 'máy giặt');
+        $fridge = $amenities->contains(fn ($item) => in_array($item, ['fridge', 'refrigerator', 'tủ lạnh', 'tu lanh'], true)) || str_contains($descLower, 'tủ lạnh');
+        $wifi = $amenities->contains(fn ($item) => in_array($item, ['wifi', 'internet', 'mạng'], true)) || str_contains($descLower, 'wifi');
         
         $ownerStars = intval(round($rating));
         $ownerRating = str_repeat('⭐', $ownerStars) . str_repeat('☆', 5 - $ownerStars) . " ($ownerStars/5)";
@@ -565,6 +570,11 @@ $rentyRooms = function ($filterEmpty = true) {
             'loft' => $loft ? 'true' : 'false',
             'balcony' => $balcony ? 'true' : 'false',
             'wc' => $wc ? 'true' : 'false',
+            'ac' => $ac ? 'true' : 'false',
+            'washer' => $washer ? 'true' : 'false',
+            'fridge' => $fridge ? 'true' : 'false',
+            'wifi' => $wifi ? 'true' : 'false',
+            'amenities' => $room->amenities ?? [],
             'owner' => $ownerRating,
             'sec' => $secRating,
             'title' => $title,

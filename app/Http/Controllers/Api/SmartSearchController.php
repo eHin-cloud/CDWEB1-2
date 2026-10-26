@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ScoutSearchService;
 use App\Services\SmartSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,10 +11,14 @@ use Illuminate\Http\Request;
 class SmartSearchController extends Controller
 {
     protected SmartSearchService $searchService;
+    protected ScoutSearchService $scoutSearchService;
 
-    public function __construct(SmartSearchService $searchService)
-    {
+    public function __construct(
+        SmartSearchService $searchService,
+        ScoutSearchService $scoutSearchService
+    ) {
         $this->searchService = $searchService;
+        $this->scoutSearchService = $scoutSearchService;
     }
 
     /**
@@ -56,6 +61,13 @@ class SmartSearchController extends Controller
             ? (float) $request->input('rating')
             : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
 
+        $engine = (string) $request->input('engine', 'hybrid');
+
+        // Tìm kiếm bằng Laravel Scout Search Engine nếu được yêu cầu
+        if ($engine === 'scout') {
+            return $this->scoutSearch($request);
+        }
+
         $result = $this->searchService->search($query, [
             'limit' => $limit,
             'page' => $page,
@@ -69,6 +81,7 @@ class SmartSearchController extends Controller
 
         return response()->json([
             'success' => true,
+            'engine' => 'hybrid',
             'original_query' => $result['analysis']['original'],
             'normalized_query' => $result['analysis']['normalized'],
             'corrected_query' => $result['analysis']['corrected'],
@@ -84,6 +97,83 @@ class SmartSearchController extends Controller
             'rooms' => $result['rooms'],
             'suggestions' => $result['suggestions'],
             'hybrid_search' => $result['hybrid_search'] ?? null,
+        ]);
+    }
+
+    /**
+     * API Tìm kiếm phòng trọ bằng Laravel Scout Engine
+     * GET /api/renty/rooms/scout-search
+     */
+    public function scoutSearch(Request $request): JsonResponse
+    {
+        $query = mb_substr((string) $request->input('q', $request->input('query', '')), 0, 100);
+        $limit = min(50, max(1, (int) $request->input('limit', 12)));
+        $page = max(1, (int) $request->input('page', 1));
+        $status = (string) $request->input('status', 'all');
+        $sort = (string) $request->input('sort', $request->input('sort_by', 'default'));
+
+        $minPrice = $request->filled('min_price')
+            ? (int) $request->input('min_price')
+            : ($request->filled('price_min') ? (int) $request->input('price_min') : null);
+
+        $maxPrice = $request->filled('max_price')
+            ? (int) $request->input('max_price')
+            : ($request->filled('price_max') ? (int) $request->input('price_max') : null);
+
+        if ($minPrice !== null && $maxPrice !== null && $minPrice > $maxPrice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).',
+                'errors' => [
+                    'price' => ['Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).']
+                ]
+            ], 422);
+        }
+
+        $amenities = $request->input('amenities', []);
+        if (is_string($amenities)) {
+            $amenities = array_filter(explode(',', $amenities));
+        }
+
+        $rating = $request->filled('rating') && $request->input('rating') !== 'all'
+            ? (float) $request->input('rating')
+            : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
+
+        $result = $this->scoutSearchService->search($query, [
+            'limit' => $limit,
+            'page' => $page,
+            'status' => $status,
+            'sort' => $sort,
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'amenities' => $amenities,
+            'min_rating' => $rating,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'engine' => 'laravel_scout',
+            'driver' => $result['driver'] ?? config('scout.driver'),
+            'original_query' => $query,
+            'normalized_query' => $query,
+            'corrected_query' => $query,
+            'did_you_mean' => null,
+            'has_correction' => false,
+            'recognized_terms' => [],
+            'filters' => [
+                'min_price' => $minPrice,
+                'max_price' => $maxPrice,
+                'amenities' => $amenities,
+                'locations' => [],
+            ],
+            'count' => $result['count'],
+            'total' => $result['total'],
+            'page' => $result['page'],
+            'per_page' => $result['per_page'],
+            'last_page' => $result['last_page'] ?? 1,
+            'has_more' => $result['has_more'],
+            'rooms' => $result['rooms'],
+            'suggestions' => $result['suggestions'],
         ]);
     }
 

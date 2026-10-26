@@ -59,5 +59,7 @@ class DatabaseSeeder extends Seeder
         // $this->call(HospitalityDummyDataSeeder::class);
         $this->call(HousekeepingFrontdeskDemoSeeder::class);
         $this->call(RoomRatingBreakdownSeeder::class);
+        $this->call(RoomAmenitiesSeeder::class);
+        $this->call(AddNewRoomsSeeder::class);
     }
 }

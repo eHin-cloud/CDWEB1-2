@@ -38,6 +38,7 @@ Route::post('/webhooks/payments', [PaymentWebhookController::class, 'handleWebho
 Route::get('/renty/rooms', [VisitorController::class, 'index']);
 Route::get('/renty/filter', [VisitorController::class, 'filter'])->middleware('throttle:60,1')->name('api.renty.filter');
 Route::get('/renty/rooms/smart-search', [SmartSearchController::class, 'search']);
+Route::get('/renty/rooms/scout-search', [SmartSearchController::class, 'scoutSearch']);
 Route::get('/renty/rooms/suggest', [SmartSearchController::class, 'suggestions']);
 Route::get('/renty/rooms/autocomplete', [SmartSearchController::class, 'suggestions']);
 Route::get('/renty/rooms/map', [VisitorController::class, 'map']);

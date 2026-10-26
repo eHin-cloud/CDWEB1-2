@@ -461,6 +461,10 @@ class SmartSearchService
             if (in_array('loft', $requestedAmenities, true) && !$room['loft']) return false;
             if (in_array('balcony', $requestedAmenities, true) && !$room['balcony']) return false;
             if (in_array('wc', $requestedAmenities, true) && !$room['wc']) return false;
+            if ((in_array('air_conditioner', $requestedAmenities, true) || in_array('ac', $requestedAmenities, true) || in_array('máy lạnh', $requestedAmenities, true)) && empty($room['ac'])) return false;
+            if ((in_array('washing_machine', $requestedAmenities, true) || in_array('washer', $requestedAmenities, true) || in_array('máy giặt', $requestedAmenities, true)) && empty($room['washer'])) return false;
+            if ((in_array('fridge', $requestedAmenities, true) || in_array('tủ lạnh', $requestedAmenities, true)) && empty($room['fridge'])) return false;
+            if ((in_array('wifi', $requestedAmenities, true)) && empty($room['wifi'])) return false;
 
             // 4. Tiện ích bóc tách từ câu hỏi tự nhiên (NLP)
             if (!empty($nlpAmenities)) {
@@ -610,7 +614,7 @@ class SmartSearchService
     /**
      * Decorate toàn bộ collection phòng chuẩn cấu trúc hiển thị Renty
      */
-    protected function decorateRoomsCollection(Collection $rooms): Collection
+    public function decorateRoomsCollection(Collection $rooms): Collection
     {
         $mapped = $rooms->map(function (Room $room) {
             $num = intval($room->room_number);
@@ -643,6 +647,11 @@ class SmartSearchService
             $loft = $amenities->contains(fn ($item) => str_contains($item, 'gác') || str_contains($item, 'gac')) || (($num % 3) != 2);
             $balcony = $amenities->contains(fn ($item) => str_contains($item, 'ban công') || str_contains($item, 'ban cong')) || (($num % 4) != 0);
             $wc = $amenities->contains(fn ($item) => str_contains($item, 'khép kín') || str_contains($item, 'wc') || str_contains($item, 'vệ sinh')) || (($num % 5) != 3);
+            $descLower = mb_strtolower((string) ($room->description ?? ''));
+            $ac = $amenities->contains(fn ($item) => in_array($item, ['ac', 'air_conditioner', 'máy lạnh', 'may lanh', 'điều hòa', 'dieu hoa'], true)) || str_contains($descLower, 'máy lạnh') || str_contains($descLower, 'điều hòa');
+            $washer = $amenities->contains(fn ($item) => in_array($item, ['washer', 'washing_machine', 'máy giặt', 'may giat'], true)) || str_contains($descLower, 'máy giặt');
+            $fridge = $amenities->contains(fn ($item) => in_array($item, ['fridge', 'refrigerator', 'tủ lạnh', 'tu lanh'], true)) || str_contains($descLower, 'tủ lạnh');
+            $wifi = $amenities->contains(fn ($item) => in_array($item, ['wifi', 'internet', 'mạng'], true)) || str_contains($descLower, 'wifi');
 
             $title = $buildingName . " - Phòng " . $room->room_number;
             $area = (int) ($room->area ?? (22 + ($num % 9)));
@@ -710,10 +719,18 @@ class SmartSearchService
                 'loft' => $loft,
                 'balcony' => $balcony,
                 'wc' => $wc,
+                'ac' => $ac,
+                'washer' => $washer,
+                'fridge' => $fridge,
+                'wifi' => $wifi,
                 'pets_txt' => $pets ? 'Có' : 'Không',
                 'loft_txt' => $loft ? 'Có' : 'Không',
                 'balcony_txt' => $balcony ? 'Có' : 'Không',
                 'wc_txt' => $wc ? 'Có' : 'Không',
+                'ac_txt' => $ac ? 'Có' : 'Không',
+                'washer_txt' => $washer ? 'Có' : 'Không',
+                'fridge_txt' => $fridge ? 'Có' : 'Không',
+                'wifi_txt' => $wifi ? 'Có' : 'Không',
                 'title' => $title,
                 'building_name' => $buildingName,
                 'address' => $buildingAddress,

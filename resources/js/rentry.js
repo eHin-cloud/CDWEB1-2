@@ -1564,6 +1564,10 @@ function renderRoomCardsHtml(rooms) {
              data-loft="${room.loft}"
              data-balcony="${room.balcony}"
              data-wc="${room.wc}"
+             data-ac="${room.ac ? 'true' : 'false'}"
+             data-washer="${room.washer ? 'true' : 'false'}"
+             data-fridge="${room.fridge ? 'true' : 'false'}"
+             data-wifi="${room.wifi ? 'true' : 'false'}"
              data-distance="${room.distance}"
              data-area-name="${escapeHtml(room.area_name)}"
              data-status="${room.status}"
@@ -1619,6 +1623,10 @@ function renderRoomCardsHtml(rooms) {
                         </span>
                     </div>
                     <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-800/40">
+                        ${room.ac ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="fa-solid fa-snowflake text-[8px] mr-0.5"></i> Máy lạnh</span>' : ''}
+                        ${room.washer ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i class="fa-solid fa-soap text-[8px] mr-0.5"></i> Máy giặt</span>' : ''}
+                        ${room.fridge ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-box-archive text-[8px] mr-0.5"></i> Tủ lạnh</span>' : ''}
+                        ${room.wifi ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20"><i class="fa-solid fa-wifi text-[8px] mr-0.5"></i> Wifi</span>' : ''}
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.wc ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">WC ${room.wc_txt}</span>
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.balcony ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">Ban công ${room.balcony_txt}</span>
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.loft ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">Gác lửng ${room.loft_txt}</span>
@@ -1735,6 +1743,10 @@ function restoreFiltersFromUrl() {
     if (page && parseInt(page) > 0) {
         rentyCurrentPage = parseInt(page);
     }
+    const engineFromUrl = url.searchParams.get('engine');
+    if (engineFromUrl && document.getElementById('search-engine-select')) {
+        document.getElementById('search-engine-select').value = engineFromUrl;
+    }
 }
 window.restoreFiltersFromUrl = restoreFiltersFromUrl;
 
@@ -1746,6 +1758,8 @@ async function executeSmartSearchApi(params) {
     if (params.wcChecked) amenities.push('wc');
     if (document.getElementById('tag-ac')?.checked) amenities.push('air_conditioner');
     if (document.getElementById('tag-washer')?.checked) amenities.push('washing_machine');
+    if (document.getElementById('tag-fridge')?.checked) amenities.push('fridge');
+    if (document.getElementById('tag-wifi')?.checked) amenities.push('wifi');
 
     let effectiveMaxPrice = params.maxPriceVal;
     if (effectiveMaxPrice === null && params.filterPrice && params.filterPrice !== 'all') {
@@ -1761,7 +1775,10 @@ async function executeSmartSearchApi(params) {
     if (params.filterRating && params.filterRating !== 'all') searchParams.set('rating', params.filterRating);
     if (sortBy !== 'default') searchParams.set('sort_by', sortBy);
     if (params.hideRented) searchParams.set('status', 'empty');
-    if (amenities.length > 0) searchParams.set('amenities', amenities.join(','));
+    const searchEngine = document.getElementById('search-engine-select')?.value || (new URLSearchParams(window.location.search).get('engine') || 'hybrid');
+    if (searchEngine && searchEngine !== 'hybrid') {
+        searchParams.set('engine', searchEngine);
+    }
     searchParams.set('page', rentyCurrentPage);
     searchParams.set('limit', rentyItemsPerPage);
 
@@ -1807,11 +1824,14 @@ async function executeSmartSearchApi(params) {
             if (didYouMeanBanner) didYouMeanBanner.classList.add('hidden');
         }
 
-        // 2. Cập nhật số lượng kết quả
+        // 2. Cập nhật số lượng kết quả kèm thông tin Search Engine
         const resultsCountEl = document.getElementById('results-count');
         const total = data.total ?? data.count ?? 0;
         if (resultsCountEl) {
-            resultsCountEl.textContent = `Tìm thấy ${total} phòng`;
+            const engineBadge = data.engine === 'laravel_scout'
+                ? `<span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold border border-cyan-500/35 tracking-wide shadow-sm"><i class="fa-solid fa-bolt text-[9px]"></i> Scout (${data.driver || 'database'})</span>`
+                : `<span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/35 tracking-wide shadow-sm"><i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i> Hybrid RRF</span>`;
+            resultsCountEl.innerHTML = `Tìm thấy ${total} phòng ${engineBadge}`;
         }
 
         // 3. Xử lý hiển thị danh sách phòng & Empty State (ERR_21_04)
@@ -1999,6 +2019,10 @@ function filterItems(options = {}) {
         const loft = card.getAttribute('data-loft') === 'true';
         const balcony = card.getAttribute('data-balcony') === 'true';
         const wc = card.getAttribute('data-wc') === 'true';
+        const ac = card.getAttribute('data-ac') === 'true';
+        const washer = card.getAttribute('data-washer') === 'true';
+        const fridge = card.getAttribute('data-fridge') === 'true';
+        const wifi = card.getAttribute('data-wifi') === 'true';
         const status = card.getAttribute('data-status');
         const searchableText = normalizeText(
             `${card.getAttribute('data-title') || ''} ` +
@@ -2086,10 +2110,10 @@ function filterItems(options = {}) {
         if (loftChecked && !loft) matchesTags = false;
         if (balconyChecked && !balcony) matchesTags = false;
         if (wcChecked && !wc) matchesTags = false;
-        if (acChecked && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
-        if (washerChecked && !searchableText.includes('may giat')) matchesTags = false;
-        if (fridgeChecked && !searchableText.includes('tu lanh')) matchesTags = false;
-        if (wifiChecked && !searchableText.includes('wifi')) matchesTags = false;
+        if (acChecked && !ac && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
+        if (washerChecked && !washer && !searchableText.includes('may giat')) matchesTags = false;
+        if (fridgeChecked && !fridge && !searchableText.includes('tu lanh')) matchesTags = false;
+        if (wifiChecked && !wifi && !searchableText.includes('wifi')) matchesTags = false;
         if (elevatorChecked && !(searchableText.includes('thang may') || searchableText.includes('thang máy'))) matchesTags = false;
 
         // Lọc diện tích (Spec FEAT_21: range_area)

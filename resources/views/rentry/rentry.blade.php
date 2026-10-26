@@ -1208,6 +1208,17 @@
                     </button>
                 </div>
 
+                <!-- Search Engine Selector (AI Hybrid vs Laravel Scout) -->
+                <div class="flex items-center gap-2 bg-slate-950/45 px-3 py-1.5 rounded-2xl border border-slate-900/60 backdrop-blur-sm">
+                    <span class="text-[11px] text-slate-400 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> <span class="hidden md:inline">Engine:</span>
+                    </span>
+                    <select id="search-engine-select" onchange="filterItems()" class="bg-slate-900/90 text-xs text-emerald-400 border border-slate-800 hover:border-emerald-500/40 rounded-xl px-2.5 py-1 outline-none font-semibold cursor-pointer transition-colors">
+                        <option value="hybrid">AI Hybrid (RRF)</option>
+                        <option value="scout">Laravel Scout</option>
+                    </select>
+                </div>
+
                 <div class="flex items-center gap-3 bg-slate-950/45 px-4 py-2 rounded-2xl border border-slate-900/60 backdrop-blur-sm">
                     <label for="hide-rented-toggle" class="text-xs text-slate-400 font-bold select-none cursor-pointer hover:text-slate-200 transition-colors">Ẩn phòng đã thuê</label>
                     <label class="ios-switch cursor-pointer">

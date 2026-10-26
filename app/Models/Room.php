@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 
 class Room extends Model
 {
+    use Searchable;
+
     public const MAX_OCCUPANTS = 5;
     public const ROOM_TYPES = ['standard', 'deluxe', 'vip', 'studio'];
     public const RENTAL_TYPES = ['month', 'day', 'hour'];
@@ -384,6 +387,46 @@ class Room extends Model
             'low' => 'Ưu tiên thấp',
             default => 'Bình thường',
         };
+    }
+
+    /**
+     * Dữ liệu index cho Laravel Scout Search Engine
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        $amenitiesText = '';
+        if (is_array($this->amenities)) {
+            $amenitiesText = implode(' ', $this->amenities);
+        } elseif (is_string($this->amenities)) {
+            $amenitiesText = $this->amenities;
+        }
+
+        return [
+            'id' => (int) $this->id,
+            'room_number' => (string) $this->room_number,
+            'room_type' => (string) ($this->room_type ?? ''),
+            'description' => (string) ($this->description ?? ''),
+            'amenities' => $amenitiesText,
+            'status' => (string) ($this->status ?? ''),
+        ];
+    }
+
+    /**
+     * Tên search index của model
+     */
+    public function searchableAs(): string
+    {
+        return 'rooms_index';
+    }
+
+    /**
+     * Eager loading khi Scout thực hiện mapping / querying
+     */
+    public function makeAllSearchableUsing($query)
+    {
+        return $query->with(['building', 'tenant', 'reviews']);
     }
 }
 

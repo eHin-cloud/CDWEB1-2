@@ -18,6 +18,10 @@
      data-loft="{{ $room['loft'] }}" 
      data-balcony="{{ $room['balcony'] }}" 
      data-wc="{{ $room['wc'] }}"
+     data-ac="{{ in_array($room['ac'] ?? '', [true, 1, 'true', '1'], true) ? 'true' : 'false' }}"
+     data-washer="{{ in_array($room['washer'] ?? '', [true, 1, 'true', '1'], true) ? 'true' : 'false' }}"
+     data-fridge="{{ in_array($room['fridge'] ?? '', [true, 1, 'true', '1'], true) ? 'true' : 'false' }}"
+     data-wifi="{{ in_array($room['wifi'] ?? '', [true, 1, 'true', '1'], true) ? 'true' : 'false' }}"
      data-area="{{ $room['area'] ?? 25 }}"
      data-room-type="{{ $room['room_type'] ?? '' }}"
      data-distance="{{ $room['distance'] }}" 
@@ -252,6 +256,18 @@
                @endif
            </div>
            <div class="flex flex-wrap gap-1.5">
+                @if(!empty($room['ac']))
+                    <span class="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-[9px] font-bold border border-blue-500/20"><i class="fa-solid fa-snowflake text-[8px] mr-0.5"></i> Máy lạnh</span>
+                @endif
+                @if(!empty($room['washer']))
+                    <span class="px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 text-[9px] font-bold border border-cyan-500/20"><i class="fa-solid fa-soap text-[8px] mr-0.5"></i> Máy giặt</span>
+                @endif
+                @if(!empty($room['fridge']))
+                    <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-[9px] font-bold border border-amber-500/20"><i class="fa-solid fa-box-archive text-[8px] mr-0.5"></i> Tủ lạnh</span>
+                @endif
+                @if(!empty($room['wifi']))
+                    <span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 text-[9px] font-bold border border-purple-500/20"><i class="fa-solid fa-wifi text-[8px] mr-0.5"></i> Wifi</span>
+                @endif
                @if($room['loft'] === 'true')
                    <span class="px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[9px] font-bold border border-indigo-500/20">Có gác lửng</span>
                @endif

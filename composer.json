@@ -12,6 +12,7 @@
         "laravel/framework": "^11.31",
         "laravel/reverb": "^1.11",
         "laravel/sanctum": "^4.0",
+        "laravel/scout": "^11.9",
         "laravel/tinker": "^2.9",
         "psr/simple-cache": "^3.0"
     },
