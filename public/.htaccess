@@ -19,3 +19,14 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+<IfModule mod_headers.c>
+    # 1. Chống MIME-sniffing cho tài nguyên tĩnh và toàn bộ server (CWE-693)
+    Header set X-Content-Type-Options "nosniff"
+
+    # 2. Chống Clickjacking cho tài nguyên tĩnh (CWE-1021)
+    Header set X-Frame-Options "SAMEORIGIN"
+
+    # 3. Giới hạn rò rỉ URL qua Referer (CWE-200)
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

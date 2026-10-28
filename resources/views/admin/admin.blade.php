@@ -251,7 +251,7 @@
                     </div>
 
                     <!-- FORM CẬP NHẬT HỒ SƠ CHỦ TRỌ (FEAT_02_PROFILE) -->
-                    <form id="profile-form" method="POST" action="{{ route('smartroom.admin.profile.update') }}" enctype="multipart/form-data" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-6">
+                    <form id="profile-form" method="POST" action="{{ route('smartroom.admin.profile.update', [], false) }}" enctype="multipart/form-data" class="mb-10 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-6 space-y-6">
                         @csrf
 
                         @if ($errors->any())
@@ -825,7 +825,7 @@
                                     <p class="mt-2 text-slate-300">Mã hồ sơ: #{{ $kycRequest->id ?? 'N/A' }}. Ban quản trị SmartRoom đang thẩm định CCCD và phê duyệt cấp Tích Xanh cho cơ sở của bạn.</p>
                                 </div>
                             @else
-                                <form id="kyc-form" method="POST" action="{{ route('smartroom.admin.kyc.submit') }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-5 rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
+                                <form id="kyc-form" method="POST" action="{{ route('smartroom.admin.kyc.submit', [], false) }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-5 rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
                                     @csrf
 
                                     <!-- STT 1: Input Số CCCD 12 số (id_card_number) -->
@@ -1126,7 +1126,7 @@
                                 </div>
                             </div>
 
-                            <form method="POST" action="{{ route('smartroom.admin.verification.premium') }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                            <form method="POST" action="{{ route('smartroom.admin.verification.premium', [], false) }}" enctype="multipart/form-data" class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
                                 @csrf
                                 <label class="block">
                                     <span class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Giấy phép ĐKKD</span>
@@ -1675,7 +1675,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-6">
-                        <form method="POST" action="{{ route('smartroom.admin.notifications.run_all') }}">
+                        <form method="POST" action="{{ route('smartroom.admin.notifications.run_all', [], false) }}">
                             @csrf
                             <button type="submit" class="w-full px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i> Run all
@@ -1684,13 +1684,13 @@
                         <button type="button" onclick="triggerAutoRemind(this)" class="w-full px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-2">
                             <i class="fa-solid fa-money-bill-wave"></i> Payment
                         </button>
-                        <form method="POST" action="{{ route('smartroom.admin.notifications.contracts') }}">
+                        <form method="POST" action="{{ route('smartroom.admin.notifications.contracts', [], false) }}">
                             @csrf
                             <button type="submit" class="w-full px-4 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-file-signature"></i> Contracts
                             </button>
                         </form>
-                        <form method="POST" action="{{ route('smartroom.admin.notifications.maintenance') }}">
+                        <form method="POST" action="{{ route('smartroom.admin.notifications.maintenance', [], false) }}">
                             @csrf
                             <button type="submit" class="w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-screwdriver-wrench"></i> Maintenance
@@ -2069,7 +2069,7 @@
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <form id="bulk-utility-form" action="{{ route('smartroom.admin.utility.bulk_store') }}" method="POST">
+                        <form id="bulk-utility-form" action="{{ route('smartroom.admin.utility.bulk_store', [], false) }}" method="POST">
                             @csrf
                             <!-- Bảng ghi số tblUtility theo Bảng 110 -->
                             <table id="tblUtility" class="w-full text-left text-sm text-slate-300">
@@ -2182,7 +2182,7 @@
                                                      <i class="fa-solid fa-file-invoice-dollar"></i> Hóa đơn
                                                  </button>
                                                  @if($room->status === 'overdue' && $latestBill && $latestBill->status !== 'paid')
-                                                     <form action="{{ route('smartroom.admin.utility.pay', $latestBill->id) }}" method="POST" class="inline">
+                                                     <form action="{{ route('smartroom.admin.utility.pay', $latestBill->id, false) }}" method="POST" class="inline">
                                                          @csrf
                                                          <button type="submit" class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-xs font-bold border border-emerald-500/20 transition-all flex items-center gap-1">
                                                              <i class="fa-solid fa-check"></i> Xác nhận đóng
@@ -2261,7 +2261,7 @@
                             <p class="text-xs text-slate-500">Lưu trữ thông tin cá nhân, đăng ký tạm trú, quản lý người thân tạm trú.</p>
                         </div>
                         <div class="flex gap-2">
-                            <form method="GET" action="{{ route('smartroom.admin') }}" class="flex gap-2">
+                            <form method="GET" action="{{ route('smartroom.admin', [], false) }}" class="flex gap-2">
                                 <input type="hidden" name="tab" value="resident-section">
                                 <input type="search" name="resident_q" value="{{ $residentFilters['q'] }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Ten / SDT / CCCD">
                                 <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all">
@@ -2333,7 +2333,7 @@
                                             </button>
                                             @if($isLandlord)
                                                 {{-- Nút Xóa cư dân - có chống spam click (disabled sau click) --}}
-                                                <form action="{{ route('smartroom.admin.resident.delete', $resident->id) }}" method="POST" onsubmit="return confirmAndDisable(this, 'Bạn có chắc chắn muốn xóa cư dân này ra khỏi phòng trọ?')" class="inline">
+                                                <form action="{{ route('smartroom.admin.resident.delete', $resident->id, false) }}" method="POST" onsubmit="return confirmAndDisable(this, 'Bạn có chắc chắn muốn xóa cư dân này ra khỏi phòng trọ?')" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="anti-spam-btn px-2 py-1.5 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/20 rounded-lg text-[10px] font-bold text-rose-400 transition-all" title="Xóa cư dân">
@@ -2551,7 +2551,7 @@
                                             @endif
 
                                             @if($isLandlord)
-                                                <form action="{{ route('smartroom.admin.contract.delete', $c->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này không?')" class="inline">
+                                                <form action="{{ route('smartroom.admin.contract.delete', $c->id, false) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này không?')" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="px-3 py-2 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl text-xs font-bold border border-rose-500/25 transition-all">
@@ -2695,7 +2695,7 @@
                                             <a href="https://zalo.me/{{ $req->phone }}" target="_blank" class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all text-xs" title="Chat Zalo">
                                                 <i class="fa-solid fa-comment-sms"></i>
                                             </a>
-                                            <form action="{{ route('smartroom.admin.contact_request.status', $req->id) }}" method="POST" class="inline">
+                                            <form action="{{ route('smartroom.admin.contact_request.status', $req->id, false) }}" method="POST" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="{{ $req->status === 'pending' ? 'processed' : 'pending' }}">
                                                 <button type="submit" class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all text-xs" title="Đổi trạng thái">
@@ -2703,7 +2703,7 @@
                                                 </button>
                                             </form>
                                             @if($isLandlord)
-                                                <form action="{{ route('smartroom.admin.contact_request.delete', $req->id) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa yêu cầu tư vấn này?')">
+                                                <form action="{{ route('smartroom.admin.contact_request.delete', $req->id, false) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa yêu cầu tư vấn này?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all text-xs" title="Xóa">
@@ -3131,7 +3131,7 @@
                 <i class="fa-solid fa-user-plus text-indigo-400"></i> Thêm Cư Dân Mới
             </h2>
             <!-- Chống spam click: form submit sẽ disable nút sau lần click đầu tiên -->
-            <form action="{{ route('smartroom.admin.resident.store') }}" method="POST" class="space-y-4" onsubmit="return antiSpamSubmit(this)">
+            <form action="{{ route('smartroom.admin.resident.store', [], false) }}" method="POST" class="space-y-4" onsubmit="return antiSpamSubmit(this)">
                 @csrf
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -3601,7 +3601,7 @@
             <h2 class="text-xl font-bold mb-4 text-slate-100 flex items-center gap-2">
                 <i class="fa-solid fa-file-signature text-indigo-400"></i> Tạo Hợp Đồng Thuê Nhà Mới
             </h2>
-            <form id="create-contract-form" action="{{ route('smartroom.admin.contract.store') }}" method="POST" onsubmit="return validateCreateContractForm(event)" novalidate class="space-y-6">
+            <form id="create-contract-form" action="{{ route('smartroom.admin.contract.store', [], false) }}" method="POST" onsubmit="return validateCreateContractForm(event)" novalidate class="space-y-6">
                 @csrf
 
                 <!-- Phương thức ký kết hợp đồng -->
@@ -9780,8 +9780,9 @@
             // Auto-switch to tab from query param if provided (e.g. ?tab=utility-section)
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
-            if (tabParam) {
-                const targetLink = document.querySelector(`.sidebar-nav-link[data-section="${tabParam}"]`);
+            if (tabParam && /^[a-zA-Z0-9_-]+$/.test(tabParam)) {
+                const escapedTab = CSS.escape(tabParam);
+                const targetLink = document.querySelector(`.sidebar-nav-link[data-section="${escapedTab}"]`);
                 if (targetLink) {
                     switchTab(tabParam, targetLink);
                 }

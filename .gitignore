@@ -31,3 +31,7 @@ yarn-error.log
 /dist/
 # Microsoft Office temporary files
 ~$*
+
+# Database backups
+/database/backups/
+*.sql

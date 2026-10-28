@@ -45,14 +45,17 @@ class SecurityHeadersMiddleware
         }
 
         // 8. Content-Security-Policy (CSP) (CWE-693)
-        // Cung cấp chính sách tương thích với các thư viện frontend hiện có (Google Fonts, Tailwind, CDN, Leaflet, Chart.js)
+        // Cung cấp chính sách tương thích với các thư viện frontend hiện có (Google Fonts, Bunny, Tailwind, VietQR, CDN, Leaflet, Chart.js)
         $csp = implode('; ', [
             "default-src 'self'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com",
-            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:",
-            "img-src 'self' data: https: blob:",
-            "connect-src 'self' https: ws: wss: http://localhost:* http://127.0.0.1:*",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net https://cdnjs.cloudflare.com https://unpkg.com",
+            "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net https://cdnjs.cloudflare.com data:",
+            "img-src 'self' data: blob: https://img.vietqr.io https://ui-avatars.com https://images.unsplash.com https://*.google.com https://*.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
+            "connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://*.pusher.com wss://*.pusher.com ws://localhost:8080 ws://127.0.0.1:8080 ws://localhost:5173 ws://127.0.0.1:5173 http://localhost:8088 http://127.0.0.1:8088 https://localhost:8088 https://127.0.0.1:8088",
             "frame-ancestors 'self'",
         ]);
         $response->headers->set('Content-Security-Policy', $csp);

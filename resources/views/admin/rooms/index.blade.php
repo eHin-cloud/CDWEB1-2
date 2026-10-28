@@ -125,7 +125,7 @@
                     <span id="price-range-error-text">Khoảng giá lọc không hợp lệ: Giá tối thiểu phải nhỏ hơn hoặc bằng giá tối đa</span>
                 </div>
 
-                <form id="filter-rooms-form" method="GET" action="{{ route('admin.rooms.index') }}" onsubmit="return validateFilterPriceRange(event)" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-3 mb-6">
+                <form id="filter-rooms-form" method="GET" action="{{ route('admin.rooms.index', [], false) }}" onsubmit="return validateFilterPriceRange(event)" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-3 mb-6">
                     <!-- UI Element STT 1: txtSearch - Tìm kiếm phòng -->
                     <div class="xl:col-span-2">
                         <input type="search" 
@@ -287,7 +287,7 @@
 
                                         @if($isLandlord)
                                             <!-- Chống xóa bằng GET, bắt buộc POST với CSRF và check xóa trùng -->
-                                            <form action="{{ route('admin.rooms.destroy', $room->id) }}" method="POST" class="delete-form inline">
+                                            <form action="{{ route('admin.rooms.destroy', $room->id, false) }}" method="POST" class="delete-form inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" onclick="return confirmDelete(event, '{{ $room->room_number }}')" class="delete-btn px-3 py-2 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl text-xs font-bold border border-rose-500/25 transition-all">

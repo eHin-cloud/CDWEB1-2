@@ -99,7 +99,7 @@
 
             <!-- BỘ LỌC TÌM KIẾM NHẬT KÝ -->
             <div class="panel rounded-2xl p-5">
-                <form method="GET" action="{{ route('admin.audit-logs') }}" class="flex flex-wrap items-center gap-3">
+                <form method="GET" action="{{ route('admin.audit-logs', [], false) }}" class="flex flex-wrap items-center gap-3">
                     <div class="relative min-w-[280px] flex-1">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
                         <input type="text" 

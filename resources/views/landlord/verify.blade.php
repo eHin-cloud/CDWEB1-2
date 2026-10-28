@@ -334,7 +334,7 @@
 
 
                     <!-- Form verify -->
-                    <form id="verify-form" action="{{ route('landlord.verifyOtp') }}" method="POST" class="space-y-5">
+                    <form id="verify-form" action="{{ route('landlord.verifyOtp', [], false) }}" method="POST" class="space-y-5">
                         @csrf
 
                         <!-- OTP Input -->

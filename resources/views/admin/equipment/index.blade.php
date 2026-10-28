@@ -84,7 +84,7 @@
                     </h3>
                     <p class="text-xs text-slate-500 mt-1">Nhập cùng mã thiết bị sẽ cộng thêm số lượng vào danh mục hiện có.</p>
 
-                    <form action="{{ route('admin.equipment.store') }}" method="POST" class="secure-form mt-5 space-y-4" data-watch="equipment-create" id="formCreateEquipment" novalidate>
+                    <form action="{{ route('admin.equipment.store', [], false) }}" method="POST" class="secure-form mt-5 space-y-4" data-watch="equipment-create" id="formCreateEquipment" novalidate>
                         @csrf
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -124,7 +124,7 @@
                         <i class="fa-solid fa-right-left text-emerald-400"></i> Bàn Giao - Thu Hồi Theo Phòng
                     </h3>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
-                        <form action="{{ route('admin.equipment.allocate') }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-allocate" id="formAllocateEquipment" novalidate>
+                        <form action="{{ route('admin.equipment.allocate', [], false) }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-allocate" id="formAllocateEquipment" novalidate>
                             @csrf
                             <h4 class="text-sm font-bold text-emerald-400">Bàn giao / lắp đặt</h4>
                             @include('admin.equipment.partials.movement-fields', ['equipment' => $equipment, 'rooms' => $rooms, 'mode' => 'allocate'])
@@ -133,7 +133,7 @@
                             </button>
                         </form>
 
-                        <form action="{{ route('admin.equipment.recover') }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-recover" id="formRecoverEquipment" novalidate>
+                        <form action="{{ route('admin.equipment.recover', [], false) }}" method="POST" class="secure-form rounded-xl bg-slate-950/40 border border-slate-800 p-5 space-y-4" data-watch="equipment-recover" id="formRecoverEquipment" novalidate>
                             @csrf
                             <h4 class="text-sm font-bold text-amber-400">Thu hồi về kho</h4>
                             @include('admin.equipment.partials.movement-fields', ['equipment' => $equipment, 'rooms' => $rooms, 'mode' => 'recover'])
@@ -200,7 +200,7 @@
                                             <summary class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-xs font-bold border border-indigo-500/20">
                                                 <i class="fa-regular fa-pen-to-square"></i> Sửa
                                             </summary>
-                                            <form action="{{ route('admin.equipment.update', $item->id) }}" method="POST" class="secure-form mt-3 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 min-w-[320px]" data-watch="equipment-update-{{ $item->id }}">
+                                            <form action="{{ route('admin.equipment.update', $item->id, false) }}" method="POST" class="secure-form mt-3 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 min-w-[320px]" data-watch="equipment-update-{{ $item->id }}">
                                                 @csrf
                                                 <input type="hidden" name="version" value="{{ $item->version }}">
                                                 <div class="grid grid-cols-2 gap-3">
@@ -215,7 +215,7 @@
                                                 </div>
                                             </form>
                                             @if($isLandlord)
-                                                <form action="{{ route('admin.equipment.destroy', $item->id) }}" method="POST" class="secure-form mt-2" data-watch="equipment-delete-{{ $item->id }}">
+                                                <form action="{{ route('admin.equipment.destroy', $item->id, false) }}" method="POST" class="secure-form mt-2" data-watch="equipment-delete-{{ $item->id }}">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="submit-btn w-full px-3 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs font-bold" data-confirm="Xóa thiết bị {{ $item->name }} khỏi danh mục?">

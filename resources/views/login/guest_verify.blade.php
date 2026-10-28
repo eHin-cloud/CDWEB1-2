@@ -216,7 +216,7 @@
                 </div>
 
                 <!-- Form verify OTP -->
-                <form id="verify-form" action="{{ route('guest.verifyOtp') }}" method="POST" class="space-y-5">
+                <form id="verify-form" action="{{ route('guest.verifyOtp', [], false) }}" method="POST" class="space-y-5">
                     @csrf
 
                     <!-- OTP Input -->

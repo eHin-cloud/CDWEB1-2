@@ -509,7 +509,7 @@
 
                 <section id="resident-tab-tickets" class="resident-section panel rounded-2xl p-6 hidden">
                     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        <form method="POST" action="{{ route('smartroom.resident.tickets.store') }}" enctype="multipart/form-data" class="xl:col-span-1 rounded-xl bg-slate-950/40 border border-slate-800 p-4 space-y-3.5" id="resident-ticket-form" onsubmit="return handleTicketFormSubmit(event, this)">
+                        <form method="POST" action="{{ route('smartroom.resident.tickets.store', [], false) }}" enctype="multipart/form-data" class="xl:col-span-1 rounded-xl bg-slate-950/40 border border-slate-800 p-4 space-y-3.5" id="resident-ticket-form" onsubmit="return handleTicketFormSubmit(event, this)">
                             @csrf
                             <div class="flex items-center justify-between pb-2 border-b border-slate-900">
                                 <h2 class="text-base font-black text-slate-100 flex items-center gap-2">
@@ -685,7 +685,7 @@
                     <h2 class="text-lg font-bold mb-4 text-slate-100 flex items-center gap-2">
                         <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i> Yêu Cầu Gia Hạn Hợp Đồng
                     </h2>
-                    <form action="{{ route('smartroom.resident.contract.request_renewal', $contract->id) }}" method="POST" class="space-y-4" onsubmit="return disableSubmit(this)">
+                    <form action="{{ route('smartroom.resident.contract.request_renewal', $contract->id, false) }}" method="POST" class="space-y-4" onsubmit="return disableSubmit(this)">
                         @csrf
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số tháng muốn gia hạn</label>

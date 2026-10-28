@@ -598,7 +598,7 @@
                     @endif
 
                     <!-- ONBOARDING FORM -->
-                    <form method="POST" action="{{ route('landlord.register.store') }}" class="space-y-4" novalidate>
+                    <form id="landlord-onboarding-form" method="POST" action="{{ route('landlord.register.store', [], false) }}" class="space-y-4" novalidate>
                         @csrf
 
                         <!-- KHỐI 1: CÁC TRƯỜNG ĐĂNG KÝ -->
@@ -1165,7 +1165,7 @@
 
         // Client-side validation for required fields
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form[action="{{ route('landlord.register.store') }}"]');
+            const form = document.getElementById('landlord-onboarding-form') || document.querySelector('form[action="{{ route('landlord.register.store', [], false) }}"]');
             if (!form) return;
 
             updateLandlordEmailMethodState();

@@ -165,7 +165,7 @@
 
                     <!-- Search & Filter Controls -->
                     <div class="flex flex-wrap items-center gap-3">
-                        <form method="GET" action="{{ route('admin.residents.index') }}" class="flex flex-wrap items-center gap-2">
+                        <form method="GET" action="{{ route('admin.residents.index', [], false) }}" class="flex flex-wrap items-center gap-2">
                             <!-- Input Tìm kiếm -->
                             <div class="relative">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
@@ -332,7 +332,7 @@
             </div>
 
             <!-- Form Thêm Cư Dân -->
-            <form id="formAddResident" action="{{ route('admin.residents.store') }}" method="POST" class="space-y-4">
+            <form id="formAddResident" action="{{ route('admin.residents.store', [], false) }}" method="POST" class="space-y-4">
                 @csrf
 
                 <!-- Họ và tên cư dân * -->

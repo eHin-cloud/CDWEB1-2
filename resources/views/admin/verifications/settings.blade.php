@@ -83,7 +83,7 @@
         <div class="grid grid-cols-1 gap-8">
             <!-- Form Config -->
             <div class="glass-panel rounded-2xl p-8 transition-all duration-300">
-                <form action="{{ route('admin.settings.update') }}" method="POST" class="space-y-8">
+                <form action="{{ route('admin.settings.update', [], false) }}" method="POST" class="space-y-8">
                     @csrf
                     
                     <!-- Setting 1: TTL -->

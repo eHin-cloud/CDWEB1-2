@@ -94,7 +94,7 @@
 
         <!-- Filter Panel -->
         <div class="glass-panel rounded-2xl p-6 mb-8 transition-all duration-300">
-            <form action="{{ route('admin.audit-logs') }}" method="GET" class="flex flex-col md:flex-row items-end gap-4">
+            <form action="{{ route('admin.audit-logs', [], false) }}" method="GET" class="flex flex-col md:flex-row items-end gap-4">
                 <div class="flex-1 w-full space-y-2">
                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tìm kiếm nhanh</label>
                     <div class="relative">

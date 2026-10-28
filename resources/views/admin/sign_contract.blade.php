@@ -253,7 +253,7 @@
                         </div>
                     </div>
                 @elseif($showTenantSignaturePad)
-                    <form id="sign-form" action="{{ route('smartroom.contract.sign_canvas', $contract->id) }}" method="POST" class="space-y-6">
+                    <form id="sign-form" action="{{ route('smartroom.contract.sign_canvas', $contract->id, false) }}" method="POST" class="space-y-6">
                         @csrf
                         <input type="hidden" name="signature" id="signature-input">
                         <input type="hidden" name="signature_data" id="signature-data-input">
@@ -348,7 +348,7 @@
                                 </div>
                             </div>
                         @elseif($canLessorSign)
-                            <form id="lessor-sign-form" action="{{ route('smartroom.contract.lessor_sign', $contract->id) }}" method="POST" class="w-full max-w-sm space-y-4">
+                            <form id="lessor-sign-form" action="{{ route('smartroom.contract.lessor_sign', $contract->id, false) }}" method="POST" class="w-full max-w-sm space-y-4">
                                 @csrf
                                 <input type="hidden" name="lessor_signature" id="lessor-signature-input">
                                 <div class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden relative group" style="height: 180px;">

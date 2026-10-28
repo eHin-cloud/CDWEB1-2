@@ -351,7 +351,7 @@
                     </div>
 
                     <!-- Gửi đánh giá form (FEAT_25_REVIEW_REPORT) -->
-                    <form id="formRoomReview" action="{{ route('renty.room.review.store', $room['id']) }}" method="POST" class="mt-8 pt-6 border-t border-slate-800/60 space-y-4">
+                    <form id="formRoomReview" action="{{ route('renty.room.review.store', $room['id'], false) }}" method="POST" class="mt-8 pt-6 border-t border-slate-800/60 space-y-4">
                         @csrf
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -800,7 +800,7 @@
                 </button>
             </div>
 
-            <form id="formRoomReport" method="POST" action="{{ route('renty.room.report.store', $room['id']) }}" class="space-y-4">
+            <form id="formRoomReport" method="POST" action="{{ route('renty.room.report.store', $room['id'], false) }}" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" name="reporter_name" value="{{ Auth::user()->name ?? '' }}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none placeholder-slate-600 transition-colors" placeholder="Họ tên của bạn">

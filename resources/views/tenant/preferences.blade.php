@@ -97,7 +97,7 @@
             </div>
 
             <!-- Form -->
-            <form id="preferences-form" action="{{ route('tenant.preferences.save') }}" method="POST">
+            <form id="preferences-form" action="{{ route('tenant.preferences.save', [], false) }}" method="POST">
                 @csrf
                 <input type="hidden" name="area_tags" id="area-tags-input" value="{{ json_encode($savedTags ?? []) }}">
 

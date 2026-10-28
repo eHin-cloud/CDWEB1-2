@@ -105,7 +105,7 @@
 
             <!-- BỘ LỌC THỜI GIAN & TÒA NHÀ (range_picker) -->
             <section class="panel rounded-2xl p-5 shadow-xl">
-                <form id="filter-form" action="{{ route('admin.dashboard') }}" method="GET" class="space-y-4">
+                <form id="filter-form" action="{{ route('admin.dashboard', [], false) }}" method="GET" class="space-y-4">
                     <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
                         
                         <!-- Kỳ xem báo cáo & Tòa nhà -->

@@ -680,7 +680,7 @@
                         </div>
 
                         <!-- A. FORM ĐĂNG NHẬP MẬT KHẨU -->
-                        <form id="form-signin-password" action="{{ route('user.authUser') }}" method="POST" class="space-y-3" onsubmit="return handleSigninSubmit(event)">
+                        <form id="form-signin-password" action="{{ route('user.authUser', [], false) }}" method="POST" class="space-y-3" onsubmit="return handleSigninSubmit(event)">
                             @csrf
                             <input type="hidden" name="auth_role" id="auth-role-input" value="{{ old('auth_role', 'guest') }}">
                             <div>
@@ -798,7 +798,7 @@
 
                     <!-- 5. PANE: ĐĂNG KÝ (KHÁCH THUÊ) - CÂN ĐỐI 2 CỘT TỔNG THỂ -->
                     <div id="auth-pane-signup" class="hidden">
-                        <form id="form-signup-guest" action="{{ route('user.postUser') }}" method="POST" class="space-y-3" onsubmit="return handleSignupSubmit(event)">
+                        <form id="form-signup-guest" action="{{ route('user.postUser', [], false) }}" method="POST" class="space-y-3" onsubmit="return handleSignupSubmit(event)">
                             @csrf
                             
                             <!-- Hàng 1: Tên tài khoản & Họ tên (Grid 2 cột) -->
