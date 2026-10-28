@@ -523,13 +523,17 @@ class IotSmartMeteringService
         $totalWaterFlow = $recentWaterTelemetries->sum('flow_rate');
 
 
+        $anomalies = $this->getFacilityAnomalies($tenantId);
+        $warningDevicesCount = max($warningDevices, count($anomalies));
+
         return [
             'total_devices' => $totalDevices,
             'online_devices' => $onlineDevices,
             'offline_devices' => $offlineDevices,
-            'warning_devices' => $warningDevices,
+            'warning_devices' => $warningDevicesCount,
             'total_power_kw' => round($totalPowerWatts / 1000, 2),
             'total_water_flow' => round($totalWaterFlow, 2),
+            'anomalies' => $anomalies,
             'devices' => $devices->map(function ($d) {
                 return [
                     'id' => $d->id,
@@ -545,6 +549,168 @@ class IotSmartMeteringService
                 ];
             }),
         ];
+    }
+
+    /**
+     * Lấy danh sách chi tiết các cảnh báo dị thường (Anomalies) kèm thời gian và giải thích nguyên nhân
+     */
+    public function getFacilityAnomalies(?int $tenantId = null, int $limit = 20): array
+    {
+        $telemetriesQuery = IotMeterTelemetry::with(['room.residents', 'device'])
+            ->where(function ($q) {
+                // 1. Quá tải công suất điện (> 4500W)
+                $q->where(function ($eq) {
+                    $eq->where('meter_type', 'electricity')
+                       ->where('power', '>', 4500);
+                })
+                // 2. Điện áp ngoài dải an toàn (> 250V hoặc < 175V)
+                ->orWhere(function ($vq) {
+                    $vq->where('meter_type', 'electricity')
+                       ->whereNotNull('voltage')
+                       ->where(function ($sub) {
+                           $sub->where('voltage', '>', 250)
+                               ->orWhere('voltage', '<', 175);
+                       });
+                })
+                // 3. Rò rỉ nước đêm (01h - 05h sáng có nước chảy > 0.05 L/m) hoặc lưu lượng đột biến (> 15 L/m)
+                ->orWhere(function ($wq) {
+                    $wq->where('meter_type', 'water')
+                       ->where(function ($sub) {
+                           $sub->where(function ($night) {
+                               $night->whereRaw('HOUR(recorded_at) BETWEEN 1 AND 5')
+                                     ->where('flow_rate', '>', 0.05);
+                           })->orWhere('flow_rate', '>', 15);
+                       });
+                });
+            });
+
+        if ($tenantId) {
+            $telemetriesQuery->whereHas('room', function ($rq) use ($tenantId) {
+                $rq->where('tenant_id', $tenantId);
+            });
+        }
+
+        $records = $telemetriesQuery->orderBy('recorded_at', 'desc')->limit($limit)->get();
+
+        $anomalies = [];
+
+        foreach ($records as $t) {
+            $room = $t->room;
+            $resident = $room?->residents->first();
+            $recordedAt = Carbon::parse($t->recorded_at);
+
+            $type = 'unknown';
+            $title = '';
+            $reason = '';
+            $suggestion = '';
+            $severity = 'warning';
+            $measuredValue = '';
+            $threshold = '';
+            $badgeColor = 'amber';
+
+            if ($t->meter_type === 'electricity' && $t->power > 4500) {
+                $type = 'power_overload';
+                $severity = $t->power > 6000 ? 'danger' : 'warning';
+                $badgeColor = $t->power > 6000 ? 'rose' : 'amber';
+                $title = 'Cảnh Báo Quá Tải Công Suất Điện';
+                $measuredValue = number_format($t->power, 0, ',', '.') . ' W';
+                $overPercent = round((($t->power - 4500) / 4500) * 100);
+                $threshold = "4.500 W (Vượt +{$overPercent}%)";
+                $reason = "Công suất tiêu thụ tức thời tăng vọt lên {$measuredValue}, vượt quá công suất định mức an toàn ({$threshold}). Thường do phòng đang bật đồng thời nhiều thiết bị nhiệt tải lớn (bếp từ, ấm đun siêu tốc, bình nóng lạnh, điều hòa, máy sấy tóc). Tình trạng này có nguy cơ gây nhảy Aptomat phòng/tầng, sụt áp điện lưới nội bộ hoặc phát nhiệt gây chập cháy dây dẫn âm tường.";
+                $suggestion = 'Khuyến nghị: Liên hệ ngay với khách thuê phòng để kiểm tra tắt bớt các thiết bị đun nấu công suất cao chưa cần thiết. Kiểm tra độ ấm của Aptomat bảo vệ phòng.';
+            } elseif ($t->meter_type === 'electricity' && ($t->voltage > 250 || $t->voltage < 175)) {
+                $type = 'voltage_abnormal';
+                $severity = 'warning';
+                $badgeColor = 'amber';
+                $title = 'Cảnh Báo Điện Áp Lưới Dị Thường';
+                $measuredValue = number_format($t->voltage, 1) . ' V';
+                $threshold = '175 V - 250 V';
+                $reason = "Điện áp tức thời đo được là {$measuredValue}, nằm ngoài dải điện áp định mức an toàn ({$threshold}). Điện áp cao gây nguy cơ cháy nổ tụ lọc nguồn thiết bị; điện áp quá thấp làm động cơ lốc máy lạnh, tủ lạnh bị kẹt tải sinh nhiệt hỏng hóc.";
+                $suggestion = 'Khuyến nghị: Kiểm tra nguồn điện cấp vào từ trạm biến áp hoặc tủ điện tổng của tòa nhà. Khuyến cáo cư dân tạm thời ngắt nguồn các thiết bị điện tử nhạy cảm.';
+            } elseif ($t->meter_type === 'water') {
+                $hour = $recordedAt->hour;
+                if ($hour >= 1 && $hour <= 5 && $t->flow_rate > 0.05) {
+                    $type = 'water_leak_night';
+                    $severity = 'danger';
+                    $badgeColor = 'rose';
+                    $title = 'Cảnh Báo Nghi Vấn Rò Rỉ Nước Ban Đêm';
+                    $measuredValue = number_format($t->flow_rate, 2) . ' L/phút';
+                    $threshold = '0.05 L/phút (Khung giờ tĩnh 01h - 05h)';
+                    $reason = "Phát hiện nước chảy liên tục với lưu lượng {$measuredValue} vào khung giờ rạng sáng ({$recordedAt->format('H:i')}) khi cư dân đang ngủ tĩnh (nhu cầu sử dụng thông thường bằng 0). Hiện tượng này thường do kẹt van xả bồn cầu (nước xả rỉ ngầm liên tục xuống bể phốt), bục dây cấp mềm lavabo hoặc rạn nứt phụ kiện ống nước ngầm.";
+                    $suggestion = 'Khuyến nghị: Kiểm tra ngay phao van bồn cầu của phòng, xem xét khóa van cấp nước nhánh nếu phát hiện tiếng nước rò rỉ róc rách để tránh thất thoát chi phí lớn.';
+                } elseif ($t->flow_rate > 15) {
+                    $type = 'water_high_flow';
+                    $severity = 'warning';
+                    $badgeColor = 'amber';
+                    $title = 'Cảnh Báo Lưu Lượng Nước Đột Biến';
+                    $measuredValue = number_format($t->flow_rate, 2) . ' L/phút';
+                    $threshold = '15.0 L/phút';
+                    $reason = "Lưu lượng nước tăng vọt lên {$measuredValue}, vượt xa mức xả thông thường của vòi sen hoặc vòi rửa. Khả năng cao do quên khóa vòi xả tràn bồn hoặc bục vỡ ống cấp bình nóng lạnh.";
+                    $suggestion = 'Khuyến nghị: Liên hệ gấp cư dân phòng kiểm tra các vòi xả nước trong nhà tắm.';
+                }
+            }
+
+            if ($type !== 'unknown') {
+                $anomalies[] = [
+                    'id' => $t->id,
+                    'room_id' => $room?->id,
+                    'room_number' => $room?->room_number ?? 'Chưa gán phòng',
+                    'resident_name' => $resident?->name ?? 'Chưa có cư dân',
+                    'resident_phone' => $resident?->phone ?? '',
+                    'meter_type' => $t->meter_type,
+                    'meter_serial' => $t->meter_serial,
+                    'type' => $type,
+                    'title' => $title,
+                    'severity' => $severity,
+                    'badge_color' => $badgeColor,
+                    'measured_value' => $measuredValue,
+                    'threshold' => $threshold,
+                    'recorded_at' => $recordedAt->toIso8601String(),
+                    'recorded_at_formatted' => $recordedAt->format('H:i:s - d/m/Y'),
+                    'time_ago' => $recordedAt->diffForHumans(),
+                    'reason' => $reason,
+                    'suggestion' => $suggestion,
+                ];
+            }
+        }
+
+        // Bổ sung thiết bị đang có status 'warning' nếu chưa có trong danh sách trên
+        $warningDevices = IotDevice::with(['room.residents'])
+            ->where('status', 'warning')
+            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->get();
+
+        foreach ($warningDevices as $wd) {
+            $alreadyHas = collect($anomalies)->contains(fn($a) => $a['meter_serial'] === $wd->meter_serial);
+            if (!$alreadyHas) {
+                $room = $wd->room;
+                $resident = $room?->residents->first();
+                $lastSeen = $wd->last_seen_at ? Carbon::parse($wd->last_seen_at) : now();
+
+                $anomalies[] = [
+                    'id' => 'dev-' . $wd->id,
+                    'room_id' => $room?->id,
+                    'room_number' => $room?->room_number ?? 'Chưa gán phòng',
+                    'resident_name' => $resident?->name ?? 'Chưa có cư dân',
+                    'resident_phone' => $resident?->phone ?? '',
+                    'meter_type' => $wd->meter_type,
+                    'meter_serial' => $wd->meter_serial,
+                    'type' => 'device_warning',
+                    'title' => 'Cảnh Báo Thiết Bị Công Tơ Bất Thường',
+                    'severity' => 'warning',
+                    'badge_color' => 'amber',
+                    'measured_value' => 'Trạng thái Warning',
+                    'threshold' => 'Online bình thường',
+                    'recorded_at' => $lastSeen->toIso8601String(),
+                    'recorded_at_formatted' => $lastSeen->format('H:i:s - d/m/Y'),
+                    'time_ago' => $lastSeen->diffForHumans(),
+                    'reason' => "Thiết bị công tơ {$wd->device_code} ghi nhận tín hiệu cảnh báo từ bộ điều khiển vi xử lý (ESP32 / Modbus) hoặc mất đồng bộ chỉ số trong chu kỳ đo.",
+                    'suggestion' => 'Khuyến nghị: Kiểm tra nguồn nuôi thiết bị và ăng-ten truyền thông WiFi / LoRaWAN tại tủ điện.',
+                ];
+            }
+        }
+
+        return $anomalies;
     }
 
     /**
