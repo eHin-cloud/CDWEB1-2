@@ -269,7 +269,7 @@
 
             <!-- FILTER & SEARCH BAR -->
             <div class="glass-card rounded-2xl p-5 mb-8">
-                <form action="{{ route('admin.buildings.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+                <form action="{{ route('admin.buildings.index', [], false) }}" method="GET" class="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
                     <div class="flex-1 relative">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
                         <input type="text" name="search" value="{{ $search }}" placeholder="Tìm kiếm theo tên cơ sở, địa chỉ hoặc số hotline..." class="w-full pl-11 pr-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">

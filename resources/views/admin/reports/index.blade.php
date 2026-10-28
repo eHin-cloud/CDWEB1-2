@@ -57,7 +57,7 @@
                 <button type="button" onclick="toggleThemeMode()" class="theme-toggle-button" aria-label="Chuyển chế độ sáng tối">
                     <i class="fa-solid fa-moon" data-theme-icon></i>
                 </button>
-                <form method="GET" action="{{ route('admin.reports.index') }}" class="flex items-center gap-2">
+                <form method="GET" action="{{ route('admin.reports.index', [], false) }}" class="flex items-center gap-2">
                     <input type="month" name="billing_month" value="{{ $billingMonth ?: now()->format('Y-m') }}" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500" title="Chọn tháng báo cáo">
                     <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2">
                         <i class="fa-solid fa-filter"></i> Lọc
@@ -206,7 +206,7 @@
                         <p class="text-xs text-slate-500 mt-1">Ghi nhận các chi phí phát sinh ngoài hóa đơn (tiền sửa đồ, mua sắm đồ mới, thu phí dịch vụ...).</p>
                     </div>
 
-                    <form action="{{ route('admin.reports.transaction.store') }}" method="POST" class="space-y-4">
+                    <form action="{{ route('admin.reports.transaction.store', [], false) }}" method="POST" class="space-y-4">
                         @csrf
                         <div>
                             <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-2">Loại giao dịch (Thu / Chi)</label>

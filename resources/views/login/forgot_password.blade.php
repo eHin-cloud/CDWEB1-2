@@ -339,7 +339,7 @@
 
                 @if(($step ?? 1) == 1 || empty($email))
                     <!-- BƯỚC 1: NHẬP EMAIL ĐỂ NHẬN OTP -->
-                    <form action="{{ route('password.sendOtp') }}" method="POST" class="space-y-4" onsubmit="handleSendOtpSubmit(this)">
+                    <form action="{{ route('password.sendOtp', [], false) }}" method="POST" class="space-y-4" onsubmit="handleSendOtpSubmit(this)">
                         @csrf
                         <div>
                             <label for="input-email" class="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -435,7 +435,7 @@
 
                     <!-- GIAI ĐOẠN 2B: THIẾT LẬP MẬT KHẨU MỚI (CHỈ XUẤT HIỆN SAU KHI OTP ĐÃ HỢP LỆ) -->
                     <div id="stage-password" class="hidden space-y-4">
-                        <form id="form-reset-password" action="{{ route('password.resetWithOtp') }}" method="POST" class="space-y-4" novalidate onsubmit="return handleResetPasswordSubmit(event)">
+                        <form id="form-reset-password" action="{{ route('password.resetWithOtp', [], false) }}" method="POST" class="space-y-4" novalidate onsubmit="return handleResetPasswordSubmit(event)">
                             @csrf
                             <input type="hidden" name="otp" id="hidden-otp-input" value="{{ old('otp') }}">
 

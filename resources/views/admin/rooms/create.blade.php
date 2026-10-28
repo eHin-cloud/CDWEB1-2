@@ -82,7 +82,7 @@
                     <i class="fa-solid fa-circle-plus text-indigo-400"></i> Nhập Thông Tin Phòng Trọ
                 </h3>
 
-                <form id="create-room-form" action="{{ route('admin.rooms.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <form id="create-room-form" action="{{ route('admin.rooms.store', [], false) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
 
                     <!-- Tòa nhà và số phòng -->

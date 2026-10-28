@@ -27,7 +27,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" crossorigin="anonymous">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -40,7 +40,7 @@
             }
         };
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     <style>
         /* Glassmorphism custom styling for premium feel */
@@ -536,7 +536,7 @@
                     </div>
 
                     <!-- Gửi đánh giá form (FEAT_25_REVIEW_REPORT) -->
-                    <form id="formRoomReview" action="{{ route('renty.room.review.store', $room['id']) }}" method="POST" class="mt-8 pt-6 border-t border-slate-800/60 space-y-4">
+                    <form id="formRoomReview" action="{{ route('renty.room.review.store', $room['id'], false) }}" method="POST" class="mt-8 pt-6 border-t border-slate-800/60 space-y-4">
                         @csrf
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -894,7 +894,7 @@
                                 <span>Nhắn Zalo</span>
                             </a>
                         </div>
-                        <form action="{{ route('renty.contact_request.store') }}" method="POST" id="formContactRequest" novalidate class="space-y-3">
+                        <form action="{{ route('renty.contact_request.store', [], false) }}" method="POST" id="formContactRequest" novalidate class="space-y-3">
                             @csrf
                             <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                             <div>
@@ -985,7 +985,7 @@
                 </button>
             </div>
 
-            <form id="formRoomReport" method="POST" action="{{ route('renty.room.report.store', $room['id']) }}" class="space-y-4">
+            <form id="formRoomReport" method="POST" action="{{ route('renty.room.report.store', $room['id'], false) }}" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" name="reporter_name" value="{{ Auth::user()->name ?? '' }}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:border-rose-500 focus:outline-none placeholder-slate-600 transition-colors" placeholder="Họ tên của bạn">

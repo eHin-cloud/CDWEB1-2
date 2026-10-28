@@ -449,7 +449,7 @@
                                         @if($request->status === 'pending')
                                             <div class="flex items-center justify-center gap-2">
                                                 <!-- Button btnApprove: Phê duyệt & Cấp tích xanh (Nền Emerald) -->
-                                                <form method="POST" action="{{ route('admin.kyc.approve', $request->id) }}" onsubmit="return confirm('Xác nhận phê duyệt hồ sơ định danh KYC và cấp huy hiệu Tích Xanh cho cơ sở này?');" class="inline-block">
+                                                <form method="POST" action="{{ route('admin.kyc.approve', $request->id, false) }}" onsubmit="return confirm('Xác nhận phê duyệt hồ sơ định danh KYC và cấp huy hiệu Tích Xanh cho cơ sở này?');" class="inline-block">
                                                     @csrf
                                                     <button type="submit" 
                                                             name="btnApprove" 
@@ -578,7 +578,7 @@
                                                         {{ str_replace('_', ' ', strtoupper($document->document_type)) }}
                                                     </div>
                                                     
-                                                    <form method="POST" action="{{ route('admin.verification-documents.unlock', $document) }}" onsubmit="handleJitUnlockSubmit(event, this)" class="mt-2.5 space-y-2">
+                                                    <form method="POST" action="{{ route('admin.verification-documents.unlock', $document, false) }}" onsubmit="handleJitUnlockSubmit(event, this)" class="mt-2.5 space-y-2">
                                                         @csrf
                                                         <textarea name="reason" required minlength="12" rows="2" placeholder="Lý do mở khóa dữ liệu bảo mật JIT..." class="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[11px] text-slate-200 outline-none focus:border-amber-500/80 transition-all placeholder-slate-600 font-sans"></textarea>
                                                         <button class="w-full py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[10px] font-extrabold text-amber-300 hover:bg-amber-500/20 active:scale-[0.98] transition-all">
@@ -599,7 +599,7 @@
                                         <i class="fa-solid fa-sliders text-emerald-400"></i> Thao Tác Quyết Định
                                     </h3>
 
-                                    <form method="POST" action="{{ route('admin.kyc.approve', $request->id) }}">
+                                    <form method="POST" action="{{ route('admin.kyc.approve', $request->id, false) }}">
                                         @csrf
                                         <button class="btnApprove w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all duration-200 active:scale-[0.97]">
                                             <i class="fa-solid fa-square-check mr-1.5 text-base align-middle"></i> Phê Duyệt & Cấp Tích Xanh

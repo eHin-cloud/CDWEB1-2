@@ -199,7 +199,7 @@
                     </div>
 
                     <!-- FORM BỘ LỌC -->
-                    <form method="GET" action="{{ route('admin.superadmin.dashboard') }}" class="flex flex-wrap items-center gap-3">
+                    <form method="GET" action="{{ route('admin.superadmin.dashboard', [], false) }}" class="flex flex-wrap items-center gap-3">
                         
                         <!-- 1. search_user: Tìm kiếm Email, Họ tên hoặc Số điện thoại -->
                         <div class="relative min-w-[240px]">
@@ -363,7 +363,7 @@
 
                                             <!-- Nút 3: Khóa / Mở Khóa Tài Khoản -->
                                             @if($user->status === 'locked')
-                                                <form method="POST" action="{{ route('admin.superadmin.users.status', $user->id) }}" class="inline">
+                                                <form method="POST" action="{{ route('admin.superadmin.users.status', $user->id, false) }}" class="inline">
                                                     @csrf
                                                     <input type="hidden" name="status" value="active">
                                                     <button type="submit" 
@@ -423,7 +423,7 @@
                         </span>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.superadmin.config.update') }}" class="space-y-4">
+                    <form method="POST" action="{{ route('admin.superadmin.config.update', [], false) }}" class="space-y-4">
                         @csrf
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

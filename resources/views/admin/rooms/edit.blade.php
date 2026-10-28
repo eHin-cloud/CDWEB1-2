@@ -89,7 +89,7 @@
                     <i class="fa-regular fa-pen-to-square text-indigo-400"></i> Chỉnh Sửa Phòng Trọ P.{{ $room->room_number }}
                 </h3>
 
-                <form id="edit-room-form" action="{{ route('admin.rooms.update', $room->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <form id="edit-room-form" action="{{ route('admin.rooms.update', $room->id, false) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
                     
                     <!-- Container lưu trữ danh sách ảnh bị xóa -->

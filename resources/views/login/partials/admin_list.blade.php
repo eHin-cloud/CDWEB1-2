@@ -60,7 +60,7 @@
         </div>
 
         <!-- Filters & Search Form -->
-        <form method="GET" action="{{ route('user.list') }}" class="flex flex-col md:flex-row gap-3 justify-between items-center mb-6">
+        <form method="GET" action="{{ route('user.list', [], false) }}" class="flex flex-col md:flex-row gap-3 justify-between items-center mb-6">
             <div class="relative w-full md:w-80">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
@@ -275,7 +275,7 @@
                 </button>
             </div>
             
-            <form id="assign-role-form" method="POST" action="{{ route('user.updateRole') }}" class="space-y-4">
+            <form id="assign-role-form" method="POST" action="{{ route('user.updateRole', [], false) }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="user_id" id="modal-user-id">
                 

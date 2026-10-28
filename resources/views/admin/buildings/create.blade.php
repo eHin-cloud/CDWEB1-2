@@ -88,7 +88,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.buildings.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6" id="buildingCreateForm" novalidate>
+            <form action="{{ route('admin.buildings.store', [], false) }}" method="POST" enctype="multipart/form-data" class="space-y-6" id="buildingCreateForm" novalidate>
                 @csrf
 
                 <!-- Basic Information Card -->

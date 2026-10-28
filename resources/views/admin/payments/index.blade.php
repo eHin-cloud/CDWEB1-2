@@ -85,7 +85,7 @@
             </section>
 
             <section class="panel glass-card rounded-2xl p-6">
-                <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-3">
+                <form method="GET" action="{{ route('admin.payments.index', [], false) }}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-3">
                     <input type="month" name="billing_month" value="{{ $filters['billing_month'] }}" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
                     <input type="month" name="from_month" value="{{ $filters['from_month'] }}" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500" title="Từ tháng">
                     <input type="month" name="to_month" value="{{ $filters['to_month'] }}" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500" title="Đến tháng">
@@ -174,7 +174,7 @@
                                     </td>
                                     <td class="px-4 py-4 min-w-[260px]">
                                         @if($row->id)
-                                            <form method="POST" action="{{ route('admin.payments.update', $row->id) }}" class="grid grid-cols-2 gap-2">
+                                            <form method="POST" action="{{ route('admin.payments.update', $row->id, false) }}" class="grid grid-cols-2 gap-2">
                                                 @csrf
                                                 <select name="status" class="col-span-2 px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
                                                     <option value="sent" @selected($row->status === 'sent')>Đã gửi</option>
