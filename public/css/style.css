@@ -7210,3 +7210,163 @@ html.theme-light .booking-sidebar-card input[type="datetime-local"],
 body.theme-light .booking-sidebar-card input[type="datetime-local"] {
     color-scheme: light !important;
 }
+
+/* ============================================================ */
+/* ĐỒNG BỘ GIAO DIỆN LIGHT MODE CHO BỘ LỌC CHI TIẾT (#filter-drawer) */
+/* ============================================================ */
+#filter-drawer label.cursor-pointer:has(input:checked) {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    color: #6ee7b7 !important;
+}
+
+html.theme-light #filter-drawer,
+body.theme-light #filter-drawer {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
+}
+
+html.theme-light #filter-drawer .border-b,
+html.theme-light #filter-drawer .border-t,
+body.theme-light #filter-drawer .border-b,
+body.theme-light #filter-drawer .border-t {
+    border-color: #f1f5f9 !important;
+}
+
+html.theme-light #filter-drawer span.text-slate-200,
+body.theme-light #filter-drawer span.text-slate-200 {
+    color: #0f172a !important;
+}
+
+html.theme-light #filter-drawer label,
+body.theme-light #filter-drawer label {
+    color: #334155 !important;
+}
+
+html.theme-light #filter-drawer #btnApplyFilter,
+body.theme-light #filter-drawer #btnApplyFilter {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
+}
+
+html.theme-light #filter-drawer #btnApplyFilter:hover,
+body.theme-light #filter-drawer #btnApplyFilter:hover {
+    background: linear-gradient(135deg, #047857 0%, #0f766e 100%) !important;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
+}
+
+html.theme-light #filter-drawer button[onclick*="resetAllFilters"],
+body.theme-light #filter-drawer button[onclick*="resetAllFilters"] {
+    color: #64748b !important;
+}
+
+html.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover,
+body.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover {
+    color: #e11d48 !important;
+    background-color: #ffe4e6 !important;
+}
+
+html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]),
+html.theme-light #filter-drawer select,
+body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]),
+body.theme-light #filter-drawer select {
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):hover,
+html.theme-light #filter-drawer select:hover,
+body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):hover,
+body.theme-light #filter-drawer select:hover {
+    border-color: #94a3b8 !important;
+    background-color: #ffffff !important;
+}
+
+html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):focus,
+html.theme-light #filter-drawer select:focus,
+body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):focus,
+body.theme-light #filter-drawer select:focus {
+    border-color: #10b981 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+html.theme-light #filter-drawer input::placeholder,
+body.theme-light #filter-drawer input::placeholder {
+    color: #94a3b8 !important;
+}
+
+html.theme-light #filter-drawer select option,
+body.theme-light #filter-drawer select option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+
+html.theme-light #filter-drawer .text-slate-600,
+body.theme-light #filter-drawer .text-slate-600 {
+    color: #94a3b8 !important;
+}
+
+html.theme-light #filter-drawer label.cursor-pointer,
+body.theme-light #filter-drawer label.cursor-pointer {
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.theme-light #filter-drawer label.cursor-pointer:hover,
+body.theme-light #filter-drawer label.cursor-pointer:hover {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #059669 !important;
+}
+
+html.theme-light #filter-drawer label.cursor-pointer:has(input:checked),
+body.theme-light #filter-drawer label.cursor-pointer:has(input:checked) {
+    background-color: #ecfdf5 !important;
+    border-color: #10b981 !important;
+    color: #047857 !important;
+    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15) !important;
+}
+
+html.theme-light #filter-drawer input[type="checkbox"],
+body.theme-light #filter-drawer input[type="checkbox"] {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light #filter-drawer .tick-mark,
+body.theme-light #filter-drawer .tick-mark {
+    color: #64748b !important;
+}
+
+html.theme-light #filter-drawer .tick-mark:hover,
+body.theme-light #filter-drawer .tick-mark:hover {
+    color: #059669 !important;
+}
+
+html.theme-light #filter-drawer .feedback-box,
+body.theme-light #filter-drawer .feedback-box {
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light #filter-drawer #distance-feedback,
+body.theme-light #filter-drawer #distance-feedback {
+    color: #334155 !important;
+}
+
+html.theme-light #filter-drawer .feedback-box i,
+body.theme-light #filter-drawer .feedback-box i {
+    color: #059669 !important;
+}
