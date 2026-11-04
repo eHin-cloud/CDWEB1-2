@@ -403,6 +403,11 @@ class Room extends Model
             $amenitiesText = $this->amenities;
         }
 
+        $building = $this->building;
+        $buildingName = (string) ($building?->name ?? '');
+        $buildingAddress = (string) ($building?->address ?? '');
+        $fullText = "{$this->room_number} {$this->room_type} {$this->description} {$amenitiesText} {$buildingName} {$buildingAddress}";
+
         return [
             'id' => (int) $this->id,
             'room_number' => (string) $this->room_number,
@@ -410,6 +415,11 @@ class Room extends Model
             'description' => (string) ($this->description ?? ''),
             'amenities' => $amenitiesText,
             'status' => (string) ($this->status ?? ''),
+            'price' => (float) ($this->price ?? 0),
+            'area' => (float) ($this->area ?? 0),
+            'building_name' => $buildingName,
+            'building_address' => $buildingAddress,
+            'unaccented_text' => \Illuminate\Support\Str::ascii($fullText),
         ];
     }
 
@@ -424,7 +434,7 @@ class Room extends Model
     /**
      * Eager loading khi Scout thực hiện mapping / querying
      */
-    public function makeAllSearchableUsing($query)
+    public static function makeAllSearchableUsing($query)
     {
         return $query->with(['building', 'tenant', 'reviews']);
     }
