@@ -900,9 +900,10 @@ class GoogleMapsRenty {
                     offset: [0, -10]
                 });
 
-                // Marker hover: Di chuột vào marker trên bản đồ -> hiện popup và highlight
+                // Marker hover: Di chuột vào marker trên bản đồ -> cập nhật popup động và highlight
                 marker.on('mouseover', () => {
                     this.highlightMarker(room.id);
+                    marker.setPopupContent(this.buildInfoWindowHtml(room, coords));
                     marker.openPopup();
                 });
 
@@ -910,7 +911,8 @@ class GoogleMapsRenty {
                 marker.on('click', () => {
                     this.activeRoomId = room.id;
                     this.highlightMarker(room.id);
-                    if (this.selectedUniversity) {
+                    marker.setPopupContent(this.buildInfoWindowHtml(room, coords));
+                    if (this.selectedUniversity && this.selectedCampusId && this.selectedCampusId !== 'all') {
                         this.drawCommuteRoute(coords, this.selectedUniversity);
                     }
                     if (typeof window.highlightRoomCard === 'function') {
@@ -935,20 +937,24 @@ class GoogleMapsRenty {
         const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${coords.lat},${coords.lng}`;
 
         let uniDistHtml = '';
-        if (this.selectedUniversity) {
+        // CHỈ hiển thị khoảng cách đến trường khi người dùng THỰC SỰ CHỌN một trường cụ thể (không phải 'Tất cả')
+        // và khoảng cách nằm trong phạm vi hợp lý (< 45km), tránh hiển thị vô lý hàng nghìn km xuyên tỉnh thành
+        if (this.selectedUniversity && this.selectedCampusId && this.selectedCampusId !== 'all') {
             const uniDistKm = this.calcHaversineDistance(coords.lat, coords.lng, this.selectedUniversity.lat, this.selectedUniversity.lng);
-            const bikeM = Math.max(2, Math.round((uniDistKm / 24) * 60 + 2));
-            const cleanUni = this.selectedUniversity.shortName || this.selectedUniversity.name.split('(')[0].trim();
-            uniDistHtml = `
-                <div style="margin-bottom: 10px; padding: 6px 10px; border-radius: 10px; background: rgba(14, 165, 233, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                    <span style="font-size: 11px; color: #7dd3fc; display: flex; align-items: center; gap: 5px;">
-                        <i class="fa-solid fa-graduation-cap text-sky-400"></i> Cách ${cleanUni}:
-                    </span>
-                    <span style="font-size: 11px; font-weight: 800; color: #ffffff; white-space: nowrap;">
-                        ${uniDistKm.toFixed(1)} km <span style="font-weight: 500; color: #94a3b8; font-size: 10px;">(~${bikeM}p xe máy)</span>
-                    </span>
-                </div>
-            `;
+            if (uniDistKm <= 45) {
+                const bikeM = Math.max(2, Math.round((uniDistKm / 24) * 60 + 2));
+                const cleanUni = this.selectedUniversity.shortName || this.selectedUniversity.name.split('(')[0].trim();
+                uniDistHtml = `
+                    <div style="margin-bottom: 10px; padding: 6px 10px; border-radius: 10px; background: rgba(14, 165, 233, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span style="font-size: 11px; color: #7dd3fc; display: flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-graduation-cap text-sky-400"></i> Cách ${cleanUni}:
+                        </span>
+                        <span style="font-size: 11px; font-weight: 800; color: #ffffff; white-space: nowrap;">
+                            ${uniDistKm.toFixed(1)} km <span style="font-weight: 500; color: #94a3b8; font-size: 10px;">(~${bikeM}p xe máy)</span>
+                        </span>
+                    </div>
+                `;
+            }
         }
 
         return `
