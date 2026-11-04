@@ -62,5 +62,6 @@ class DatabaseSeeder extends Seeder
         $this->call(RoomAmenitiesSeeder::class);
         $this->call(AddNewRoomsSeeder::class);
         $this->call(VerificationSeeder::class);
+        $this->call(Vietnam34ProvincesRoomsSeeder::class);
     }
 }

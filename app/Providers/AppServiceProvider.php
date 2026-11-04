@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Room;
+use App\Observers\RoomSolrObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -27,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
                 $elasticsearch = app(\Elastic\Elasticsearch\Client::class);
                 return new \Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine($elasticsearch);
             });
+        }
+
+        // Tự động đồng bộ thêm/sửa/xoá phòng sang Apache Solr
+        if (class_exists(RoomSolrObserver::class)) {
+            Room::observe(RoomSolrObserver::class);
         }
     }
 }

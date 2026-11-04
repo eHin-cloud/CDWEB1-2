@@ -870,15 +870,21 @@ class GoogleMapsRenty {
                 } else if (isHanoi) {
                     center = [21.036, 105.790]; // Hanoi Cầu Giấy
                     preservedCity = 'hanoi';
+                } else {
+                    preservedCity = 'all';
+                    center = [16.047, 108.206]; // Tâm bản đồ Việt Nam
+                    initialZoom = 6;
                 }
+            } else {
+                preservedCity = 'all';
+                center = [16.047, 108.206];
+                initialZoom = 6;
             }
         }
 
         this.initialCenter = center;
         this.options.defaultZoom = initialZoom;
-        if (preservedCity) {
-            this.currentCity = preservedCity;
-        }
+        this.currentCity = preservedCity || 'all';
 
         // 3. Instantiate Leaflet Map with Google Maps
         if (this.container) {
@@ -925,26 +931,34 @@ class GoogleMapsRenty {
         this.renderRoomMarkers(rooms);
 
         // Đồng bộ giao diện tab thành phố và danh sách chips trường học phù hợp với khu vực khám phá
-        if (this.currentCity && this.currentCity !== 'all') {
-            const cityTab = document.getElementById(`city-tab-${this.currentCity}`);
-            if (cityTab) {
-                document.querySelectorAll('.gm-city-tab').forEach(btn => {
-                    btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-                    btn.classList.add('bg-slate-900', 'text-slate-400');
-                });
-                cityTab.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-                cityTab.classList.remove('bg-slate-900', 'text-slate-400');
-            }
-            this.renderCampusChips();
+        const activeCity = this.currentCity || 'all';
+        const cityTab = document.getElementById(`city-tab-${activeCity}`);
+        if (cityTab) {
+            document.querySelectorAll('.gm-city-tab').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-slate-900', 'text-slate-400');
+            });
+            cityTab.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+            cityTab.classList.remove('bg-slate-900', 'text-slate-400');
         }
+        this.renderCampusChips();
 
         // 5. Invalidate size after layout transition and re-center
         [80, 200, 450, 750].forEach(delay => {
             setTimeout(() => {
                 if (this.map && typeof this.map.invalidateSize === 'function') {
                     this.map.invalidateSize();
-                    if (this.initialCenter) {
-                        this.map.setView(this.initialCenter, this.map.getZoom() || 14, { animate: false });
+                    if (this.currentCity === 'all' && this.markers && Object.keys(this.markers).length > 0) {
+                        try {
+                            const markerGroup = L.featureGroup(Object.values(this.markers));
+                            this.map.fitBounds(markerGroup.getBounds(), { padding: [50, 50], maxZoom: 13, animate: false });
+                        } catch (e) {
+                            if (this.initialCenter) {
+                                this.map.setView(this.initialCenter, this.options.defaultZoom || 6, { animate: false });
+                            }
+                        }
+                    } else if (this.initialCenter) {
+                        this.map.setView(this.initialCenter, this.options.defaultZoom || 14, { animate: false });
                     }
                 }
             }, delay);
@@ -2112,7 +2126,7 @@ class GoogleMapsRenty {
     }
 
 
-    searchGeocodeOrCampus(keyword) {
+    async searchGeocodeOrCampus(keyword) {
         if (!keyword || !keyword.trim()) return;
         const normKey = removeVietnameseTones(keyword);
         const tokens = normKey.split(/\s+/).filter(Boolean);
@@ -2237,7 +2251,43 @@ class GoogleMapsRenty {
             }
         }
 
-        // 3. Tìm vị trí bất kỳ (Tên đường, địa chỉ tự do) qua Live Geocoding
+        // 3. Ưu tiên tìm phòng trọ trực tiếp bằng Apache Solr Engine
+        try {
+            const solrRes = await fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(keyword)}&engine=solr&limit=1`);
+            const solrData = await solrRes.json();
+            if (solrData && solrData.success && solrData.rooms && solrData.rooms.length > 0) {
+                const targetRoom = solrData.rooms[0];
+                const coords = this.computeRoomCoordinates(targetRoom);
+                if (coords && !isNaN(coords.lat) && !isNaN(coords.lng)) {
+                    // Zoom mượt mà trực tiếp đến vị trí phòng trọ
+                    this.map.flyTo([coords.lat, coords.lng], 16, { duration: 1.2 });
+
+                    setTimeout(() => {
+                        if (this.markers && this.markers[targetRoom.id]) {
+                            this.markers[targetRoom.id].openPopup();
+                            this.highlightMarker(targetRoom.id);
+                        }
+                    }, 1250);
+
+                    // Đồng thời cuộn và highlight thẻ phòng ở danh sách
+                    if (typeof window.highlightRoomCard === 'function') {
+                        window.highlightRoomCard(targetRoom.id);
+                    } else {
+                        const card = document.querySelector(`.room-item-card[data-room-id="${targetRoom.id}"]`);
+                        if (card) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            card.classList.add('ring-2', 'ring-amber-400');
+                            setTimeout(() => card.classList.remove('ring-2', 'ring-amber-400'), 2500);
+                        }
+                    }
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('[Solr Map Search Error]', e);
+        }
+
+        // 4. Tìm vị trí bất kỳ (Tên đường, địa chỉ tự do) qua Live Geocoding
         this.geocodeAndFly(keyword);
     }
 
@@ -2601,8 +2651,18 @@ class GoogleMapsRenty {
             return;
         }
 
+        // Hiện banner hướng dẫn nổi bật chỉ lên góc trên thanh địa chỉ
+        if (typeof window.showGpsBrowserGuide === 'function') {
+            window.showGpsBrowserGuide();
+        }
+
         navigator.geolocation.getCurrentPosition(
             (pos) => {
+                // Ẩn banner hướng dẫn khi đã lấy được vị trí
+                if (typeof window.hideGpsBrowserGuide === 'function') {
+                    window.hideGpsBrowserGuide();
+                }
+
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
 
@@ -2645,6 +2705,9 @@ class GoogleMapsRenty {
                 this.scanRadiusAtLocation(lat, lng, 'Vị trí hiện tại của bạn');
             },
             (err) => {
+                if (typeof window.hideGpsBrowserGuide === 'function') {
+                    window.hideGpsBrowserGuide();
+                }
                 // [ERR_05_01]: Từ chối cấp quyền định vị GPS -> Popup thông báo hướng dẫn bật GPS
                 console.warn('[ERR_05_01] Từ chối cấp quyền định vị GPS:', err);
                 this.showGpsPermissionModal();
@@ -2937,11 +3000,11 @@ window.setMapRadius = function(radiusMeters, btnEl) {
     }
 };
 
-window.onMapSearchSubmit = function(e) {
+window.onMapSearchSubmit = async function(e) {
     if (e) e.preventDefault();
     const input = document.getElementById('gm-search-input');
     if (input && window.rentyGoogleMap) {
-        window.rentyGoogleMap.searchGeocodeOrCampus(input.value);
+        await window.rentyGoogleMap.searchGeocodeOrCampus(input.value);
     }
 };
 
@@ -3513,11 +3576,13 @@ function initMapSearchEngine() {
             if (roomData) {
                 const coords = mapInstance.computeRoomCoordinates(roomData);
                 if (coords) {
-                    mapInstance.map.panTo([coords.lat, coords.lng], { animate: true, duration: 0.5 });
-                    if (mapInstance.markers && mapInstance.markers[roomId]) {
-                        mapInstance.markers[roomId].openPopup();
-                        mapInstance.highlightMarker(roomId);
-                    }
+                    mapInstance.map.flyTo([coords.lat, coords.lng], 16, { duration: 1.0 });
+                    setTimeout(() => {
+                        if (mapInstance.markers && mapInstance.markers[roomId]) {
+                            mapInstance.markers[roomId].openPopup();
+                            mapInstance.highlightMarker(roomId);
+                        }
+                    }, 1050);
                 }
             }
             if (typeof window.highlightRoomCard === 'function') {

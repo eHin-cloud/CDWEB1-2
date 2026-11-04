@@ -1286,6 +1286,33 @@
             background: #e2e8f0 !important;
         }
 
+        /* GPS Browser Guide Banner Theme Adaptive */
+        #gps-browser-guide-banner {
+            background-color: #0f172a !important;
+            border-color: #10b981 !important;
+            color: #f8fafc !important;
+        }
+        #gps-browser-guide-banner .gps-guide-title {
+            color: #ffffff !important;
+        }
+        #gps-browser-guide-banner .gps-guide-desc {
+            color: #cbd5e1 !important;
+        }
+        html.theme-light #gps-browser-guide-banner,
+        body.theme-light #gps-browser-guide-banner {
+            background-color: #ffffff !important;
+            border-color: #059669 !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        html.theme-light #gps-browser-guide-banner .gps-guide-title,
+        body.theme-light #gps-browser-guide-banner .gps-guide-title {
+            color: #0f172a !important;
+        }
+        html.theme-light #gps-browser-guide-banner .gps-guide-desc,
+        body.theme-light #gps-browser-guide-banner .gps-guide-desc {
+            color: #334155 !important;
+        }
+
         html.theme-light .gm-pro-hud .gm-action-btn,
         body.theme-light .gm-pro-hud .gm-action-btn,
         html.theme-light .gm-pro-hud button[onclick*="locateUserRentyMap"],
@@ -1797,6 +1824,118 @@
             background: #f1f5f9 !important;
             border-color: #cbd5e1 !important;
             color: #0284c7 !important;
+        }
+
+        /* --- ROOM CARD MEDIA BADGES IN LIGHT MODE (Độ tương phản cao trên nền ảnh sáng) --- */
+        .room-card-media .bg-gradient-to-t {
+            background-image: linear-gradient(to top, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.25) 35%, transparent 65%) !important;
+        }
+
+        /* Nút Xem nhanh (Quick eye button) */
+        html.theme-light .room-card-media .quick-eye-button,
+        body.theme-light .room-card-media .quick-eye-button {
+            background: #ffffff !important;
+            border: 1.5px solid #059669 !important;
+            color: #047857 !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button i,
+        body.theme-light .room-card-media .quick-eye-button i {
+            color: #059669 !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button .quick-eye-text,
+        body.theme-light .room-card-media .quick-eye-button .quick-eye-text {
+            color: #047857 !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button:hover,
+        body.theme-light .room-card-media .quick-eye-button:hover {
+            background: #059669 !important;
+            border-color: #047857 !important;
+            color: #ffffff !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button:hover i,
+        html.theme-light .room-card-media .quick-eye-button:hover .quick-eye-text,
+        body.theme-light .room-card-media .quick-eye-button:hover i,
+        body.theme-light .room-card-media .quick-eye-button:hover .quick-eye-text {
+            color: #ffffff !important;
+        }
+
+        /* Huy hiệu Tích Xanh (Verified Flame Badge) */
+        html.theme-light .verified-flame-badge,
+        body.theme-light .verified-flame-badge {
+            background: #ffffff !important;
+            border: 1.5px solid #0284c7 !important;
+            color: #0369a1 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25), 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+            animation: none !important;
+        }
+        html.theme-light .verified-flame-badge i,
+        body.theme-light .verified-flame-badge i {
+            color: #0284c7 !important;
+            filter: none !important;
+        }
+
+        /* Huy hiệu Trạng thái phòng: Sẵn sàng */
+        html.theme-light .room-card-media .room-status-empty,
+        body.theme-light .room-card-media .room-status-empty {
+            background: #ffffff !important;
+            border: 1.5px solid #059669 !important;
+            color: #047857 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        html.theme-light .room-card-media .room-status-empty span,
+        body.theme-light .room-card-media .room-status-empty span {
+            background-color: #059669 !important;
+        }
+
+        /* Huy hiệu Trạng thái phòng: Đã thuê */
+        html.theme-light .room-card-media .room-status-rented,
+        body.theme-light .room-card-media .room-status-rented {
+            background: #ffffff !important;
+            border: 1.5px solid #e11d48 !important;
+            color: #be123c !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        html.theme-light .room-card-media .room-status-rented span,
+        body.theme-light .room-card-media .room-status-rented span {
+            background-color: #e11d48 !important;
+        }
+
+        /* Huy hiệu Cảnh báo giá */
+        html.theme-light .room-card-media span[title*="giá"],
+        html.theme-light .room-card-media span[title*="Giá"],
+        body.theme-light .room-card-media span[title*="giá"],
+        body.theme-light .room-card-media span[title*="Giá"] {
+            background: #ffffff !important;
+            border: 1.5px solid #d97706 !important;
+            color: #b45309 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+        }
+        html.theme-light .room-card-media span[title*="giá"] i,
+        html.theme-light .room-card-media span[title*="Giá"] i,
+        body.theme-light .room-card-media span[title*="giá"] i,
+        body.theme-light .room-card-media span[title*="Giá"] i {
+            color: #d97706 !important;
+        }
+
+        /* Nút icon thư viện ảnh góc dưới phải */
+        html.theme-light .room-card-media span:has(.fa-images),
+        body.theme-light .room-card-media span:has(.fa-images) {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+        }
+        html.theme-light .room-card-media .fa-images,
+        body.theme-light .room-card-media .fa-images {
+            color: #059669 !important;
         }
     </style>
 </head>
@@ -2332,8 +2471,9 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <button type="button" onclick="locateUserRentyMap()" title="Định vị GPS" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-400 flex items-center justify-center text-[10px] transition-all">
-                            <i class="fa-solid fa-crosshairs"></i>
+                        <button type="button" onclick="locateUserRentyMap()" title="Tìm phòng quanh vị trí của tôi" class="gm-action-btn px-2 py-0.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500 hover:text-white text-emerald-400 flex items-center gap-1 text-[11px] font-bold transition-all shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-crosshairs animate-pulse"></i>
+                            <span class="hidden sm:inline">Gần tôi</span>
                         </button>
                         <button type="button" onclick="resetRentyMapView()" title="Về trung tâm" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-[10px] transition-all">
                             <i class="fa-solid fa-compass"></i>
@@ -3827,6 +3967,25 @@
     });
 </script>
 
+    <!-- Banner Hướng Dẫn Cấp Quyền Vị Trí Trực Quan (Chỉ thẳng lên góc thanh địa chỉ trình duyệt) -->
+    <div id="gps-browser-guide-banner" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-[99999999] max-w-lg w-[94%] sm:w-auto border-2 border-emerald-500 p-3.5 sm:p-4 rounded-2xl shadow-2xl backdrop-blur-xl flex items-start gap-3 transition-all animate-bounce-subtle">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-500 flex items-center justify-center text-xl shrink-0 animate-bounce shadow-sm">
+            <i class="fa-solid fa-arrow-up"></i>
+        </div>
+        <div class="flex-1 min-w-0 pr-1">
+            <div class="flex items-center gap-2">
+                <span class="gps-guide-title font-black text-xs sm:text-sm tracking-tight">Đang xác định vị trí của bạn...</span>
+                <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-400/30 uppercase tracking-wide">Nhìn lên trên 👆</span>
+            </div>
+            <p class="gps-guide-desc text-[11px] sm:text-xs mt-1 leading-relaxed font-medium">
+                Vui lòng nhìn lên góc trên thanh địa chỉ trình duyệt và bấm <b>"Cho phép" (Allow)</b> để Renty quét phòng trọ gần bạn nhất!
+            </p>
+        </div>
+        <button type="button" onclick="hideGpsBrowserGuide()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer" title="Đóng">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
     <!-- Popup Modal: Hướng dẫn bật GPS [ERR_05_01] -->
     <div id="gps-permission-modal" class="hidden fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
         <div class="relative w-full max-w-md p-6 rounded-3xl bg-slate-900 border-2 border-rose-500 shadow-2xl shadow-rose-950/50 text-slate-100 flex flex-col gap-4 animate-scale-in">
@@ -3866,6 +4025,17 @@
     </div>
 
     <script>
+        function showGpsBrowserGuide() {
+            const b = document.getElementById('gps-browser-guide-banner');
+            if (b) b.classList.remove('hidden');
+        }
+        function hideGpsBrowserGuide() {
+            const b = document.getElementById('gps-browser-guide-banner');
+            if (b) b.classList.add('hidden');
+        }
+        window.showGpsBrowserGuide = showGpsBrowserGuide;
+        window.hideGpsBrowserGuide = hideGpsBrowserGuide;
+
         function closeGpsModal() {
             const m = document.getElementById('gps-permission-modal');
             if (m) m.classList.add('hidden');
