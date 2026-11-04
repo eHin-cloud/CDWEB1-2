@@ -7362,20 +7362,14 @@ body.theme-light .booking-sidebar-card input[type="datetime-local"] {
 }
 
 /* ============================================================ */
-/* ĐỒNG BỘ GIAO DIỆN LIGHT MODE CHO BỘ LỌC CHI TIẾT (#filter-drawer) */
+/* ĐỒNG BỘ CHẾ ĐỘ SÁNG (LIGHT THEME) CHO BỘ LỌC CHI TIẾT #filter-drawer */
 /* ============================================================ */
-#filter-drawer label.cursor-pointer:has(input:checked) {
-    background-color: rgba(16, 185, 129, 0.15) !important;
-    border-color: rgba(16, 185, 129, 0.4) !important;
-    color: #6ee7b7 !important;
-}
-
 html.theme-light #filter-drawer,
 body.theme-light #filter-drawer {
     background: #ffffff !important;
     background-color: #ffffff !important;
     border-color: #e2e8f0 !important;
-    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.05) !important;
 }
 
 html.theme-light #filter-drawer .border-b,
@@ -7394,10 +7388,8 @@ body.theme-light #filter-drawer label {
 
 html.theme-light #filter-drawer .text-slate-200,
 html.theme-light #filter-drawer .text-slate-100,
-html.theme-light #filter-drawer span.text-slate-200,
 body.theme-light #filter-drawer .text-slate-200,
-body.theme-light #filter-drawer .text-slate-100,
-body.theme-light #filter-drawer span.text-slate-200 {
+body.theme-light #filter-drawer .text-slate-100 {
     color: #0f172a !important;
 }
 
@@ -7411,74 +7403,47 @@ body.theme-light #filter-drawer .text-slate-400 {
     color: #64748b !important;
 }
 
-html.theme-light #filter-drawer .text-slate-600,
-body.theme-light #filter-drawer .text-slate-600 {
-    color: #94a3b8 !important;
-}
-
-html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]),
+html.theme-light #filter-drawer input[type="text"],
 html.theme-light #filter-drawer select,
 html.theme-light #filter-drawer .feedback-box,
-body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]),
+body.theme-light #filter-drawer input[type="text"],
 body.theme-light #filter-drawer select,
 body.theme-light #filter-drawer .feedback-box {
     background-color: #f8fafc !important;
     background: #f8fafc !important;
-    border: 1px solid #cbd5e1 !important;
+    border-color: #cbd5e1 !important;
     color: #0f172a !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 }
 
-html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):hover,
-html.theme-light #filter-drawer select:hover,
-body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):hover,
-body.theme-light #filter-drawer select:hover {
-    border-color: #94a3b8 !important;
-    background-color: #ffffff !important;
-}
-
-html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):focus,
-html.theme-light #filter-drawer select:focus,
-body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]):focus,
-body.theme-light #filter-drawer select:focus {
-    border-color: #10b981 !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
-}
-
-html.theme-light #filter-drawer input::placeholder,
-body.theme-light #filter-drawer input::placeholder {
+html.theme-light #filter-drawer input[type="text"]::placeholder,
+body.theme-light #filter-drawer input[type="text"]::placeholder {
     color: #94a3b8 !important;
 }
 
-html.theme-light #filter-drawer select option,
-body.theme-light #filter-drawer select option {
+html.theme-light #filter-drawer input[type="text"]:focus,
+html.theme-light #filter-drawer select:focus,
+body.theme-light #filter-drawer input[type="text"]:focus,
+body.theme-light #filter-drawer select:focus {
     background-color: #ffffff !important;
-    color: #0f172a !important;
+    background: #ffffff !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
 html.theme-light #filter-drawer label.cursor-pointer,
 body.theme-light #filter-drawer label.cursor-pointer {
     background-color: #f8fafc !important;
     background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
     color: #334155 !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 }
 
 html.theme-light #filter-drawer label.cursor-pointer:hover,
 body.theme-light #filter-drawer label.cursor-pointer:hover {
-    background-color: #ecfdf5 !important;
-    border-color: #a7f3d0 !important;
-    color: #059669 !important;
-}
-
-html.theme-light #filter-drawer label.cursor-pointer:has(input:checked),
-body.theme-light #filter-drawer label.cursor-pointer:has(input:checked) {
-    background-color: #ecfdf5 !important;
-    border-color: #10b981 !important;
-    color: #047857 !important;
-    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15) !important;
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
 }
 
 html.theme-light #filter-drawer input[type="checkbox"],
@@ -7496,20 +7461,6 @@ html.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover,
 body.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover {
     color: #e11d48 !important;
     background-color: #ffe4e6 !important;
-}
-
-html.theme-light #filter-drawer #btnApplyFilter,
-body.theme-light #filter-drawer #btnApplyFilter {
-    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
-    color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
-}
-
-html.theme-light #filter-drawer #btnApplyFilter:hover,
-body.theme-light #filter-drawer #btnApplyFilter:hover {
-    background: linear-gradient(135deg, #047857 0%, #0f766e 100%) !important;
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
 }
 
 html.theme-light #filter-drawer .custom-range-slider::-webkit-slider-runnable-track,
@@ -7537,28 +7488,11 @@ body.theme-light #filter-drawer .tick-mark {
 
 html.theme-light #filter-drawer .tick-mark:hover,
 body.theme-light #filter-drawer .tick-mark:hover {
-    color: #059669 !important;
-}
-
-html.theme-light #filter-drawer .feedback-box,
-body.theme-light #filter-drawer .feedback-box {
-    background-color: #f8fafc !important;
-    background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
-}
-
-html.theme-light #filter-drawer #distance-feedback,
-body.theme-light #filter-drawer #distance-feedback {
-    color: #334155 !important;
-}
-
-html.theme-light #filter-drawer .feedback-box i,
-body.theme-light #filter-drawer .feedback-box i {
-    color: #059669 !important;
+    color: #0f172a !important;
 }
 
 /* ============================================================ */
-/* ĐỒNG BỘ GỢI Ý TÌM KIẾM BẢN ĐỒ (#gm-search-autocomplete) */
+/* ĐỒNG BỘ GỢI Ý TÌM KIẾN BẢN ĐỒ (#gm-search-autocomplete) */
 /* ============================================================ */
 #gm-search-autocomplete {
     background-color: #0b0f19 !important;
@@ -7646,3 +7580,108 @@ body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover div {
     color: #ffffff !important;
 }
 
+/* --- ROOM CARD MEDIA BADGES IN LIGHT MODE (High Contrast on White Photos) --- */
+.room-card-media .bg-gradient-to-t {
+    background-image: linear-gradient(to top, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.25) 35%, transparent 65%) !important;
+}
+
+html.theme-light .room-card-media .quick-eye-button,
+body.theme-light .room-card-media .quick-eye-button {
+    background: #ffffff !important;
+    border: 1.5px solid #059669 !important;
+    color: #047857 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22) !important;
+    backdrop-filter: blur(8px) !important;
+}
+html.theme-light .room-card-media .quick-eye-button i,
+body.theme-light .room-card-media .quick-eye-button i {
+    color: #059669 !important;
+}
+html.theme-light .room-card-media .quick-eye-button .quick-eye-text,
+body.theme-light .room-card-media .quick-eye-button .quick-eye-text {
+    color: #047857 !important;
+    font-weight: 800 !important;
+}
+html.theme-light .room-card-media .quick-eye-button:hover,
+body.theme-light .room-card-media .quick-eye-button:hover {
+    background: #059669 !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+}
+html.theme-light .room-card-media .quick-eye-button:hover i,
+html.theme-light .room-card-media .quick-eye-button:hover .quick-eye-text,
+body.theme-light .room-card-media .quick-eye-button:hover i,
+body.theme-light .room-card-media .quick-eye-button:hover .quick-eye-text {
+    color: #ffffff !important;
+}
+
+html.theme-light .verified-flame-badge,
+body.theme-light .verified-flame-badge {
+    background: #ffffff !important;
+    border: 1.5px solid #0284c7 !important;
+    color: #0369a1 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25), 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+    animation: none !important;
+}
+html.theme-light .verified-flame-badge i,
+body.theme-light .verified-flame-badge i {
+    color: #0284c7 !important;
+    filter: none !important;
+}
+
+html.theme-light .room-card-media .room-status-empty,
+body.theme-light .room-card-media .room-status-empty {
+    background: #ffffff !important;
+    border: 1.5px solid #059669 !important;
+    color: #047857 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+    backdrop-filter: blur(8px) !important;
+}
+html.theme-light .room-card-media .room-status-empty span,
+body.theme-light .room-card-media .room-status-empty span {
+    background-color: #059669 !important;
+}
+
+html.theme-light .room-card-media .room-status-rented,
+body.theme-light .room-card-media .room-status-rented {
+    background: #ffffff !important;
+    border: 1.5px solid #e11d48 !important;
+    color: #be123c !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+    backdrop-filter: blur(8px) !important;
+}
+html.theme-light .room-card-media .room-status-rented span,
+body.theme-light .room-card-media .room-status-rented span {
+    background-color: #e11d48 !important;
+}
+
+html.theme-light .room-card-media span[title*="giá"],
+html.theme-light .room-card-media span[title*="Giá"],
+body.theme-light .room-card-media span[title*="giá"],
+body.theme-light .room-card-media span[title*="Giá"] {
+    background: #ffffff !important;
+    border: 1.5px solid #d97706 !important;
+    color: #b45309 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+}
+html.theme-light .room-card-media span[title*="giá"] i,
+html.theme-light .room-card-media span[title*="Giá"] i,
+body.theme-light .room-card-media span[title*="giá"] i,
+body.theme-light .room-card-media span[title*="Giá"] i {
+    color: #d97706 !important;
+}
+
+html.theme-light .room-card-media span:has(.fa-images),
+body.theme-light .room-card-media span:has(.fa-images) {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+}
+html.theme-light .room-card-media .fa-images,
+body.theme-light .room-card-media .fa-images {
+    color: #059669 !important;
+}
