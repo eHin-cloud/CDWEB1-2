@@ -80,17 +80,65 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
             ]
         );
 
-        // 2. Danh mục 34 Tỉnh Thành tiêu biểu trải dài 3 miền Bắc - Trung - Nam
+        // 2. Danh mục các Tỉnh Thành và Quận Huyện phân tán đều
         $provincesData = [
-            // MIỀN BẮC
+            // HÀ NỘI - CHIA ĐỀU CÁC QUẬN SINH VIÊN (Tổng 42 phòng, mỗi quận 7 phòng)
             [
-                'code' => 'HN',
+                'code' => 'HN_CG',
                 'province' => 'Hà Nội',
-                'building_name' => 'Renty Complex Cầu Giấy',
-                'address' => 'Số 68 Đường Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội',
-                'description' => 'Tòa nhà căn hộ mini dịch vụ cao cấp ngay trung tâm Cầu Giấy, gần ĐH Sư Phạm, ĐH Quốc Gia và ga Metro Nhổn.',
+                'building_name' => 'Renty Cầu Giấy Campus',
+                'address' => 'Số 68 Đường Xuân Thủy, Phường Dịch Vọng Hậu, Quận Cầu Giấy, Hà Nội',
+                'description' => 'Chung cư mini cao cấp gần ĐH Quốc Gia Hà Nội, ĐH Sư Phạm và Học viện Báo chí.',
                 'base_price' => 3800000,
+                'target_rooms' => 7,
             ],
+            [
+                'code' => 'HN_DD',
+                'province' => 'Hà Nội',
+                'building_name' => 'Renty Đống Đa Chùa Láng',
+                'address' => 'Số 15 Ngõ 91 Đường Chùa Láng, Phường Láng Thượng, Quận Đống Đa, Hà Nội',
+                'description' => 'Phòng trọ tiện nghi liền kề ĐH Ngoại Thương, ĐH Luật Hà Nội và Học viện Ngoại Giao.',
+                'base_price' => 3600000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HN_HBT',
+                'province' => 'Hà Nội',
+                'building_name' => 'Renty Bách Kinh Xây Hub',
+                'address' => 'Số 38 Đường Tạ Quang Bửu, Phường Bách Khoa, Quận Hai Bà Trưng, Hà Nội',
+                'description' => 'Tòa nhà sinh viên nằm ngay cụm ĐH Bách Khoa, ĐH Kinh Tế Quốc Dân và ĐH Xây Dựng.',
+                'base_price' => 3500000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HN_TX',
+                'province' => 'Hà Nội',
+                'building_name' => 'Renty Thanh Xuân Smart',
+                'address' => 'Số 334 Đường Nguyễn Trãi, Phường Thanh Xuân Trung, Quận Thanh Xuân, Hà Nội',
+                'description' => 'Căn hộ mini hiện đại gần ga Metro Thượng Đình, ĐH KHTN, ĐH KHXH&NV và ĐH Hà Nội.',
+                'base_price' => 3400000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HN_HD',
+                'province' => 'Hà Nội',
+                'building_name' => 'Renty Hà Đông Metro Hub',
+                'address' => 'Số 10 Đường Trần Phú, Phường Mộ Lao, Quận Hà Đông, Hà Nội',
+                'description' => 'Phòng trọ cao cấp cạnh HV Bưu Chính Viễn Thông PTIT, ĐH Kiến Trúc và HV An Ninh.',
+                'base_price' => 3200000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HN_NTL',
+                'province' => 'Hà Nội',
+                'building_name' => 'Renty Mỹ Đình Plaza',
+                'address' => 'Số 26 Đường Hồ Tùng Mậu, Phường Mai Dịch, Quận Nam Từ Liêm, Hà Nội',
+                'description' => 'Chung cư mini khép kín gần ĐH Thương Mại, ĐH Sân Khấu Điện Ảnh và bến xe Mỹ Đình.',
+                'base_price' => 3300000,
+                'target_rooms' => 7,
+            ],
+
+            // CÁC TỈNH THÀNH MIỀN BẮC (Mỗi tỉnh 10 phòng)
             [
                 'code' => 'HP',
                 'province' => 'Hải Phòng',
@@ -98,7 +146,7 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
                 'address' => 'Số 45 Đường Lạch Tray, Phường Lạch Tray, Quận Ngô Quyền, Hải Phòng',
                 'description' => 'Chung cư mini hiện đại gần ĐH Hàng Hải, sân vận động Lạch Tray và trung tâm thành phố Hoa Phượng Đỏ.',
                 'base_price' => 3200000,
-                'target_rooms' => 80,
+                'target_rooms' => 10,
             ],
             [
                 'code' => 'QN',
@@ -213,7 +261,7 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
                 'address' => 'Số 120 Đường Nguyễn Văn Thoại, Phường Mỹ An, Quận Ngũ Hành Sơn, Đà Nẵng',
                 'description' => 'Tòa nhà căn hộ cao cấp cách bãi biển Mỹ Khê 300m, gần ĐH Kinh Tế Đà Nẵng, khu phố Tây An Thượng.',
                 'base_price' => 3800000,
-                'target_rooms' => 100,
+                'target_rooms' => 10,
             ],
             [
                 'code' => 'QNM',
@@ -274,15 +322,69 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
                 'base_price' => 2100000,
             ],
 
-            // ĐÔNG NAM BỘ
+            // TP. HỒ CHÍ MINH - CHIA ĐỀU CÁC QUẬN SINH VIÊN (Tổng 49 phòng, mỗi quận 7 phòng)
             [
-                'code' => 'HCM',
+                'code' => 'HCM_DHQG',
                 'province' => 'TP. Hồ Chí Minh',
-                'building_name' => 'Renty Landmark Sài Gòn Sky',
-                'address' => 'Số 208 Đường Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, TP. Hồ Chí Minh',
-                'description' => 'Chung cư mini cao cấp liền kề Landmark 81, ga Metro Tân Cảng, ĐH HUTECH, ĐH Giao Thông Vận Tải.',
-                'base_price' => 4500000,
-                'target_rooms' => 120,
+                'building_name' => 'Renty KTX Làng ĐHQG',
+                'address' => 'Đường Tô Vĩnh Diện, Khu Đô Thị ĐHQG, Phường Đông Hòa, TP. Thủ Đức, TP. Hồ Chí Minh',
+                'description' => 'Tòa nhà sinh viên hiện đại liền kề ĐH Bách Khoa CS2, ĐH CNTT, ĐH KHTN và KTX ĐHQG.',
+                'base_price' => 2600000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HCM_TDC',
+                'province' => 'TP. Hồ Chí Minh',
+                'building_name' => 'Renty Thủ Đức Tech Center',
+                'address' => 'Số 53 Đường Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh',
+                'description' => 'Phòng trọ tiện nghi ngay cạnh CĐ Công Nghệ Thủ Đức và ĐH Sư Phạm Kỹ Thuật TP.HCM.',
+                'base_price' => 3200000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HCM_Q10',
+                'province' => 'TP. Hồ Chí Minh',
+                'building_name' => 'Renty Quận 10 Bách Khoa',
+                'address' => 'Số 268 Đường Lý Thường Kiệt, Phường 14, Quận 10, TP. Hồ Chí Minh',
+                'description' => 'Căn hộ mini trung tâm Quận 10, liền kề ĐH Bách Khoa TP.HCM và ĐH Kinh Tế TP.HCM (UEH).',
+                'base_price' => 3900000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HCM_BT',
+                'province' => 'TP. Hồ Chí Minh',
+                'building_name' => 'Renty Bình Thạnh D2 Hub',
+                'address' => 'Số 48 Đường Nguyễn Gia Trí, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh',
+                'description' => 'Tòa nhà sôi động gần ĐH HUTECH, ĐH Ngoại Thương CS2 và ĐH Giao Thông Vận Tải.',
+                'base_price' => 4200000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HCM_Q5',
+                'province' => 'TP. Hồ Chí Minh',
+                'building_name' => 'Renty Quận 5 An Dương Vương',
+                'address' => 'Số 273 Đường An Dương Vương, Phường 3, Quận 5, TP. Hồ Chí Minh',
+                'description' => 'Chung cư mini cao cấp gần ĐH Sài Gòn (SGU), ĐH Sư Phạm và ĐH KHTN.',
+                'base_price' => 3800000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HCM_GV',
+                'province' => 'TP. Hồ Chí Minh',
+                'building_name' => 'Renty Gò Vấp Quang Trung',
+                'address' => 'Số 12 Đường Nguyễn Văn Bảo, Phường 4, Quận Gò Vấp, TP. Hồ Chí Minh',
+                'description' => 'Phòng trọ khép kín sinh viên ngay cạnh ĐH Công Nghiệp TP.HCM (IUH).',
+                'base_price' => 3100000,
+                'target_rooms' => 7,
+            ],
+            [
+                'code' => 'HCM_Q7',
+                'province' => 'TP. Hồ Chí Minh',
+                'building_name' => 'Renty Quận 7 Nam Sài Gòn',
+                'address' => 'Số 19 Đường Nguyễn Hữu Thọ, Phường Tân Phong, Quận 7, TP. Hồ Chí Minh',
+                'description' => 'Khu căn hộ studio cao cấp gần ĐH Tôn Đức Thắng, ĐH RMIT và TTTM SC VivoCity.',
+                'base_price' => 4100000,
+                'target_rooms' => 7,
             ],
             [
                 'code' => 'BD',
@@ -325,7 +427,7 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
                 'address' => 'Số 88 Đường 30 Tháng 4, Phường An Phú, Quận Ninh Kiều, Cần Thơ',
                 'description' => 'Tòa nhà căn hộ cao cấp cạnh bến Ninh Kiều, gần ĐH Cần Thơ, ĐH Y Dược Cần Thơ.',
                 'base_price' => 2800000,
-                'target_rooms' => 80,
+                'target_rooms' => 10,
             ],
             [
                 'code' => 'LA',
@@ -425,8 +527,8 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
             );
             $totalCreatedBuildings++;
 
-            // Tiêu chuẩn 6 phòng/nơi để phân tán đẹp và tối ưu hiệu năng bản đồ không bị lag
-            $targetRooms = 6;
+            // Tiêu chuẩn 10 phòng/tỉnh, riêng Hà Nội và TP.HCM chia đều 7 phòng/quận
+            $targetRooms = $item['target_rooms'] ?? 10;
 
             // Kiểm tra số lượng phòng hiện tại của toà nhà để đảm bảo đủ số lượng mục tiêu
             $existingRoomCount = DB::table('rooms')->where('building_id', $building->id)->count();
