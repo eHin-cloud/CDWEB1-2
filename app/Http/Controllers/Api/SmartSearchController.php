@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\ScoutSearchService;
 use App\Services\SmartSearchService;
+use App\Services\SolrSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,13 +13,16 @@ class SmartSearchController extends Controller
 {
     protected SmartSearchService $searchService;
     protected ScoutSearchService $scoutSearchService;
+    protected SolrSearchService $solrSearchService;
 
     public function __construct(
         SmartSearchService $searchService,
-        ScoutSearchService $scoutSearchService
+        ScoutSearchService $scoutSearchService,
+        SolrSearchService $solrSearchService
     ) {
         $this->searchService = $searchService;
         $this->scoutSearchService = $scoutSearchService;
+        $this->solrSearchService = $solrSearchService;
     }
 
     /**
@@ -61,7 +65,12 @@ class SmartSearchController extends Controller
             ? (float) $request->input('rating')
             : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
 
-        $engine = (string) $request->input('engine', 'hybrid');
+        $engine = (string) $request->input('engine', env('SEARCH_ENGINE', 'hybrid'));
+
+        // Tìm kiếm bằng Apache Solr Search Engine nếu được yêu cầu
+        if ($engine === 'solr') {
+            return $this->solrSearch($request);
+        }
 
         // Tìm kiếm bằng Laravel Scout Search Engine nếu được yêu cầu
         if ($engine === 'scout') {
@@ -181,6 +190,81 @@ class SmartSearchController extends Controller
      * API Gợi ý từ khoá và sửa lỗi nhanh (Autocomplete / Quick suggestions)
      * GET /api/renty/rooms/suggest
      */
+    /**
+     * Tìm kiếm phòng trọ bằng Apache Solr Engine
+     */
+    public function solrSearch(Request $request): JsonResponse
+    {
+        $query = mb_substr((string) $request->input('q', $request->input('query', '')), 0, 100);
+        $limit = min(50, max(1, (int) $request->input('limit', 12)));
+        $page = max(1, (int) $request->input('page', 1));
+        $status = (string) $request->input('status', 'all');
+        $sort = (string) $request->input('sort', $request->input('sort_by', 'default'));
+
+        $minPrice = $request->filled('min_price')
+            ? (int) $request->input('min_price')
+            : ($request->filled('price_min') ? (int) $request->input('price_min') : null);
+
+        $maxPrice = $request->filled('max_price')
+            ? (int) $request->input('max_price')
+            : ($request->filled('price_max') ? (int) $request->input('price_max') : null);
+
+        if ($minPrice !== null && $maxPrice !== null && $minPrice > $maxPrice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).',
+                'errors' => [
+                    'price' => ['Khoảng giá tìm kiếm không hợp lệ (Giá tối thiểu phải nhỏ hơn giá tối đa).']
+                ]
+            ], 422);
+        }
+
+        $amenities = $request->input('amenities', []);
+        if (is_string($amenities)) {
+            $amenities = array_filter(explode(',', $amenities));
+        }
+
+        $rating = $request->filled('rating') && $request->input('rating') !== 'all'
+            ? (float) $request->input('rating')
+            : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
+
+        $result = $this->solrSearchService->search($query, [
+            'limit' => $limit,
+            'page' => $page,
+            'status' => $status,
+            'sort' => $sort,
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'amenities' => $amenities,
+            'min_rating' => $rating,
+            'room_type' => $request->input('room_type'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'engine' => 'apache_solr',
+            'original_query' => $query,
+            'normalized_query' => $result['analysis']['normalized'] ?? $query,
+            'corrected_query' => $result['analysis']['corrected'] ?? $query,
+            'did_you_mean' => null,
+            'has_correction' => false,
+            'recognized_terms' => [],
+            'filters' => [
+                'min_price' => $minPrice,
+                'max_price' => $maxPrice,
+                'amenities' => $amenities,
+                'status' => $status,
+            ],
+            'count' => $result['count'],
+            'total' => $result['total'],
+            'page' => $result['page'],
+            'per_page' => $result['per_page'],
+            'last_page' => ceil(max(1, $result['total']) / $limit),
+            'has_more' => $result['has_more'],
+            'rooms' => $result['rooms'],
+        ]);
+    }
+
     public function suggestions(Request $request): JsonResponse
     {
         $query = mb_substr((string) $request->input('q', $request->input('query', '')), 0, 100);
