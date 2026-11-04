@@ -1660,6 +1660,118 @@
             border-color: #cbd5e1 !important;
             color: #0284c7 !important;
         }
+
+        /* --- ROOM CARD MEDIA BADGES IN LIGHT MODE (Độ tương phản cao trên nền ảnh sáng) --- */
+        .room-card-media .bg-gradient-to-t {
+            background-image: linear-gradient(to top, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.25) 35%, transparent 65%) !important;
+        }
+
+        /* Nút Xem nhanh (Quick eye button) */
+        html.theme-light .room-card-media .quick-eye-button,
+        body.theme-light .room-card-media .quick-eye-button {
+            background: #ffffff !important;
+            border: 1.5px solid #059669 !important;
+            color: #047857 !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button i,
+        body.theme-light .room-card-media .quick-eye-button i {
+            color: #059669 !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button .quick-eye-text,
+        body.theme-light .room-card-media .quick-eye-button .quick-eye-text {
+            color: #047857 !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button:hover,
+        body.theme-light .room-card-media .quick-eye-button:hover {
+            background: #059669 !important;
+            border-color: #047857 !important;
+            color: #ffffff !important;
+        }
+        html.theme-light .room-card-media .quick-eye-button:hover i,
+        html.theme-light .room-card-media .quick-eye-button:hover .quick-eye-text,
+        body.theme-light .room-card-media .quick-eye-button:hover i,
+        body.theme-light .room-card-media .quick-eye-button:hover .quick-eye-text {
+            color: #ffffff !important;
+        }
+
+        /* Huy hiệu Tích Xanh (Verified Flame Badge) */
+        html.theme-light .verified-flame-badge,
+        body.theme-light .verified-flame-badge {
+            background: #ffffff !important;
+            border: 1.5px solid #0284c7 !important;
+            color: #0369a1 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25), 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+            animation: none !important;
+        }
+        html.theme-light .verified-flame-badge i,
+        body.theme-light .verified-flame-badge i {
+            color: #0284c7 !important;
+            filter: none !important;
+        }
+
+        /* Huy hiệu Trạng thái phòng: Sẵn sàng */
+        html.theme-light .room-card-media .room-status-empty,
+        body.theme-light .room-card-media .room-status-empty {
+            background: #ffffff !important;
+            border: 1.5px solid #059669 !important;
+            color: #047857 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        html.theme-light .room-card-media .room-status-empty span,
+        body.theme-light .room-card-media .room-status-empty span {
+            background-color: #059669 !important;
+        }
+
+        /* Huy hiệu Trạng thái phòng: Đã thuê */
+        html.theme-light .room-card-media .room-status-rented,
+        body.theme-light .room-card-media .room-status-rented {
+            background: #ffffff !important;
+            border: 1.5px solid #e11d48 !important;
+            color: #be123c !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        html.theme-light .room-card-media .room-status-rented span,
+        body.theme-light .room-card-media .room-status-rented span {
+            background-color: #e11d48 !important;
+        }
+
+        /* Huy hiệu Cảnh báo giá */
+        html.theme-light .room-card-media span[title*="giá"],
+        html.theme-light .room-card-media span[title*="Giá"],
+        body.theme-light .room-card-media span[title*="giá"],
+        body.theme-light .room-card-media span[title*="Giá"] {
+            background: #ffffff !important;
+            border: 1.5px solid #d97706 !important;
+            color: #b45309 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+        }
+        html.theme-light .room-card-media span[title*="giá"] i,
+        html.theme-light .room-card-media span[title*="Giá"] i,
+        body.theme-light .room-card-media span[title*="giá"] i,
+        body.theme-light .room-card-media span[title*="Giá"] i {
+            color: #d97706 !important;
+        }
+
+        /* Nút icon thư viện ảnh góc dưới phải */
+        html.theme-light .room-card-media span:has(.fa-images),
+        body.theme-light .room-card-media span:has(.fa-images) {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16) !important;
+        }
+        html.theme-light .room-card-media .fa-images,
+        body.theme-light .room-card-media .fa-images {
+            color: #059669 !important;
+        }
     </style>
 </head>
 @php
