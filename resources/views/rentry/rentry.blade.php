@@ -3418,6 +3418,7 @@
         window.submitHeroSearch = function(event) {
             if (event) event.preventDefault();
             const heroInput = document.getElementById('hero-search-input');
+            const navbarInput = document.getElementById('search-input');
             const boxContainer = document.getElementById('hero-search-box-container');
             const errEmpty = document.getElementById('search-empty-error');
             const errInvalid = document.getElementById('search-invalid-error');
@@ -3432,6 +3433,25 @@
                 if (errInvalid) errInvalid.classList.add('hidden');
                 if (typeof openRentySearchSuggestions === 'function') openRentySearchSuggestions();
                 if (heroInput) heroInput.focus();
+
+                // Đảm bảo cả hai ô tìm kiếm đều sạch và giải phóng bán kính map cũ
+                if (heroInput) heroInput.value = '';
+                if (navbarInput) navbarInput.value = '';
+                if (window.rentyGoogleMap && !window.rentyGoogleMap.selectedUniversity && window.rentyGoogleMap.activeCenter) {
+                    window.rentyGoogleMap.activeCenter = null;
+                    if (window.rentyGoogleMap.campusRadiusCircle) {
+                        window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.campusRadiusCircle);
+                        window.rentyGoogleMap.campusRadiusCircle = null;
+                    }
+                    if (window.rentyGoogleMap.customPlacePin) {
+                        window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.customPlacePin);
+                        window.rentyGoogleMap.customPlacePin = null;
+                    }
+                }
+                // Đồng thời reset bộ lọc hiển thị toàn bộ phòng thay vì kẹt kết quả tìm kiếm trước đó
+                if (typeof filterItems === 'function') {
+                    filterItems({ resetPage: true });
+                }
                 return;
             }
 
@@ -3440,11 +3460,13 @@
                 boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
             }
 
+            // Đồng bộ sang navbar input
+            if (navbarInput) navbarInput.value = val;
+
             // ERR_04_02: Nhập từ khóa chứa mã độc/ký tự lạ -> Tự động làm sạch
             if (/[<>{}\$*&^%`~;]/.test(val)) {
                 const cleaned = val.replace(/[<>{}\$*&^%`~;]/g, '').trim();
                 if (heroInput) heroInput.value = cleaned;
-                const navbarInput = document.getElementById('search-input');
                 if (navbarInput) navbarInput.value = cleaned;
                 if (errInvalid) errInvalid.classList.remove('hidden');
                 setTimeout(() => {
@@ -3452,6 +3474,19 @@
                 }, 5000);
             } else {
                 if (errInvalid) errInvalid.classList.add('hidden');
+            }
+
+            // Nếu người dùng tìm kiếm từ khóa mới, giải phóng bán kính bản đồ cũ nếu có
+            if (window.rentyGoogleMap && !window.rentyGoogleMap.selectedUniversity && window.rentyGoogleMap.activeCenter) {
+                window.rentyGoogleMap.activeCenter = null;
+                if (window.rentyGoogleMap.campusRadiusCircle) {
+                    window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.campusRadiusCircle);
+                    window.rentyGoogleMap.campusRadiusCircle = null;
+                }
+                if (window.rentyGoogleMap.customPlacePin) {
+                    window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.customPlacePin);
+                    window.rentyGoogleMap.customPlacePin = null;
+                }
             }
 
             if (typeof filterItems === 'function') {
@@ -3469,6 +3504,18 @@
             if (errEmpty) errEmpty.classList.add('hidden');
             const boxContainer = document.getElementById('hero-search-box-container');
             if (boxContainer) boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+
+            if (window.rentyGoogleMap && !window.rentyGoogleMap.selectedUniversity && window.rentyGoogleMap.activeCenter) {
+                window.rentyGoogleMap.activeCenter = null;
+                if (window.rentyGoogleMap.campusRadiusCircle) {
+                    window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.campusRadiusCircle);
+                    window.rentyGoogleMap.campusRadiusCircle = null;
+                }
+                if (window.rentyGoogleMap.customPlacePin) {
+                    window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.customPlacePin);
+                    window.rentyGoogleMap.customPlacePin = null;
+                }
+            }
 
             if (typeof filterItems === 'function') {
                 filterItems({ resetPage: true });
@@ -3488,6 +3535,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const navbarInput = document.getElementById('search-input');
             const heroInput = document.getElementById('hero-search-input');
+            const boxContainer = document.getElementById('hero-search-box-container');
 
             function syncInputs(source, target) {
                 if (source && target && target.value !== source.value) {
@@ -3500,26 +3548,23 @@
                     syncInputs(navbarInput, heroInput);
                     const errEmpty = document.getElementById('search-empty-error');
                     if (errEmpty && navbarInput.value.trim() !== '') errEmpty.classList.add('hidden');
+                    if (boxContainer && navbarInput.value.trim() !== '') {
+                        boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+                    }
                 });
                 
                 heroInput.addEventListener('input', () => {
                     syncInputs(heroInput, navbarInput);
                     const errEmpty = document.getElementById('search-empty-error');
                     if (errEmpty && heroInput.value.trim() !== '') errEmpty.classList.add('hidden');
-                    if (typeof filterItems === 'function') {
-                        filterItems();
+                    if (boxContainer && heroInput.value.trim() !== '') {
+                        boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
                     }
                 });
 
                 navbarInput.addEventListener('change', () => {
                     syncInputs(navbarInput, heroInput);
                 });
-
-                setInterval(() => {
-                    if (navbarInput.value !== heroInput.value) {
-                        syncInputs(navbarInput, heroInput);
-                    }
-                }, 200);
             }
         });
     </script>
