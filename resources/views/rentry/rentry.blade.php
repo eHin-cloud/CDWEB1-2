@@ -160,9 +160,98 @@
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 18px rgba(14, 165, 233, 0.35);
         }
     }
+
+    /* Hiệu ứng Animation khi click phòng trên bản đồ */
+    @keyframes rentyCardPulseHighlight {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.9), 0 0 25px rgba(16, 185, 129, 0.6);
+            border-color: #10b981 !important;
+        }
+        20% {
+            transform: scale(1.035);
+            box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.5), 0 0 40px rgba(16, 185, 129, 0.95);
+            border-color: #34d399 !important;
+        }
+        40% {
+            transform: scale(1.015);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.7), 0 0 25px rgba(16, 185, 129, 0.7);
+            border-color: #10b981 !important;
+        }
+        60% {
+            transform: scale(1.035);
+            box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.5), 0 0 40px rgba(16, 185, 129, 0.95);
+            border-color: #34d399 !important;
+        }
+        80% {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.5);
+            border-color: #10b981 !important;
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+    }
+
+    .room-item-card.renty-card-highlight-active {
+        animation: rentyCardPulseHighlight 2.8s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+        z-index: 50 !important;
+        position: relative !important;
+        border-width: 2px !important;
+        border-color: #34d399 !important;
+    }
     </style>
 
     <script>
+        window.highlightRoomCard = function(roomId) {
+            if (!roomId) return;
+            const roomCard = document.querySelector(`.room-item-card[data-room-id="${roomId}"]`);
+            if (!roomCard) return;
+
+            // 1. Nếu thẻ đang bị ẩn do phân trang, tự động chuyển đến trang chứa phòng đó
+            const allCards = Array.from(document.querySelectorAll('.room-item-card'));
+            const activeCards = allCards.filter(c => c.dataset.filteredOut !== 'true' && c.style.display !== 'none');
+            const cardIndex = activeCards.indexOf(roomCard);
+            
+            if (cardIndex !== -1 && typeof window.changeRentyPage === 'function' && typeof rentyItemsPerPage !== 'undefined') {
+                const targetPage = Math.floor(cardIndex / rentyItemsPerPage) + 1;
+                if (typeof rentyCurrentPage !== 'undefined' && rentyCurrentPage !== targetPage) {
+                    window.changeRentyPage(targetPage);
+                }
+            }
+
+            // Đảm bảo card luôn hiển thị
+            roomCard.classList.remove('hidden');
+            roomCard.style.display = '';
+
+            // 2. Cuộn mượt tới khung nhìn danh sách (đảm bảo hiển thị trọn vẹn card, không bị đè)
+            const scrollArea = document.querySelector('.renty-split-scroll-area') || document.querySelector('.renty-split-right');
+            if (scrollArea && (document.body.classList.contains('renty-map-mode') || window.innerWidth > 768)) {
+                const cardRect = roomCard.getBoundingClientRect();
+                const containerRect = scrollArea.getBoundingClientRect();
+                const targetScrollTop = (cardIndex === 0) 
+                    ? 0 
+                    : Math.max(0, scrollArea.scrollTop + (cardRect.top - containerRect.top) - 16);
+                scrollArea.scrollTo({
+                    top: targetScrollTop,
+                    behavior: 'smooth'
+                });
+            } else {
+                roomCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // 3. Chạy animation giật nhấp nháy phát sáng nổi bật
+            document.querySelectorAll('.room-item-card.renty-card-highlight-active').forEach(c => {
+                c.classList.remove('renty-card-highlight-active');
+            });
+            roomCard.classList.add('renty-card-highlight-active');
+
+            if (roomCard._highlightTimer) clearTimeout(roomCard._highlightTimer);
+            roomCard._highlightTimer = setTimeout(() => {
+                roomCard.classList.remove('renty-card-highlight-active');
+            }, 2800);
+        };
         window.toggleThemeMode = window.toggleThemeMode || function() {
             const isLight = document.body.classList.contains('theme-light') || document.documentElement.classList.contains('theme-light');
             const nextMode = isLight ? 'dark' : 'light';
@@ -210,10 +299,13 @@
             }
         };
 
-        // Mặc định luôn ở giao diện 2D (Lưới danh sách). Chỉ mở bản đồ khi URL có chỉ định view=map
+        // Mở bản đồ khi URL có view=map hoặc khi người dùng đã lưu chế độ map
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            if (params.get('view') === 'map') {
+            const viewParam = params.get('view');
+            const savedMode = localStorage.getItem('rentry_view_mode');
+            
+            if (viewParam === 'map' || (!viewParam && savedMode === 'map')) {
                 if (typeof window.setViewMode === 'function') {
                     window.setViewMode('map');
                 }
@@ -221,6 +313,106 @@
                 localStorage.setItem('rentry_view_mode', 'grid');
                 if (typeof window.setViewMode === 'function') {
                     window.setViewMode('grid');
+                }
+            }
+        });
+
+        // Chuyển đổi giữa 'Xem tất cả trọ hệ thống' và 'Chỉ xem trọ của tôi' mượt mà qua AJAX không reload trang
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a.preserve-map-view, a[href*="all_tenants"]');
+            if (link) {
+                e.preventDefault();
+                const isMap = document.body.classList.contains('renty-map-mode') || localStorage.getItem('rentry_view_mode') === 'map';
+                try {
+                    const url = new URL(link.href, window.location.origin);
+                    if (isMap) {
+                        url.searchParams.set('view', 'map');
+
+                        // Lưu tọa độ tâm bản đồ và mức zoom hiện tại
+                        if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+                            const center = window.rentyGoogleMap.map.getCenter();
+                            const zoom = window.rentyGoogleMap.map.getZoom();
+                            const city = window.rentyGoogleMap.currentCity || (center.lat > 15 ? 'hanoi' : 'hcm');
+
+                            url.searchParams.set('map_lat', center.lat.toFixed(5));
+                            url.searchParams.set('map_lng', center.lng.toFixed(5));
+                            url.searchParams.set('map_zoom', zoom || 14);
+                            url.searchParams.set('map_city', city);
+                        }
+                    } else {
+                        // Đang ở trang Khám phá: Giữ nguyên chế độ khám phá (grid), không đổi sang map
+                        url.searchParams.delete('view');
+                    }
+
+                    // Hiệu ứng loading nhẹ
+                    link.style.pointerEvents = 'none';
+                    link.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang cập nhật trọ...`;
+
+                    fetch(url.toString(), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        // 1. Cập nhật header phân chia
+                        const newSplitHeader = doc.querySelector('.renty-split-header');
+                        const curSplitHeader = document.querySelector('.renty-split-header');
+                        if (newSplitHeader && curSplitHeader) {
+                            curSplitHeader.innerHTML = newSplitHeader.innerHTML;
+                        }
+
+                        // 2. Cập nhật danh sách phòng
+                        const newRoomsGrid = doc.getElementById('rooms-grid');
+                        const curRoomsGrid = document.getElementById('rooms-grid');
+                        if (newRoomsGrid && curRoomsGrid) {
+                            curRoomsGrid.innerHTML = newRoomsGrid.innerHTML;
+                        }
+
+                        // 3. Cập nhật phân trang
+                        const newPagination = doc.getElementById('renty-pagination');
+                        const curPagination = document.getElementById('renty-pagination');
+                        if (newPagination && curPagination) {
+                            curPagination.innerHTML = newPagination.innerHTML;
+                        }
+
+                        // 4. Lấy dữ liệu rentyRoomsData mới
+                        const scripts = doc.querySelectorAll('script');
+                        let updatedRoomsData = null;
+                        scripts.forEach(s => {
+                            const text = s.textContent || '';
+                            const match = text.match(/window\.rentyRoomsData\s*=\s*(\{.*?\});/s);
+                            if (match) {
+                                try {
+                                    updatedRoomsData = JSON.parse(match[1]);
+                                } catch (err) {}
+                            }
+                        });
+
+                        if (updatedRoomsData) {
+                            window.rentyRoomsData = updatedRoomsData;
+                        }
+
+                        // 5. Cập nhật markers trên bản đồ nếu đang ở chế độ bản đồ
+                        if (isMap && window.rentyGoogleMap) {
+                            window.rentyGoogleMap.renderRoomMarkers(window.rentyRoomsData);
+                            if (typeof window.rentyGoogleMap.selectCampus === 'function') {
+                                window.rentyGoogleMap.selectCampus('all');
+                            }
+                        }
+
+                        // 6. Cập nhật URL trên trình duyệt
+                        window.history.pushState({}, '', url.toString());
+                    })
+                    .catch(err => {
+                        window.location.href = url.toString();
+                    })
+                    .finally(() => {
+                        link.style.pointerEvents = '';
+                    });
+                } catch (err) {
+                    window.location.href = link.href;
                 }
             }
         });
@@ -801,6 +993,136 @@
             -moz-appearance: textfield; 
         }
 
+        /* ============================================================ */
+        /* ĐỒNG BỘ CHẾ ĐỘ SÁNG (LIGHT THEME) CHO BỘ LỌC CHI TIẾT #filter-drawer */
+        /* ============================================================ */
+        html.theme-light #filter-drawer,
+        body.theme-light #filter-drawer {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        html.theme-light #filter-drawer .border-b,
+        html.theme-light #filter-drawer .border-t,
+        body.theme-light #filter-drawer .border-b,
+        body.theme-light #filter-drawer .border-t {
+            border-color: #f1f5f9 !important;
+        }
+
+        html.theme-light #filter-drawer span,
+        html.theme-light #filter-drawer label,
+        body.theme-light #filter-drawer span,
+        body.theme-light #filter-drawer label {
+            color: #475569;
+        }
+
+        html.theme-light #filter-drawer .text-slate-200,
+        html.theme-light #filter-drawer .text-slate-100,
+        body.theme-light #filter-drawer .text-slate-200,
+        body.theme-light #filter-drawer .text-slate-100 {
+            color: #0f172a !important;
+        }
+
+        html.theme-light #filter-drawer .text-slate-300,
+        body.theme-light #filter-drawer .text-slate-300 {
+            color: #334155 !important;
+        }
+
+        html.theme-light #filter-drawer .text-slate-400,
+        body.theme-light #filter-drawer .text-slate-400 {
+            color: #64748b !important;
+        }
+
+        html.theme-light #filter-drawer input[type="text"],
+        html.theme-light #filter-drawer select,
+        html.theme-light #filter-drawer .feedback-box,
+        body.theme-light #filter-drawer input[type="text"],
+        body.theme-light #filter-drawer select,
+        body.theme-light #filter-drawer .feedback-box {
+            background-color: #f8fafc !important;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light #filter-drawer input[type="text"]::placeholder,
+        body.theme-light #filter-drawer input[type="text"]::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        html.theme-light #filter-drawer input[type="text"]:focus,
+        html.theme-light #filter-drawer select:focus,
+        body.theme-light #filter-drawer input[type="text"]:focus,
+        body.theme-light #filter-drawer select:focus {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+        }
+
+        html.theme-light #filter-drawer label.cursor-pointer,
+        body.theme-light #filter-drawer label.cursor-pointer {
+            background-color: #f8fafc !important;
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+
+        html.theme-light #filter-drawer label.cursor-pointer:hover,
+        body.theme-light #filter-drawer label.cursor-pointer:hover {
+            background-color: #f1f5f9 !important;
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light #filter-drawer input[type="checkbox"],
+        body.theme-light #filter-drawer input[type="checkbox"] {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        html.theme-light #filter-drawer button[onclick*="resetAllFilters"],
+        body.theme-light #filter-drawer button[onclick*="resetAllFilters"] {
+            color: #64748b !important;
+        }
+
+        html.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover,
+        body.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover {
+            color: #e11d48 !important;
+            background-color: #ffe4e6 !important;
+        }
+
+        html.theme-light #filter-drawer .custom-range-slider::-webkit-slider-runnable-track,
+        body.theme-light #filter-drawer .custom-range-slider::-webkit-slider-runnable-track {
+            background: linear-gradient(
+                to right,
+                #10b981 0%,
+                #10b981 var(--range-progress, 100%),
+                #e2e8f0 var(--range-progress, 100%),
+                #e2e8f0 100%
+            ) !important;
+        }
+
+        html.theme-light #filter-drawer .custom-range-slider::-webkit-slider-thumb,
+        body.theme-light #filter-drawer .custom-range-slider::-webkit-slider-thumb {
+            background: #ffffff !important;
+            border: 2px solid #10b981 !important;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        html.theme-light #filter-drawer .tick-mark,
+        body.theme-light #filter-drawer .tick-mark {
+            color: #64748b !important;
+        }
+
+        html.theme-light #filter-drawer .tick-mark:hover,
+        body.theme-light #filter-drawer .tick-mark:hover {
+            color: #0f172a !important;
+        }
+
         /* =========================================================
            LIGHT THEME: GOOGLE MAPS PRO HUD BAR ENHANCEMENTS
            ========================================================= */
@@ -858,13 +1180,92 @@
             color: #0284c7 !important;
         }
 
+        /* Style mặc định của Gợi ý tìm kiếm Bản đồ (Chế độ tối) */
+        #gm-search-autocomplete {
+            background-color: #0b0f19 !important;
+            background: #0b0f19 !important;
+            border: 1.5px solid #38bdf8 !important;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95) !important;
+            color: #f1f5f9;
+        }
+
+        /* Style Gợi ý tìm kiếm Bản đồ khi ở CHẾ ĐỘ SÁNG (Light Mode - Sáng rõ, nền trắng) */
         html.theme-light #gm-search-autocomplete,
         body.theme-light #gm-search-autocomplete {
             background: #ffffff !important;
             background-color: #ffffff !important;
             color: #0f172a !important;
-            border-color: #38bdf8 !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+            border: 1.5px solid #0284c7 !important;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18), 0 0 0 1px #e2e8f0 !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item,
+        body.theme-light #gm-search-autocomplete .gm-search-item {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item:hover,
+        body.theme-light #gm-search-autocomplete .gm-search-item:hover {
+            background-color: #f0f9ff !important;
+            background: #f0f9ff !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item span.font-bold,
+        body.theme-light #gm-search-autocomplete .gm-search-item span.font-bold {
+            color: #0f172a !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item:hover span.font-bold,
+        body.theme-light #gm-search-autocomplete .gm-search-item:hover span.font-bold {
+            color: #0284c7 !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item .text-slate-400,
+        body.theme-light #gm-search-autocomplete .gm-search-item .text-slate-400 {
+            color: #64748b !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item span.rounded-lg,
+        body.theme-light #gm-search-autocomplete .gm-search-item span.rounded-lg {
+            background-color: #e0f2fe !important;
+            border-color: #bae6fd !important;
+            color: #0284c7 !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .gm-search-item:hover span.rounded-lg,
+        body.theme-light #gm-search-autocomplete .gm-search-item:hover span.rounded-lg {
+            background-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+
+        html.theme-light #gm-search-autocomplete .fa-chevron-right,
+        body.theme-light #gm-search-autocomplete .fa-chevron-right {
+            color: #94a3b8 !important;
+        }
+
+        html.theme-light #gm-search-autocomplete div[data-type="geocode"],
+        body.theme-light #gm-search-autocomplete div[data-type="geocode"] {
+            background-color: #f8fafc !important;
+            background: #f8fafc !important;
+            border-top: 1px solid #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover,
+        body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover {
+            background-color: #0284c7 !important;
+            background: #0284c7 !important;
+            color: #ffffff !important;
+        }
+
+        html.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover span,
+        html.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover div,
+        body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover span,
+        body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover div {
+            color: #ffffff !important;
         }
 
         html.theme-light .gm-pro-hud .gm-layer-container,
@@ -954,6 +1355,16 @@
             color: #0f172a !important;
         }
 
+        html.theme-light .gm-pro-hud .gm-campus-chip.active,
+        body.theme-light .gm-pro-hud .gm-campus-chip.active {
+            background: #2563eb !important;
+            background-color: #2563eb !important;
+            border: 1.5px solid #1d4ed8 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+        }
+
         html.theme-light .gm-pro-hud .gm-campus-chip:not(.active),
         body.theme-light .gm-pro-hud .gm-campus-chip:not(.active) {
             background: #ffffff !important;
@@ -1010,14 +1421,406 @@
         body.theme-light .gm-pro-hud .border-white\/10 {
             border-color: #e2e8f0 !important;
         }
+
+        /* Popup InfoWindow xem trước phòng - Light Mode Sync */
+        html.theme-light .gm-infowindow-popup .leaflet-popup-content-wrapper,
+        body.theme-light .gm-infowindow-popup .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12) !important;
+            border-radius: 16px !important;
+        }
+
+        /* Custom Alert Modal - Light Mode Sync */
+        html.theme-light #custom-alert-modal .custom-alert-card,
+        body.theme-light #custom-alert-modal .custom-alert-card {
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+        }
+        html.theme-light #custom-alert-title,
+        body.theme-light #custom-alert-title {
+            color: #0f172a !important;
+            font-weight: 800 !important;
+        }
+        html.theme-light #custom-alert-message,
+        body.theme-light #custom-alert-message {
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+
+        /* =========================================================================
+           DETAILED COMPARISON MODAL & FLOATING BAR - LIGHT MODE SYNC
+           ========================================================================= */
+        /* 1. Modal So sánh phòng */
+        html.theme-light #renty-compare-modal .compare-modal-card,
+        body.theme-light #renty-compare-modal .compare-modal-card,
+        html.theme-light #renty-compare-modal .bg-\[\#0c1017\],
+        body.theme-light #renty-compare-modal .bg-\[\#0c1017\] {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+        }
+
+        html.theme-light #renty-compare-modal .compare-modal-header,
+        body.theme-light #renty-compare-modal .compare-modal-header {
+            border-color: #e2e8f0 !important;
+        }
+
+        html.theme-light #renty-compare-modal h3,
+        body.theme-light #renty-compare-modal h3 {
+            color: #0f172a !important;
+        }
+
+        html.theme-light #renty-compare-modal p,
+        body.theme-light #renty-compare-modal p {
+            color: #64748b !important;
+        }
+
+        /* Icon so sánh ở header */
+        html.theme-light #renty-compare-modal .compare-modal-header > div > div:first-child,
+        body.theme-light #renty-compare-modal .compare-modal-header > div > div:first-child {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0d9488 !important;
+        }
+
+        /* Nút chia sẻ và nút đóng modal */
+        html.theme-light #renty-compare-modal button[onclick*="copyCompareShareLink"],
+        body.theme-light #renty-compare-modal button[onclick*="copyCompareShareLink"],
+        html.theme-light #renty-compare-modal button[onclick*="hideCompareModal"],
+        body.theme-light #renty-compare-modal button[onclick*="hideCompareModal"] {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #475569 !important;
+        }
+
+        html.theme-light #renty-compare-modal button[onclick*="copyCompareShareLink"]:hover,
+        body.theme-light #renty-compare-modal button[onclick*="copyCompareShareLink"]:hover,
+        html.theme-light #renty-compare-modal button[onclick*="hideCompareModal"]:hover,
+        body.theme-light #renty-compare-modal button[onclick*="hideCompareModal"]:hover {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+
+        /* Khung chứa bảng so sánh */
+        html.theme-light #renty-compare-modal .compare-table-container,
+        body.theme-light #renty-compare-modal .compare-table-container,
+        html.theme-light #renty-compare-modal .bg-slate-950\/40,
+        body.theme-light #renty-compare-modal .bg-slate-950\/40 {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        /* =========================================================================
+           ÉP BUỘC MÀU CHỮ TOÀN BỘ BẢNG SO SÁNH TRONG LIGHT MODE LUÔN RÕ RÀNG
+           ========================================================================= */
+        html.theme-light #tblCompare,
+        html.theme-light #tblCompare *,
+        body.theme-light #tblCompare,
+        body.theme-light #tblCompare * {
+            color: #0f172a !important;
+        }
+
+        /* Dòng header của bảng so sánh (Tiêu chí + Tên phòng) */
+        html.theme-light #tblCompare thead,
+        body.theme-light #tblCompare thead,
+        html.theme-light #tblCompare thead tr,
+        body.theme-light #tblCompare thead tr,
+        html.theme-light #tblCompare thead tr.bg-slate-900\/90,
+        body.theme-light #tblCompare thead tr.bg-slate-900\/90,
+        html.theme-light #tblCompare thead th,
+        body.theme-light #tblCompare thead th {
+            background-color: #f8fafc !important;
+            background: #f8fafc !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light #tblCompare thead th,
+        body.theme-light #tblCompare thead th {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+
+        html.theme-light #tblCompare thead th span,
+        body.theme-light #tblCompare thead th span,
+        html.theme-light #tblCompare thead th div,
+        body.theme-light #tblCompare thead th div {
+            color: #0f172a !important;
+            background-color: transparent !important;
+            background: transparent !important;
+            font-weight: 700 !important;
+        }
+
+        /* Nút xóa phòng khỏi bảng so sánh */
+        html.theme-light #tblCompare .btnRemoveRoom,
+        body.theme-light #tblCompare .btnRemoveRoom {
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #64748b !important;
+        }
+        html.theme-light #tblCompare .btnRemoveRoom:hover,
+        body.theme-light #tblCompare .btnRemoveRoom:hover {
+            background-color: #fee2e2 !important;
+            color: #dc2626 !important;
+            border-color: #fca5a5 !important;
+        }
+
+        /* Thân bảng so sánh */
+        html.theme-light #tblCompare tbody tr,
+        body.theme-light #tblCompare tbody tr {
+            border-color: #e2e8f0 !important;
+        }
+
+        html.theme-light #tblCompare tbody tr:hover,
+        body.theme-light #tblCompare tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* Cột Tiêu chí (cột bên trái) */
+        html.theme-light #tblCompare tbody td:first-child,
+        body.theme-light #tblCompare tbody td:first-child {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+            font-weight: 700 !important;
+            border-right: 1px solid #e2e8f0 !important;
+        }
+
+        /* Các cột giá trị phòng */
+        html.theme-light #tblCompare tbody td:not(:first-child),
+        body.theme-light #tblCompare tbody td:not(:first-child) {
+            color: #0f172a !important;
+            background-color: #ffffff !important;
+        }
+
+        /* Giá thuê màu nổi bật trên nền sáng */
+        html.theme-light #tblCompare tbody tr:first-child td:not(:first-child),
+        body.theme-light #tblCompare tbody tr:first-child td:not(:first-child) {
+            color: #0d9488 !important;
+            font-weight: 800 !important;
+        }
+
+        /* Hộp AI Recommendation trong Light mode */
+        html.theme-light #compare-ai-box,
+        body.theme-light #compare-ai-box {
+            background-color: #f0fdf4 !important;
+            border-color: #86efac !important;
+            color: #14532d !important;
+        }
+        html.theme-light #compare-ai-box h4,
+        body.theme-light #compare-ai-box h4 {
+            color: #15803d !important;
+        }
+        html.theme-light #compare-ai-content,
+        body.theme-light #compare-ai-content {
+            color: #166534 !important;
+        }
+
+        /* Footer modal so sánh */
+        html.theme-light #renty-compare-modal .compare-modal-footer,
+        body.theme-light #renty-compare-modal .compare-modal-footer {
+            border-color: #e2e8f0 !important;
+        }
+
+        html.theme-light #compare-ai-btn,
+        body.theme-light #compare-ai-btn {
+            background-color: #f0fdf4 !important;
+            border-color: #86efac !important;
+            color: #15803d !important;
+        }
+        html.theme-light #compare-ai-btn:hover,
+        body.theme-light #compare-ai-btn:hover {
+            background-color: #dcfce7 !important;
+            color: #166534 !important;
+        }
+
+        html.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="hideCompareModal"],
+        body.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="hideCompareModal"] {
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="hideCompareModal"]:hover,
+        body.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="hideCompareModal"]:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="clearCompareList"],
+        body.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="clearCompareList"] {
+            color: #64748b !important;
+        }
+        html.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="clearCompareList"]:hover,
+        body.theme-light #renty-compare-modal .compare-modal-footer button[onclick*="clearCompareList"]:hover {
+            color: #dc2626 !important;
+        }
+
+        /* 2. Thanh nổi chọn so sánh (#renty-compare-bar) */
+        html.theme-light #renty-compare-bar,
+        body.theme-light #renty-compare-bar {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.theme-light #renty-compare-bar > div:first-child,
+        body.theme-light #renty-compare-bar > div:first-child {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0d9488 !important;
+        }
+        html.theme-light #renty-compare-bar > div:first-child svg,
+        body.theme-light #renty-compare-bar > div:first-child svg {
+            color: #0d9488 !important;
+        }
+        html.theme-light #renty-compare-bar button[onclick*="clearCompareList"],
+        body.theme-light #renty-compare-bar button[onclick*="clearCompareList"] {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #475569 !important;
+        }
+        html.theme-light #compare-submit-btn,
+        body.theme-light #compare-submit-btn {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3) !important;
+        }
+
+        /* Chip phòng trên thanh so sánh nổi trong Light Mode */
+        html.theme-light #renty-compare-bar .compare-item-chip,
+        body.theme-light #renty-compare-bar .compare-item-chip {
+            background-color: #f8fafc !important;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.theme-light #renty-compare-bar .compare-item-chip:hover,
+        body.theme-light #renty-compare-bar .compare-item-chip:hover {
+            background-color: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+        }
+        html.theme-light #renty-compare-bar .compare-item-chip span.font-bold,
+        body.theme-light #renty-compare-bar .compare-item-chip span.font-bold,
+        html.theme-light #renty-compare-bar .compare-item-chip .text-white,
+        body.theme-light #renty-compare-bar .compare-item-chip .text-white {
+            color: #0f172a !important;
+        }
+        html.theme-light #renty-compare-bar .compare-item-chip span.text-zinc-300,
+        body.theme-light #renty-compare-bar .compare-item-chip span.text-zinc-300 {
+            color: #0d9488 !important;
+        }
+        html.theme-light #renty-compare-bar .compare-item-chip span.rounded-full,
+        body.theme-light #renty-compare-bar .compare-item-chip span.rounded-full {
+            background-color: #0d9488 !important;
+        }
+
+        /* Toast thông báo trong Light Mode */
+        html.theme-light #renty-toast-container > div,
+        body.theme-light #renty-toast-container > div {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+        html.theme-light #renty-toast-container h4,
+        body.theme-light #renty-toast-container h4 {
+            color: #0f172a !important;
+        }
+        html.theme-light #renty-toast-container p,
+        body.theme-light #renty-toast-container p {
+            color: #334155 !important;
+        }
+        html.theme-light #renty-toast-container button,
+        body.theme-light #renty-toast-container button {
+            color: #64748b !important;
+        }
+        html.theme-light #renty-toast-container button:hover,
+        body.theme-light #renty-toast-container button:hover {
+            color: #0f172a !important;
+        }
+
+        html.theme-light .gm-infowindow-popup .leaflet-popup-tip,
+        body.theme-light .gm-infowindow-popup .leaflet-popup-tip {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        html.theme-light .gm-infowindow-card,
+        body.theme-light .gm-infowindow-card {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-title,
+        body.theme-light .gm-infowindow-card .gm-info-title {
+            color: #0f172a !important;
+            font-weight: 800 !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-address,
+        body.theme-light .gm-infowindow-card .gm-info-address {
+            color: #64748b !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-price,
+        body.theme-light .gm-infowindow-card .gm-info-price {
+            color: #059669 !important;
+            font-weight: 900 !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-area,
+        body.theme-light .gm-infowindow-card .gm-info-area {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-btn-detail,
+        body.theme-light .gm-infowindow-card .gm-info-btn-detail {
+            background: rgba(45, 212, 191, 0.15) !important;
+            color: #0d9488 !important;
+            font-weight: 800 !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-btn-detail:hover,
+        body.theme-light .gm-infowindow-card .gm-info-btn-detail:hover {
+            background: #0d9488 !important;
+            color: #ffffff !important;
+        }
+
+        html.theme-light .gm-infowindow-card .gm-info-btn-action,
+        body.theme-light .gm-infowindow-card .gm-info-btn-action {
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0284c7 !important;
+        }
     </style>
 </head>
-<body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+@php
+    $isMapMode = request('view') === 'map' || request()->is('renty/map') || request()->routeIs('renty.map');
+@endphp
+<body class="bg-[#080b11] text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-white {{ $isMapMode ? 'renty-map-mode' : '' }}">
     <script>
         (function() {
             try {
-                var theme = localStorage.getItem('renty_theme_mode') || 'ice';
-                document.body.classList.add(theme === 'fire' ? 'theme-fire' : 'theme-ice');
+                var initialSavedTheme = localStorage.getItem('renty_theme_mode') || localStorage.getItem('smartroom_theme') || 'dark';
+                var isLight = (initialSavedTheme === 'light');
+                if (isLight) {
+                    document.documentElement.classList.add('theme-light');
+                    document.body.classList.add('theme-light');
+                } else {
+                    document.documentElement.classList.remove('theme-light');
+                    document.body.classList.remove('theme-light');
+                }
+                var savedMode = localStorage.getItem('rentry_view_mode');
+                var params = new URLSearchParams(window.location.search);
+                if (params.get('view') === 'map' || (!params.get('view') && savedMode === 'map')) {
+                    document.body.classList.add('renty-map-mode');
+                }
             } catch (e) {}
         })();
     </script>
@@ -1453,6 +2256,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button type="button" onclick="switchToFallbackMapTiles()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-satellite-dish"></i> Dùng bản đồ dự phòng
+                    </button>
                     <a href="/renty?view=grid" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
                         <i class="fa-solid fa-table-cells"></i> Chuyển sang chế độ danh sách
                     </a>
@@ -1498,8 +2304,8 @@
                             </button>
                         </form>
 
-                        <!-- Dropdown Autocomplete: ĐẶC 100%, KHÔNG TRONG SUỐT, NỔI LÊN MỌI THỨ -->
-                        <div id="gm-search-autocomplete" style="background-color: #0b0f19 !important; background: #0b0f19 !important; opacity: 1 !important; z-index: 999999 !important; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1.5px #38bdf8 !important;" class="hidden absolute left-0 right-0 top-full mt-2 border border-sky-500/50 rounded-2xl overflow-hidden max-h-84 overflow-y-auto text-xs divide-y divide-slate-800">
+                        <!-- Dropdown Autocomplete: Đồng bộ Dark/Light Mode, NỔI LÊN MỌI THỨ -->
+                        <div id="gm-search-autocomplete" style="z-index: 999999 !important;" class="hidden absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden max-h-84 overflow-y-auto text-xs">
                             <!-- Kết quả tìm kiếm tự động đổ vào đây -->
                         </div>
                     </div>
@@ -1551,35 +2357,62 @@
                         <button type="button" onclick="selectCampusFilter('all', this)" id="campus-chip-all" class="gm-campus-chip active px-2.5 py-0.5 rounded-lg bg-blue-600 text-white text-[11px] font-bold transition-all shrink-0 flex items-center gap-1 cursor-pointer">
                             <span>🌐 Tất cả</span>
                         </button>
+                        <button type="button" onclick="selectCampusFilter('cd_tdc', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 CĐ Công Nghệ Thủ Đức</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('sgu', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Sài Gòn (Q.5)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('sgu_q3', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐH Sài Gòn (Q.3)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('cd_hitc', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 CĐ Công Thương (Thủ Đức)</span>
+                        </button>
                         <button type="button" onclick="selectCampusFilter('hcmut', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 Bách Khoa TP.HCM</span>
+                            <span>🎓 Bách Khoa (CS Q.10)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('hcmut_dian', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Bách Khoa (CS2 Làng ĐH)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('vnuhcm', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
                             <span>🎓 Làng ĐH Thủ Đức</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('spkt', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH SPKT</span>
+                            <span>🎓 ĐH SPKT (Thủ Đức)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('ueh', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH Kinh Tế UEH</span>
+                            <span>🎓 Kinh Tế UEH (CS Q.10)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('ueh_binhchanh', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 UEH (CS Nam Sài Gòn)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('hutech', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH HUTECH</span>
+                            <span>🎓 HUTECH (Điện Biên Phủ)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('hutech_cnc', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 HUTECH (Khu CNC Q.9)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('tdtu', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH Tôn Đức Thắng</span>
+                            <span>🎓 ĐH Tôn Đức Thắng (Q.7)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('rmit', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH RMIT Q.7</span>
+                            <span>🎓 ĐH RMIT (Q.7)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('iuh', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH Công Nghiệp IUH</span>
+                            <span>🎓 ĐH Công Nghiệp IUH (Gò Vấp)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('vanlang', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH Văn Lang</span>
+                            <span>🎓 Văn Lang (CS3 Bình Thạnh)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('vanlang_cs1', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Văn Lang (CS1 Q.1)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('vnu_hn', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐHQG Hà Nội</span>
+                            <span>🎓 ĐHQG Hà Nội (Cầu Giấy)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('vnu_hn_hoalac', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 ĐHQG Hà Nội (Hòa Lạc)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('hust', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
                             <span>🎓 Bách Khoa HN</span>
@@ -1588,10 +2421,16 @@
                             <span>🎓 ĐH KT Quốc Dân</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('ftu', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 ĐH Ngoại Thương</span>
+                            <span>🎓 ĐH Ngoại Thương (Đống Đa)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('ftu_hcm', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 Ngoại Thương (CS2 Bình Thạnh)</span>
                         </button>
                         <button type="button" onclick="selectCampusFilter('ptit', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
-                            <span>🎓 Học viện PTIT</span>
+                            <span>🎓 Học viện PTIT (Hà Đông)</span>
+                        </button>
+                        <button type="button" onclick="selectCampusFilter('ptit_hcm', this)" class="gm-campus-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🎓 PTIT (CS TP.Thủ Đức)</span>
                         </button>
                     </div>
 
@@ -1635,40 +2474,48 @@
                 <!-- Collapsible filter section (Mặc định ẩn gọn) -->
                 <div id="gm-hud-collapsible" class="hidden flex flex-col gap-2 transition-all duration-300 pt-2 border-t border-slate-800/80">
                     <!-- Nearby Places Amenities Scanner -->
-                    <div class="flex items-center justify-between gap-3 flex-wrap">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1.5">
-                                <i class="fa-solid fa-layer-group text-sky-400"></i> Quét tiện ích:
-                            </span>
-                        </div>
+                    <div class="flex items-center justify-between gap-1.5 flex-nowrap min-w-0">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1 mr-0.5">
+                            <i class="fa-solid fa-layer-group text-sky-400"></i> Quét tiện ích:
+                        </span>
 
-                        <!-- Nearby Places Filter Chips (Đầy đủ 8 tiện ích thiết thực) -->
-                        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar flex-grow">
-                            <button type="button" onclick="toggleNearbyPlace('supermarket', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                        <!-- Nút trượt trái tiện ích -->
+                        <button type="button" onclick="scrollNearbyBar(-160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm cursor-pointer" title="Cuộn tiện ích sang trái">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+
+                        <!-- Nearby Places Filter Chips (Đầy đủ 8 tiện ích thiết thực, hỗ trợ cuộn chuột & kéo rê mượt mà) -->
+                        <div class="gm-nearby-bar flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar flex-grow min-w-0 select-none cursor-grab" style="scrollbar-width: none; -ms-overflow-style: none;">
+                            <button type="button" onclick="toggleNearbyPlace('supermarket', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🛒 Siêu thị & Tiện lợi
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('hospital', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('hospital', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🏥 Bệnh viện & Nhà thuốc
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('bus', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('bus', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🚌 Xe buýt & Metro
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('food', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('food', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🍜 Quán ăn sinh viên
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('cafe', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('cafe', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 ☕ Cà phê học bài
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('atm', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('atm', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🏧 Cây ATM & Ngân hàng
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('laundry', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('laundry', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🧺 Giặt sấy 24/7
                             </button>
-                            <button type="button" onclick="toggleNearbyPlace('gym', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0">
+                            <button type="button" onclick="toggleNearbyPlace('gym', this)" class="gm-nearby-chip px-2.5 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-all shrink-0 cursor-pointer">
                                 🏋️ Phòng Gym
                             </button>
                         </div>
+
+                        <!-- Nút trượt phải tiện ích -->
+                        <button type="button" onclick="scrollNearbyBar(160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm cursor-pointer" title="Cuộn tiện ích sang phải">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
 
                     <!-- Distance Matrix Result Banner (shown when university selected) -->
@@ -1686,12 +2533,20 @@
                     <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
                         <i class="fa-solid fa-building-user text-indigo-400"></i> Cơ sở: {{ auth()->user()->tenant?->name ?? 'Khu vực quản lý' }}
                     </span>
+                    @php
+                        $baseParams = request()->except(['all_tenants', 'page']);
+                        if ($isMapMode) {
+                            $baseParams['view'] = 'map';
+                        } else {
+                            unset($baseParams['view']);
+                        }
+                    @endphp
                     @if(request()->boolean('all_tenants'))
-                        <a href="{{ route('renty.user') }}" class="text-xs text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1">
+                        <a href="{{ route('renty.user', $baseParams) }}" class="preserve-map-view text-xs text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1">
                             <i class="fa-solid fa-filter"></i> Chỉ xem trọ của tôi
                         </a>
                     @else
-                        <a href="{{ route('renty.user', ['all_tenants' => 1]) }}" class="text-xs text-slate-400 hover:text-slate-200 hover:underline flex items-center gap-1">
+                        <a href="{{ route('renty.user', array_merge($baseParams, ['all_tenants' => 1])) }}" class="preserve-map-view text-xs text-slate-400 hover:text-slate-200 hover:underline flex items-center gap-1">
                             <i class="fa-solid fa-globe"></i> Xem tất cả trọ hệ thống
                         </a>
                     @endif
@@ -1713,16 +2568,8 @@
                     </button>
                 </div>
 
-                <!-- Search Engine Selector (AI Hybrid vs Laravel Scout) -->
-                <div class="flex items-center gap-2 bg-slate-950/45 px-3 py-1.5 rounded-2xl border border-slate-900/60 backdrop-blur-sm">
-                    <span class="text-[11px] text-slate-400 font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-bolt text-amber-400"></i> <span class="hidden md:inline">Engine:</span>
-                    </span>
-                    <select id="search-engine-select" onchange="filterItems()" class="bg-slate-900/90 text-xs text-emerald-400 border border-slate-800 hover:border-emerald-500/40 rounded-xl px-2.5 py-1 outline-none font-semibold cursor-pointer transition-colors">
-                        <option value="hybrid">AI Hybrid (RRF)</option>
-                        <option value="scout">Laravel Scout</option>
-                    </select>
-                </div>
+                <!-- Search Engine mặc định chạy thuật toán tối ưu nhất: AI Hybrid (RRF) -->
+                <input type="hidden" id="search-engine-select" value="hybrid">
 
                 <div class="flex items-center gap-3 bg-slate-950/45 px-4 py-2 rounded-2xl border border-slate-900/60 backdrop-blur-sm">
                     <label for="hide-rented-toggle" class="text-xs text-slate-400 font-bold select-none cursor-pointer hover:text-slate-200 transition-colors">Ẩn phòng đã thuê</label>
@@ -1734,6 +2581,8 @@
             </div>
         </div>
 
+        <!-- Scrollable Area for Rooms List and Banners in Map Mode -->
+        <div class="renty-split-scroll-area" id="renty-split-scroll-area">
         <!-- SMART SEARCH DID YOU MEAN BANNER -->
         <div id="smart-search-did-you-mean-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs backdrop-blur-md">
             <div class="flex items-center gap-2.5 text-emerald-300">
@@ -1838,6 +2687,7 @@
 
         <!-- FOOTER -->
         @include('footer.footer')
+        </div> <!-- End of .renty-split-scroll-area -->
         </div> <!-- End of .renty-split-right -->
     </main>
 
@@ -2465,17 +3315,103 @@
 
     <!-- CUSTOM ALERT MODAL -->
     <div id="custom-alert-modal" class="fixed inset-0 z-[60] bg-[#04060b]/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-sm bg-[#0a0f1d] border border-slate-800 rounded-3xl p-5 shadow-2xl relative text-center">
-            <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-3">
-                <i class="fa-solid fa-circle-check text-xl"></i>
+        <div class="custom-alert-card w-full max-w-sm bg-[#0a0f1d] border border-slate-800 rounded-3xl p-5 shadow-2xl relative text-center">
+            <div id="custom-alert-icon-box" class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-3">
+                <i id="custom-alert-icon" class="fa-solid fa-circle-check text-xl"></i>
             </div>
             <h3 class="text-sm font-bold text-slate-100 mb-1.5" id="custom-alert-title">Thành công!</h3>
-            <p class="text-[11px] text-slate-400 leading-normal mb-4" id="custom-alert-message"></p>
-            <button onclick="closeCustomAlert()" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-extrabold text-white transition-colors">
+            <p class="text-[12px] text-slate-400 leading-normal mb-4" id="custom-alert-message"></p>
+            <button id="custom-alert-btn" onclick="closeCustomAlert()" class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-extrabold text-white transition-colors cursor-pointer shadow-md">
                 Xác nhận
             </button>
         </div>
     </div>
+
+    <script>
+        window.showCustomAlert = function(arg1, arg2, arg3) {
+            let title = 'Thông báo';
+            let message = '';
+            let type = 'info';
+
+            const validTypes = ['success', 'warning', 'error', 'danger', 'info'];
+
+            if (validTypes.includes(arg2)) {
+                // Kiểu gọi: showCustomAlert('Vui lòng nhập địa chỉ email của bạn.', 'warning')
+                message = arg1;
+                type = arg2;
+                title = (type === 'error' || type === 'danger') ? 'Lỗi'
+                      : (type === 'warning' ? 'Cảnh báo'
+                      : (type === 'success' ? 'Thành công!' : 'Thông báo'));
+            } else if (arg2 !== undefined && arg3 !== undefined) {
+                // Kiểu gọi: showCustomAlert('Tiêu đề', 'Nội dung', 'success')
+                title = arg1;
+                message = arg2;
+                type = arg3;
+            } else if (arg2 !== undefined) {
+                title = arg1;
+                message = arg2;
+                type = 'info';
+            } else {
+                message = arg1;
+            }
+
+            const modal = document.getElementById('custom-alert-modal');
+            const titleEl = document.getElementById('custom-alert-title');
+            const messageEl = document.getElementById('custom-alert-message');
+            const iconBox = document.getElementById('custom-alert-icon-box');
+            const iconEl = document.getElementById('custom-alert-icon');
+            const btnEl = document.getElementById('custom-alert-btn');
+
+            if (modal && titleEl && messageEl) {
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+
+                // Cập nhật ICON và MÀU SẮC theo type (warning/error -> Dấu X đỏ)
+                if (type === 'error' || type === 'danger' || type === 'warning') {
+                    if (iconBox) {
+                        iconBox.className = 'w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-500 mx-auto mb-3';
+                    }
+                    if (iconEl) {
+                        iconEl.className = 'fa-solid fa-circle-xmark text-2xl text-rose-500';
+                    }
+                    if (btnEl) {
+                        btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-extrabold text-white transition-all shadow-md shadow-rose-600/25 cursor-pointer';
+                    }
+                } else if (type === 'success') {
+                    if (iconBox) {
+                        iconBox.className = 'w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-3';
+                    }
+                    if (iconEl) {
+                        iconEl.className = 'fa-solid fa-circle-check text-2xl text-emerald-400';
+                    }
+                    if (btnEl) {
+                        btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-extrabold text-white transition-all shadow-md shadow-emerald-600/25 cursor-pointer';
+                    }
+                } else {
+                    if (iconBox) {
+                        iconBox.className = 'w-12 h-12 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mx-auto mb-3';
+                    }
+                    if (iconEl) {
+                        iconEl.className = 'fa-solid fa-circle-info text-2xl text-sky-400';
+                    }
+                    if (btnEl) {
+                        btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-extrabold text-white transition-all shadow-md shadow-sky-600/25 cursor-pointer';
+                    }
+                }
+
+                modal.classList.remove('hidden');
+            } else if (typeof window.showRentyToast === 'function') {
+                window.showRentyToast(message, type, title);
+            } else {
+                alert(title + ': ' + message);
+            }
+        };
+
+        window.closeCustomAlert = function() {
+            const modal = document.getElementById('custom-alert-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+    </script>
 
     <!-- FEAT_04_LANDING: Script tìm kiếm, Filter Chips và Xử lý Lỗi chuẩn spec -->
     <script>
@@ -2680,7 +3616,7 @@
     </div>
 
     <!-- Danh sách các phòng đã chọn (render động bởi JS) -->
-    <div id="compare-bar-items" class="flex items-center gap-2 max-w-[50vw] sm:max-w-none overflow-x-auto no-scrollbar py-0.5">
+    <div id="compare-bar-items" class="flex items-center gap-2 max-w-[70vw] sm:max-w-none overflow-x-auto no-scrollbar py-0.5">
         <!-- Chứa các thẻ chip phòng -->
     </div>
 
@@ -2698,9 +3634,9 @@
 
 <!-- DETAILED COMPARISON MODAL (MATCHING SPEC HÌNH 23.2) -->
 <div id="renty-compare-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/80 backdrop-blur-md px-4 py-6">
-    <div class="w-full max-w-3xl bg-[#0c1017] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fade-in p-6">
+    <div class="compare-modal-card w-full max-w-3xl bg-[#0c1017] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fade-in p-6">
         <!-- Header -->
-        <div class="flex justify-between items-start pb-4 border-b border-slate-800/80 mb-4">
+        <div class="compare-modal-header flex justify-between items-start pb-4 border-b border-slate-800/80 mb-4">
             <div class="flex items-start gap-3">
                 <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 flex items-center justify-center shrink-0 mt-0.5">
                     <i class="fa-solid fa-code-compare text-base"></i>
@@ -2722,7 +3658,7 @@
         </div>
         
         <!-- Table Container -->
-        <div class="overflow-x-auto flex-grow rounded-xl border border-slate-800/80 bg-slate-950/40">
+        <div class="compare-table-container overflow-x-auto flex-grow rounded-xl border border-slate-800/80 bg-slate-950/40">
             <table class="w-full text-left text-xs text-slate-200 min-w-[500px] border-collapse compare-table" id="tblCompare">
                 <!-- Populated by JS -->
             </table>
@@ -2747,7 +3683,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="pt-4 mt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
+        <div class="compare-modal-footer pt-4 mt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
             <button type="button" onclick="generateAiComparison()" id="compare-ai-btn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-emerald-400 text-xs font-bold transition-all">
                 <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
                 <span>Tư vấn so sánh bằng AI</span>
@@ -2789,6 +3725,16 @@
             defaultTitle = 'Thông báo';
         }
 
+        // Không hiển thị mã lỗi kỹ thuật (ERR_...) làm tiêu đề toast ra ngoài giao diện người dùng
+        if (customTitle && typeof customTitle === 'string' && customTitle.startsWith('ERR_')) {
+            customTitle = (type === 'warning') ? 'Cảnh báo' : (type === 'error' ? 'Thông báo' : 'Thông báo');
+        }
+
+        const isLight = document.body?.classList.contains('theme-light') || document.documentElement.classList.contains('theme-light');
+        const titleColor = isLight ? '#0f172a' : '#ffffff';
+        const msgColor = isLight ? '#334155' : '#cbd5e1';
+        const closeColor = isLight ? 'text-slate-400 hover:text-slate-800' : 'text-slate-500 hover:text-white';
+
         const title = customTitle || defaultTitle;
         const toast = document.createElement('div');
         toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-x-10 opacity-0 ${styleClasses}`;
@@ -2798,10 +3744,10 @@
                 <i class="fa-solid ${icon} text-base"></i>
             </div>
             <div class="flex-grow min-w-0">
-                <h4 class="font-extrabold text-white text-xs tracking-wide">${title}</h4>
-                <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">${message}</p>
+                <h4 class="font-extrabold text-xs tracking-wide" style="color: ${titleColor} !important;">${title}</h4>
+                <p class="text-[11px] mt-0.5 leading-relaxed" style="color: ${msgColor} !important;">${message}</p>
             </div>
-            <button type="button" onclick="this.parentElement.remove()" class="text-slate-500 hover:text-white transition-colors shrink-0 p-1">
+            <button type="button" onclick="this.parentElement.remove()" class="${closeColor} transition-colors shrink-0 p-1">
                 <i class="fa-solid fa-xmark text-xs"></i>
             </button>
         `;
@@ -2826,7 +3772,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (window.rentySessionSuccess) {
             showRentyToast(window.rentySessionSuccess, 'success');
-        }
         }
     });
 </script>

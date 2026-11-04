@@ -3058,11 +3058,12 @@ body.renty-map-mode main {
     width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    display: flex;
-    flex-direction: row;
-    height: calc(100vh - 80px);
+    display: flex !important;
+    flex-direction: row !important;
+    height: calc(100vh - 80px) !important;
     /* Set height precisely to viewport minus the 80px navbar */
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden !important;
 }
 
 /* Fullscreen mode for Map Explorer (Hides header, expands to 100vh) */
@@ -3097,20 +3098,47 @@ body.renty-map-mode.renty-map-fullscreen main {
     transition: width 0.45s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+body:not(.renty-map-mode) .renty-split-left {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    flex: 0 0 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+body:not(.renty-map-mode) .renty-split-right {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    padding: 0 !important;
+}
+
 body.renty-map-mode .renty-split-left {
     display: block !important;
     width: 50% !important;
+    min-width: 50% !important;
+    max-width: 50% !important;
+    flex: 0 0 50% !important;
     opacity: 1 !important;
     position: relative !important;
     height: 100% !important;
     overflow: hidden !important;
+    box-sizing: border-box !important;
 }
 
 body.renty-map-mode .renty-split-right {
-    width: 50%;
-    /* Make list column 50% width */
-    height: 100%;
-    overflow-y: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 50% !important;
+    min-width: 0 !important;
+    max-width: 50% !important;
+    flex: 0 0 50% !important;
+    height: 100% !important;
+    overflow: hidden !important; /* Khóa container cha để header luôn cố định ở trên đỉnh */
+    box-sizing: border-box !important;
+    padding: 20px 20px 0 20px !important;
 }
 
 #renty-interactive-map {
@@ -3124,7 +3152,7 @@ body.renty-map-mode .renty-split-right {
 #renty-interactive-map .leaflet-container {
     width: 100% !important;
     height: 100% !important;
-    background: #090d16 !important;
+    background: #e8ecf2 !important;
 }
 
 .renty-new-badge {
@@ -3167,23 +3195,25 @@ body:not(.renty-map-mode) .room-item-card {
     animation: rentyCardFadeInVertical 0.38s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
-/* Premium sticky header for search toolbar inside right list view */
+/* Premium clean header inside right list view (relative to prevent overlapping cards) */
 body.renty-map-mode .renty-split-header {
-    position: sticky;
-    top: -24px; /* Offset the 24px padding of the right container */
-    background: #080b11;
-    padding-top: 24px;
-    padding-bottom: 16px;
-    margin-top: -24px;
-    z-index: 30;
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative !important;
+    top: auto !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 20px !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
 }
 
-/* Light theme overrides for the sticky header */
+/* Light theme overrides for the split header */
 html.theme-light .renty-split-header,
 body.theme-light .renty-split-header {
-    background: #ffffff !important;
+    background: transparent !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
@@ -3193,60 +3223,111 @@ body.theme-light .renty-split-header .bg-slate-950\/45 {
     border-color: rgba(203, 213, 225, 0.6) !important;
 }
 
+/* Independent scrollable area for room cards below the fixed header */
+body.renty-map-mode .renty-split-scroll-area {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    padding-right: 4px !important;
+    padding-bottom: 24px !important;
+    scroll-behavior: smooth;
+}
+
+body:not(.renty-map-mode) .renty-split-scroll-area {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+}
+
 body.renty-map-mode #rooms-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
-    /* Force single column list on right */
+    grid-template-columns: 1fr !important;
     gap: 16px !important;
     margin-bottom: 0 !important;
+    width: 100% !important;
 }
 
 body.renty-map-mode .room-item-card {
-    display: flex;
-    flex-direction: row;
-    /* Horizontal cards in split screen mode for professional look */
-    min-height: 220px;
-    height: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: auto !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    position: relative !important;
 }
 
 body.renty-map-mode .room-item-card>.room-card-content {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    min-height: 220px;
-    height: auto;
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 180px !important;
+    height: auto !important;
+    position: relative !important;
+    box-sizing: border-box !important;
 }
 
 body.renty-map-mode .room-card-media {
-    width: 200px;
-    height: auto;
-    min-height: 220px;
-    flex-shrink: 0;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    height: auto !important;
+    min-height: 180px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
     border-bottom: 0 !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-sizing: border-box !important;
 }
 
 body.renty-map-mode .room-item-card .p-5 {
-    padding: 16px !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex-grow: 1;
-    height: auto;
-    min-height: 188px;
-    /* 220px - 32px padding */
+    padding: 14px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    flex-grow: 1 !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 180px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+body.renty-map-mode .room-item-card h3 {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    min-width: 0 !important;
+    word-break: break-word !important;
+    overflow: hidden !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
 }
 
 body.renty-map-mode .room-item-card .viewed-room-strip {
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.35rem !important;
 }
 
 body.renty-map-mode .room-item-card .mb-4 {
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.35rem !important;
 }
 
-body.renty-map-mode .room-item-card>div:last-child {
-    display: none !important;
-    /* Hide actions footer to keep horizontal cards extremely compact & clean */
+body.renty-map-mode .room-item-card .room-card-footer {
+    display: flex !important;
+    width: 100% !important;
+    padding: 8px 16px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-sizing: border-box !important;
 }
 
 /* Map specific styling */
@@ -3258,7 +3339,7 @@ body.renty-map-mode .room-item-card>div:last-child {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background: #090e17;
+    background: #e8ecf2;
     z-index: 1;
 }
 
@@ -3386,6 +3467,58 @@ body.renty-map-mode .room-item-card>div:last-child {
 .gm-infowindow-popup .leaflet-popup-tip {
     background: #0b1120 !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Light Mode cho Google Maps InfoWindow Popup */
+.theme-light .gm-infowindow-popup .leaflet-popup-content-wrapper {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12) !important;
+}
+
+.theme-light .gm-infowindow-popup .leaflet-popup-tip {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.theme-light .gm-infowindow-card {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-title {
+    color: #0f172a !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-address {
+    color: #64748b !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-price {
+    color: #059669 !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-area {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-btn-detail {
+    background: rgba(45, 212, 191, 0.15) !important;
+    color: #0d9488 !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-btn-detail:hover {
+    background: #0d9488 !important;
+    color: #ffffff !important;
+}
+
+.theme-light .gm-infowindow-card .gm-info-btn-action {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0284c7 !important;
 }
 
 .gm-price-marker:hover {
@@ -3589,6 +3722,13 @@ body.renty-map-mode .room-item-card>div:last-child {
         width: 100%;
         height: auto;
         overflow-y: visible;
+        padding: 16px !important;
+    }
+
+    body.renty-map-mode .renty-split-scroll-area {
+        overflow-y: visible !important;
+        height: auto !important;
+        padding-right: 0 !important;
     }
 
     body.renty-map-mode .room-item-card {
@@ -6750,6 +6890,16 @@ body.theme-light .gm-pro-hud button[onclick*="scrollCampusBar"]:hover {
     color: #0f172a !important;
 }
 
+html.theme-light .gm-pro-hud .gm-campus-chip.active,
+body.theme-light .gm-pro-hud .gm-campus-chip.active {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+    border: 1.5px solid #1d4ed8 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+}
+
 html.theme-light .gm-pro-hud .gm-campus-chip:not(.active),
 body.theme-light .gm-pro-hud .gm-campus-chip:not(.active) {
     background: #ffffff !important;
@@ -7222,8 +7372,8 @@ body.theme-light .booking-sidebar-card input[type="datetime-local"] {
 
 html.theme-light #filter-drawer,
 body.theme-light #filter-drawer {
-    background-color: #ffffff !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     border-color: #e2e8f0 !important;
     box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
 }
@@ -7235,45 +7385,43 @@ body.theme-light #filter-drawer .border-t {
     border-color: #f1f5f9 !important;
 }
 
+html.theme-light #filter-drawer span,
+html.theme-light #filter-drawer label,
+body.theme-light #filter-drawer span,
+body.theme-light #filter-drawer label {
+    color: #475569;
+}
+
+html.theme-light #filter-drawer .text-slate-200,
+html.theme-light #filter-drawer .text-slate-100,
 html.theme-light #filter-drawer span.text-slate-200,
+body.theme-light #filter-drawer .text-slate-200,
+body.theme-light #filter-drawer .text-slate-100,
 body.theme-light #filter-drawer span.text-slate-200 {
     color: #0f172a !important;
 }
 
-html.theme-light #filter-drawer label,
-body.theme-light #filter-drawer label {
+html.theme-light #filter-drawer .text-slate-300,
+body.theme-light #filter-drawer .text-slate-300 {
     color: #334155 !important;
 }
 
-html.theme-light #filter-drawer #btnApplyFilter,
-body.theme-light #filter-drawer #btnApplyFilter {
-    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
-    color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
-}
-
-html.theme-light #filter-drawer #btnApplyFilter:hover,
-body.theme-light #filter-drawer #btnApplyFilter:hover {
-    background: linear-gradient(135deg, #047857 0%, #0f766e 100%) !important;
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
-}
-
-html.theme-light #filter-drawer button[onclick*="resetAllFilters"],
-body.theme-light #filter-drawer button[onclick*="resetAllFilters"] {
+html.theme-light #filter-drawer .text-slate-400,
+body.theme-light #filter-drawer .text-slate-400 {
     color: #64748b !important;
 }
 
-html.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover,
-body.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover {
-    color: #e11d48 !important;
-    background-color: #ffe4e6 !important;
+html.theme-light #filter-drawer .text-slate-600,
+body.theme-light #filter-drawer .text-slate-600 {
+    color: #94a3b8 !important;
 }
 
 html.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]),
 html.theme-light #filter-drawer select,
+html.theme-light #filter-drawer .feedback-box,
 body.theme-light #filter-drawer input:not([type="checkbox"]):not([type="range"]),
-body.theme-light #filter-drawer select {
+body.theme-light #filter-drawer select,
+body.theme-light #filter-drawer .feedback-box {
     background-color: #f8fafc !important;
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
@@ -7309,11 +7457,6 @@ body.theme-light #filter-drawer select option {
     color: #0f172a !important;
 }
 
-html.theme-light #filter-drawer .text-slate-600,
-body.theme-light #filter-drawer .text-slate-600 {
-    color: #94a3b8 !important;
-}
-
 html.theme-light #filter-drawer label.cursor-pointer,
 body.theme-light #filter-drawer label.cursor-pointer {
     background-color: #f8fafc !important;
@@ -7344,6 +7487,49 @@ body.theme-light #filter-drawer input[type="checkbox"] {
     border-color: #cbd5e1 !important;
 }
 
+html.theme-light #filter-drawer button[onclick*="resetAllFilters"],
+body.theme-light #filter-drawer button[onclick*="resetAllFilters"] {
+    color: #64748b !important;
+}
+
+html.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover,
+body.theme-light #filter-drawer button[onclick*="resetAllFilters"]:hover {
+    color: #e11d48 !important;
+    background-color: #ffe4e6 !important;
+}
+
+html.theme-light #filter-drawer #btnApplyFilter,
+body.theme-light #filter-drawer #btnApplyFilter {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
+}
+
+html.theme-light #filter-drawer #btnApplyFilter:hover,
+body.theme-light #filter-drawer #btnApplyFilter:hover {
+    background: linear-gradient(135deg, #047857 0%, #0f766e 100%) !important;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38) !important;
+}
+
+html.theme-light #filter-drawer .custom-range-slider::-webkit-slider-runnable-track,
+body.theme-light #filter-drawer .custom-range-slider::-webkit-slider-runnable-track {
+    background: linear-gradient(
+        to right,
+        #10b981 0%,
+        #10b981 var(--range-progress, 100%),
+        #e2e8f0 var(--range-progress, 100%),
+        #e2e8f0 100%
+    ) !important;
+}
+
+html.theme-light #filter-drawer .custom-range-slider::-webkit-slider-thumb,
+body.theme-light #filter-drawer .custom-range-slider::-webkit-slider-thumb {
+    background: #ffffff !important;
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+}
+
 html.theme-light #filter-drawer .tick-mark,
 body.theme-light #filter-drawer .tick-mark {
     color: #64748b !important;
@@ -7370,3 +7556,93 @@ html.theme-light #filter-drawer .feedback-box i,
 body.theme-light #filter-drawer .feedback-box i {
     color: #059669 !important;
 }
+
+/* ============================================================ */
+/* ĐỒNG BỘ GỢI Ý TÌM KIẾM BẢN ĐỒ (#gm-search-autocomplete) */
+/* ============================================================ */
+#gm-search-autocomplete {
+    background-color: #0b0f19 !important;
+    background: #0b0f19 !important;
+    border: 1.5px solid #38bdf8 !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95) !important;
+    color: #f1f5f9;
+}
+
+html.theme-light #gm-search-autocomplete,
+body.theme-light #gm-search-autocomplete {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #0284c7 !important;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18), 0 0 0 1px #e2e8f0 !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item,
+body.theme-light #gm-search-autocomplete .gm-search-item {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item:hover,
+body.theme-light #gm-search-autocomplete .gm-search-item:hover {
+    background-color: #f0f9ff !important;
+    background: #f0f9ff !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item span.font-bold,
+body.theme-light #gm-search-autocomplete .gm-search-item span.font-bold {
+    color: #0f172a !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item:hover span.font-bold,
+body.theme-light #gm-search-autocomplete .gm-search-item:hover span.font-bold {
+    color: #0284c7 !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item .text-slate-400,
+body.theme-light #gm-search-autocomplete .gm-search-item .text-slate-400 {
+    color: #64748b !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item span.rounded-lg,
+body.theme-light #gm-search-autocomplete .gm-search-item span.rounded-lg {
+    background-color: #e0f2fe !important;
+    border-color: #bae6fd !important;
+    color: #0284c7 !important;
+}
+
+html.theme-light #gm-search-autocomplete .gm-search-item:hover span.rounded-lg,
+body.theme-light #gm-search-autocomplete .gm-search-item:hover span.rounded-lg {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+html.theme-light #gm-search-autocomplete .fa-chevron-right,
+body.theme-light #gm-search-autocomplete .fa-chevron-right {
+    color: #94a3b8 !important;
+}
+
+html.theme-light #gm-search-autocomplete div[data-type="geocode"],
+body.theme-light #gm-search-autocomplete div[data-type="geocode"] {
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover,
+body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover {
+    background-color: #0284c7 !important;
+    background: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+html.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover span,
+html.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover div,
+body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover span,
+body.theme-light #gm-search-autocomplete div[data-type="geocode"]:hover div {
+    color: #ffffff !important;
+}
+

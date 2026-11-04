@@ -61,5 +61,6 @@ class DatabaseSeeder extends Seeder
         $this->call(RoomRatingBreakdownSeeder::class);
         $this->call(RoomAmenitiesSeeder::class);
         $this->call(AddNewRoomsSeeder::class);
+        $this->call(VerificationSeeder::class);
     }
 }

@@ -1,18 +1,18 @@
 @echo off
 chcp 65001 > nul
 setlocal enabledelayedexpansion
-title SmartRoom ^& Renty Ultimate Orchestrator v8.0 [Super Auto-Pilot]
+title SmartRoom ^& Renty - Control Dashboard
 
 :: Dam bao container CSDL MySQL Docker luon duoc bat
 docker start smartroom_mysql > nul 2>&1
 
-:: Neu khong truyen tham so --cli, tu dong khoi chay GUI App Launcher
+:: Neu truyen tham so --gui, khoi chay GUI App Launcher
 if "%1" neq "--cli" (
-    start "" powershell -WindowStyle Normal -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    start "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
     exit /b 0
 )
 
-mode con: cols=110 lines=42
+mode con: cols=100 lines=32
 chcp 65001 >nul
 
 :: ======================================================================
@@ -57,18 +57,162 @@ if !errorlevel! equ 0 (
 
 :: Doc file .env de lay thong tin DB
 set DB_NAME=quan_ly_nha_tro
-set DB_PORT=3306
+set DB_PORT=3309
+set APP_PORT=8088
 if exist .env (
     for /f "usebackq tokens=1,2 delims==" %%i in (".env") do (
         set var_name=%%i
         set var_val=%%j
         if "!var_name!"=="DB_DATABASE" set DB_NAME=!var_val!
         if "!var_name!"=="DB_PORT" set DB_PORT=!var_val!
+        if "!var_name!"=="APP_URL" for /f "tokens=3 delims=:" %%p in ("!var_val!") do for /f "tokens=1 delims=/" %%k in ("%%p") do set APP_PORT=%%k
     )
 )
 
 :: Cau hinh lenh Docker Compose voi file trong thu muc docker
-set "DOCKER_COMPOSE_CMD=docker compose -p cdweb1-2 -f "%~dp0docker\docker-compose.yml""
+:: Neu co tham so --menu hoac --cli, vao giao dien Menu chon day du
+if "%1"=="--menu" goto TAB_MENU
+if "%1"=="--cli" goto TAB_MENU
+
+:: MAC DINH: KHOI CHAY NGAY CHE DO 1 TASK COMPACT (KHONG HIEN CUA SO CMD CON)
+goto AUTO_START_COMPACT
+
+:AUTO_START_COMPACT
+cls
+color 0b
+echo.
+echo    ========================================================================================
+echo                     SMARTROOM ^& RENTY - DANG KHOI DONG DICH VU NGAM...
+echo    ========================================================================================
+echo.
+
+:: 1. Kiem tra va don dep tien trinh cu tranh ket cong
+echo    [1/4] Giai phong cac tien trinh cu (tranh xung dot cong)...
+taskkill /f /im php.exe >nul 2>&1
+taskkill /f /im node.exe >nul 2>&1
+if exist public\hot del /f /q public\hot
+
+:: 2. Kiem tra .env, packages, app_key
+if not exist .env (
+    copy .env.example .env > nul
+)
+if not exist vendor (
+    echo    [!] Thieu thu vien Backend. Dang cai dat Composer...
+    call !COMPOSER_CMD! install --prefer-dist --ignore-platform-reqs
+)
+if not exist node_modules (
+    echo    [!] Thieu thu vien Frontend. Dang cai dat NPM...
+    call npm install
+)
+findstr /C:"APP_KEY=base64:" .env > nul
+if %errorlevel% neq 0 (
+    call !PHP_CMD! artisan key:generate
+)
+if not exist public\storage (
+    call !PHP_CMD! artisan storage:link > nul 2>&1
+)
+
+:: 3. Khoi dong CSDL theo cau hinh .env
+echo    [2/4] Dang ket noi Co so du lieu (Cong !DB_PORT!)...
+if "!DB_PORT!"=="3309" (
+    docker start smartroom_mysql > nul 2>&1
+    !DOCKER_COMPOSE_CMD! up -d mysql > nul 2>&1
+    !DOCKER_COMPOSE_CMD! stop app > nul 2>&1
+    powershell -Command "for ($i=0; $i -lt 15; $i++) { if (Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 }; Start-Sleep -Seconds 1 }; exit 0" > nul 2>&1
+) else (
+    call :ENSURE_MYSQL
+)
+
+:: 4. Khoi chay Web Server, Reverb WS va Vite hoan toan NGAM (-WindowStyle Hidden)
+echo    [3/4] Dang khoi chay Laravel Server, Reverb WS ^& Vite Assets (Chay ngam 100%%)...
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & `\"!PHP_CMD!`\" artisan serve --host=127.0.0.1 --port=!APP_PORT!' -WindowStyle Hidden"
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & `\"!PHP_CMD!`\" artisan reverb:start --host=127.0.0.1 --port=8085' -WindowStyle Hidden"
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & npm run dev' -WindowStyle Hidden"
+
+:: 5. Doi server san sang va mo trinh duyet
+echo    [4/4] Dang doi Server san sang va mo Website...
+powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $r = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:!APP_PORT!/' -TimeoutSec 1; if ($r.StatusCode -ge 200) { exit 0 } } catch {}; Start-Sleep -Seconds 1 }; exit 0" > nul 2>&1
+start "" "http://localhost:!APP_PORT!/renty"
+
+:DASHBOARD_COMPACT
+cls
+color 0a
+echo.
+echo    ========================================================================================
+echo                     SMARTROOM ^& RENTY - TRUNG TAM DIEU KHIEN (SINGLE TASK)
+echo    ========================================================================================
+echo.
+echo      [✔] Website Nguoi Thue:    http://localhost:!APP_PORT!/renty     (Dang chay ngam)
+echo      [✔] Cong Quan Tri Admin:   http://localhost:!APP_PORT!/smartroom/admin
+echo      [✔] Reverb WebSocket:      ws://127.0.0.1:8085             (Dang chay ngam)
+echo      [✔] Vite Assets:           Hot-Reloading                   (Dang chay ngam)
+echo      [✔] Co So Du Lieu:         Cong !DB_PORT! (!DB_NAME!)         (San sang)
+echo.
+echo    ----------------------------------------------------------------------------------------
+echo      [*] TAI KHOAN MAU (Mat khau chung: 123456):
+echo          - Admin:   admin1, admin2         ^|  - Chu tro KYC: chutro1 .. chutro8
+echo          - Quan ly: quanly1_1 .. quanly8   ^|  - Cu dan:      cudan_1 .. cudan_120
+echo    ----------------------------------------------------------------------------------------
+echo.
+echo      >> PHIM TAT QUAN TRI:
+echo         [1] Mo lai Website tren trinh duyet
+echo         [2] Don dep Cache he thong (optimize:clear)
+echo         [3] Khoi dong lai toan bo dich vu (Restart)
+echo         [4] Lam moi ^& nap lai CSDL (migrate:fresh --seed)
+echo         [5] Mo giao dien do hoa (GUI App Launcher)
+echo         [6] Menu nang cao (Docker full, XAMPP, Chuan doan...)
+echo         [0] Dung he thong ^& Thoat sach se
+echo.
+echo    ========================================================================================
+set /p compact_act="   >> Nhap thao tac (0-6): "
+
+if "!compact_act!"=="1" (
+    start "" "http://localhost:!APP_PORT!/renty"
+    goto DASHBOARD_COMPACT
+)
+if "!compact_act!"=="2" (
+    echo.
+    echo    [+] Dang don sach cache Laravel...
+    call !PHP_CMD! artisan optimize:clear
+    echo    [OK] Da don dep xong!
+    timeout /t 2 > nul
+    goto DASHBOARD_COMPACT
+)
+if "!compact_act!"=="3" (
+    goto AUTO_START_COMPACT
+)
+if "!compact_act!"=="4" (
+    echo.
+    echo    [!] Canh bao: Thao tac nay se xoa va nap lai du lieu CSDL!
+    set /p confirm_seed="   >> Ban co chac muon lam moi DB? [y/n]: "
+    if /i "!confirm_seed!"=="y" (
+        call !PHP_CMD! artisan migrate:fresh --seed
+    )
+    goto DASHBOARD_COMPACT
+)
+if "!compact_act!"=="5" (
+    start "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    goto DASHBOARD_COMPACT
+)
+if "!compact_act!"=="6" (
+    goto TAB_MENU
+)
+if "!compact_act!"=="0" (
+    goto STOP_AND_EXIT
+)
+goto DASHBOARD_COMPACT
+
+:STOP_AND_EXIT
+cls
+color 0e
+echo.
+echo    [!] Dang giai phong va tat toan bo tien trinh ngam php va node...
+taskkill /f /im php.exe >nul 2>&1
+taskkill /f /im node.exe >nul 2>&1
+echo    [OK] Da tat toan bo he thong sach se. Tam biet!
+timeout /t 1 > nul
+cmd /c "exit /b 0"
+exit /b 0
 
 :MENU
 :TAB_MENU
@@ -108,7 +252,7 @@ if "%tab_choice%"=="3" goto RUN_VIA_XAMPP
 if "%tab_choice%"=="4" goto RUN_VIA_WAMPP
 if "%tab_choice%"=="5" goto ADVANCED_MENU
 if "%tab_choice%"=="0" goto EXIT_CLEAN
-goto TAB_MENU
+goto DASHBOARD_COMPACT
 
 :: ======================================================================
 :: RUN HANDLERS: HYBRID / DOCKER / XAMPP / WAMPP
@@ -173,16 +317,16 @@ if %errorlevel% equ 2 (
 
 :: 8. Khoi dong Web Server Native va Reverb
 echo    [3/3] Dang khoi chay Web Server Native tren cong 8088 ^& Reverb WebSocket 8085...
-start "SmartRoom Native Web Server" cmd /c "!PHP_CMD! artisan serve --host=127.0.0.1 --port=8088"
-start "SmartRoom Reverb WS" cmd /c "!PHP_CMD! artisan reverb:start --host=127.0.0.1 --port=8085"
-start "SmartRoom Vite Hot-Reload" cmd /c "npm run dev"
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & `\"!PHP_CMD!`\" artisan serve --host=127.0.0.1 --port=8088' -WindowStyle Hidden"
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & `\"!PHP_CMD!`\" artisan reverb:start --host=127.0.0.1 --port=8085' -WindowStyle Hidden"
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & npm run dev' -WindowStyle Hidden"
 timeout /t 2 > nul
 
 start "" "http://localhost:8088/renty"
 echo.
 echo    [ OK ] Da khoi chay che do Sieu Toc thanh cong! Toc do phan hoi ~0.1 giay.
 pause
-goto TAB_MENU
+goto DASHBOARD_COMPACT
 
 :RUN_VIA_DOCKER
 cls
@@ -228,7 +372,7 @@ if not defined XAMPP_PHP (
     echo    Kiem tra cac duong dan: D:\xampp, C:\xampp, E:\xampp hoac PHP trong PATH.
     echo.
     pause
-    goto TAB_MENU
+    goto DASHBOARD_COMPACT
 )
 
 echo    [1/3] [+] Da xac dinh PHP XAMPP: !XAMPP_PHP!
@@ -319,7 +463,7 @@ if not defined WAMP_PHP (
     echo    Vui long kiem tra WampServer hoac chon chay bang XAMPP hoac Docker.
     echo.
     pause
-    goto TAB_MENU
+    goto DASHBOARD_COMPACT
 )
 
 echo    [1/3] [+] Da xac dinh PHP Wamp: !WAMP_PHP!
@@ -400,7 +544,7 @@ if "%choice%"=="7" goto UPGRADE_ALL
 if "%choice%"=="8" goto DIAGNOSTICS
 if "%choice%"=="9" goto LOG_MGMT
 if "%choice%"=="10" goto DOCKER_RUN
-if "%choice%"=="11" goto TAB_MENU
+if "%choice%"=="11" goto DASHBOARD_COMPACT
 if "%choice%"=="12" goto AUTO_SYNC
 if "%choice%"=="0" goto EXIT_CLEAN
 goto ADVANCED_MENU
@@ -480,7 +624,7 @@ if "!docker_choice!"=="6" goto DOCKER_DOWN
 goto DOCKER_RUN
 
 :DOCKER_BACK_TO_MENU
-goto TAB_MENU
+goto DASHBOARD_COMPACT
 
 :DOCKER_CHECK_CLI
 where docker >nul 2>&1
@@ -1548,9 +1692,9 @@ if %errorlevel% equ 0 (
 
 color 0a
 echo    [ STEP 3 ] PHAT HANH BAN SERVERS CONG !PORT!...
-start "SmartRoom ^& Renty Laravel Server" cmd /c "!PHP_CMD! artisan serve --port=!PORT!"
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & `\"!PHP_CMD!`\" artisan serve --port=!PORT!' -WindowStyle Hidden"
 if "%MODE%"=="DEV" (
-    start "Vite Hot-Reload Server" cmd /c "npm run dev"
+    powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c cd /d `\"%~dp0`\" & npm run dev' -WindowStyle Hidden"
 )
 
 set "AUTO_OPEN_PATH=/renty"

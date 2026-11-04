@@ -164,13 +164,36 @@
                                     </td>
 
                                     <td class="px-4 py-3">
+                                        @php
+                                            $actionMap = [
+                                                'system_config_updated' => ['label' => 'Cập nhật cấu hình sàn', 'color' => 'bg-amber-500/10 text-amber-300 border-amber-500/20'],
+                                                'user_role_updated' => ['label' => 'Phân quyền vai trò', 'color' => 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20'],
+                                                'user_status_changed' => ['label' => 'Đổi trạng thái tài khoản', 'color' => 'bg-rose-500/10 text-rose-300 border-rose-500/20'],
+                                                'user_password_reset' => ['label' => 'Đặt lại mật khẩu', 'color' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'],
+                                                'sensitive_data_viewed' => ['label' => 'Xem dữ liệu nhạy cảm', 'color' => 'bg-sky-500/10 text-sky-300 border-sky-500/20'],
+                                                'kyc_approved' => ['label' => 'Phê duyệt KYC', 'color' => 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'],
+                                                'kyc_rejected' => ['label' => 'Từ chối KYC', 'color' => 'bg-rose-500/10 text-rose-300 border-rose-500/20'],
+                                            ];
+                                            $resourceMap = [
+                                                'SystemConfig' => 'Cấu hình hệ thống',
+                                                'User' => 'Tài khoản người dùng',
+                                                'VerificationDocument' => 'Tài liệu xác thực',
+                                                'Verification' => 'Hồ sơ xác minh',
+                                            ];
+                                            $actionInfo = $actionMap[$log->action] ?? ['label' => $log->action, 'color' => 'bg-slate-500/10 text-slate-300 border-slate-500/20'];
+                                            $resourceLabel = $resourceMap[$log->resource_type] ?? $log->resource_type;
+                                        @endphp
                                         <div>
-                                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                                                {{ $log->action }}
+                                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold border {{ $actionInfo['color'] }}">
+                                                {{ $actionInfo['label'] }}
                                             </span>
                                         </div>
-                                        <div class="text-[11px] text-slate-400 mt-1 font-semibold">
-                                            {{ $log->resource_type }} #{{ $log->resource_id }}
+                                        <div class="text-[11px] text-slate-400 mt-1 font-semibold flex items-center gap-1">
+                                            <span>{{ $resourceLabel }}</span>
+                                            <span class="text-slate-500 font-mono">#{{ $log->resource_id }}</span>
+                                        </div>
+                                        <div class="text-[9px] text-slate-500 font-mono mt-0.5 opacity-60">
+                                            {{ $log->action }}
                                         </div>
                                     </td>
 
@@ -193,13 +216,22 @@
                                         </div>
                                     </td>
 
-                                    <td class="px-4 py-3 font-mono text-[11px]">
-                                        <div class="text-emerald-400 truncate max-w-[220px]" title="Row Hash: {{ $log->row_hash }}">
-                                            <span class="text-slate-500 text-[10px]">Row:</span> {{ substr($log->row_hash, 0, 14) }}...
+                                    <td class="px-4 py-3">
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
+                                            <i class="fa-solid fa-circle-check text-xs"></i>
+                                            <span>Đã bảo chứng an toàn</span>
                                         </div>
-                                        <div class="text-slate-400 truncate max-w-[220px]" title="Prev Hash: {{ $log->prev_hash }}">
-                                            <span class="text-slate-500 text-[10px]">Prev:</span> {{ $log->prev_hash ? substr($log->prev_hash, 0, 14) . '...' : 'GENESIS_ROOT' }}
-                                        </div>
+                                        <details class="text-[10px] text-slate-500 mt-1 font-mono cursor-pointer">
+                                            <summary class="hover:text-emerald-400 transition-colors">Xem mã chuỗi băm</summary>
+                                            <div class="mt-1 p-2 rounded bg-slate-950/80 border border-slate-800 text-[10px] space-y-1">
+                                                <div class="truncate text-emerald-400" title="{{ $log->row_hash }}">
+                                                    <span class="text-slate-400 font-sans font-semibold">Bản ghi:</span> {{ $log->row_hash }}
+                                                </div>
+                                                <div class="truncate text-slate-400" title="{{ $log->prev_hash }}">
+                                                    <span class="text-slate-500 font-sans font-semibold">Khối trước:</span> {{ $log->prev_hash ?: 'GỐC (Khởi nguyên)' }}
+                                                </div>
+                                            </div>
+                                        </details>
                                     </td>
                                 </tr>
                             @empty
