@@ -1889,6 +1889,9 @@
                         <button data-filter="maintenance" onclick="filterRooms('maintenance', this)" class="room-filter-btn px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all">
                             Bảo trì (<span id="filter-count-maintenance">{{ $maintenanceRooms ?? 0 }}</span>)
                         </button>
+                        <div class="relative ml-2">
+                            <input type="text" id="room-map-search-input" oninput="filterRoomsByKeyword(this.value)" placeholder="Tìm số phòng, cư dân..." class="px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none w-44">
+                        </div>
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold text-slate-400">
@@ -2045,6 +2048,9 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
+                            <div class="relative">
+                                <input type="text" id="utility-search-input" oninput="filterUtilityRows()" placeholder="Tìm số phòng, tên cư dân..." class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all placeholder-slate-500 w-44 sm:w-52">
+                            </div>
                             <button type="button" onclick="openIotDashboardModal()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-tower-broadcast animate-pulse"></i> 📡 IoT Smart Metering
                             </button>
@@ -2412,7 +2418,19 @@
                             </h3>
                             <p class="text-xs text-slate-500 mt-0.5">Khởi tạo hợp đồng thuê nhà điện tử và theo dõi trạng thái ký trực tuyến.</p>
                         </div>
-                        <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <form method="GET" action="{{ route('smartroom.admin', [], false) }}" class="flex gap-2">
+                                <input type="hidden" name="tab" value="contract-section">
+                                <input type="search" name="contract_q" value="{{ $contractFilters['q'] ?? '' }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Mã HĐ / Phòng / Cư dân / SĐT">
+                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Tìm kiếm">
+                                    <i class="fa-solid fa-filter"></i>
+                                </button>
+                                @if(!empty($contractFilters['q']))
+                                    <a href="{{ route('smartroom.admin', ['tab' => 'contract-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Xóa lọc">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </a>
+                                @endif
+                            </form>
                             <button onclick="toggleAddContractModal(true)" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/25 hover:-translate-y-0.5">
                                 <i class="fa-solid fa-plus-circle"></i> Tạo Hợp Đồng Mới
                             </button>
@@ -2634,6 +2652,20 @@
                             <h2 class="text-lg font-bold text-slate-200">Danh sách đăng ký tư vấn</h2>
                             <p class="text-xs text-slate-500 mt-1">Các yêu cầu xem phòng và đăng ký tư vấn từ khách thuê trên Renty Hub</p>
                         </div>
+                        <div class="flex gap-2">
+                            <form method="GET" action="{{ route('smartroom.admin', [], false) }}" class="flex gap-2">
+                                <input type="hidden" name="tab" value="contact-section">
+                                <input type="search" name="contact_q" value="{{ $contactFilters['q'] ?? '' }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Tên khách / SĐT / Phòng / Lời nhắn">
+                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Tìm kiếm">
+                                    <i class="fa-solid fa-filter"></i>
+                                </button>
+                                @if(!empty($contactFilters['q']))
+                                    <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Xóa lọc">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </a>
+                                @endif
+                            </form>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -2716,7 +2748,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center text-xs text-slate-500">
+                                    <td colspan="8" class="px-6 py-12 text-center text-xs text-slate-500">
                                         <div class="flex flex-col items-center justify-center gap-3">
                                             <i class="fa-solid fa-phone-slash text-2xl text-slate-700"></i>
                                             <span>Chưa có yêu cầu tư vấn hay đăng ký xem phòng nào.</span>
@@ -5563,6 +5595,15 @@
         let currentRoomFilter = 'all';
         let currentBuildingFilter = 'all';
         let currentFloorFilter = 'all';
+        let currentRoomSearchQuery = '';
+
+        function filterRoomsByKeyword(keyword) {
+            currentRoomSearchQuery = (keyword || '').trim().toLowerCase();
+            document.querySelectorAll('.room-card').forEach(card => {
+                applyCurrentFilterToCard(card);
+            });
+            refreshFloorGroupsVisibility();
+        }
 
         function applyCurrentFilterToCard(card) {
             if (!card) return;
@@ -5573,7 +5614,15 @@
             const buildingMatch = (currentBuildingFilter === 'all' || String(buildingId) === String(currentBuildingFilter));
             const floorMatch = (currentFloorFilter === 'all' || String(cardFloor) === String(currentFloorFilter));
 
-            if (statusMatch && buildingMatch && floorMatch) {
+            let searchMatch = true;
+            if (currentRoomSearchQuery !== '') {
+                const roomNum = (card.getAttribute('data-room-number') || '').toLowerCase();
+                const resName = (card.getAttribute('data-resident-name') || '').toLowerCase();
+                const resPhone = (card.getAttribute('data-resident-phone') || '').toLowerCase();
+                searchMatch = roomNum.includes(currentRoomSearchQuery) || resName.includes(currentRoomSearchQuery) || resPhone.includes(currentRoomSearchQuery);
+            }
+
+            if (statusMatch && buildingMatch && floorMatch && searchMatch) {
                 card.classList.remove('hidden');
                 card.style.display = '';
             } else {
@@ -6822,6 +6871,21 @@
             if (confirm('Xác nhận cư dân đã thanh toán hóa đơn này?')) {
                 document.getElementById('modal-pay-form').submit();
             }
+        }
+
+        function filterUtilityRows() {
+            const query = (document.getElementById('utility-search-input')?.value || '').trim().toLowerCase();
+            const rows = document.querySelectorAll('#tblUtility tbody tr');
+            rows.forEach(row => {
+                const roomNum = (row.getAttribute('data-room') || '').toLowerCase();
+                const text = (row.textContent || '').toLowerCase();
+                const serials = ((row.getAttribute('data-electric-serial') || '') + ' ' + (row.getAttribute('data-water-serial') || '')).toLowerCase();
+                if (!query || roomNum.includes(query) || text.includes(query) || serials.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         }
 
         // Live calculation for electricity & water utility row with anomaly detection & validation (FEAT_15_UTILITY_BULK)
@@ -9776,20 +9840,6 @@
                     calculateRowCost(input);
                 }
             });
-
-            // Auto-switch to tab from query param if provided (e.g. ?tab=utility-section)
-            const urlParams = new URLSearchParams(window.location.search);
-            const tabParam = urlParams.get('tab');
-            if (tabParam && /^[a-zA-Z0-9_-]+$/.test(tabParam)) {
-                const escapedTab = CSS.escape(tabParam);
-                const targetLink = document.querySelector(`.sidebar-nav-link[data-section="${escapedTab}"]`);
-                if (targetLink) {
-                    switchTab(tabParam, targetLink);
-                }
-                // Clean the URL parameter without reloading the page
-                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                window.history.replaceState({ path: newUrl }, '', newUrl);
-            }
         });
 
         let currentQrAccountNo = '1051572297';

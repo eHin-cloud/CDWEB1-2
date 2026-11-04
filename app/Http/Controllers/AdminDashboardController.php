@@ -164,14 +164,39 @@ class AdminDashboardController extends Controller
         $emptyRoomsList = Room::where('tenant_id', $tenantId)->where('status', 'empty')->orderBy('room_number')->get();
 
         // 6. Contracts Tab
+        $contractFilters = [
+            'q' => trim((string) $request->query('contract_q', '')),
+        ];
         $contractStats = [
             'total' => Contract::where('tenant_id', $tenantId)->count(),
             'active' => Contract::where('tenant_id', $tenantId)->where('status', 'active')->count(),
             'pending' => Contract::where('tenant_id', $tenantId)->where('status', 'pending')->count(),
         ];
-        $contracts = Contract::with(['room', 'resident'])->where('tenant_id', $tenantId)->orderBy('id', 'desc')->paginate(10, ['*'], 'contract_page');
+        $contracts = Contract::with(['room', 'resident'])
+            ->where('tenant_id', $tenantId)
+            ->when($contractFilters['q'] !== '', function ($query) use ($contractFilters) {
+                $codeKeyword = $this->prefixLike($contractFilters['q']);
+                $searchKeyword = $this->containsLike($contractFilters['q']);
+
+                $query->where(function ($sub) use ($codeKeyword, $searchKeyword) {
+                    $sub->where('contract_code', 'like', $searchKeyword)
+                        ->orWhereHas('room', function ($rq) use ($searchKeyword) {
+                            $rq->where('room_number', 'like', $searchKeyword);
+                        })
+                        ->orWhereHas('resident', function ($resQ) use ($codeKeyword, $searchKeyword) {
+                            $resQ->where('name', 'like', $searchKeyword)
+                                ->orWhere('phone', 'like', $codeKeyword)
+                                ->orWhere('cccd', 'like', $codeKeyword);
+                        });
+                });
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(10, ['*'], 'contract_page');
 
         // 8. Contact Requests Tab
+        $contactFilters = [
+            'q' => trim((string) $request->query('contact_q', '')),
+        ];
         $contactRequestStats = [
             'total' => \App\Models\ContactRequest::whereHas('room', fn($q) => $q->where('tenant_id', $tenantId))->count(),
             'pending' => \App\Models\ContactRequest::whereHas('room', fn($q) => $q->where('tenant_id', $tenantId))->where('status', 'pending')->count(),
@@ -179,7 +204,21 @@ class AdminDashboardController extends Controller
         ];
         $contactRequests = \App\Models\ContactRequest::with('room')
             ->whereHas('room', fn($q) => $q->where('tenant_id', $tenantId))
-            ->orderBy('id', 'desc')->paginate(10, ['*'], 'contact_page');
+            ->when($contactFilters['q'] !== '', function ($query) use ($contactFilters) {
+                $phoneKeyword = $this->prefixLike($contactFilters['q']);
+                $searchKeyword = $this->containsLike($contactFilters['q']);
+
+                $query->where(function ($sub) use ($phoneKeyword, $searchKeyword) {
+                    $sub->where('name', 'like', $searchKeyword)
+                        ->orWhere('phone', 'like', $phoneKeyword)
+                        ->orWhere('message', 'like', $searchKeyword)
+                        ->orWhereHas('room', function ($rq) use ($searchKeyword) {
+                            $rq->where('room_number', 'like', $searchKeyword);
+                        });
+                });
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(10, ['*'], 'contact_page');
 
         // 9. Smart alerts
         $today = Carbon::today();
@@ -402,8 +441,10 @@ class AdminDashboardController extends Controller
             'recentActivities',
             'contracts',
             'contractStats',
+            'contractFilters',
             'contactRequests',
             'contactRequestStats',
+            'contactFilters',
             'smartAlertGroups',
             'smartAlertTotal',
             'notificationLogs',
