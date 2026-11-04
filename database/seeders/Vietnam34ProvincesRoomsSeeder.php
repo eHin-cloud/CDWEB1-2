@@ -26,9 +26,8 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
     public function run(): void
     {
         $this->command?->info("==========================================================================");
-        $this->command?->info("   KHỞI TẠO DỮ LIỆU PHÒNG TRỌ 34 TỈNH THÀNH VIỆT NAM");
-        $this->command?->info("   Top 4 Thành phố dẫn đầu số phòng: TP.HCM (120), Đà Nẵng (100), Hải Phòng (80), Cần Thơ (80)");
-        $this->command?->info("   30 Tỉnh thành còn lại: tiêu chuẩn 50 phòng / tỉnh");
+        $this->command?->info("   KHỞI TẠO DỮ LIỆU PHÒNG TRỌ 34 TỈNH THÀNH VIỆT NAM (PHÂN TÁN TIÊU CHUẨN 6 PHÒNG/NƠI)");
+        $this->command?->info("   Phân bố rải rác đều 34 tỉnh thành cả nước, tối ưu mượt mà cho Bản đồ Renty");
         $this->command?->info("==========================================================================");
 
         // 1. Chuẩn bị Tenant & Tài khoản Chủ trọ Toàn quốc
@@ -46,6 +45,9 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
                 'onboarding_step' => 4,
             ]
         );
+
+        // Dọn dẹp phòng cũ của tenant này để phân tán lại chuẩn 5-6 phòng/nơi, tránh dồn cục gây lag map
+        DB::table('rooms')->where('tenant_id', $tenant->id)->delete();
 
         $landlordRole = Role::firstOrCreate(['slug' => 'landlord'], ['name' => 'Chủ trọ / Quản lý']);
 
@@ -423,7 +425,8 @@ class Vietnam34ProvincesRoomsSeeder extends Seeder
             );
             $totalCreatedBuildings++;
 
-            $targetRooms = $item['target_rooms'] ?? 50;
+            // Tiêu chuẩn 6 phòng/nơi để phân tán đẹp và tối ưu hiệu năng bản đồ không bị lag
+            $targetRooms = 6;
 
             // Kiểm tra số lượng phòng hiện tại của toà nhà để đảm bảo đủ số lượng mục tiêu
             $existingRoomCount = DB::table('rooms')->where('building_id', $building->id)->count();

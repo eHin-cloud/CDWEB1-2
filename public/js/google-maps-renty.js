@@ -2284,49 +2284,92 @@ class GoogleMapsRenty {
         const seed = roomIdNum > 0 ? roomIdNum : (num * 7);
 
         // Xác định vị trí địa điểm / tuyến đường trọng điểm
-        if (addr.includes('18 võ văn ngân')) {
-            baseLat = 10.8492; baseLng = 106.7548;
-        } else if (addr.includes('24 võ văn ngân')) {
-            baseLat = 10.8532; baseLng = 106.7612;
-        } else if (addr.includes('võ văn ngân')) {
-            baseLat = 10.8510; baseLng = 106.7580;
-        } else if (addr.includes('lê văn việt')) {
-            baseLat = 10.8450; baseLng = 106.7780;
-        } else if (addr.includes('làng đại học') || addr.includes('linh trung') || addr.includes('dhqg')) {
-            baseLat = 10.875; baseLng = 106.800;
-        } else if (addr.includes('thủ đức')) {
-            baseLat = 10.850; baseLng = 106.762;
-        } else if (addr.includes('bình thạnh')) {
-            baseLat = 10.803; baseLng = 106.711;
-        } else if (addr.includes('quận 10') || addr.includes('quan 10')) {
-            baseLat = 10.772; baseLng = 106.669;
-        } else if (addr.includes('quận 7') || addr.includes('quan 7') || addr.includes('rmit')) {
-            baseLat = 10.730; baseLng = 106.695;
-        } else if (addr.includes('gò vấp')) {
-            baseLat = 10.838; baseLng = 106.665;
-        } else if (addr.includes('hồ chí minh') || addr.includes('hcm')) {
-            baseLat = 10.780; baseLng = 106.695;
-        } else {
-            // Hà Nội
-            if (addr.includes('thanh xuân')) {
-                baseLat = 20.998; baseLng = 105.811;
-            } else if (addr.includes('đống đa')) {
-                baseLat = 21.018; baseLng = 105.827;
-            } else if (addr.includes('ba đình')) {
-                baseLat = 21.035; baseLng = 105.830;
-            } else if (addr.includes('hai bà trưng')) {
-                baseLat = 21.008; baseLng = 105.852;
-            } else if (addr.includes('hà đông')) {
-                baseLat = 20.972; baseLng = 105.776;
-            } else {
-                baseLat = 21.036; baseLng = 105.790; // Cầu Giấy
+        const provinceCoordsMap = [
+            // Các tuyến đường / cơ sở trọng điểm TP.HCM
+            { match: ['18 võ văn ngân'], coords: [10.8492, 106.7548] },
+            { match: ['24 võ văn ngân'], coords: [10.8532, 106.7612] },
+            { match: ['võ văn ngân'], coords: [10.8510, 106.7580] },
+            { match: ['lê văn việt'], coords: [10.8450, 106.7780] },
+            { match: ['làng đại học', 'linh trung', 'dhqg'], coords: [10.8750, 106.8000] },
+            { match: ['thủ đức'], coords: [10.8500, 106.7620] },
+            { match: ['bình thạnh'], coords: [10.8030, 106.7110] },
+            { match: ['quận 10', 'quan 10'], coords: [10.7720, 106.6690] },
+            { match: ['quận 7', 'quan 7', 'rmit'], coords: [10.7300, 106.6950] },
+            { match: ['gò vấp'], coords: [10.8380, 106.6650] },
+            { match: ['quận 1', 'quan 1', 'bến nghé', 'bến thành'], coords: [10.7760, 106.7000] },
+            { match: ['tân bình'], coords: [10.8010, 106.6550] },
+            { match: ['phú nhuận'], coords: [10.7990, 106.6800] },
+
+            // 34 Tỉnh thành toàn quốc (Dữ liệu Seeder 34 tỉnh)
+            { match: ['đà nẵng', 'mỹ khê', 'ngũ hành sơn'], coords: [16.0544, 108.2022] },
+            { match: ['hải phòng', 'lạch tray', 'ngô quyền'], coords: [20.8449, 106.6881] },
+            { match: ['quảng ninh', 'hạ long', 'bãi cháy'], coords: [20.9599, 107.0425] },
+            { match: ['cần thơ', 'ninh kiều'], coords: [10.0452, 105.7469] },
+            { match: ['khánh hòa', 'nha trang'], coords: [12.2388, 109.1967] },
+            { match: ['lâm đồng', 'đà lạt'], coords: [11.9404, 108.4583] },
+            { match: ['bà rịa - vũng tàu', 'vũng tàu', 'thùy vân'], coords: [10.3460, 107.0843] },
+            { match: ['kiên giang', 'phú quốc', 'dương đông'], coords: [10.2222, 103.9583] },
+            { match: ['bắc ninh'], coords: [21.1861, 106.0763] },
+            { match: ['thái nguyên'], coords: [21.5942, 105.8482] },
+            { match: ['hải dương'], coords: [20.9373, 106.3146] },
+            { match: ['nam định'], coords: [20.4388, 106.1806] },
+            { match: ['vĩnh phúc', 'vĩnh yên'], coords: [21.3090, 105.6049] },
+            { match: ['hưng yên', 'phố hiến'], coords: [20.6463, 106.0511] },
+            { match: ['phú thọ', 'việt trì'], coords: [21.3228, 105.4019] },
+            { match: ['thái bình'], coords: [20.4463, 106.3366] },
+            { match: ['ninh bình', 'tràng an'], coords: [20.2506, 105.9745] },
+            { match: ['thanh hóa', 'lam sơn'], coords: [19.8067, 105.7852] },
+            { match: ['nghệ an', 'thành vinh', 'tp. vinh', 'tp vinh'], coords: [18.6734, 105.6813] },
+            { match: ['thừa thiên huế', 'huế', 'sông hương'], coords: [16.4637, 107.5909] },
+            { match: ['quảng nam', 'hội an'], coords: [15.8801, 108.3380] },
+            { match: ['bình định', 'quy nhơn'], coords: [13.7820, 109.2197] },
+            { match: ['bình thuận', 'phan thiết', 'mũi né'], coords: [10.9289, 108.1021] },
+            { match: ['đắk lắk', 'buôn ma thuột', 'ban mê'], coords: [12.6667, 108.0500] },
+            { match: ['gia lai', 'pleiku'], coords: [13.9833, 108.0000] },
+            { match: ['bình dương', 'thủ dầu một'], coords: [10.9805, 106.6519] },
+            { match: ['đồng nai', 'biên hòa'], coords: [10.9574, 106.8427] },
+            { match: ['tây ninh', 'núi bà'], coords: [11.3351, 106.1098] },
+            { match: ['long an', 'tân an'], coords: [10.5333, 106.4000] },
+            { match: ['tiền giang', 'mỹ tho'], coords: [10.3600, 106.3600] },
+            { match: ['an giang', 'long xuyên'], coords: [10.3759, 105.4358] },
+            { match: ['bến tre'], coords: [10.2415, 106.3759] },
+
+            // Hà Nội các quận
+            { match: ['thanh xuân'], coords: [20.9980, 105.8110] },
+            { match: ['đống đa'], coords: [21.0180, 105.8270] },
+            { match: ['ba đình'], coords: [21.0350, 105.8300] },
+            { match: ['hai bà trưng'], coords: [21.0080, 105.8520] },
+            { match: ['hà đông'], coords: [20.9720, 105.7760] },
+            { match: ['hoàng mai'], coords: [20.9750, 105.8450] },
+            { match: ['tây hồ'], coords: [21.0650, 105.8250] },
+            { match: ['nam từ liêm'], coords: [21.0150, 105.7650] },
+            { match: ['bắc từ liêm'], coords: [21.0600, 105.7600] },
+            { match: ['cầu giấy', 'xuân thủy', 'chùa hà', 'quan hoa', 'dịch vọng'], coords: [21.0360, 105.7900] },
+
+            // Toàn cục TP.HCM & Hà Nội
+            { match: ['hồ chí minh', 'tp.hcm', 'tphcm', 'sài gòn'], coords: [10.7800, 106.6950] },
+            { match: ['hà nội', 'ha noi'], coords: [21.0285, 105.8542] },
+        ];
+
+        let matched = false;
+        for (const item of provinceCoordsMap) {
+            if (item.match.some(m => addr.includes(m))) {
+                baseLat = item.coords[0];
+                baseLng = item.coords[1];
+                matched = true;
+                break;
             }
         }
 
+        if (!matched) {
+            baseLat = 21.036;
+            baseLng = 105.790;
+        }
+
         // Độ phân tán vi mô bằng tỷ lệ vàng (Golden angle: 137.5 độ) dựa trên seed (room.id)
-        // Giúp các phòng trong cùng tòa nhà / cùng địa chỉ tách nhau ra 70m - 160m, không bao giờ bị đè chồng ghim lên nhau
+        // Phân tán các trọ trong cùng khu vực cách nhau 400m - 1.8km, thoáng đãng không đè ghim lên nhau
         const angle = ((seed * 137.5) % 360) * (Math.PI / 180);
-        const radius = 0.00065 + ((seed % 5) * 0.00025);
+        const radius = 0.0035 + ((seed % 6) * 0.0025);
         const offsetLat = Math.sin(angle) * radius;
         const offsetLng = Math.cos(angle) * radius;
 
