@@ -99,14 +99,6 @@ class ScoutSearchService
                 });
             }
 
-            // Mở rộng tìm kiếm sang toà nhà nếu có từ khoá
-            if ($cleanQuery !== '') {
-                $builder->orWhereHas('building', function ($q) use ($cleanQuery) {
-                    $q->where('name', 'like', "%{$cleanQuery}%")
-                      ->orWhere('address', 'like', "%{$cleanQuery}%");
-                });
-            }
-
             // Áp dụng sắp xếp trên Database
             match ($sortBy) {
                 'price_asc' => $builder->orderBy('price', 'asc'),
