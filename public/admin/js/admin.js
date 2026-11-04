@@ -34,8 +34,18 @@ function checkAdminAuth(redirectOnFail = true) {
 }
 
 // Đăng xuất
-function adminLogout() {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị hệ thống?')) {
+async function adminLogout() {
+    const confirmed = typeof smartConfirm === 'function' 
+        ? await smartConfirm({
+            title: 'Đăng Xuất',
+            text: 'Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị hệ thống?',
+            icon: 'question',
+            confirmButtonText: '<i class="fa-solid fa-right-from-bracket mr-1.5"></i> Đăng Xuất',
+            confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500'
+        })
+        : confirm('Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị hệ thống?');
+
+    if (confirmed) {
         const token = getAdminToken();
         if (token) {
             fetch(`${API_BASE}/auth/logout`, {

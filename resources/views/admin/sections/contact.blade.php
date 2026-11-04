@@ -132,7 +132,7 @@
                                                 </button>
                                             </form>
                                             @if($isLandlord)
-                                                <form action="{{ route('smartroom.admin.contact_request.delete', $req->id, false) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa yêu cầu tư vấn này?')">
+                                                <form action="{{ route('smartroom.admin.contact_request.delete', $req->id, false) }}" method="POST" class="inline" onsubmit="return confirmDelete(event, this, 'Bạn có chắc chắn muốn xóa yêu cầu tư vấn này?', 'Xóa Yêu Cầu Tư Vấn')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all text-xs" title="Xóa">

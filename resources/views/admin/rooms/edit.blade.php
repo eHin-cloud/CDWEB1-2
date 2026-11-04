@@ -533,8 +533,15 @@
         }
 
         // Quản lý xóa ảnh hiện tại
-        function markImageDeleted(btn, imagePath) {
-            if (!confirm('Bạn có chắc chắn muốn xóa ảnh này khỏi phòng trọ không?')) {
+        async function markImageDeleted(btn, imagePath) {
+            const confirmed = await smartConfirm({
+                title: 'Xóa Ảnh Phòng',
+                text: 'Bạn có chắc chắn muốn xóa ảnh này khỏi phòng trọ không?',
+                icon: 'warning',
+                confirmButtonText: '<i class="fa-solid fa-trash-can mr-1.5"></i> Xóa Ảnh',
+                confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+            });
+            if (!confirmed) {
                 return;
             }
             const item = btn.closest('[data-image-item]');

@@ -34,6 +34,7 @@
     @if($isAdminPage)
         <link rel="stylesheet" href="{{ asset('css/admin-sidebar.css') }}">
     @endif
+    @include('admin.partials.smart-dialog')
     
     @vite(['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'])
     <style>

@@ -205,7 +205,7 @@
                                             @endif
 
                                             @if($isLandlord)
-                                                <form action="{{ route('smartroom.admin.contract.delete', $c->id, false) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này không?')" class="inline">
+                                                <form action="{{ route('smartroom.admin.contract.delete', $c->id, false) }}" method="POST" onsubmit="return confirmDelete(event, this, 'Bạn có chắc chắn muốn xóa hợp đồng này không?', 'Xóa Hợp Đồng')" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="px-3 py-2 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl text-xs font-bold border border-rose-500/25 transition-all">

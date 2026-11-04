@@ -142,69 +142,7 @@
             `;
             document.head.appendChild(toastStyle);
 
-            window.alert = function(message) {
-                let type = 'success';
-                let title = 'Thông Báo';
-                
-                const lowerMsg = message.toLowerCase();
-                if (lowerMsg.includes('lỗi') || 
-                    lowerMsg.includes('không thể') || 
-                    lowerMsg.includes('thất bại') || 
-                    lowerMsg.includes('chưa') || 
-                    lowerMsg.includes('không được') || 
-                    lowerMsg.includes('chỉ được') || 
-                    lowerMsg.includes('nhỏ hơn') ||
-                    lowerMsg.includes('vui lòng')) {
-                    type = 'warning';
-                    title = 'Cảnh Báo';
-                } else if (lowerMsg.includes('thành công') || 
-                           lowerMsg.includes('tuyệt vời') || 
-                           lowerMsg.includes('đã') || 
-                           lowerMsg.includes('sao chép')) {
-                    type = 'success';
-                    title = 'Thành Công';
-                } else {
-                    type = 'info';
-                    title = 'Thông Tin';
-                }
-                
-                let container = document.querySelector('.custom-toast-container');
-                if (!container) {
-                    container = document.createElement('div');
-                    container.className = 'custom-toast-container';
-                    document.body.appendChild(container);
-                }
-                
-                const toast = document.createElement('div');
-                toast.className = `custom-toast custom-toast-${type}`;
-                
-                let iconHtml = '';
-                if (type === 'success') iconHtml = '<i class="fa-solid fa-check"></i>';
-                else if (type === 'warning') iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                else if (type === 'error') iconHtml = '<i class="fa-solid fa-circle-xmark"></i>';
-                else iconHtml = '<i class="fa-solid fa-info"></i>';
-                
-                toast.innerHTML = `
-                    <div class="custom-toast-icon">${iconHtml}</div>
-                    <div class="custom-toast-content">
-                        <div class="custom-toast-title">${title}</div>
-                        <div class="custom-toast-message">${message}</div>
-                    </div>
-                    <div class="custom-toast-close" onclick="this.parentElement.classList.add('hide'); setTimeout(() => this.parentElement.remove(), 400);"><i class="fa-solid fa-xmark"></i></div>
-                `;
-                
-                container.appendChild(toast);
-                
-                setTimeout(() => toast.classList.add('show'), 10);
-                
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.classList.remove('show');
-                        toast.classList.add('hide');
-                        setTimeout(() => toast.remove(), 400);
-                    }
-                }, 4500);
-            };
+            // window.alert được quản lý tập trung và hiển thị dạng popup box hiện đại qua smart-dialog
 
             window.showAdminToast = function(message, type = 'success', title = null) {
                 if (!title) {
@@ -1934,8 +1872,9 @@
             document.getElementById('room-detail-modal').classList.add('hidden');
         }
 
-        function submitModalPay() {
-            if (confirm('Xác nhận cư dân đã thanh toán hóa đơn này?')) {
+        async function submitModalPay() {
+            const confirmed = await smartConfirm('Xác Nhận Thanh Toán', 'Xác nhận cư dân đã thanh toán hóa đơn này?', 'question');
+            if (confirmed) {
                 document.getElementById('modal-pay-form').submit();
             }
         }
@@ -4156,7 +4095,14 @@
 
 
         async function triggerIotAutoSync(btn) {
-            if (!confirm('Bạn có chắc chắn muốn CHỐT SỐ TỰ ĐỘNG TỪ IOT cho toàn bộ các phòng vào hóa đơn tháng này?')) {
+            const confirmed = await smartConfirm({
+                title: '⚡ Chốt Số Tự Động Từ IoT',
+                text: 'Bạn có chắc chắn muốn CHỐT SỐ TỰ ĐỘNG TỪ IOT cho toàn bộ các phòng vào hóa đơn tháng này?',
+                icon: 'question',
+                confirmButtonText: '<i class="fa-solid fa-bolt mr-1.5"></i> Chốt Số Ngay',
+                confirmButtonClass: '!bg-gradient-to-r !from-cyan-600 !to-blue-600 !shadow-cyan-500/30'
+            });
+            if (!confirmed) {
                 return;
             }
 
@@ -4178,14 +4124,18 @@
 
                 const res = await response.json();
                 if (res.success) {
-                    alert(`⚡ ĐỒNG BỘ THÀNH CÔNG!\n${res.message}`);
+                    await smartAlert({
+                        title: '⚡ Đồng Bộ Thành Công!',
+                        text: res.message || 'Đã chốt số IoT toàn bộ các phòng vào hóa đơn.',
+                        icon: 'success'
+                    });
                     window.location.href = "{{ route('smartroom.admin', ['tab' => 'utility-section']) }}";
                 } else {
-                    alert('Lỗi: ' + (res.message || 'Không thể đồng bộ chốt số'));
+                    smartAlert('Đã Xảy Ra Lỗi', res.message || 'Không thể đồng bộ chốt số', 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Có lỗi xảy ra khi gọi API chốt số IoT!');
+                smartAlert('Lỗi Kết Nối', 'Có lỗi xảy ra khi gọi API chốt số IoT!', 'error');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4222,8 +4172,15 @@
         }
 
         // Resident delete simulation
-        function deleteRow(btn) {
-            if(confirm('Bạn có chắc chắn muốn xóa cư dân này ra khỏi phòng trọ?')) {
+        async function deleteRow(btn) {
+            const confirmed = await smartConfirm({
+                title: 'Xóa Cư Dân',
+                text: 'Bạn có chắc chắn muốn xóa cư dân này ra khỏi phòng trọ?',
+                icon: 'warning',
+                confirmButtonText: '<i class="fa-solid fa-trash-can mr-1.5"></i> Xóa Cư Dân',
+                confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+            });
+            if (confirmed) {
                 btn.closest('tr').remove();
             }
         }
@@ -4638,8 +4595,15 @@
             });
         }
 
-        function deleteRelative(id) {
-            if (!confirm('Bạn có chắc chắn muốn xóa thông tin người thân này?')) return;
+        async function deleteRelative(id) {
+            const confirmed = await smartConfirm({
+                title: 'Xóa Người Thân',
+                text: 'Bạn có chắc chắn muốn xóa thông tin người thân này?',
+                icon: 'warning',
+                confirmButtonText: '<i class="fa-solid fa-trash-can mr-1.5"></i> Xóa Ngay',
+                confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+            });
+            if (!confirmed) return;
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             
@@ -4654,14 +4618,14 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message || "Đã xóa thành công!");
+                    smartAlert('Thành Công', data.message || "Đã xóa thành công!", 'success');
                     loadRelativesList();
                 } else {
-                    alert("Có lỗi xảy ra: " + (data.message || "Không thể xóa!"));
+                    smartAlert('Đã Xảy Ra Lỗi', data.message || "Không thể xóa!", 'error');
                 }
             })
             .catch(err => {
-                alert("Không thể kết nối máy chủ để xóa!");
+                smartAlert('Lỗi Kết Nối', "Không thể kết nối máy chủ để xóa!", 'error');
                 console.error(err);
             });
         }
@@ -4679,18 +4643,6 @@
                 btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang xử lý...';
             }
             return true;
-        }
-
-        function confirmAndDisable(form, message) {
-            if (confirm(message)) {
-                const btn = form.querySelector('.anti-spam-btn') || form.querySelector('button[type="submit"]');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>';
-                }
-                return true;
-            }
-            return false;
         }
 
         // ==========================================
@@ -5208,8 +5160,15 @@
             });
         }
 
-        function triggerAutoRemind(btn) {
-            if (!confirm('Hệ thống sẽ tự động quét các hóa đơn chưa đóng trong tháng này và gửi tin nhắn nhắc nợ qua Zalo hàng loạt. Bạn có chắc chắn muốn thực hiện?')) {
+        async function triggerAutoRemind(btn) {
+            const confirmed = await smartConfirm({
+                title: '🔔 Tự Động Nhắc Nợ Zalo',
+                text: 'Hệ thống sẽ tự động quét các hóa đơn chưa đóng trong tháng này và gửi tin nhắn nhắc nợ qua Zalo hàng loạt. Bạn có chắc chắn muốn thực hiện?',
+                icon: 'question',
+                confirmButtonText: '<i class="fa-solid fa-paper-plane mr-1.5"></i> Gửi Tin Nhắc Nợ',
+                confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+            });
+            if (!confirmed) {
                 return;
             }
 
@@ -5232,18 +5191,18 @@
                 if (data.success) {
                     if (data.sent_count > 0) {
                         let roomList = data.sent_rooms.map(r => `Phòng ${r.room_number} (${r.resident_name}): ${r.total_amount_formatted}`).join('\n');
-                        alert(`🚀 Tự động nhắc nợ thành công!\nĐã gửi tin nhắn nhắc nợ Zalo tới ${data.sent_count} phòng chưa đóng tiền:\n\n${roomList}`);
+                        smartAlert('🚀 Nhắc Nợ Thành Công', `Đã gửi tin nhắn nhắc nợ Zalo tới ${data.sent_count} phòng chưa đóng tiền:\n\n${roomList}`, 'success');
                     } else {
-                        alert(`✨ Tuyệt vời! Tất cả các phòng đã hoàn thành đóng tiền trọ tháng này.`);
+                        smartAlert('✨ Tuyệt Vời', `Tất cả các phòng đã hoàn thành đóng tiền trọ tháng này.`, 'success');
                     }
                 } else {
-                    alert("Có lỗi xảy ra khi gửi nhắc nợ tự động.");
+                    smartAlert('Đã Xảy Ra Lỗi', "Có lỗi xảy ra khi gửi nhắc nợ tự động.", 'error');
                 }
             })
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
-                alert("Không thể kết nối đến máy chủ để thực hiện gửi nhắc nợ hàng loạt!");
+                smartAlert('Lỗi Kết Nối', "Không thể kết nối đến máy chủ để thực hiện gửi nhắc nợ hàng loạt!", 'error');
                 console.error(err);
             });
         }
@@ -5813,8 +5772,15 @@
             const declineBtn = document.getElementById('renew-decline-btn');
             if (contract.renewal_status === 'requested') {
                 declineBtn.classList.remove('hidden');
-                declineBtn.onclick = function() {
-                    if (confirm('Bạn có chắc chắn muốn từ chối yêu cầu gia hạn này không?')) {
+                declineBtn.onclick = async function() {
+                    const confirmed = await smartConfirm({
+                        title: 'Từ Chối Gia Hạn',
+                        text: 'Bạn có chắc chắn muốn từ chối yêu cầu gia hạn này không?',
+                        icon: 'warning',
+                        confirmButtonText: '<i class="fa-solid fa-xmark mr-1.5"></i> Từ Chối',
+                        confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+                    });
+                    if (confirmed) {
                         const declineForm = document.createElement('form');
                         declineForm.method = 'POST';
                         declineForm.action = `/smartroom/admin/contract/${contract.id}/decline-renewal`;

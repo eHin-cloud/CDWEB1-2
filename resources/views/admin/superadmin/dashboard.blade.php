@@ -943,14 +943,21 @@
         });
 
         // 2. Xử lý khóa tài khoản & Modal cảnh báo đỏ tự khóa chính mình (ERR_20_03)
-        function handleLockUser(targetUserId, currentAuthId) {
+        async function handleLockUser(targetUserId, currentAuthId) {
             if (targetUserId === currentAuthId) {
                 // Tự khóa chính mình -> Bật modal cảnh báo đỏ từ chối hành động ERR_20_03
                 document.getElementById('modal-alert-self-lock').classList.remove('hidden');
                 return;
             }
 
-            if (confirm('Bạn có chắc chắn muốn khóa tài khoản này không? Người dùng sẽ không thể đăng nhập vào hệ thống.')) {
+            const confirmed = await smartConfirm({
+                title: 'Khóa Tài Khoản',
+                text: 'Bạn có chắc chắn muốn khóa tài khoản này không? Người dùng sẽ không thể đăng nhập vào hệ thống.',
+                icon: 'warning',
+                confirmButtonText: '<i class="fa-solid fa-lock mr-1.5"></i> Khóa Ngay',
+                confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+            });
+            if (confirmed) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/admin/users/${targetUserId}/status`;

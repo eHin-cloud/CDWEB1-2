@@ -350,16 +350,23 @@
             return true;
         }
 
-        // 1. Chống spam click nút xóa
-        function confirmDelete(e, roomNumber) {
+        // 1. Chống spam click nút xóa với modal xác nhận đẹp mắt
+        async function confirmDelete(e, roomNumber) {
             e.preventDefault();
-            if (confirm(`Bạn có chắc chắn muốn xóa phòng ${roomNumber} không? Hành động này không thể hoàn tác!`)) {
-                const form = e.target.closest('form');
+            const form = e.target.closest('form');
+            const confirmed = await smartConfirm({
+                title: 'Xóa Phòng Trọ',
+                text: `Bạn có chắc chắn muốn xóa phòng ${roomNumber} không? Hành động này không thể hoàn tác!`,
+                icon: 'warning',
+                confirmButtonText: '<i class="fa-solid fa-trash-can mr-1.5"></i> Xóa Phòng',
+                confirmButtonClass: '!bg-rose-600 hover:!bg-rose-500 !shadow-rose-600/30'
+            });
+            if (confirmed && form) {
                 const btn = form.querySelector('.delete-btn');
-                
-                // Tránh nhấn đúp
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang xóa...';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Đang xóa...';
+                }
                 form.submit();
             }
             return false;

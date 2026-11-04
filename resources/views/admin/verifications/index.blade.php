@@ -455,7 +455,7 @@
                                                         ? 'Xác nhận phê duyệt hồ sơ ĐKKD/PCCC và cấp huy hiệu Tích Xanh cho cơ sở này?' 
                                                         : 'Xác nhận phê duyệt hồ sơ định danh KYC (CCCD) cho chủ cơ sở này?';
                                                 @endphp
-                                                <form method="POST" action="{{ route('admin.kyc.approve', $request->id, false) }}" onsubmit="return confirm('{{ $confirmApproveMsg }}');" class="inline-block">
+                                                <form method="POST" action="{{ route('admin.kyc.approve', $request->id, false) }}" onsubmit="return confirmAction(event, this, '{{ $confirmApproveMsg }}', 'Xác Nhận Phê Duyệt', 'question', '<i class=\'fa-solid fa-check mr-1.5\'></i> Phê Duyệt Ngay', '!bg-emerald-600 hover:!bg-emerald-500 !shadow-emerald-600/30');" class="inline-block">
                                                     @csrf
                                                     <button type="submit" 
                                                             name="btnApprove" 
@@ -868,10 +868,17 @@
         // ================= WebAuthn FIDO2 Biometric Security =================
         window.hasPasskey = false;
 
-        function ensureSecureWebAuthnDomain() {
+        async function ensureSecureWebAuthnDomain() {
             if (window.location.hostname === '127.0.0.1') {
                 const newUrl = window.location.href.replace('127.0.0.1', 'localhost');
-                if (confirm('Chuẩn bảo mật WebAuthn (Passkey) bắt buộc truy cập qua "localhost" hoặc HTTPS (không hỗ trợ địa chỉ IP 127.0.0.1 theo tiêu chuẩn W3C WebAuthn).\n\nBạn có muốn chuyển sang ' + newUrl + ' ngay bây giờ?')) {
+                const confirmed = await smartConfirm({
+                    title: 'Bảo Mật WebAuthn Passkey',
+                    text: 'Chuẩn bảo mật WebAuthn (Passkey) bắt buộc truy cập qua "localhost" hoặc HTTPS (không hỗ trợ địa chỉ IP 127.0.0.1 theo tiêu chuẩn W3C WebAuthn).\n\nBạn có muốn chuyển sang ' + newUrl + ' ngay bây giờ?',
+                    icon: 'info',
+                    confirmButtonText: '<i class="fa-solid fa-arrow-right mr-1.5"></i> Chuyển Sang Localhost',
+                    confirmButtonClass: '!bg-indigo-600 hover:!bg-indigo-500'
+                });
+                if (confirmed) {
                     window.location.href = newUrl;
                 }
                 return false;

@@ -123,7 +123,7 @@
                                             </button>
                                             @if($isLandlord)
                                                 {{-- Nút Xóa cư dân - có chống spam click (disabled sau click) --}}
-                                                <form action="{{ route('smartroom.admin.resident.delete', $resident->id, false) }}" method="POST" onsubmit="return confirmAndDisable(this, 'Bạn có chắc chắn muốn xóa cư dân này ra khỏi phòng trọ?')" class="inline">
+                                                <form action="{{ route('smartroom.admin.resident.delete', $resident->id, false) }}" method="POST" onsubmit="return confirmAndDisable(this, 'Bạn có chắc chắn muốn xóa cư dân này ra khỏi phòng trọ?', 'Xóa Cư Dân')" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="anti-spam-btn px-2 py-1.5 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/20 rounded-lg text-[10px] font-bold text-rose-400 transition-all" title="Xóa cư dân">
