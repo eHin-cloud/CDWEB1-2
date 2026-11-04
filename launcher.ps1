@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # SmartRoom & Renty - GUI App Launcher
 # ==============================================================================
 
@@ -341,11 +341,14 @@ $OutputEncoding           = [System.Text.Encoding]::UTF8
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="SmartRoom x Renty • System Orchestrator v8.0" FontSize="11" Foreground="#475569" VerticalAlignment="Center"/>
-                <Button Name="btnOpenAdvTab" Grid.Column="1" Content="⚙️ Menu Nâng Cao" Height="28" Padding="12,0" FontSize="11"
+                <Button Name="btnStopAll" Grid.Column="1" Content="⏹️ Dừng Server" Height="28" Padding="12,0" FontSize="11"
+                        Background="#7f1d1d" Foreground="#fca5a5" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0"/>
+                <Button Name="btnOpenAdvTab" Grid.Column="2" Content="⚙️ Menu Nâng Cao" Height="28" Padding="12,0" FontSize="11"
                         Background="#1e293b" Foreground="#cbd5e1" BorderThickness="1" BorderBrush="#334155" Cursor="Hand" Margin="0,0,8,0"/>
-                <Button Name="btnExit" Grid.Column="2" Content="Thoát" Height="28" Padding="16,0" FontSize="11"
+                <Button Name="btnExit" Grid.Column="3" Content="Thoát" Height="28" Padding="16,0" FontSize="11"
                         Background="#334155" Foreground="#f8fafc" BorderThickness="0" Cursor="Hand"/>
             </Grid>
         </Border>
@@ -372,6 +375,7 @@ $btnAdvDiag      = $window.FindName("btnAdvDiag")
 $btnAdvAutoSync  = $window.FindName("btnAdvAutoSync")
 $btnAdvOpenCli   = $window.FindName("btnAdvOpenCli")
 $btnOpenAdvTab   = $window.FindName("btnOpenAdvTab")
+$btnStopAll     = $window.FindName("btnStopAll")
 $btnExit         = $window.FindName("btnExit")
 $txtStatus       = $window.FindName("txtStatus")
 $chkAppMode      = $window.FindName("chkAppMode")
@@ -636,14 +640,14 @@ $btnRunHybrid.Add_Click({
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan migrate --force & `"$phpPath`" artisan db:seed --force" -Wait
     }
 
-    # 8. Khởi chạy Server và Vite
+    # 8. Khởi chạy Server và Vite (Chạy ngầm ẩn cửa sổ để không hiện task rác trên Taskbar)
     $isServed = Test-NetConnection -ComputerName 127.0.0.1 -Port 8088 -InformationLevel Quiet -WarningAction SilentlyContinue
     if (-not $isServed) {
-        $txtStatus.Text = "⏳ Đang khởi chạy Laravel Server (Port 8088) & Reverb WebSocket..."
+        $txtStatus.Text = "⏳ Đang khởi chạy Laravel Server (Port 8088) & Reverb WebSocket ngầm..."
         Update-UI
-        Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Native Server (Port 8088) & cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --host=127.0.0.1 --port=8088"
-        Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Reverb WebSocket (Port 8085) & cd /d `"$scriptDir`" & `"$phpPath`" artisan reverb:start --host=127.0.0.1 --port=8085"
-        Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Vite Assets & cd /d `"$scriptDir`" & npm run dev"
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --host=127.0.0.1 --port=8088" -WindowStyle Hidden
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan reverb:start --host=127.0.0.1 --port=8085" -WindowStyle Hidden
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & npm run dev" -WindowStyle Hidden
         Start-Sleep -Seconds 2
     }
 
@@ -754,10 +758,10 @@ $btnRunXampp.Add_Click({
         }
     }
 
-    # Khoi chay Laravel + Vite
-    $txtStatus.Text = "⏳ Đang khởi chạy Laravel Server (port 8000) & Vite..."
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Laravel Server & cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --port=8000"
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Vite Hot-Reload & cd /d `"$scriptDir`" & npm run dev"
+    # Khoi chay Laravel + Vite ngam an cua so
+    $txtStatus.Text = "⏳ Đang khởi chạy Laravel Server (port 8000) & Vite ngầm..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --port=8000" -WindowStyle Hidden
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & npm run dev" -WindowStyle Hidden
 
     Start-Sleep -Seconds 3
     $targetUrl = "http://127.0.0.1:8000/renty"
@@ -798,10 +802,10 @@ $btnRunWampp.Add_Click({
         return
     }
 
-    # Khoi chay
-    $txtStatus.Text = "⏳ Đang khởi chạy ứng dụng với Wamp PHP..."
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title SmartRoom Laravel (WAMP) & cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --port=8000"
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c title Vite Server & cd /d `"$scriptDir`" & npm run dev"
+    # Khoi chay ngam an cua so
+    $txtStatus.Text = "⏳ Đang khởi chạy ứng dụng với Wamp PHP ngầm..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --port=8000" -WindowStyle Hidden
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & npm run dev" -WindowStyle Hidden
 
     Start-Sleep -Seconds 3
     $targetUrl = "http://127.0.0.1:8000/renty"
@@ -851,12 +855,24 @@ $btnAdvOpenCli.Add_Click({
 })
 
 # FOOTER BUTTONS
+$btnStopAll.Add_Click({
+    $txtStatus.Text = "⏳ Đang giải phóng và dừng toàn bộ tiến trình PHP, Node ngầm..."
+    Update-UI
+    Stop-Process -Name "php", "node" -Force -ErrorAction SilentlyContinue
+    $txtStatus.Text = "⏹️ Đã dừng toàn bộ dịch vụ Server & Vite ngầm thành công."
+})
+
 $btnOpenAdvTab.Add_Click({
     $mainTabControl.SelectedIndex = 3
 })
 
 $btnExit.Add_Click({
+    Stop-Process -Name "php", "node" -Force -ErrorAction SilentlyContinue
     $window.Close()
+})
+
+$window.Add_Closing({
+    Stop-Process -Name "php", "node" -Force -ErrorAction SilentlyContinue
 })
 
 # Hien thi Window

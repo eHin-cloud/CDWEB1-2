@@ -19,19 +19,19 @@
 @endphp
 
 @if($shouldShowCelebration && !empty($congratData))
-<div id="celebration-verification-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-950/85 backdrop-blur-xl animate-fade-in transition-all duration-300">
+<div id="celebration-verification-modal" onclick="closeCelebrationModal()" class="fixed inset-0 flex items-center justify-center p-4 sm:p-6 bg-slate-950/85 backdrop-blur-xl animate-fade-in transition-all duration-300" style="z-index: 99999 !important;">
     <!-- Confetti Canvas -->
     <canvas id="celebration-confetti-canvas" class="absolute inset-0 pointer-events-none w-full h-full z-0"></canvas>
 
     <!-- Modal Content Card -->
-    <div class="relative z-10 w-full max-w-lg bg-gradient-to-b {{ $isPremiumModal ? 'from-[#0b1b36] via-[#091124] to-[#040711] border-sky-500/40 shadow-sky-500/20' : 'from-[#06241b] via-[#071714] to-[#040b09] border-emerald-500/40 shadow-emerald-500/20' }} border-2 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
+    <div onclick="event.stopPropagation()" class="relative z-10 w-full max-w-lg bg-gradient-to-b {{ $isPremiumModal ? 'from-[#0b1b36] via-[#091124] to-[#040711] border-sky-500/40 shadow-sky-500/20' : 'from-[#06241b] via-[#071714] to-[#040b09] border-emerald-500/40 shadow-emerald-500/20' }} border-2 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
         
         <!-- Glow Backdrop circles -->
         <div class="absolute -top-24 -left-24 w-52 h-52 {{ $isPremiumModal ? 'bg-sky-500/20' : 'bg-emerald-500/20' }} rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -right-24 w-52 h-52 {{ $isPremiumModal ? 'bg-indigo-500/20' : 'bg-teal-500/20' }} rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Close button -->
-        <button type="button" onclick="closeCelebrationModal()" class="absolute top-4 right-4 w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-400 hover:text-white flex items-center justify-center transition-all">
+        <button type="button" onclick="closeCelebrationModal()" title="Đóng thông báo (Esc)" class="absolute top-4 right-4 w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer z-30">
             <i class="fa-solid fa-xmark text-sm"></i>
         </button>
 
@@ -119,7 +119,7 @@
 
         <!-- Action Button -->
         <div class="flex flex-col sm:flex-row gap-3">
-            <button type="button" onclick="closeCelebrationModal()" class="flex-1 py-3 px-5 rounded-2xl {{ $isPremiumModal ? 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-sky-500/30' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-500/30' }} text-sm font-bold shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <button type="button" onclick="closeCelebrationModal()" class="flex-1 py-3 px-5 rounded-2xl {{ $isPremiumModal ? 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-sky-500/30' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-500/30' }} text-sm font-bold shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer relative z-30">
                 <i class="fa-solid fa-rocket"></i>
                 Bắt Đầu Quản Lý Cơ Sở Ngay
             </button>
@@ -128,13 +128,36 @@
 </div>
 
 <script>
-    function closeCelebrationModal() {
+    window.closeCelebrationModal = function() {
         const modal = document.getElementById('celebration-verification-modal');
         if (modal) {
-            modal.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => modal.remove(), 300);
+            modal.style.transition = 'opacity 0.25s ease';
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            setTimeout(() => {
+                try { modal.remove(); } catch (e) { modal.style.display = 'none'; }
+            }, 250);
         }
-    }
+        // Xóa query param ?celebrate trên URL nếu có để không bị hiện lại khi refresh
+        try {
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location.href);
+                if (url.searchParams.has('celebrate')) {
+                    url.searchParams.delete('celebrate');
+                    window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+                }
+            }
+        } catch (e) { }
+    };
+
+    // Đóng nhanh bằng phím Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            if (typeof window.closeCelebrationModal === 'function') {
+                window.closeCelebrationModal();
+            }
+        }
+    });
 
     // Hiệu ứng pháo hoa Confetti siêu nhẹ (Pure Canvas)
     (function initCelebrationConfetti() {
@@ -144,7 +167,10 @@
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
 
-        const colors = {{ $isPremiumModal ? "['#38bdf8', '#818cf8', '#60a5fa', '#f59e0b', '#ffffff']" : "['#34d399', '#10b981', '#14b8a6', '#f59e0b', '#ffffff']" }};
+        const isPremium = @json($isPremiumModal);
+        const colors = isPremium
+            ? ['#38bdf8', '#818cf8', '#60a5fa', '#f59e0b', '#ffffff']
+            : ['#34d399', '#10b981', '#14b8a6', '#f59e0b', '#ffffff'];
         const pieces = [];
         const numberOfPieces = 80;
 

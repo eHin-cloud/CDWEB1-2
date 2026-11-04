@@ -350,7 +350,7 @@
                                 <th class="py-4 px-4">Số CCCD</th>
                                 <th class="py-4 px-4">Ảnh đính kèm</th>
                                 <th class="py-4 px-4">Ngày nộp</th>
-                                <th class="py-4 px-4">Trạng thái</th>
+                                <th class="py-4 px-4 whitespace-nowrap text-center">Trạng thái</th>
                                 <th class="py-4 px-6 text-center">Hành động</th>
                             </tr>
                         </thead>
@@ -438,8 +438,8 @@
                                     </td>
 
                                     <!-- Trạng thái -->
-                                    <td class="py-4 px-4">
-                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider {{ $statusBadge }}">
+                                    <td class="py-4 px-4 whitespace-nowrap text-center">
+                                        <span class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider {{ $statusBadge }}">
                                             {{ $statusName }}
                                         </span>
                                     </td>
@@ -448,14 +448,24 @@
                                     <td class="py-4 px-6 text-center whitespace-nowrap">
                                         @if($request->status === 'pending')
                                             <div class="flex items-center justify-center gap-2">
-                                                <!-- Button btnApprove: Phê duyệt & Cấp tích xanh (Nền Emerald) -->
-                                                <form method="POST" action="{{ route('admin.kyc.approve', $request->id) }}" onsubmit="return confirm('Xác nhận phê duyệt hồ sơ định danh KYC và cấp huy hiệu Tích Xanh cho cơ sở này?');" class="inline-block">
+                                                <!-- Button btnApprove: Phê duyệt theo loại hồ sơ (Nền Emerald) -->
+                                                @php
+                                                    $isPremiumReq = ($request->type === 'premium');
+                                                    $confirmApproveMsg = $isPremiumReq 
+                                                        ? 'Xác nhận phê duyệt hồ sơ ĐKKD/PCCC và cấp huy hiệu Tích Xanh cho cơ sở này?' 
+                                                        : 'Xác nhận phê duyệt hồ sơ định danh KYC (CCCD) cho chủ cơ sở này?';
+                                                @endphp
+                                                <form method="POST" action="{{ route('admin.kyc.approve', $request->id) }}" onsubmit="return confirm('{{ $confirmApproveMsg }}');" class="inline-block">
                                                     @csrf
                                                     <button type="submit" 
                                                             name="btnApprove" 
                                                             id="btnApprove_{{ $request->id }}" 
                                                             class="btnApprove inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all">
-                                                        <i class="fa-solid fa-certificate"></i> Phê duyệt & Cấp tích xanh
+                                                        @if($isPremiumReq)
+                                                            <i class="fa-solid fa-certificate"></i> Cấp tích xanh
+                                                        @else
+                                                            <i class="fa-solid fa-user-check"></i> Phê duyệt KYC
+                                                        @endif
                                                     </button>
                                                 </form>
 
@@ -599,10 +609,17 @@
                                         <i class="fa-solid fa-sliders text-emerald-400"></i> Thao Tác Quyết Định
                                     </h3>
 
+                                    @php
+                                        $isCardPremiumReq = ($request->type === 'premium');
+                                    @endphp
                                     <form method="POST" action="{{ route('admin.kyc.approve', $request->id) }}">
                                         @csrf
                                         <button class="btnApprove w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all duration-200 active:scale-[0.97]">
-                                            <i class="fa-solid fa-square-check mr-1.5 text-base align-middle"></i> Phê Duyệt & Cấp Tích Xanh
+                                            @if($isCardPremiumReq)
+                                                <i class="fa-solid fa-certificate mr-1.5 text-base align-middle"></i> Cấp Tích Xanh
+                                            @else
+                                                <i class="fa-solid fa-user-check mr-1.5 text-base align-middle"></i> Phê Duyệt Hồ Sơ KYC
+                                            @endif
                                         </button>
                                     </form>
 

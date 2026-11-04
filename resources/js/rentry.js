@@ -924,13 +924,17 @@ function initRentyMap() {
 
         window.rentyGoogleMap = new GoogleMapsRenty('renty-interactive-map', {
             onSelectRoom: (room) => {
-                const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
-                if (roomCard) {
-                    roomCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    roomCard.classList.add('ring-2', 'ring-emerald-500');
-                    setTimeout(() => {
-                        roomCard.classList.remove('ring-2', 'ring-emerald-500');
-                    }, 2000);
+                if (typeof window.highlightRoomCard === 'function') {
+                    window.highlightRoomCard(room.id);
+                } else {
+                    const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
+                    if (roomCard) {
+                        roomCard.classList.remove('hidden');
+                        roomCard.style.display = '';
+                        roomCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        roomCard.classList.add('renty-card-highlight-active');
+                        setTimeout(() => roomCard.classList.remove('renty-card-highlight-active'), 2800);
+                    }
                 }
             }
         });
@@ -1093,11 +1097,6 @@ function initRentyMap() {
                 pinEl.classList.add('active');
             }
 
-            rentyMap.setView(marker.getLatLng(), 17, {
-                animate: true,
-                duration: 0.8
-            });
-
             marker.openPopup();
         });
 
@@ -1118,13 +1117,17 @@ function initRentyMap() {
             rentyMap.panTo(marker.getLatLng());
 
             // Find and highlight matching card in scrollable right panel
-            const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
-            if (roomCard) {
-                roomCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                roomCard.classList.add('ring-2', 'ring-emerald-500');
-                setTimeout(() => {
-                    roomCard.classList.remove('ring-2', 'ring-emerald-500');
-                }, 2000);
+            if (typeof window.highlightRoomCard === 'function') {
+                window.highlightRoomCard(room.id);
+            } else {
+                const roomCard = document.querySelector(`.room-item-card[data-room-id="${room.id}"]`);
+                if (roomCard) {
+                    roomCard.classList.remove('hidden');
+                    roomCard.style.display = '';
+                    roomCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    roomCard.classList.add('renty-card-highlight-active');
+                    setTimeout(() => roomCard.classList.remove('renty-card-highlight-active'), 2800);
+                }
             }
         });
 
@@ -1192,10 +1195,10 @@ function initRentyMap() {
             // Open Leaflet popup
             rentyMarkers[roomId].openPopup();
             
-            // Zoom straight into marker (level 17)
-            rentyMap.setView(rentyMarkers[roomId].getLatLng(), 17, {
+            // Di chuyển tâm nhẹ nhàng tới phòng, giữ nguyên mức zoom hiện tại của người dùng
+            rentyMap.panTo(rentyMarkers[roomId].getLatLng(), {
                 animate: true,
-                duration: 0.8
+                duration: 0.5
             });
         }
     });
@@ -2008,6 +2011,11 @@ function filterItems(options = {}) {
 
     setSearchSkeletonLoading(false);
 
+    // Đồng bộ với Bộ lọc Bản đồ Thông minh (Trường học / Bán kính)
+    const mapInstance = window.rentyGoogleMap;
+    const isCampusFilterActive = mapInstance && mapInstance.selectedUniversity;
+    const isCustomPlaceFilterActive = mapInstance && mapInstance.activeCenter && !isCampusFilterActive;
+
     let matches = [];
 
     document.querySelectorAll('.room-item-card').forEach(card => {
@@ -2144,7 +2152,42 @@ function filterItems(options = {}) {
             matchesStatus = false;
         }
 
-        if (matchesQuery && matchesPrice && matchesArea && matchesRoomType && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus) {
+        let matchesMapRadius = true;
+        if (isCampusFilterActive) {
+            const uni = mapInstance.selectedUniversity;
+            const activeRadius = mapInstance.currentRadius || 3500;
+            const maxRadiusKm = (activeRadius / 1000) + 0.6;
+            const roomId = card.getAttribute('data-room-id');
+            const roomData = window.rentyRoomsData && window.rentyRoomsData[roomId];
+            let distKm = 999;
+            if (roomData && typeof mapInstance.computeRoomCoordinates === 'function' && typeof mapInstance.calcHaversineDistance === 'function') {
+                const coords = mapInstance.computeRoomCoordinates(roomData);
+                if (coords) {
+                    distKm = mapInstance.calcHaversineDistance(coords.lat, coords.lng, uni.lat, uni.lng);
+                }
+            }
+            if (distKm > maxRadiusKm) {
+                matchesMapRadius = false;
+            }
+        } else if (isCustomPlaceFilterActive) {
+            const center = mapInstance.activeCenter;
+            const activeRadius = mapInstance.currentRadius || 5000;
+            const maxRadiusKm = (activeRadius / 1000) + 0.6;
+            const roomId = card.getAttribute('data-room-id');
+            const roomData = window.rentyRoomsData && window.rentyRoomsData[roomId];
+            let distKm = 999;
+            if (roomData && typeof mapInstance.computeRoomCoordinates === 'function' && typeof mapInstance.calcHaversineDistance === 'function') {
+                const coords = mapInstance.computeRoomCoordinates(roomData);
+                if (coords) {
+                    distKm = mapInstance.calcHaversineDistance(coords.lat, coords.lng, center.lat, center.lng);
+                }
+            }
+            if (distKm > maxRadiusKm) {
+                matchesMapRadius = false;
+            }
+        }
+
+        if (matchesQuery && matchesPrice && matchesArea && matchesRoomType && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus && matchesMapRadius) {
             matches.push(card);
             showMarker(card.getAttribute('data-room-id'));
         } else {
@@ -2171,7 +2214,17 @@ function filterItems(options = {}) {
     const matchesCount = matches.length;
     const resultsCountEl = document.getElementById('results-count');
     if (resultsCountEl) {
-        resultsCountEl.textContent = `Tìm thấy ${matchesCount} phòng`;
+        if (isCampusFilterActive) {
+            const cleanUniName = mapInstance.selectedUniversity.name.split('(')[0].trim();
+            const radiusKmText = ((mapInstance.currentRadius || 3500) / 1000).toFixed(1);
+            resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${matchesCount}</span> phòng trong bán kính ${radiusKmText}km quanh <span class="text-sky-300 font-bold">${cleanUniName}</span> <button type="button" onclick="selectCampusFilter('all')" class="ml-2 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>Hủy lọc</button>`;
+        } else if (isCustomPlaceFilterActive) {
+            const cleanLabel = mapInstance.activeCenter.label || 'địa điểm đã chọn';
+            const radiusKmText = ((mapInstance.currentRadius || 5000) / 1000).toFixed(1);
+            resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${matchesCount}</span> phòng trong bán kính ${radiusKmText}km quanh <span class="text-sky-300 font-bold">${cleanLabel}</span> <button type="button" onclick="clearMapSearchInput()" class="ml-2 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>Hủy lọc</button>`;
+        } else {
+            resultsCountEl.textContent = `Tìm thấy ${matchesCount} phòng`;
+        }
     }
 
     // Xử lý Empty State ERR_21_04
@@ -2234,30 +2287,6 @@ function filterItems(options = {}) {
         });
 
         renderPaginationControls(totalPages);
-    }
-
-    // Fit map bounds to visible markers ONLY when map mode is active and container has dimensions
-    if (document.body.classList.contains('renty-map-mode') && typeof L !== 'undefined') {
-        const m = (window.rentyGoogleMap && window.rentyGoogleMap.map) || rentyMap;
-        if (m && typeof m.hasLayer === 'function') {
-            try {
-                const markersObj = (window.rentyGoogleMap && window.rentyGoogleMap.markers) || rentyMarkers || {};
-                const visibleLatLngs = [];
-                Object.values(markersObj).forEach(marker => {
-                    if (marker && m.hasLayer(marker) && typeof marker.getLatLng === 'function') {
-                        visibleLatLngs.push(marker.getLatLng());
-                    }
-                });
-                if (visibleLatLngs.length > 0) {
-                    const bounds = L.latLngBounds(visibleLatLngs);
-                    if (bounds.isValid()) {
-                        m.fitBounds(bounds, { maxZoom: 14, padding: [30, 30] });
-                    }
-                }
-            } catch (err) {
-                console.warn('Leaflet fitBounds safe catch:', err);
-            }
-        }
     }
 }
 
@@ -3091,18 +3120,74 @@ function handleNotifySubscribeSubmit(event) {
     showCustomAlert('Đăng ký thành công!', `Đã kích hoạt chuông báo trống phòng thành công cho phòng "${roomTitle}". Chúng tôi sẽ gửi thông báo tới "${contactInput}" ngay khi phòng Sẵn sàng.`, 'success');
 }
 
-function showCustomAlert(title, message, type = 'info') {
-    if (typeof message === 'undefined' || (typeof type === 'undefined' && ['info', 'warning', 'success', 'error'].includes(message))) {
-        type = message || 'info';
-        message = title;
-        title = type === 'success' ? 'Thành công!' : (type === 'warning' ? 'Cảnh báo' : (type === 'error' ? 'Lỗi' : 'Thông báo'));
+function showCustomAlert(arg1, arg2, arg3) {
+    let title = 'Thông báo';
+    let message = '';
+    let type = 'info';
+
+    const validTypes = ['success', 'warning', 'error', 'danger', 'info'];
+
+    if (validTypes.includes(arg2)) {
+        message = arg1;
+        type = arg2;
+        title = (type === 'error' || type === 'danger') ? 'Lỗi'
+              : (type === 'warning' ? 'Cảnh báo'
+              : (type === 'success' ? 'Thành công!' : 'Thông báo'));
+    } else if (arg2 !== undefined && arg3 !== undefined) {
+        title = arg1;
+        message = arg2;
+        type = arg3;
+    } else if (arg2 !== undefined) {
+        title = arg1;
+        message = arg2;
+        type = 'info';
+    } else {
+        message = arg1;
     }
+
     const modal = document.getElementById('custom-alert-modal');
     const titleEl = document.getElementById('custom-alert-title');
     const messageEl = document.getElementById('custom-alert-message');
+    const iconBox = document.getElementById('custom-alert-icon-box');
+    const iconEl = document.getElementById('custom-alert-icon');
+    const btnEl = document.getElementById('custom-alert-btn');
+
     if (modal && titleEl && messageEl) {
         titleEl.textContent = title;
         messageEl.textContent = message;
+
+        if (type === 'error' || type === 'danger' || type === 'warning') {
+            if (iconBox) {
+                iconBox.className = 'w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-500 mx-auto mb-3';
+            }
+            if (iconEl) {
+                iconEl.className = 'fa-solid fa-circle-xmark text-2xl text-rose-500';
+            }
+            if (btnEl) {
+                btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-extrabold text-white transition-all shadow-md shadow-rose-600/25 cursor-pointer';
+            }
+        } else if (type === 'success') {
+            if (iconBox) {
+                iconBox.className = 'w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-3';
+            }
+            if (iconEl) {
+                iconEl.className = 'fa-solid fa-circle-check text-2xl text-emerald-400';
+            }
+            if (btnEl) {
+                btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-extrabold text-white transition-all shadow-md shadow-emerald-600/25 cursor-pointer';
+            }
+        } else {
+            if (iconBox) {
+                iconBox.className = 'w-12 h-12 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mx-auto mb-3';
+            }
+            if (iconEl) {
+                iconEl.className = 'fa-solid fa-circle-info text-2xl text-sky-400';
+            }
+            if (btnEl) {
+                btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-extrabold text-white transition-all shadow-md shadow-sky-600/25 cursor-pointer';
+            }
+        }
+
         modal.classList.remove('hidden');
     } else if (typeof window.showRentyToast === 'function') {
         window.showRentyToast(message, type, title);
@@ -5122,7 +5207,7 @@ function toggleCompare(arg1, arg2) {
         if (rentyCompareList.length >= 3) {
             checkbox.checked = false;
             const notify = window.showRentyToast || alert;
-            notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'ERR_23_01');
+            notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'Thông báo');
             return;
         }
         if (!rentyCompareList.includes(roomId)) {
@@ -5136,7 +5221,7 @@ function toggleCompare(arg1, arg2) {
         } else {
             if (rentyCompareList.length >= 3) {
                 const notify = window.showRentyToast || alert;
-                notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'ERR_23_01');
+                notify('Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.', 'warning', 'Thông báo');
                 return;
             }
             rentyCompareList.push(roomId);
@@ -5165,7 +5250,7 @@ function removeCompareItem(roomId) {
     syncCompareCheckboxes();
 
     if (window.showRentyToast) {
-        window.showRentyToast('Đã xóa phòng khỏi danh sách so sánh.', 'success', 'ERR_23_03');
+        window.showRentyToast('Đã xóa phòng khỏi danh sách so sánh.', 'success', 'So sánh phòng');
     }
 
     if (rentyCompareList.length < 2) {
@@ -5201,42 +5286,64 @@ window.formatComparePriceCompact = formatComparePriceCompact;
 
 function getCompareRoomInfo(roomId) {
     const id = parseInt(roomId);
+    let title = '';
+    let price = null;
+    let roomNumber = null;
+    let buildingName = '';
+
     if (window.rentyRoomsData && window.rentyRoomsData[id]) {
         const r = window.rentyRoomsData[id];
-        return {
-            id: id,
-            title: r.title || `Phòng ${id}`,
-            price: r.price
-        };
-    }
-    const cb = document.querySelector(`.compare-checkbox[data-room-id="${id}"], .compare-checkbox[value="${id}"]`);
-    if (cb && cb.dataset) {
-        const title = cb.dataset.roomTitle || cb.dataset.title;
-        const price = cb.dataset.roomPrice || cb.dataset.price;
-        if (title) {
-            return {
-                id: id,
-                title: title,
-                price: price
-            };
+        title = r.title || '';
+        price = r.price;
+        roomNumber = r.room_number || null;
+        buildingName = r.building_name || '';
+    } else {
+        const cb = document.querySelector(`.compare-checkbox[data-room-id="${id}"], .compare-checkbox[value="${id}"]`);
+        if (cb && cb.dataset) {
+            title = cb.dataset.roomTitle || cb.dataset.title || '';
+            price = cb.dataset.roomPrice || cb.dataset.price;
+        }
+        if (!title) {
+            const card = document.querySelector(`.room-item-card[data-room-id="${id}"], [data-room-id="${id}"]`);
+            if (card && card.dataset) {
+                title = card.dataset.title || card.querySelector('h3, h4')?.textContent?.trim() || '';
+                price = card.dataset.price;
+            }
         }
     }
-    const card = document.querySelector(`.room-item-card[data-room-id="${id}"], [data-room-id="${id}"]`);
-    if (card && card.dataset) {
-        const title = card.dataset.title || card.querySelector('h3, h4')?.textContent?.trim();
-        const price = card.dataset.price;
-        if (title) {
-            return {
-                id: id,
-                title: title,
-                price: price
-            };
-        }
+
+    // Tinh chỉnh tiêu đề phòng trên chip bar: Đưa số phòng lên đầu và cắt sạch các ký tự nối thừa
+    let displayTitle = title || `Phòng ${id}`;
+    
+    // Tìm số phòng nếu chưa có
+    if (!roomNumber && title) {
+        const m = title.match(/Phòng\s*(\d+[A-Z]?)/i);
+        if (m) roomNumber = m[1];
     }
+
+    // Làm sạch tên tòa nhà / dự án
+    let rawBuilding = (buildingName || title || '')
+        .replace(/^Chung cư mini\s*/i, '')
+        .replace(/[\s–-]*Tòa\s+[A-Z0-9]+/ig, '')
+        .replace(/[\s–-]*Phòng\s*\d+[A-Z]?/ig, '')
+        .replace(/Quận\s*(\d+)/ig, 'Q.$1')
+        .replace(/[\s–-]+/g, ' ')
+        .trim();
+
+    // Dọn sạch dấu gạch nối, khoảng trắng ở hai đầu
+    rawBuilding = rawBuilding.replace(/^[\s–-]+|[\s–-]+$/g, '').trim();
+
+    if (roomNumber) {
+        displayTitle = rawBuilding ? `Phòng ${roomNumber} – ${rawBuilding}` : `Phòng ${roomNumber}`;
+    } else {
+        displayTitle = rawBuilding || title || `Phòng ${id}`;
+    }
+
     return {
         id: id,
-        title: `Phòng #${id}`,
-        price: null
+        title: title || displayTitle,
+        displayTitle: displayTitle,
+        price: price
     };
 }
 window.getCompareRoomInfo = getCompareRoomInfo;
@@ -5264,17 +5371,28 @@ function updateCompareBar() {
     bar.classList.remove('translate-y-28', 'opacity-0', 'pointer-events-none');
     bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
 
+    const isLight = document.body?.classList.contains('theme-light') || 
+                    document.documentElement.classList.contains('theme-light') || 
+                    (localStorage.getItem('renty_theme_mode') === 'light');
+
+    const chipClass = isLight 
+        ? "bg-slate-100/90 border-slate-300 hover:bg-slate-200/90 hover:border-slate-400" 
+        : "bg-[#141824] border-zinc-800 hover:border-zinc-700";
+    const dotClass = isLight ? "bg-teal-600" : "bg-white";
+    const titleTextClass = isLight ? "text-slate-900 group-hover:text-teal-700" : "text-white group-hover:text-emerald-300";
+    const priceTextClass = isLight ? "text-teal-700" : "text-zinc-300";
+
     if (itemsContainer) {
         itemsContainer.innerHTML = rentyCompareList.map(roomId => {
             const room = getCompareRoomInfo(roomId);
             const priceText = formatComparePriceCompact(room.price);
             const escapedTitle = (room.title || '').replace(/"/g, '&quot;');
             return `
-                <div class="compare-item-chip flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-[#141824] border border-zinc-800 hover:border-zinc-700 max-w-[210px] sm:max-w-[270px] shrink-0 transition-all cursor-pointer group" onclick="removeCompareItem(${roomId})" title="Bấm để bỏ chọn ${escapedTitle}">
-                    <span class="w-2 h-2 rounded-full bg-white shrink-0 group-hover:bg-rose-400 transition-colors" title="Đang chọn"></span>
+                <div class="compare-item-chip flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border max-w-[300px] sm:max-w-[400px] shrink-0 transition-all cursor-pointer group ${chipClass}" onclick="removeCompareItem(${roomId})" title="Bấm để bỏ chọn ${escapedTitle}">
+                    <span class="w-2 h-2 rounded-full ${dotClass} shrink-0 group-hover:bg-rose-500 transition-colors" title="Đang chọn"></span>
                     <div class="flex flex-col text-left leading-tight truncate">
-                        <span class="text-[12px] sm:text-[13px] font-bold text-white truncate group-hover:text-emerald-300 transition-colors">${room.title}</span>
-                        <span class="text-[11px] sm:text-[12px] font-bold text-zinc-300">(${priceText})</span>
+                        <span class="text-[12px] sm:text-[13px] font-bold truncate transition-colors ${titleTextClass}">${room.displayTitle || room.title}</span>
+                        <span class="text-[11px] sm:text-[12px] font-bold ${priceTextClass}">(${priceText})</span>
                     </div>
                 </div>
             `;
@@ -5447,7 +5565,7 @@ async function showCompareModal() {
     // Kịch bản xử lý lỗi theo Báo cáo: Cần tối thiểu 2 phòng để so sánh
     if (rentyCompareList.length < 2) {
         const notify = window.showRentyToast || alert;
-        notify('Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối đầu.', 'warning', 'ERR_23_02');
+        notify('Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối đầu.', 'warning', 'Thông báo');
         return;
     }
 
@@ -5529,18 +5647,30 @@ function renderComparisonTable(rooms) {
     const table = document.getElementById('tblCompare') || document.getElementById('compare-table');
     if (!table) return;
 
+    const isLight = document.body?.classList.contains('theme-light') || 
+                    document.documentElement.classList.contains('theme-light') || 
+                    (localStorage.getItem('renty_theme_mode') === 'light');
+
+    // Các biến màu chữ và màu nền thích ứng cả Sáng và Tối
+    const headerBg = isLight ? 'bg-slate-100 border-b border-slate-200' : 'bg-slate-900/90 border-b border-slate-800';
+    const headerText = isLight ? 'color: #0f172a !important;' : 'color: #ffffff !important;';
+    const cellText = isLight ? 'color: #0f172a !important;' : 'color: #e2e8f0 !important;';
+    const labelText = isLight ? 'color: #334155 !important; font-weight: 700;' : 'color: #94a3b8 !important; font-weight: 600;';
+    const priceText = isLight ? 'color: #0d9488 !important; font-weight: 800;' : 'color: #34d399 !important; font-weight: 800;';
+
     let html = `
         <thead>
-            <tr class="bg-slate-900/90 border-b border-slate-800 text-xs">
-                <th class="px-5 py-4 font-bold text-slate-300 w-1/4">Tiêu chí</th>
+            <tr class="${headerBg} text-xs">
+                <th class="px-5 py-4 font-bold w-1/4" style="${labelText}">Tiêu chí</th>
     `;
 
     rooms.forEach(room => {
+        const roomTitle = `Phòng ${room.room_number} – ${room.building_name}`;
         html += `
-            <th class="px-5 py-4 font-bold text-white text-xs relative group text-left min-w-[200px]">
+            <th class="px-5 py-4 font-bold text-xs relative group text-left min-w-[200px]" style="${headerText}">
                 <div class="flex items-start justify-between gap-2.5">
-                    <span class="whitespace-normal break-words leading-relaxed text-slate-100 font-bold" title="Phòng ${room.room_number} – ${room.building_name}">Phòng ${room.room_number} – ${room.building_name}</span>
-                    <button type="button" onclick="removeCompareItem(${room.id})" title="Gỡ phòng khỏi bảng so sánh" class="btnRemoveRoom w-5 h-5 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 shrink-0 mt-0.5">
+                    <span class="whitespace-normal break-words leading-relaxed font-bold" style="${headerText}" title="${roomTitle}">${roomTitle}</span>
+                    <button type="button" onclick="removeCompareItem(${room.id})" title="Gỡ phòng khỏi bảng so sánh" class="btnRemoveRoom w-5 h-5 rounded-md ${isLight ? 'bg-slate-200 hover:bg-rose-500 text-slate-600' : 'bg-slate-800 hover:bg-rose-500 text-slate-400'} hover:text-white flex items-center justify-center transition-all opacity-80 hover:opacity-100 shrink-0 mt-0.5">
                         <span class="text-xs leading-none">&times;</span>
                     </button>
                 </div>
@@ -5551,49 +5681,49 @@ function renderComparisonTable(rooms) {
     html += `
             </tr>
         </thead>
-        <tbody class="divide-y divide-slate-800/80 text-xs">
+        <tbody class="divide-y ${isLight ? 'divide-slate-200' : 'divide-slate-800/80'} text-xs">
             <!-- Row 1: Giá thuê (tháng) -->
-            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-4 font-semibold text-slate-400">Giá thuê (tháng)</td>
+            <tr class="spec_rows ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/30'} transition-all">
+                <td class="px-5 py-4" style="${labelText}">Giá thuê (tháng)</td>
                 ${rooms.map(r => `
-                    <td class="px-5 py-4 font-bold text-white text-xs">
+                    <td class="px-5 py-4 text-xs font-bold" style="${priceText}">
                         ${Number(r.price).toLocaleString('vi-VN')} VNĐ
                     </td>
                 `).join('')}
             </tr>
             <!-- Row 2: Diện tích -->
-            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-4 font-semibold text-slate-400">Diện tích</td>
+            <tr class="spec_rows ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/30'} transition-all">
+                <td class="px-5 py-4" style="${labelText}">Diện tích</td>
                 ${rooms.map(r => `
-                    <td class="px-5 py-4 text-slate-200">
+                    <td class="px-5 py-4" style="${cellText}">
                         ${r.area} m²
                     </td>
                 `).join('')}
             </tr>
             <!-- Row 3: Tiền cọc -->
-            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-4 font-semibold text-slate-400">Tiền cọc</td>
+            <tr class="spec_rows ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/30'} transition-all">
+                <td class="px-5 py-4" style="${labelText}">Tiền cọc</td>
                 ${rooms.map(r => `
-                    <td class="px-5 py-4 text-slate-200">
+                    <td class="px-5 py-4" style="${cellText}">
                         ${r.deposit && r.deposit !== r.price ? Number(r.deposit).toLocaleString('vi-VN') + ' VNĐ' : '1 tháng'}
                     </td>
                 `).join('')}
             </tr>
             <!-- Row 4: Tiện nghi -->
-            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-4 font-semibold text-slate-400">Tiện nghi</td>
+            <tr class="spec_rows ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/30'} transition-all">
+                <td class="px-5 py-4" style="${labelText}">Tiện nghi</td>
                 ${rooms.map(r => `
-                    <td class="px-5 py-4 text-slate-300 leading-relaxed text-[11px]">
+                    <td class="px-5 py-4 leading-relaxed text-[11px]" style="${cellText}">
                         ${formatRoomAmenities(r)}
                     </td>
                 `).join('')}
             </tr>
             <!-- Row 5: Đánh giá trung bình -->
-            <tr class="spec_rows hover:bg-slate-900/30 transition-all">
-                <td class="px-5 py-4 font-semibold text-slate-400">Đánh giá trung bình</td>
+            <tr class="spec_rows ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/30'} transition-all">
+                <td class="px-5 py-4" style="${labelText}">Đánh giá trung bình</td>
                 ${rooms.map(r => `
-                    <td class="px-5 py-4 text-slate-200 font-medium">
-                        ${r.rating_avg} ⭐ <span class="text-slate-400 text-[11px]">(${r.reviews_count || 0} reviews)</span>
+                    <td class="px-5 py-4 font-medium" style="${cellText}">
+                        ${r.rating_avg} ⭐ <span style="${isLight ? 'color: #64748b;' : 'color: #94a3b8;'}" class="text-[11px]">(${r.reviews_count || 0} reviews)</span>
                     </td>
                 `).join('')}
             </tr>
