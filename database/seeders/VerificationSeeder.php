@@ -21,12 +21,11 @@ class VerificationSeeder extends Seeder
             $t1->update(['name' => 'Hệ thống Chung cư mini SmartRoom Cầu Giấy']);
         }
 
-        // Xóa sạch dữ liệu verification cũ để tạo bộ dữ liệu đúng chuẩn đặc tả
-        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        \App\Models\AdminAccessLog::truncate();
-        LandlordVerificationDocument::truncate();
-        LandlordVerificationRequest::truncate();
-        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        // Xóa dữ liệu verification của các tenant test để tạo bộ dữ liệu đúng chuẩn đặc tả
+        $targetTenantIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        $targetRequestIds = LandlordVerificationRequest::whereIn('tenant_id', $targetTenantIds)->pluck('id');
+        LandlordVerificationDocument::whereIn('verification_request_id', $targetRequestIds)->delete();
+        LandlordVerificationRequest::whereIn('tenant_id', $targetTenantIds)->delete();
 
         $adminId = User::where('role', 'admin')->value('id') ?? 1;
 

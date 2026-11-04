@@ -2284,6 +2284,12 @@
                         <button type="button" onclick="switchMapCity('hanoi', this)" id="city-tab-hanoi" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
                             🏛️ Hà Nội
                         </button>
+                        <button type="button" onclick="switchMapCity('danang', this)" id="city-tab-danang" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
+                            🌊 Đà Nẵng
+                        </button>
+                        <button type="button" onclick="switchMapCity('dalat', this)" id="city-tab-dalat" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
+                            🌲 Đà Lạt
+                        </button>
                     </div>
 
                     <!-- Live Search Engine Input (Rõ nét, màu bình thường đậm đặc) -->
