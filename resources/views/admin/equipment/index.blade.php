@@ -153,12 +153,12 @@
                     </div>
                     <div class="flex gap-2">
                         <form method="GET" action="{{ route('admin.equipment.index', [], false) }}" class="flex gap-2">
-                            <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Mã / Tên thiết bị">
-                            <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Tìm kiếm">
+                            <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="w-64 sm:w-80 px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all shadow-inner" placeholder="Mã / Tên thiết bị">
+                            <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0" title="Tìm kiếm">
                                 <i class="fa-solid fa-filter"></i>
                             </button>
                             @if(!empty($filters['q']))
-                                <a href="{{ route('admin.equipment.index') }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Xóa lọc">
+                                <a href="{{ route('admin.equipment.index') }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0" title="Xóa lọc">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </a>
                             @endif

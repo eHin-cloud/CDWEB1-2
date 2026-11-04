@@ -53,17 +53,17 @@
                         <div class="flex gap-2">
                             <form method="GET" action="{{ route('smartroom.admin', [], false) }}" class="flex gap-2">
                                 <input type="hidden" name="tab" value="resident-section">
-                                <input type="search" name="resident_q" value="{{ $residentFilters['q'] }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Ten / SDT / CCCD">
-                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all">
+                                <input type="search" name="resident_q" value="{{ $residentFilters['q'] }}" class="w-64 sm:w-80 md:w-96 px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all shadow-inner" placeholder="Tên / SĐT / CCCD">
+                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
                                 @if($residentFilters['q'] !== '')
-                                    <a href="{{ route('smartroom.admin', ['tab' => 'resident-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all">
+                                    <a href="{{ route('smartroom.admin', ['tab' => 'resident-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0">
                                         <i class="fa-solid fa-rotate-left"></i>
                                     </a>
                                 @endif
                             </form>
-                            <button onclick="toggleAddResidentModal(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                            <button onclick="toggleAddResidentModal(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0">
                                 <i class="fa-solid fa-plus"></i> Thêm Cư Dân
                             </button>
                         </div>

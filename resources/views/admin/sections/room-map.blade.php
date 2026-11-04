@@ -80,7 +80,7 @@
                             Bảo trì (<span id="filter-count-maintenance">{{ $maintenanceRooms ?? 0 }}</span>)
                         </button>
                         <div class="relative ml-2">
-                            <input type="text" id="room-map-search-input" oninput="filterRoomsByKeyword(this.value)" placeholder="Tìm số phòng, cư dân..." class="px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none w-44">
+                            <input type="text" id="room-map-search-input" oninput="filterRoomsByKeyword(this.value)" placeholder="Tìm số phòng, cư dân..." class="px-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all shadow-inner w-56 sm:w-72">
                         </div>
                     </div>
                     

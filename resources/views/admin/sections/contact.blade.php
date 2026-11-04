@@ -52,12 +52,12 @@
                         <div class="flex gap-2">
                             <form method="GET" action="{{ route('smartroom.admin', [], false) }}" class="flex gap-2">
                                 <input type="hidden" name="tab" value="contact-section">
-                                <input type="search" name="contact_q" value="{{ $contactFilters['q'] ?? '' }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Tên khách / SĐT / Phòng / Lời nhắn">
-                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Tìm kiếm">
+                                <input type="search" name="contact_q" value="{{ $contactFilters['q'] ?? '' }}" class="w-64 sm:w-80 md:w-96 px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all shadow-inner" placeholder="Tên khách / SĐT / Phòng / Lời nhắn">
+                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0" title="Tìm kiếm">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
                                 @if(!empty($contactFilters['q']))
-                                    <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Xóa lọc">
+                                    <a href="{{ route('smartroom.admin', ['tab' => 'contact-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0" title="Xóa lọc">
                                         <i class="fa-solid fa-rotate-left"></i>
                                     </a>
                                 @endif

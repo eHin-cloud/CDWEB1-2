@@ -94,11 +94,11 @@
                             </select>
 
                             <!-- Search Input -->
-                            <div class="relative flex-1 sm:w-64">
+                            <div class="relative flex-1 sm:w-80">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                                     <i class="fa-solid fa-magnifying-glass text-xs leading-none"></i>
                                 </div>
-                                <input type="text" id="ticket-search-input" oninput="filterAdminTickets()" placeholder="Tìm phòng, vị trí, cư dân..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs leading-normal text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                                <input type="text" id="ticket-search-input" oninput="filterAdminTickets()" placeholder="Tìm phòng, vị trí, cư dân..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs leading-normal text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all shadow-inner">
                             </div>
                         </div>
                     </div>

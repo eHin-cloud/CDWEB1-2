@@ -27,7 +27,7 @@
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <div class="relative">
-                                <input type="text" id="utility-search-input" oninput="filterUtilityRows()" placeholder="Tìm số phòng, tên cư dân..." class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all placeholder-slate-500 w-44 sm:w-52">
+                                <input type="text" id="utility-search-input" oninput="filterUtilityRows()" placeholder="Tìm số phòng, tên cư dân..." class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 focus:outline-none transition-all placeholder-slate-500 shadow-inner w-60 sm:w-80">
                             </div>
                             <button type="button" onclick="openIotDashboardModal()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-tower-broadcast animate-pulse"></i> 📡 IoT Smart Metering

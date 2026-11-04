@@ -57,17 +57,17 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <form method="GET" action="{{ route('smartroom.admin', [], false) }}" class="flex gap-2">
                                 <input type="hidden" name="tab" value="contract-section">
-                                <input type="search" name="contract_q" value="{{ $contractFilters['q'] ?? '' }}" class="px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none" placeholder="Mã HĐ / Phòng / Cư dân / SĐT">
-                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Tìm kiếm">
+                                <input type="search" name="contract_q" value="{{ $contractFilters['q'] ?? '' }}" class="w-64 sm:w-80 md:w-96 px-4 py-2 text-xs rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all shadow-inner" placeholder="Mã HĐ / Phòng / Cư dân / SĐT">
+                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0" title="Tìm kiếm">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
                                 @if(!empty($contractFilters['q']))
-                                    <a href="{{ route('smartroom.admin', ['tab' => 'contract-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all" title="Xóa lọc">
+                                    <a href="{{ route('smartroom.admin', ['tab' => 'contract-section']) }}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all shrink-0" title="Xóa lọc">
                                         <i class="fa-solid fa-rotate-left"></i>
                                     </a>
                                 @endif
                             </form>
-                            <button onclick="toggleAddContractModal(true)" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/25 hover:-translate-y-0.5">
+                            <button onclick="toggleAddContractModal(true)" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/25 hover:-translate-y-0.5 shrink-0">
                                 <i class="fa-solid fa-plus-circle"></i> Tạo Hợp Đồng Mới
                             </button>
                         </div>
