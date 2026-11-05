@@ -15,4 +15,6 @@
         } catch (e) {}
     })();
 </script>
+@include('admin.partials.smart-dialog')
+
 

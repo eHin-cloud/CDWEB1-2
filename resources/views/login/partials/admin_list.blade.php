@@ -231,7 +231,7 @@
                                             <i class="fa-regular fa-pen-to-square text-xs"></i>
                                         </a>
                                         <a href="{{ route('user.deleteUser', ['id' => $userItem->id]) }}"
-                                           onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');"
+                                           onclick="return confirmLink(event, this.href, 'Bạn có chắc chắn muốn xóa tài khoản này?', 'Xóa Tài Khoản');"
                                            class="p-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 rounded-xl text-rose-400 transition-all flex items-center justify-center shadow"
                                            title="Xóa tài khoản">
                                             <i class="fa-regular fa-trash-can text-xs"></i>

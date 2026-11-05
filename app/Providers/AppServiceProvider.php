@@ -14,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(\Psr\Http\Client\ClientInterface::class, \GuzzleHttp\Client::class);
     }
 
     /**
@@ -24,7 +24,16 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::defaultView('partials.pagination');
 
+        if (class_exists(\Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine::class)) {
+            $this->app->make(\Laravel\Scout\EngineManager::class)->extend('elasticsearch', function () {
+                $elasticsearch = app(\Elastic\Elasticsearch\Client::class);
+                return new \Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine($elasticsearch);
+            });
+        }
+
         // Tự động đồng bộ thêm/sửa/xoá phòng sang Apache Solr
-        Room::observe(RoomSolrObserver::class);
+        if (class_exists(RoomSolrObserver::class)) {
+            Room::observe(RoomSolrObserver::class);
+        }
     }
 }

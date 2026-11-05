@@ -31,18 +31,32 @@ class EquipmentController extends Controller
     {
         $tenantId = Auth::user()->tenant_id;
 
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+        ];
+
         $page = $request->query('page');
         if ($page !== null && (!ctype_digit((string) $page) || (int) $page <= 0)) {
-            return redirect()->route('admin.equipment.index', ['page' => 1]);
+            return redirect()->route('admin.equipment.index', array_filter(['page' => 1, 'q' => $filters['q']]));
         }
 
         $equipment = Equipment::where('tenant_id', $tenantId)
             ->with(['roomAllocations.room.building'])
+            ->when($filters['q'] !== '', function ($query) use ($filters) {
+                $keyword = '%' . addcslashes($filters['q'], '\%_') . '%';
+                $query->where(function ($sub) use ($keyword) {
+                    $sub->where('name', 'like', $keyword)
+                        ->orWhere('code', 'like', $keyword)
+                        ->orWhere('description', 'like', $keyword)
+                        ->orWhere('unit', 'like', $keyword);
+                });
+            })
             ->orderBy('name')
-            ->paginate(8);
+            ->paginate(8)
+            ->withQueryString();
 
         if ($equipment->currentPage() > $equipment->lastPage() && $equipment->lastPage() > 0) {
-            return redirect()->route('admin.equipment.index', ['page' => 1]);
+            return redirect()->route('admin.equipment.index', array_filter(['page' => 1, 'q' => $filters['q']]));
         }
 
         $rooms = Room::with('building')
@@ -56,7 +70,7 @@ class EquipmentController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        return view('admin.equipment.index', compact('equipment', 'rooms', 'allocations'));
+        return view('admin.equipment.index', compact('equipment', 'rooms', 'allocations', 'filters'));
     }
 
     public function store(Request $request)

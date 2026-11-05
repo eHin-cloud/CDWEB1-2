@@ -452,9 +452,11 @@ $rentyRooms = function ($filterEmpty = true) {
         $buildingAddress = $building?->address ?? 'Khu nhà trọ đang cập nhật địa chỉ';
         $areaName = 'khu vực trung tâm';
         $areaMap = [
-            'Thanh Xuân', 'Cầu Giấy', 'Đống Đa', 'Hai Bà Trưng', 'Tây Hồ', 'Ba Đình',
-            'Quận 10', 'Quận 1', 'Quận 7', 'Quận 4',
-            'Bình Thạnh', 'Tân Bình', 'Gò Vấp', 'Thủ Đức', 'Phú Mỹ Hưng',
+            'Thanh Xuân', 'Cầu Giấy', 'Đống Đa', 'Hai Bà Trưng', 'Tây Hồ', 'Ba Đình', 'Nam Từ Liêm', 'Bắc Từ Liêm', 'Hà Đông', 'Hoàng Mai',
+            'Quận 10', 'Quận 1', 'Quận 3', 'Quận 5', 'Quận 7', 'Bình Thạnh', 'Tân Bình', 'Gò Vấp', 'Thủ Đức', 'Phú Nhuận', 'Phú Mỹ Hưng',
+            'Hải Châu', 'Sơn Trà', 'Ngũ Hành Sơn', 'Thanh Khê', 'Liên Chiểu', 'Cẩm Lệ', 'Hòa Vang',
+            'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 8', 'Phường 9', 'Phường 10', 'Phường 11', 'Phường 12', 'Hồ Tuyền Lâm',
+            'Đà Lạt', 'Đà Nẵng', 'Hà Nội', 'Hồ Chí Minh',
         ];
         foreach ($areaMap as $area) {
             if (str_contains($buildingAddress, $area)) {
@@ -560,6 +562,10 @@ $rentyRooms = function ($filterEmpty = true) {
         return [
             'id' => $room->id,
             'tenant_id' => $room->tenant_id,
+            'building_id' => $room->building_id,
+            'building_name' => $buildingName,
+            'building_address' => $buildingAddress,
+            'property_type' => $building?->property_type ?? 'apartment',
             'room_number' => $room->room_number,
             'price' => $room->price,
             'status' => $room->status,

@@ -36,9 +36,32 @@ services:
       VITE_REVERB_HOST: 127.0.0.1
       VITE_REVERB_PORT: 8085
       VITE_REVERB_SCHEME: http
+      SCOUT_DRIVER: elasticsearch
+      ELASTICSEARCH_HOST: elasticsearch:9200
     depends_on:
       mysql:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: smartroom_elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
 
   mysql:
     image: mysql:8.4
@@ -63,3 +86,4 @@ services:
 volumes:
   composer_cache:
   mysql_data:
+  es_data:

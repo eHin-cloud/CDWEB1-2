@@ -43,8 +43,15 @@ class ScoutSearchService
 
         $requestedAmenities = array_filter((array) ($options['amenities'] ?? []));
 
+        // Phân tích từ khoá tiếng Việt và chuẩn hoá tìm kiếm
+        $analysis = $this->smartSearchService->analyzeAndCorrect($cleanQuery);
+        $searchTerms = $cleanQuery;
+        if (!empty($analysis['corrected']) && mb_strtolower($analysis['corrected']) !== mb_strtolower($cleanQuery)) {
+            $searchTerms = "{$cleanQuery} {$analysis['corrected']}";
+        }
+
         // Khởi tạo Scout Builder
-        $scoutBuilder = Room::search($cleanQuery);
+        $scoutBuilder = Room::search($searchTerms);
 
         // Áp dụng query callback trên Eloquent builder để xử lý eager loading & các bộ lọc nâng cao
         $scoutBuilder->query(function ($builder) use ($status, $minPrice, $maxPrice, $cleanQuery, $sortBy, $requestedAmenities) {
@@ -89,14 +96,6 @@ class ScoutSearchService
                             };
                         });
                     }
-                });
-            }
-
-            // Mở rộng tìm kiếm sang toà nhà nếu có từ khoá
-            if ($cleanQuery !== '') {
-                $builder->orWhereHas('building', function ($q) use ($cleanQuery) {
-                    $q->where('name', 'like', "%{$cleanQuery}%")
-                      ->orWhere('address', 'like', "%{$cleanQuery}%");
                 });
             }
 

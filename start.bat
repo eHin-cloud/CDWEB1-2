@@ -5,6 +5,7 @@ title SmartRoom ^& Renty - Control Dashboard
 
 :: Dam bao container CSDL MySQL Docker luon duoc bat
 docker start smartroom_mysql > nul 2>&1
+docker start smartroom_elasticsearch > nul 2>&1
 
 :: Neu truyen tham so --gui, khoi chay GUI App Launcher
 if "%1" neq "--cli" (
@@ -70,6 +71,7 @@ if exist .env (
 )
 
 :: Cau hinh lenh Docker Compose voi file trong thu muc docker
+set "DOCKER_COMPOSE_CMD=docker compose -f docker\docker-compose.yml"
 :: Neu co tham so --menu hoac --cli, vao giao dien Menu chon day du
 if "%1"=="--menu" goto TAB_MENU
 if "%1"=="--cli" goto TAB_MENU
@@ -116,7 +118,8 @@ if not exist public\storage (
 echo    [2/4] Dang ket noi Co so du lieu (Cong !DB_PORT!)...
 if "!DB_PORT!"=="3309" (
     docker start smartroom_mysql > nul 2>&1
-    !DOCKER_COMPOSE_CMD! up -d mysql > nul 2>&1
+    docker start smartroom_elasticsearch > nul 2>&1
+    !DOCKER_COMPOSE_CMD! up -d mysql elasticsearch > nul 2>&1
     !DOCKER_COMPOSE_CMD! stop app > nul 2>&1
     powershell -Command "for ($i=0; $i -lt 15; $i++) { if (Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet -WarningAction SilentlyContinue) { exit 0 }; Start-Sleep -Seconds 1 }; exit 0" > nul 2>&1
 ) else (
@@ -147,6 +150,7 @@ echo      [✔] Cong Quan Tri Admin:   http://localhost:!APP_PORT!/smartroom/adm
 echo      [✔] Reverb WebSocket:      ws://127.0.0.1:8085             (Dang chay ngam)
 echo      [✔] Vite Assets:           Hot-Reloading                   (Dang chay ngam)
 echo      [✔] Co So Du Lieu:         Cong !DB_PORT! (!DB_NAME!)         (San sang)
+echo      [✔] Elasticsearch:         http://127.0.0.1:9200           (San sang)
 echo.
 echo    ----------------------------------------------------------------------------------------
 echo      [*] TAI KHOAN MAU (Mat khau chung: 123456):
@@ -161,10 +165,11 @@ echo         [3] Khoi dong lai toan bo dich vu (Restart)
 echo         [4] Lam moi ^& nap lai CSDL (migrate:fresh --seed)
 echo         [5] Mo giao dien do hoa (GUI App Launcher)
 echo         [6] Menu nang cao (Docker full, XAMPP, Chuan doan...)
+echo         [7] Dong bo lai chi muc Elasticsearch (scout:import)
 echo         [0] Dung he thong ^& Thoat sach se
 echo.
 echo    ========================================================================================
-set /p compact_act="   >> Nhap thao tac (0-6): "
+set /p compact_act="   >> Nhap thao tac (0-7): "
 
 if "!compact_act!"=="1" (
     start "" "http://localhost:!APP_PORT!/renty"
@@ -187,6 +192,8 @@ if "!compact_act!"=="4" (
     set /p confirm_seed="   >> Ban co chac muon lam moi DB? [y/n]: "
     if /i "!confirm_seed!"=="y" (
         call !PHP_CMD! artisan migrate:fresh --seed
+        echo    [+] Dang dong bo du lieu sang Elasticsearch...
+        call !PHP_CMD! artisan scout:import "App\Models\Room"
     )
     goto DASHBOARD_COMPACT
 )
@@ -196,6 +203,14 @@ if "!compact_act!"=="5" (
 )
 if "!compact_act!"=="6" (
     goto TAB_MENU
+)
+if "!compact_act!"=="7" (
+    echo.
+    echo    [+] Dang dong bo chi muc Elasticsearch cho Room...
+    call !PHP_CMD! artisan scout:import "App\Models\Room"
+    echo    [OK] Da dong bo Elasticsearch hoan tat!
+    timeout /t 2 > nul
+    goto DASHBOARD_COMPACT
 )
 if "!compact_act!"=="0" (
     goto STOP_AND_EXIT
@@ -301,7 +316,8 @@ if not exist public\storage (
 echo.
 echo    [1/3] Dang khoi dong CSDL MySQL trong Docker (Port 3309)...
 docker start smartroom_mysql > nul 2>&1
-!DOCKER_COMPOSE_CMD! up -d mysql > nul 2>&1
+docker start smartroom_elasticsearch > nul 2>&1
+!DOCKER_COMPOSE_CMD! up -d mysql elasticsearch > nul 2>&1
 !DOCKER_COMPOSE_CMD! stop app > nul 2>&1
 
 echo    [2/3] Dang kiem tra ket noi CSDL MySQL...
@@ -797,6 +813,7 @@ echo.
 echo    [ HANH DONG ] Dang chay artisan migrate:fresh --seed ben trong container app...
 !DOCKER_COMPOSE_CMD! exec -T app php artisan migrate:fresh --seed
 !DOCKER_COMPOSE_CMD! exec -T app php artisan optimize:clear
+!DOCKER_COMPOSE_CMD! exec -T app php artisan scout:import "App\Models\Room"
 echo.
 echo    [ OK ] Da migrate va seed CSDL Docker thanh cong!
 pause
@@ -1754,6 +1771,7 @@ taskkill /f /im node.exe >nul 2>&1
 :ENSURE_MYSQL
 if "!DB_PORT!"=="3309" (
     docker start smartroom_mysql > nul 2>&1
+    docker start smartroom_elasticsearch > nul 2>&1
     powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = Test-NetConnection -ComputerName 127.0.0.1 -Port 3309 -InformationLevel Quiet; if ($c) { exit 0 } else { exit 1 } } catch { exit 1 }" > nul 2>&1
     if !errorlevel! equ 0 exit /b 0
 )

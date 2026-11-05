@@ -1899,7 +1899,24 @@ function filterItems(options = {}) {
         rentyCurrentPage = 1;
     }
     
-    const query = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
+    const heroInput = document.getElementById('hero-search-input');
+    const navInput = document.getElementById('search-input');
+    let query = '';
+    if (document.activeElement === heroInput && heroInput) {
+        query = heroInput.value || '';
+        if (navInput && navInput.value !== query) navInput.value = query;
+    } else if (document.activeElement === navInput && navInput) {
+        query = navInput.value || '';
+        if (heroInput && heroInput.value !== query) heroInput.value = query;
+    } else if (heroInput && heroInput.value !== undefined && heroInput.value.trim() !== '') {
+        query = heroInput.value;
+        if (navInput && navInput.value !== query) navInput.value = query;
+    } else if (navInput && navInput.value !== undefined && navInput.value.trim() !== '') {
+        query = navInput.value;
+        if (heroInput && heroInput.value !== query) heroInput.value = query;
+    } else {
+        query = (heroInput ? heroInput.value : (navInput ? navInput.value : '')) || '';
+    }
     const parsedSearch = parseNaturalSearch(query);
     const normalizedQuery = normalizeText(query);
     const filterPrice = document.getElementById('filter-price') ? document.getElementById('filter-price').value : 'all';
@@ -2655,6 +2672,14 @@ function clearGlobalSearch() {
     const heroBtn = document.getElementById('hero-search-clear-btn');
     if (heroBtn) heroBtn.classList.add('hidden');
 
+    // Ẩn thông báo lỗi ô tìm kiếm rỗng và viền amber
+    const errEmpty = document.getElementById('search-empty-error');
+    if (errEmpty) errEmpty.classList.add('hidden');
+    const errInvalid = document.getElementById('search-invalid-error');
+    if (errInvalid) errInvalid.classList.add('hidden');
+    const boxContainer = document.getElementById('hero-search-box-container');
+    if (boxContainer) boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+
     resetAllFilters();
     if (typeof window.clearMapSearchInput === 'function') {
         window.clearMapSearchInput();
@@ -2693,6 +2718,12 @@ function handleSearchInput(e) {
         document.getElementById('renty-search-panel')?.classList.remove('is-search-active');
         document.getElementById('renty-search-backdrop')?.classList.remove('is-active');
 
+        // Ẩn thông báo lỗi ô tìm kiếm rỗng và viền amber
+        const errEmpty = document.getElementById('search-empty-error');
+        if (errEmpty) errEmpty.classList.add('hidden');
+        const boxContainer = document.getElementById('hero-search-box-container');
+        if (boxContainer) boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+
         // Xóa sạch các gợi ý sửa lỗi gõ sai
         currentSmartSearchCorrection = null;
         document.getElementById('renty-did-you-mean-box')?.classList.add('hidden');
@@ -2700,12 +2731,29 @@ function handleSearchInput(e) {
         document.getElementById('smart-search-empty-did-you-mean')?.classList.add('hidden');
         document.getElementById('smart-search-suggestion')?.classList.add('hidden');
 
-        // Khôi phục HTML gốc nếu từng bị API đè
-        const roomsGrid = document.getElementById('rooms-grid');
-        if (roomsGrid && window.originalRoomsGridHtml) {
-            roomsGrid.innerHTML = window.originalRoomsGridHtml;
+        // Đảm bảo cả hai input đều sạch
+        if (heroInput) heroInput.value = '';
+        if (navInput) navInput.value = '';
+
+        // Giải phóng bán kính map tìm kiếm nếu không phải chip trường ĐH cố định
+        if (window.rentyGoogleMap && !window.rentyGoogleMap.selectedUniversity && window.rentyGoogleMap.activeCenter) {
+            window.rentyGoogleMap.activeCenter = null;
+            if (window.rentyGoogleMap.campusRadiusCircle) {
+                window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.campusRadiusCircle);
+                window.rentyGoogleMap.campusRadiusCircle = null;
+            }
+            if (window.rentyGoogleMap.customPlacePin) {
+                window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.customPlacePin);
+                window.rentyGoogleMap.customPlacePin = null;
+            }
         }
-        window.isUsingSmartSearchApi = false;
+
+        // Khôi phục HTML gốc CHỈ KHI từng bị SmartSearch API đè
+        const roomsGrid = document.getElementById('rooms-grid');
+        if (window.isUsingSmartSearchApi && roomsGrid && window.originalRoomsGridHtml) {
+            roomsGrid.innerHTML = window.originalRoomsGridHtml;
+            window.isUsingSmartSearchApi = false;
+        }
 
         document.querySelectorAll('.room-item-card').forEach(card => {
             card.style.display = '';
@@ -2718,7 +2766,27 @@ function handleSearchInput(e) {
         return;
     }
 
-    // 2. Khi CÓ gõ chữ: chỉ hiển thị popup gợi ý trên Header nếu đang gõ trên Header
+    // 2. Khi CÓ gõ chữ:
+    // Ẩn cảnh báo lỗi rỗng và viền amber
+    const errEmpty = document.getElementById('search-empty-error');
+    if (errEmpty) errEmpty.classList.add('hidden');
+    const boxContainer = document.getElementById('hero-search-box-container');
+    if (boxContainer) boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+
+    // Nếu người dùng gõ từ khóa mới, giải phóng bán kính bản đồ cũ nếu có
+    if (window.rentyGoogleMap && !window.rentyGoogleMap.selectedUniversity && window.rentyGoogleMap.activeCenter) {
+        window.rentyGoogleMap.activeCenter = null;
+        if (window.rentyGoogleMap.campusRadiusCircle) {
+            window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.campusRadiusCircle);
+            window.rentyGoogleMap.campusRadiusCircle = null;
+        }
+        if (window.rentyGoogleMap.customPlacePin) {
+            window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.customPlacePin);
+            window.rentyGoogleMap.customPlacePin = null;
+        }
+    }
+
+    // Chỉ hiển thị popup gợi ý trên Header nếu đang gõ trên Header
     if (input && input.id === 'search-input') {
         openRentySearchSuggestions();
     }
@@ -2793,10 +2861,31 @@ window.handleAreaPresetChange = handleAreaPresetChange;
 function resetAllFilters() {
     // 0. Khôi phục lại HTML phòng gốc nếu từng bị API ghi đè
     const roomsGrid = document.getElementById('rooms-grid');
-    if (roomsGrid && window.originalRoomsGridHtml) {
+    if (window.isUsingSmartSearchApi && roomsGrid && window.originalRoomsGridHtml) {
         roomsGrid.innerHTML = window.originalRoomsGridHtml;
+        window.isUsingSmartSearchApi = false;
     }
-    window.isUsingSmartSearchApi = false;
+
+    // Ẩn thông báo lỗi ô tìm kiếm rỗng và viền amber
+    const errEmpty = document.getElementById('search-empty-error');
+    if (errEmpty) errEmpty.classList.add('hidden');
+    const errInvalid = document.getElementById('search-invalid-error');
+    if (errInvalid) errInvalid.classList.add('hidden');
+    const boxContainer = document.getElementById('hero-search-box-container');
+    if (boxContainer) boxContainer.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+
+    // Giải phóng bán kính map tìm kiếm nếu không phải chip trường ĐH cố định
+    if (window.rentyGoogleMap && !window.rentyGoogleMap.selectedUniversity && window.rentyGoogleMap.activeCenter) {
+        window.rentyGoogleMap.activeCenter = null;
+        if (window.rentyGoogleMap.campusRadiusCircle) {
+            window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.campusRadiusCircle);
+            window.rentyGoogleMap.campusRadiusCircle = null;
+        }
+        if (window.rentyGoogleMap.customPlacePin) {
+            window.rentyGoogleMap.map.removeLayer(window.rentyGoogleMap.customPlacePin);
+            window.rentyGoogleMap.customPlacePin = null;
+        }
+    }
 
     // Xóa banner Empty State của map nếu có
     const mapEmptyBanner = document.getElementById('map-empty-state-banner');
@@ -3036,10 +3125,14 @@ function initSmartScrollSearchHeader() {
                 searchPanel.classList.remove('opacity-0', 'invisible', 'pointer-events-none', '-translate-y-2');
                 searchPanel.classList.add('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
 
-                // Đồng bộ từ khóa từ Hero sang Header
-                if (heroInput && navInput && heroInput.value && !navInput.value) {
-                    navInput.value = heroInput.value;
-                    if (headerClearBtn) headerClearBtn.classList.remove('hidden');
+                // Đồng bộ từ khóa từ Hero sang Header nếu Hero đang được gõ
+                if (heroInput && navInput && heroInput.value !== navInput.value) {
+                    if (document.activeElement === heroInput) {
+                        navInput.value = heroInput.value;
+                    }
+                }
+                if (navInput && headerClearBtn) {
+                    headerClearBtn.classList.toggle('hidden', !navInput.value.trim());
                 }
             }
         } else {
@@ -3048,10 +3141,14 @@ function initSmartScrollSearchHeader() {
                 searchPanel.classList.add('opacity-0', 'invisible', 'pointer-events-none', '-translate-y-2');
                 searchPanel.classList.remove('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
 
-                // Đồng bộ từ khóa từ Header về Hero
-                if (navInput && heroInput && navInput.value && !heroInput.value) {
-                    heroInput.value = navInput.value;
-                    if (heroClearBtn) heroClearBtn.classList.remove('hidden');
+                // Đồng bộ từ khóa từ Header về Hero nếu Header đang được gõ
+                if (navInput && heroInput && navInput.value !== heroInput.value) {
+                    if (document.activeElement === navInput) {
+                        heroInput.value = navInput.value;
+                    }
+                }
+                if (heroInput && heroClearBtn) {
+                    heroClearBtn.classList.toggle('hidden', !heroInput.value.trim());
                 }
 
                 // Đóng dropdown gợi ý trên Header nếu đang mở

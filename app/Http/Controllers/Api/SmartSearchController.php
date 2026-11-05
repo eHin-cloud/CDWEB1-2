@@ -65,14 +65,14 @@ class SmartSearchController extends Controller
             ? (float) $request->input('rating')
             : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
 
-        $engine = (string) $request->input('engine', env('SEARCH_ENGINE', 'hybrid'));
+        $engine = (string) $request->input('engine', env('SEARCH_ENGINE', 'scout'));
 
         // Tìm kiếm bằng Apache Solr Search Engine nếu được yêu cầu
         if ($engine === 'solr') {
             return $this->solrSearch($request);
         }
 
-        // Tìm kiếm bằng Laravel Scout Search Engine nếu được yêu cầu
+        // Mặc định sử dụng Laravel Scout Search Engine (Elasticsearch)
         if ($engine === 'scout') {
             return $this->scoutSearch($request);
         }
@@ -148,6 +148,8 @@ class SmartSearchController extends Controller
             ? (float) $request->input('rating')
             : ($request->filled('min_rating') ? (float) $request->input('min_rating') : null);
 
+        $analysis = $this->searchService->analyzeAndCorrect($query);
+
         $result = $this->scoutSearchService->search($query, [
             'limit' => $limit,
             'page' => $page,
@@ -164,16 +166,16 @@ class SmartSearchController extends Controller
             'engine' => 'laravel_scout',
             'driver' => $result['driver'] ?? config('scout.driver'),
             'original_query' => $query,
-            'normalized_query' => $query,
-            'corrected_query' => $query,
-            'did_you_mean' => null,
-            'has_correction' => false,
-            'recognized_terms' => [],
+            'normalized_query' => $analysis['normalized'] ?? $query,
+            'corrected_query' => $analysis['corrected'] ?? $query,
+            'did_you_mean' => $analysis['did_you_mean'] ?? null,
+            'has_correction' => !empty($analysis['did_you_mean']),
+            'recognized_terms' => $analysis['recognized_terms'] ?? [],
             'filters' => [
                 'min_price' => $minPrice,
                 'max_price' => $maxPrice,
                 'amenities' => $amenities,
-                'locations' => [],
+                'locations' => $analysis['filters']['locations'] ?? [],
             ],
             'count' => $result['count'],
             'total' => $result['total'],
