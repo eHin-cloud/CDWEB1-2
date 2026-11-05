@@ -642,14 +642,36 @@ class VisitorController extends Controller
     public function subscribeNewsletter(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email|max:150',
+            'email' => 'required|email:rfc,dns|max:150',
         ], [
             'email.required' => 'Vui lòng nhập địa chỉ email của bạn.',
-            'email.email' => 'Địa chỉ email không đúng định dạng hợp lệ.',
+            'email.email' => 'Địa chỉ email không đúng định dạng hoặc tên miền email không tồn tại.',
             'email.max' => 'Địa chỉ email không được vượt quá 150 ký tự.',
         ]);
 
         $email = trim(strtolower($validated['email']));
+
+        // 1. Kiểm tra bản ghi MX của tên miền email (đảm bảo domain thực sự có máy chủ nhận mail)
+        $domain = substr(strrchr($email, "@"), 1);
+        if (!$domain || (!checkdnsrr($domain, 'MX') && !checkdnsrr($domain, 'A'))) {
+            return response()->json([
+                'success' => false,
+                'message' => "Tên miền email '@{$domain}' không tồn tại hoặc không thể nhận thư. Vui lòng nhập email thật.",
+            ], 422);
+        }
+
+        // 2. Chặn các tên miền email rác / email ảo tạm thời
+        $disposableDomains = [
+            'mailinator.com', '10minutemail.com', 'tempmail.com', 'guerrillamail.com',
+            'trashmail.com', 'yopmail.com', 'sharklasers.com', 'getairmail.com', 'dispostable.com'
+        ];
+        if (in_array(strtolower($domain), $disposableDomains)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hệ thống không hỗ trợ đăng ký bằng email tạm thời / email rác. Vui lòng dùng email chính thức.',
+            ], 422);
+        }
+
         $mailSent = false;
         $errorDetail = null;
 
@@ -683,12 +705,19 @@ class VisitorController extends Controller
             // Không chặn phản hồi nếu NotificationLog có cấu hình khác
         }
 
+        // Nếu gửi mail thất bại (lỗi máy chủ SMTP hoặc email bị từ chối) -> KHÔNG ĐƯỢC báo success
+        if (!$mailSent) {
+            return response()->json([
+                'success' => false,
+                'mail_sent' => false,
+                'message' => 'Không thể gửi email xác nhận đến địa chỉ ' . $email . '. Vui lòng kiểm tra lại hộp thư hoặc thử lại sau.',
+            ], 422);
+        }
+
         return response()->json([
             'success' => true,
-            'mail_sent' => $mailSent,
-            'message' => $mailSent 
-                ? 'Đăng ký thành công! Hệ thống đã gửi email xác nhận đến ' . $email . '. Vui lòng kiểm tra hộp thư của bạn.'
-                : 'Đăng ký nhận tin thành công! Chúng tôi đã ghi nhận email ' . $email . ' của bạn.',
+            'mail_sent' => true,
+            'message' => 'Đăng ký thành công! Hệ thống đã gửi email xác nhận đến ' . $email . '. Vui lòng kiểm tra hộp thư của bạn.',
         ]);
     }
 }

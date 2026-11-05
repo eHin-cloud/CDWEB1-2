@@ -1068,6 +1068,7 @@ class GoogleMapsRenty {
             document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
             document.querySelectorAll('.room-item-card').forEach(card => {
                 card.style.display = '';
+                card.classList.remove('hidden');
             });
 
             // Trở về chế độ khám phá chỗ đó: Zoom bao quát toàn cảnh khu vực trường vừa xem
@@ -1878,23 +1879,35 @@ class GoogleMapsRenty {
         let routeDistanceKm = distKm;
         let latLngs = [[startCoords.lat, startCoords.lng], [destLat, destLng]];
 
-        // Fetch OSRM tuyến đường giao thông thực tế (không đâm xuyên nhà cửa)
-        try {
-            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
-            const resp = await fetch(osrmUrl);
-            if (resp.ok) {
-                const data = await resp.json();
-                if (data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                    routeDistanceKm = route.distance / 1000;
-                    bikeMins = Math.max(2, Math.round(route.duration / 60));
-                    walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
-                    busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
+        // Fetch OSRM tuyến đường giao thông thực tế (bám theo mạng lưới đường sá, không đâm xuyên nhà cửa)
+        const routingEndpoints = [
+            `https://routing.openstreetmap.de/routed-car/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
+            `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
+            `https://routing.openstreetmap.de/routed-bike/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`
+        ];
+
+        for (const ep of routingEndpoints) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const resp = await fetch(ep, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.routes && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                        routeDistanceKm = route.distance / 1000;
+                        bikeMins = Math.max(2, Math.round(route.duration / 60));
+                        walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
+                        busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
+                        break; // Đã lấy được tuyến đường thành công, dừng thử các mirror khác
+                    }
                 }
+            } catch (err) {
+                // Thử endpoint tiếp theo trong danh sách dự phòng
             }
-        } catch (e) {
-            console.warn('Lỗi tải tuyến đường OSRM, chuyển sang đường nối trực tiếp:', e);
         }
 
         // Tuyến đường thực tế bám sát theo mặt đường
@@ -2418,20 +2431,59 @@ window.switchToFallbackMapTiles = function() {
     }
 };
 
+let _lastCampusFilterTime = 0;
+
 window.selectCampusFilter = function(uniId, btnEl) {
-    document.querySelectorAll('.gm-campus-chip').forEach(btn => {
-        btn.classList.remove('active', 'bg-blue-600', 'text-white');
-        btn.classList.add('bg-slate-900', 'text-slate-300');
-    });
+    const now = Date.now();
+    // Chống double-click hoặc gọi đúp do sự kiện nổi bọt trong vòng 350ms
+    if (now - _lastCampusFilterTime < 350) {
+        return;
+    }
+    _lastCampusFilterTime = now;
+
     if (!btnEl && uniId) {
         btnEl = document.querySelector(`.gm-campus-chip[onclick*="'${uniId}'"]`) || (uniId === 'all' ? document.getElementById('campus-chip-all') : null);
     }
+
+    const mapInst = window.rentyGoogleMap;
+
+    // Kiểm tra xem trường này có đang được chọn hay không:
+    // Nếu bấm lại lần 2 vào chính trường đang quét -> HỦY QUÉT (chuyển về 'all')
+    const isCurrentlyActive = (
+        uniId && uniId !== 'all' && (
+            (mapInst && mapInst.selectedCampusId === uniId) ||
+            (btnEl && btnEl.classList.contains('active'))
+        )
+    );
+
+    if (isCurrentlyActive) {
+        // BẤM LẦN 2: HỦY QUÉT -> Bỏ active trường hiện tại, chuyển active về chip "Tất cả"
+        document.querySelectorAll('.gm-campus-chip').forEach(btn => {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+            btn.classList.add('bg-slate-900', 'text-slate-300');
+        });
+        const allBtn = document.getElementById('campus-chip-all');
+        if (allBtn) {
+            allBtn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+            allBtn.classList.remove('bg-slate-900', 'text-slate-300');
+        }
+        if (mapInst) {
+            mapInst.selectCampus('all');
+        }
+        return;
+    }
+
+    // BẤM LẦN 1: KÍCH HOẠT QUÉT GẦN TRƯỜNG ĐÃ CHỌN
+    document.querySelectorAll('.gm-campus-chip').forEach(btn => {
+        btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+        btn.classList.add('bg-slate-900', 'text-slate-300');
+    });
     if (btnEl) {
-        btnEl.classList.add('active', 'bg-blue-600', 'text-white');
+        btnEl.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
         btnEl.classList.remove('bg-slate-900', 'text-slate-300');
     }
-    if (window.rentyGoogleMap) {
-        window.rentyGoogleMap.selectCampus(uniId);
+    if (mapInst) {
+        mapInst.selectCampus(uniId);
     }
 };
 
@@ -3222,9 +3274,12 @@ document.addEventListener('click', (e) => {
     const chip = e.target.closest('.gm-campus-chip');
     if (!chip) return;
 
+    // Nếu chip đã có thuộc tính inline onclick, trình duyệt đã tự động xử lý -> không gọi lặp
+    if (chip.hasAttribute('onclick')) return;
+
     const onclickStr = chip.getAttribute('onclick') || '';
     const match = onclickStr.match(/selectCampusFilter\(['"]([^'"]+)['"]/);
-    const uniId = match ? match[1] : (chip.id === 'campus-chip-all' ? 'all' : null);
+    const uniId = match ? match[1] : (chip.id === 'campus-chip-all' ? 'all' : chip.getAttribute('data-uni-id'));
     if (uniId) {
         window.selectCampusFilter(uniId, chip);
     }

@@ -3791,7 +3791,15 @@ async function subscribeNewsletter() {
             }
             emailInput.value = '';
         } else {
-            const errorMsg = data.message || 'Không thể đăng ký lúc này. Vui lòng thử lại sau.';
+            let errorMsg = data.message;
+            if (!errorMsg && data.errors) {
+                const firstKey = Object.keys(data.errors)[0];
+                if (firstKey && data.errors[firstKey] && data.errors[firstKey][0]) {
+                    errorMsg = data.errors[firstKey][0];
+                }
+            }
+            if (!errorMsg) errorMsg = 'Không thể đăng ký lúc này. Vui lòng kiểm tra lại địa chỉ email.';
+
             if (typeof showCustomAlert === 'function') {
                 showCustomAlert(errorMsg, 'error');
             } else if (typeof window.showRentyToast === 'function') {
