@@ -748,7 +748,9 @@ class GoogleMapsRenty {
             const layer = L.tileLayer(primaryUrl, Object.assign({
                 maxZoom: 20,
                 subdomains: primarySubdomains,
-                keepBuffer: 1
+                keepBuffer: 3,
+                updateWhenIdle: true,
+                updateWhenZooming: false
             }, options));
 
             let failedAttempts = 0;
@@ -2515,71 +2517,58 @@ class GoogleMapsRenty {
         let routeDistanceKm = distKm;
         let latLngs = null;
 
-        // Fetch OSRM tuyến đường giao thông thực tế (bám theo mạng lưới đường sá, không đâm xuyên nhà cửa)
+        // Fetch OSRM song song siêu tốc qua Promise.any (bám 100% theo mạng lưới đường sá thực tế)
         const routingEndpoints = [
-            `https://routing.openstreetmap.de/routed-car/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
             `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
+            `https://routing.openstreetmap.de/routed-car/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
             `https://routing.openstreetmap.de/routed-bike/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`
         ];
 
-        for (const ep of routingEndpoints) {
+        const fetchRoute = async (url) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 4000);
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                const resp = await fetch(ep, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (resp.ok) {
-                    const data = await resp.json();
-                    if (data.routes && data.routes.length > 0) {
-                        const route = data.routes[0];
-                        if (route.geometry && Array.isArray(route.geometry.coordinates) && route.geometry.coordinates.length > 1) {
-                            latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                            routeDistanceKm = route.distance / 1000;
-                            bikeMins = Math.max(2, Math.round(route.duration / 60));
-                            walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
-                            busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
-                            break; // Lấy tuyến đường thành công
-                        }
-                    }
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timer);
+                if (!resp.ok) throw new Error('Route status not ok');
+                const data = await resp.json();
+                if (!data.routes || !data.routes.length) throw new Error('No route');
+                const r = data.routes[0];
+                if (!r.geometry || !Array.isArray(r.geometry.coordinates) || r.geometry.coordinates.length < 2) {
+                    throw new Error('Invalid coordinates');
                 }
+                return r;
             } catch (err) {
-                // Thử mirror tiếp theo
+                clearTimeout(timer);
+                throw err;
             }
+        };
+
+        try {
+            const route = await Promise.any(routingEndpoints.map(url => fetchRoute(url)));
+            if (route) {
+                latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                routeDistanceKm = route.distance / 1000;
+                bikeMins = Math.max(2, Math.round(route.duration / 60));
+                walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
+                busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
+            }
+        } catch (err) {
+            console.warn('[Routing] OSRM mirrors pending or unavailable:', err);
         }
 
-        // Nếu OSRM không phản hồi hoặc mất mạng: tạo đường cong uốn lượn tự nhiên mô phỏng lộ trình giao thông (không kẻ 1 đường thẳng tắp xuyên qua các tòa nhà)
+        // Nếu tất cả mirror OSRM đều mất mạng hoàn toàn: fallback đường nối mượt mà
         if (!latLngs || latLngs.length < 2) {
-            latLngs = [];
-            const numSteps = 20;
-            const midLat = (startCoords.lat + destLat) / 2;
-            const midLng = (startCoords.lng + destLng) / 2;
-            // Tạo độ lệch nhẹ sang trục giao thông chính
-            const offsetLat = (destLng - startCoords.lng) * 0.12;
-            const offsetLng = -(destLat - startCoords.lat) * 0.12;
-            const ctrlLat = midLat + offsetLat;
-            const ctrlLng = midLng + offsetLng;
-
-            for (let i = 0; i <= numSteps; i++) {
-                const t = i / numSteps;
-                // Bậc 2 Bezier curve
-                const curLat = (1 - t) * (1 - t) * startCoords.lat + 2 * (1 - t) * t * ctrlLat + t * t * destLat;
-                const curLng = (1 - t) * (1 - t) * startCoords.lng + 2 * (1 - t) * t * ctrlLng + t * t * destLng;
-                latLngs.push([curLat, curLng]);
-            }
-            routeDistanceKm = distKm * 1.25;
-            bikeMins = Math.max(2, Math.round((routeDistanceKm / 24) * 60 + 2));
-            walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
+            latLngs = [[startCoords.lat, startCoords.lng], [destLat, destLng]];
         }
 
-        // Tuyến đường thực tế bám sát theo mặt đường
+        // Tuyến đường thực tế bám sát theo mặt đường: ĐƯỜNG LIỀN MÀU RÕ NÉT (KHÔNG NÉT ĐỨT)
         this.routePolyline = L.polyline(latLngs, {
-            color: '#0284c7',
-            weight: 5,
-            opacity: 0.92,
+            color: '#2563eb',
+            weight: 6,
+            opacity: 0.9,
             lineJoin: 'round',
-            lineCap: 'round',
-            dashArray: '8, 8'
+            lineCap: 'round'
         }).addTo(this.map);
 
         const bounds = L.latLngBounds(latLngs);
@@ -4001,23 +3990,10 @@ window.initRoomCardMapSync = function() {
 
             const marker = mapInstance.markers[roomId];
             if (marker && mapInstance.map) {
-                // 1. Highlight pin trên bản đồ
+                // 1. Chỉ highlight nổi bật pin/marker trên bản đồ (nhẹ nhàng, không giật lag)
                 mapInstance.highlightMarker(roomId);
-
-                // 2. Mở popup InfoWindow xem trước phòng
-                marker.openPopup();
-
-                // 3. Chỉ panTo nếu marker thực sự nằm ngoài khung nhìn hiện tại của bản đồ
-                const bounds = mapInstance.map.getBounds();
-                const latLng = marker.getLatLng();
-                if (bounds && !bounds.contains(latLng)) {
-                    mapInstance.map.panTo(latLng, {
-                        animate: true,
-                        duration: 0.35
-                    });
-                }
             }
-        }, 90);
+        }, 120);
     });
 };
 

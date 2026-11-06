@@ -1170,37 +1170,22 @@ function initRentyMap() {
         }
     });
 
-    // Global hover listener using event delegation to zoom straight to matching map marker
+    // Global hover listener: Chỉ highlight marker tương ứng nhẹ nhàng (không gọi panTo hay openPopup để triệt tiêu hoàn toàn giật lag)
+    let _roomCardHoverTimer = null;
+    let _lastHoveredRoomId = null;
     document.body.addEventListener('mouseover', (e) => {
         const card = e.target.closest('.room-item-card');
         if (!card) return;
         const roomId = card.getAttribute('data-room-id');
-        if (!roomId) return;
+        if (!roomId || roomId === _lastHoveredRoomId) return;
 
-        if (window.rentyGoogleMap && window.rentyGoogleMap.markers && window.rentyGoogleMap.markers[roomId]) {
-            window.rentyGoogleMap.highlightMarker(roomId);
-            window.rentyGoogleMap.markers[roomId].openPopup();
-            window.rentyGoogleMap.map.panTo(window.rentyGoogleMap.markers[roomId].getLatLng(), {
-                animate: true,
-                duration: 0.8
-            });
-        } else if (rentyMarkers && rentyMarkers[roomId] && rentyMap) {
-            // Highlight pin
-            document.querySelectorAll('.glowing-teal-pin').forEach(pin => {
-                pin.classList.remove('active');
-            });
-            const pinEl = document.getElementById(`map-pin-${roomId}`);
-            if (pinEl) pinEl.classList.add('active');
-
-            // Open Leaflet popup
-            rentyMarkers[roomId].openPopup();
-            
-            // Di chuyển tâm nhẹ nhàng tới phòng, giữ nguyên mức zoom hiện tại của người dùng
-            rentyMap.panTo(rentyMarkers[roomId].getLatLng(), {
-                animate: true,
-                duration: 0.5
-            });
-        }
+        if (_roomCardHoverTimer) clearTimeout(_roomCardHoverTimer);
+        _roomCardHoverTimer = setTimeout(() => {
+            _lastHoveredRoomId = roomId;
+            if (window.rentyGoogleMap && typeof window.rentyGoogleMap.highlightMarker === 'function') {
+                window.rentyGoogleMap.highlightMarker(roomId);
+            }
+        }, 100);
     });
 }
 
