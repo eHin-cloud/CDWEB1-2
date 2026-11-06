@@ -34,21 +34,25 @@ class SolrSearchService
     protected function initClient(): void
     {
         try {
-            $adapter = new Curl();
-            $dispatcher = new EventDispatcher();
-            $options = [
-                'endpoint' => [
-                    'localhost' => [
-                        'host' => $this->host,
-                        'port' => $this->port,
-                        'path' => '/',
-                        'core' => $this->core,
-                        'timeout' => 5,
+            if (class_exists(Curl::class)) {
+                $adapter = new Curl();
+                $dispatcher = new EventDispatcher();
+                $options = [
+                    'endpoint' => [
+                        'localhost' => [
+                            'host' => $this->host,
+                            'port' => $this->port,
+                            'path' => '/',
+                            'core' => $this->core,
+                            'timeout' => 5,
+                        ]
                     ]
-                ]
-            ];
-            $this->client = new Client($adapter, $dispatcher, $options);
-        } catch (Exception $e) {
+                ];
+                $this->client = new Client($adapter, $dispatcher, $options);
+            } else {
+                $this->client = null;
+            }
+        } catch (\Throwable $e) {
             Log::error('Solr Client Init Error: ' . $e->getMessage());
             $this->client = null;
         }

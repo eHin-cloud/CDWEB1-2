@@ -1,0 +1,295 @@
+﻿
+  GET|HEAD  / ........................................................................................................ 
+  GET|HEAD  admin/analytics .................................. admin.analytics › AdminVerificationController@analytics
+  GET|HEAD  admin/audit-logs ....................................... admin.audit-logs › SuperadminController@auditLogs
+  GET|HEAD  admin/dashboard .............................. admin.superadmin.dashboard › SuperadminController@dashboard
+  GET|HEAD  admin/kyc/pending ................................ admin.kyc.pending › AdminVerificationController@pending
+  POST      admin/kyc/{id}/approve ........................... admin.kyc.approve › AdminVerificationController@approve
+  POST      admin/kyc/{id}/reject .............................. admin.kyc.reject › AdminVerificationController@reject
+  POST      admin/system/config ............. admin.superadmin.config.update › SuperadminController@updateSystemConfig
+  POST      admin/users/{user}/password ..... admin.superadmin.users.password › SuperadminController@resetUserPassword
+  POST      admin/users/{user}/role ................ admin.superadmin.users.role › SuperadminController@updateUserRole
+  POST      admin/users/{user}/status .......... admin.superadmin.users.status › SuperadminController@toggleUserStatus
+  GET|HEAD  admin/verification-audit-logs ...... admin.verification-audit-logs › AdminVerificationController@auditLogs
+  GET|HEAD  admin/verification-documents/{document} admin.verification-documents.show › VerificationDocumentControlle…
+  GET|HEAD  admin/verification-documents/{document}/stream admin.verification-documents.stream › VerificationDocument…
+  POST      admin/verification-documents/{document}/unlock admin.verification-documents.unlock › VerificationDocument…
+  GET|HEAD  admin/verifications ........................ admin.verifications.index › AdminVerificationController@index
+  GET|HEAD  admin/verifications/has-passkey . admin.verifications.has-passkey › AdminVerificationController@hasPasskey
+  POST      admin/verifications/{verification}/approve admin.verifications.approve › AdminVerificationController@appr…
+  POST      admin/verifications/{verification}/reject admin.verifications.reject › AdminVerificationController@reject
+  POST      api/admin/bills/{id}/notify ..................................... Api\TenantAdminController@notifyResident
+  GET|HEAD  api/admin/bills/{id}/pdf .............................................. Api\TenantAdminController@printPdf
+  GET|HEAD  api/admin/buildings .............................................. Api\TenantAdminController@listBuildings
+  POST      api/admin/buildings .............................................. Api\TenantAdminController@storeBuilding
+  PUT       api/admin/buildings/{id} ........................................ Api\TenantAdminController@updateBuilding
+  DELETE    api/admin/buildings/{id} ........................................ Api\TenantAdminController@deleteBuilding
+  GET|HEAD  api/admin/contracts .............................................. Api\TenantAdminController@listContracts
+  POST      api/admin/contracts .............................................. Api\TenantAdminController@storeContract
+  DELETE    api/admin/contracts/{id} ........................................ Api\TenantAdminController@deleteContract
+  GET|HEAD  api/admin/dashboard .................................................. Api\TenantAdminController@dashboard
+  GET|HEAD  api/admin/landlords ............................................... Api\SystemAdminController@getLandlords
+  GET|HEAD  api/admin/landlords/{id} ..................................... Api\SystemAdminController@getLandlordDetail
+  PATCH     api/admin/landlords/{id}/lock ............................... Api\SystemAdminController@toggleLockLandlord
+  PATCH     api/admin/landlords/{id}/verify ................................. Api\SystemAdminController@verifyLandlord
+  GET|HEAD  api/admin/properties ............................................. Api\SystemAdminController@getProperties
+  PATCH     api/admin/properties/{id}/moderate ............................ Api\SystemAdminController@moderateProperty
+  GET|HEAD  api/admin/residents .............................................. Api\TenantAdminController@listResidents
+  POST      api/admin/residents .............................................. Api\TenantAdminController@storeResident
+  PUT       api/admin/residents/{id} ........................................ Api\TenantAdminController@updateResident
+  DELETE    api/admin/residents/{id} ........................................ Api\TenantAdminController@deleteResident
+  POST      api/admin/residents/{resident}/sensitive ............................ Api\SensitiveDataController@resident
+  GET|HEAD  api/admin/rooms ...................................................... Api\TenantAdminController@listRooms
+  POST      api/admin/rooms ...................................................... Api\TenantAdminController@storeRoom
+  GET|HEAD  api/admin/rooms/matrix .............................................. Api\TenantAdminController@roomMatrix
+  PUT       api/admin/rooms/{id} ................................................ Api\TenantAdminController@updateRoom
+  DELETE    api/admin/rooms/{id} ................................................ Api\TenantAdminController@deleteRoom
+  GET|HEAD  api/admin/stats ....................................................... Api\SystemAdminController@getStats
+  POST      api/admin/tenant/bank-account/reveal ....................... Api\SensitiveDataController@tenantBankAccount
+  GET|HEAD  api/admin/tickets .................................................. Api\TenantAdminController@listTickets
+  PUT       api/admin/tickets/{id} ............................................ Api\TenantAdminController@updateTicket
+  POST      api/admin/utility/record .................................... Api\TenantAdminController@storeUtilityRecord
+  POST      api/ai/assistant-hub ..................... api.ai.assistant_hub › Api\AiAssistantHubController@dispatchHub
+  POST      api/ai/incident-triage .............. api.ai.incident_triage › Api\AiAssistantHubController@incidentTriage
+  POST      api/ai/landlord-advisor ........... api.ai.landlord_advisor › Api\AiAssistantHubController@landlordAdvisor
+  POST      api/ai/landlord-qa .......................... api.ai.landlord_qa › Api\AiAssistantHubController@landlordQA
+  POST      api/ai/room-finder .......................... api.ai.room_finder › Api\AiAssistantHubController@roomFinder
+  POST      api/auth/check-availability ......................................... Api\AuthController@checkAvailability
+  POST      api/auth/login .................................................................. Api\AuthController@login
+  POST      api/auth/logout ................................................................ Api\AuthController@logout
+  POST      api/auth/otp/verify ......................................................... Api\AuthController@verifyOtp
+  POST      api/auth/password/forgot ........................................ Api\AuthController@forgotPasswordSendOtp
+  POST      api/auth/password/reset ........................................... Api\AuthController@forgotPasswordReset
+  GET|HEAD  api/auth/profile .............................................................. Api\AuthController@profile
+  POST      api/auth/register ............................................................ Api\AuthController@register
+  GET|HEAD  api/iot/rooms/{id}/realtime ........................................... IotMeteringController@roomRealtime
+  POST      api/iot/telemetry ........................................................... IotMeteringController@ingest
+  POST      api/platform-admin/verification-documents/{document}/unlock ........ VerificationDocumentController@unlock
+  POST      api/renty/chatbot/chat ................................... api.renty.chatbot.chat › ChatbotController@chat
+  GET|HEAD  api/renty/chatbot/history .......................... api.renty.chatbot.history › ChatbotController@history
+  POST      api/renty/contact-request ................................... AdminDashboardController@storeContactRequest
+  POST      api/renty/contact-requests api.renty.contact_requests.store › AdminDashboardController@storeContactRequest
+  GET|HEAD  api/renty/filter ......................................... api.renty.filter › Api\VisitorController@filter
+  POST      api/renty/newsletter/subscribe ................................. Api\VisitorController@subscribeNewsletter
+  POST      api/renty/room-alerts ........................ api.renty.room_alerts.store › Api\RoomAlertController@store
+  GET|HEAD  api/renty/room-alerts/my ..................... api.renty.room_alerts.my › Api\RoomAlertController@myAlerts
+  DELETE    api/renty/room-alerts/{id} ............... api.renty.room_alerts.destroy › Api\RoomAlertController@destroy
+  GET|HEAD  api/renty/room/{id}/reviews ................................................ Api\VisitorController@reviews
+  GET|HEAD  api/renty/room/{id}/reviews/summary .................................. Api\VisitorController@reviewSummary
+  GET|HEAD  api/renty/rooms .............................................................. Api\VisitorController@index
+  GET|HEAD  api/renty/rooms/autocomplete ....................................... Api\SmartSearchController@suggestions
+  POST      api/renty/rooms/compare .................................................... Api\VisitorController@compare
+  POST      api/renty/rooms/compare-ai ............................................... Api\VisitorController@compareAi
+  GET|HEAD  api/renty/rooms/map ............................................................ Api\VisitorController@map
+  GET|HEAD  api/renty/rooms/scout-search ....................................... Api\SmartSearchController@scoutSearch
+  GET|HEAD  api/renty/rooms/smart-search ............................................ Api\SmartSearchController@search
+  GET|HEAD  api/renty/rooms/suggest ............................................ Api\SmartSearchController@suggestions
+  GET|HEAD  api/renty/rooms/{id}/reviews ............................................... Api\VisitorController@reviews
+  POST      api/renty/rooms/{id}/reviews ........................................... Api\VisitorController@storeReview
+  GET|HEAD  api/renty/rooms/{id}/reviews/summary ................................. Api\VisitorController@reviewSummary
+  GET|HEAD  api/resident/bills .......................................................... Api\ResidentController@bills
+  GET|HEAD  api/resident/bills/{id}/vietqr .......................................... Api\ResidentController@getBillQr
+  GET|HEAD  api/resident/dashboard .................................................. Api\ResidentController@dashboard
+  POST      api/resident/tickets .................................................. Api\ResidentController@storeTicket
+  GET|HEAD  api/revenue-breakdown .................................................................................... 
+  GET|HEAD  api/rooms/compare ........................................................................................ 
+  POST      api/send-message ......................................................................................... 
+  POST      api/upload-avatar .............................. api.upload_avatar › AdminDashboardController@uploadAvatar
+  GET|HEAD  api/utility-bill/{id}/qr ................................................................................. 
+  POST      api/utility-bills/auto-remind ............................................................................ 
+  GET|HEAD  api/v1/iot/rooms/{id}/realtime ........................................ IotMeteringController@roomRealtime
+  POST      api/v1/iot/telemetry ........................................................ IotMeteringController@ingest
+  POST      api/webhooks/payments ......................................... Api\PaymentWebhookController@handleWebhook
+  GET|HEAD  create ................................................... user.createUser › CrudUserController@createUser
+  POST      create ....................................................... user.postUser › CrudUserController@postUser
+  GET|HEAD  dashboard .................................... superadmin.dashboard.alias › SuperadminController@dashboard
+  DELETE    delete/{id} .............................................. user.deleteUser › CrudUserController@deleteUser
+  GET|HEAD  forgot-password .................................. password.forgot › CrudUserController@showForgotPassword
+  POST      forgot-password/resend-otp ............... password.resendOtp › CrudUserController@resendForgotPasswordOtp
+  POST      forgot-password/reset .................... password.resetWithOtp › CrudUserController@resetPasswordWithOtp
+  POST      forgot-password/send-otp ..................... password.sendOtp › CrudUserController@sendForgotPasswordOtp
+  POST      forgot-password/verify-otp ............... password.verifyOtp › CrudUserController@verifyForgotPasswordOtp
+  POST      guest/send-otp ........................................... guest.sendOtp › CrudUserController@sendGuestOtp
+  GET|HEAD  guest/verify ............................................. guest.verify › CrudUserController@showVerifyOtp
+  POST      guest/verify-otp ..................................... guest.verifyOtp › CrudUserController@verifyGuestOtp
+  GET|HEAD  home ................................................................................................ home
+  GET|HEAD  landlord/register ................................ landlord.register › LandlordOnboardingController@create
+  POST      landlord/register ........................... landlord.register.store › LandlordOnboardingController@store
+  POST      landlord/send-otp ................................ landlord.sendOtp › LandlordOnboardingController@sendOtp
+  GET|HEAD  landlord/verify ............................ landlord.verify › LandlordOnboardingController@showVerifyForm
+  POST      landlord/verify-otp .......................... landlord.verifyOtp › LandlordOnboardingController@verifyOtp
+  GET|HEAD  list ............................................................. user.list › CrudUserController@listUser
+  GET|HEAD  login ................................................................... login › CrudUserController@login
+  POST      login ........................................................ user.authUser › CrudUserController@authUser
+  GET|HEAD  login/magic-link ..................................... login.magic › CrudUserController@loginWithMagicLink
+  POST      login/send-otp ....................................... user.sendLoginOtp › CrudUserController@sendLoginOtp
+  POST      login/verify-otp ..................................... user.loginWithOtp › CrudUserController@loginWithOtp
+  GET|HEAD  map ......................................................................................... map.redirect
+  GET|HEAD  portal .................................................................................. smartroom.portal
+  GET|HEAD  read ......................................................... user.readUser › CrudUserController@readUser
+  GET|HEAD  register ........................................................ register › CrudUserController@createUser
+  POST      register ..................................................... register.post › CrudUserController@postUser
+  GET|HEAD  renty ......................................................................................... renty.user
+  POST      renty/chatbot/chat ........................................... renty.chatbot.chat › ChatbotController@chat
+  GET|HEAD  renty/chatbot/history .................................. renty.chatbot.history › ChatbotController@history
+  POST      renty/contact-request ......... renty.contact_request.store › AdminDashboardController@storeContactRequest
+  POST      renty/contact-requests ...................................... AdminDashboardController@storeContactRequest
+  GET|HEAD  renty/map ...................................................................................... renty.map
+  POST      renty/newsletter/subscribe ........ renty.newsletter.subscribe › Api\VisitorController@subscribeNewsletter
+  GET|HEAD  renty/notifications .................................................................. renty.notifications
+  GET|HEAD  renty/room-3d .............................................................................. renty.room.3d
+  GET|HEAD  renty/room/{id} .......................................................................... renty.room.show
+  GET|HEAD  renty/room/{id}/3d .................................................................. renty.room.detail.3d
+  POST      renty/room/{id}/report .................. renty.room.report.store › RoomReviewReportController@storeReport
+  POST      renty/room/{id}/review .................. renty.room.review.store › RoomReviewReportController@storeReview
+  GET|HEAD  renty/search ................................................................................ renty.search
+  GET|HEAD  sanctum/csrf-cookie .................... sanctum.csrf-cookie › Laravel\Sanctum › CsrfCookieController@show
+  GET|HEAD  search ................................................................................... search.redirect
+  GET|HEAD  signout ............................................................. signout › CrudUserController@signOut
+  GET|HEAD  smartroom/admin ......................................... smartroom.admin › AdminDashboardController@index
+  GET|HEAD  smartroom/admin/activity-logs ............... admin.activity_logs.index › AdminActivityLogController@index
+  POST      smartroom/admin/ai/assistant ......... smartroom.admin.ai.assistant › AdminDashboardController@aiAssistant
+  POST      smartroom/admin/ai/assistant-hub smartroom.admin.ai.assistant_hub › Api\AiAssistantHubController@dispatch…
+  POST      smartroom/admin/ai/contract-terms smartroom.admin.ai.contract_terms › AdminDashboardController@aiContract…
+  POST      smartroom/admin/ai/dashboard-insight smartroom.admin.ai.dashboard_insight › AdminDashboardController@aiDa…
+  POST      smartroom/admin/ai/ocr-meter .......... smartroom.admin.ai.ocr_meter › AdminDashboardController@aiOcrMeter
+  POST      smartroom/admin/ai/ocr-meter-bulk smartroom.admin.ai.ocr_meter_bulk › AdminDashboardController@aiOcrMeter…
+  GET|HEAD  smartroom/admin/buildings ............................... admin.buildings.index › BuildingController@index
+  GET|HEAD  smartroom/admin/buildings/create ...................... admin.buildings.create › BuildingController@create
+  POST      smartroom/admin/buildings/store ......................... admin.buildings.store › BuildingController@store
+  DELETE    smartroom/admin/buildings/{id}/delete ............... admin.buildings.destroy › BuildingController@destroy
+  GET|HEAD  smartroom/admin/buildings/{id}/edit ....................... admin.buildings.edit › BuildingController@edit
+  POST      smartroom/admin/buildings/{id}/update ................. admin.buildings.update › BuildingController@update
+  DELETE    smartroom/admin/contact-request/{id} smartroom.admin.contact_request.delete › AdminDashboardController@de…
+  POST      smartroom/admin/contact-request/{id}/status smartroom.admin.contact_request.status › AdminDashboardContro…
+  GET|HEAD  smartroom/admin/contact-requests smartroom.admin.contact_requests › AdminDashboardController@contactReque…
+  POST      smartroom/admin/contract ......... smartroom.admin.contract.store › AdminDashboardController@storeContract
+  DELETE    smartroom/admin/contract/{id} .. smartroom.admin.contract.delete › AdminDashboardController@deleteContract
+  POST      smartroom/admin/contract/{id}/confirm-offline-sign smartroom.admin.contract.confirm_offline_sign › AdminD…
+  POST      smartroom/admin/contract/{id}/decline-renewal smartroom.admin.contract.decline_renewal › AdminDashboardCo…
+  POST      smartroom/admin/contract/{id}/renew smartroom.admin.contract.renew › AdminDashboardController@renewContra…
+  POST      smartroom/admin/contracts/store . smartroom.admin.contracts.store › AdminDashboardController@storeContract
+  GET|HEAD  smartroom/admin/dashboard ............................ admin.dashboard › LandlordDashboardController@index
+  GET|HEAD  smartroom/admin/dashboard/revenue-chart admin.dashboard.revenue_chart › LandlordDashboardController@reven…
+  GET|HEAD  smartroom/admin/equipment .............................. admin.equipment.index › EquipmentController@index
+  POST      smartroom/admin/equipment/allocate ............... admin.equipment.allocate › EquipmentController@allocate
+  POST      smartroom/admin/equipment/recover .................. admin.equipment.recover › EquipmentController@recover
+  GET|HEAD  smartroom/admin/equipment/store ........................................... admin.equipment.store.redirect
+  POST      smartroom/admin/equipment/store ........................ admin.equipment.store › EquipmentController@store
+  DELETE    smartroom/admin/equipment/{id}/delete .............. admin.equipment.destroy › EquipmentController@destroy
+  POST      smartroom/admin/equipment/{id}/update ................ admin.equipment.update › EquipmentController@update
+  POST      smartroom/admin/frontdesk/checkin smartroom.admin.frontdesk.checkin › HousekeepingFrontdeskController@che…
+  POST      smartroom/admin/frontdesk/checkout smartroom.admin.frontdesk.checkout › HousekeepingFrontdeskController@c…
+  GET|HEAD  smartroom/admin/frontdesk/preview-checkout/{roomId} smartroom.admin.frontdesk.preview_checkout › Housekee…
+  POST      smartroom/admin/hotel/check-in .................... admin.hotel.checkin › HotelReceptionController@checkIn
+  POST      smartroom/admin/hotel/check-out/{bookingId} ..... admin.hotel.checkout › HotelReceptionController@checkOut
+  GET|HEAD  smartroom/admin/hotel/folio/{bookingId} .......... admin.hotel.folio › HotelReceptionController@printFolio
+  POST      smartroom/admin/hotel/folio/{bookingId}/confirm-payment admin.hotel.folio.confirm_payment › HotelReceptio…
+  POST      smartroom/admin/hotel/folio/{bookingId}/items admin.hotel.folio.add_item › HotelReceptionController@addFo…
+  POST      smartroom/admin/housekeeping/assign smartroom.admin.housekeeping.assign › HousekeepingFrontdeskController…
+  POST      smartroom/admin/housekeeping/inspect smartroom.admin.housekeeping.inspect › HousekeepingFrontdeskControll…
+  GET|HEAD  smartroom/admin/housekeeping/matrix smartroom.admin.housekeeping.matrix › HousekeepingFrontdeskController…
+  GET|HEAD  smartroom/admin/housekeeping/poll smartroom.admin.housekeeping.poll › HousekeepingFrontdeskController@poll
+  POST      smartroom/admin/housekeeping/status smartroom.admin.housekeeping.status › HousekeepingFrontdeskController…
+  GET|HEAD  smartroom/admin/invoices ............... smartroom.admin.invoices › AdminDashboardController@invoicesIndex
+  GET|HEAD  smartroom/admin/iot/rooms/{id}/realtime smartroom.admin.iot.room_realtime › IotMeteringController@roomRea…
+  POST      smartroom/admin/iot/simulate ............... smartroom.admin.iot.simulate › IotMeteringController@simulate
+  GET|HEAD  smartroom/admin/iot/summary .......... smartroom.admin.iot.summary › IotMeteringController@facilitySummary
+  POST      smartroom/admin/iot/sync-billing .... smartroom.admin.iot.sync_billing › IotMeteringController@syncBilling
+  GET|HEAD  smartroom/admin/kyc ........................... smartroom.admin.kyc › LandlordVerificationController@index
+  GET|HEAD  smartroom/admin/kyc/status ............ smartroom.admin.kyc.status › LandlordVerificationController@status
+  POST      smartroom/admin/kyc/submit ......... smartroom.admin.kyc.submit › LandlordVerificationController@submitKyc
+  GET|HEAD  smartroom/admin/ledger ..................................... admin.reports.ledger › ReportController@index
+  GET|HEAD  smartroom/admin/lookup-customer smartroom.admin.lookup_customer › AdminDashboardController@lookupCustomer
+  GET|HEAD  smartroom/admin/matrix ............................................................ smartroom.admin.matrix
+  POST      smartroom/admin/notifications/contracts smartroom.admin.notifications.contracts › AdminDashboardControlle…
+  POST      smartroom/admin/notifications/maintenance smartroom.admin.notifications.maintenance › AdminDashboardContr…
+  POST      smartroom/admin/notifications/run-all smartroom.admin.notifications.run_all › AdminDashboardController@no…
+  GET|HEAD  smartroom/admin/payments .................................. admin.payments.index › PaymentController@index
+  GET|HEAD  smartroom/admin/payments/export ......................... admin.payments.export › PaymentController@export
+  POST      smartroom/admin/payments/{payment} ...................... admin.payments.update › PaymentController@update
+  GET|HEAD  smartroom/admin/profile ................... smartroom.admin.profile › AdminDashboardController@profileView
+  POST      smartroom/admin/profile .......... smartroom.admin.profile.update › AdminDashboardController@updateProfile
+  POST      smartroom/admin/profile/update smartroom.admin.profile.update_post › AdminDashboardController@updateProfi…
+  POST      smartroom/admin/profile/upload-avatar smartroom.admin.profile.upload_avatar › AdminDashboardController@up…
+  PUT       smartroom/admin/relative/{id} .. smartroom.admin.relative.update › AdminDashboardController@updateRelative
+  DELETE    smartroom/admin/relative/{id} .. smartroom.admin.relative.delete › AdminDashboardController@deleteRelative
+  GET|HEAD  smartroom/admin/reports ..................................... admin.reports.index › ReportController@index
+  GET|HEAD  smartroom/admin/reports/cash-flow .................... admin.reports.cash_flow › ReportController@cashFlow
+  GET|HEAD  smartroom/admin/reports/export-excel ........... admin.reports.export_excel › ReportController@exportExcel
+  POST      smartroom/admin/reports/transactions . admin.reports.transaction.store › ReportController@storeTransaction
+  POST      smartroom/admin/resident ......... smartroom.admin.resident.store › AdminDashboardController@storeResident
+  PUT       smartroom/admin/resident/{id} .. smartroom.admin.resident.update › AdminDashboardController@updateResident
+  DELETE    smartroom/admin/resident/{id} .. smartroom.admin.resident.delete › AdminDashboardController@deleteResident
+  GET|HEAD  smartroom/admin/resident/{id}/export-ct01 smartroom.admin.resident.export_ct01 › AdminDashboardController…
+  POST      smartroom/admin/resident/{residentId}/relative smartroom.admin.resident.relative.store › AdminDashboardCo…
+  GET|HEAD  smartroom/admin/resident/{residentId}/relatives smartroom.admin.resident.relatives › AdminDashboardContro…
+  GET|HEAD  smartroom/admin/residents ..................... admin.residents.index › ResidentManagementController@index
+  POST      smartroom/admin/residents .............. admin.residents.store.direct › ResidentManagementController@store
+  POST      smartroom/admin/residents/store ............... admin.residents.store › ResidentManagementController@store
+  GET|HEAD  smartroom/admin/rooms ........................................... admin.rooms.index › RoomController@index
+  GET|HEAD  smartroom/admin/rooms/check-number ................. admin.rooms.check_number › RoomController@checkNumber
+  GET|HEAD  smartroom/admin/rooms/create .................................. admin.rooms.create › RoomController@create
+  POST      smartroom/admin/rooms/description/ai ..... admin.rooms.description.ai › RoomController@generateDescription
+  GET|HEAD  smartroom/admin/rooms/matrix/poll .... admin.rooms.matrix.poll › RoomMatrixRealtimeController@checkUpdates
+  GET|HEAD  smartroom/admin/rooms/matrix/stream ...... admin.rooms.matrix.stream › RoomMatrixRealtimeController@stream
+  POST      smartroom/admin/rooms/store ..................................... admin.rooms.store › RoomController@store
+  DELETE    smartroom/admin/rooms/{id}/delete ........................... admin.rooms.destroy › RoomController@destroy
+  GET|HEAD  smartroom/admin/rooms/{id}/edit ................................... admin.rooms.edit › RoomController@edit
+  POST      smartroom/admin/rooms/{id}/quick-status admin.rooms.quick_status › RoomMatrixRealtimeController@updateSta…
+  POST      smartroom/admin/rooms/{id}/update ............................. admin.rooms.update › RoomController@update
+  POST      smartroom/admin/ticket/{id}/update smartroom.admin.ticket.update › AdminDashboardController@updateTicketS…
+  GET|HEAD  smartroom/admin/tickets ............ smartroom.admin.tickets.index › AdminDashboardController@ticketsIndex
+  GET|HEAD  smartroom/admin/tickets/poll ......... smartroom.admin.tickets.poll › AdminDashboardController@pollTickets
+  POST      smartroom/admin/tickets/{id}/status smartroom.admin.tickets.status › AdminDashboardController@updateTicke…
+  GET|HEAD  smartroom/admin/utilities/bulk . smartroom.admin.utilities.bulk › AdminDashboardController@utilityBulkView
+  POST      smartroom/admin/utility ............ smartroom.admin.utility.store › AdminDashboardController@storeUtility
+  POST      smartroom/admin/utility/auto-remind smartroom.admin.utility.auto_remind › AdminDashboardController@autoRe…
+  GET|HEAD  smartroom/admin/utility/bulk ..... smartroom.admin.utility.bulk › AdminDashboardController@utilityBulkView
+  POST      smartroom/admin/utility/bulk smartroom.admin.utility.bulk_store › AdminDashboardController@storeUtilityBu…
+  POST      smartroom/admin/utility/bulk-store smartroom.admin.utility.bulk_store_post › AdminDashboardController@sto…
+  POST      smartroom/admin/utility/calculate smartroom.admin.utility.calculate › AdminDashboardController@calculateU…
+  GET|HEAD  smartroom/admin/utility/{id}/invoice-pdf smartroom.admin.utility.invoice_pdf › AdminDashboardController@e…
+  POST      smartroom/admin/utility/{id}/notify smartroom.admin.utility.notify › AdminDashboardController@notifyUtili…
+  POST      smartroom/admin/utility/{id}/pay ....... smartroom.admin.utility.pay › AdminDashboardController@payUtility
+  GET|HEAD  smartroom/admin/utility/{id}/print . smartroom.admin.utility.print › AdminDashboardController@printUtility
+  GET|HEAD  smartroom/admin/utility/{id}/vietqr smartroom.admin.utility.vietqr › AdminDashboardController@getUtilityV…
+  POST      smartroom/admin/verification/kyc smartroom.admin.verification.kyc › LandlordVerificationController@submit…
+  POST      smartroom/admin/verification/premium smartroom.admin.verification.premium › LandlordVerificationControlle…
+  GET|HEAD  smartroom/contract/{id}/export-pdf smartroom.contract.export_pdf › AdminDashboardController@printContract…
+  POST      smartroom/contract/{id}/lessor-sign smartroom.contract.lessor_sign › AdminDashboardController@signLessorC…
+  GET|HEAD  smartroom/contract/{id}/pdf ........... smartroom.contract.pdf › AdminDashboardController@printContractPdf
+  POST      smartroom/contract/{id}/send-otp smartroom.contract.send_otp › AdminDashboardController@sendOtpForContract
+  GET|HEAD  smartroom/contract/{id}/sign .... smartroom.contract.sign_view › AdminDashboardController@signContractView
+  POST      smartroom/contract/{id}/sign ............. smartroom.contract.sign › AdminDashboardController@signContract
+  POST      smartroom/contract/{id}/sign-canvas . smartroom.contract.sign_canvas › AdminDashboardController@signCanvas
+  GET|HEAD  smartroom/housekeeping ........................... admin.housekeeping.index › HousekeepingController@index
+  POST      smartroom/housekeeping/update/{roomId} ......... admin.housekeeping. › HousekeepingController@updateStatus
+  POST      smartroom/housekeeping/{roomId}/status ... admin.housekeeping.update › HousekeepingController@updateStatus
+  GET|HEAD  smartroom/resident ................................... smartroom.resident › ResidentPortalController@index
+  GET|HEAD  smartroom/resident/bills/{id}/qr ........... smartroom.resident.bills.qr › ResidentPortalController@billQr
+  GET|HEAD  smartroom/resident/bills/{id}/qr-data smartroom.resident.bills.qr_data › ResidentPortalController@billQrD…
+  GET|HEAD  smartroom/resident/bills/{id}/qr.data smartroom.resident.bills.qr.data › ResidentPortalController@billQrD…
+  GET|HEAD  smartroom/resident/contract/pdf smartroom.resident.contract.pdf › ResidentPortalController@downloadContra…
+  GET|HEAD  smartroom/resident/contract/pdf-current smartroom.resident.contract.pdf.current › ResidentPortalControlle…
+  GET|HEAD  smartroom/resident/contract/{id}/pdf smartroom.resident.contract.pdf_id › ResidentPortalController@downlo…
+  POST      smartroom/resident/contract/{id}/request-renewal smartroom.resident.contract.request_renewal › ResidentPo…
+  GET|HEAD  smartroom/resident/invoices .............. smartroom.resident.invoices › ResidentPortalController@invoices
+  GET|HEAD  smartroom/resident/portal ..................... smartroom.resident.portal › ResidentPortalController@index
+  POST      smartroom/resident/tickets ....... smartroom.resident.tickets.store › ResidentPortalController@storeTicket
+  POST      smartroom/resident/tickets/analyze smartroom.resident.tickets.analyze › ResidentPortalController@analyzeT…
+  POST      smartroom/resident/tickets/store smartroom.resident.tickets.store.alias › ResidentPortalController@storeT…
+  GET|HEAD  storage/{path} ............................................................................. storage.local
+  GET|HEAD  tenant/onboarding/preferences .................... tenant.preferences › CrudUserController@showPreferences
+  POST      tenant/onboarding/preferences ............... tenant.preferences.save › CrudUserController@savePreferences
+  GET|HEAD  up ....................................................................................................... 
+  GET|HEAD  update ................................................... user.updateUser › CrudUserController@updateUser
+  POST      update ........................................... user.postUpdateUser › CrudUserController@postUpdateUser
+  POST      users/role ............................................... user.updateRole › CrudUserController@updateRole
+  POST      webauthn/login ................................... webauthn.login › WebAuthn\WebAuthnLoginController@login
+  POST      webauthn/login/options ................. webauthn.login.options › WebAuthn\WebAuthnLoginController@options
+  POST      webauthn/register ....................... webauthn.register › WebAuthn\WebAuthnRegisterController@register
+  POST      webauthn/register/options ........ webauthn.register.options › WebAuthn\WebAuthnRegisterController@options
+
+                                                                                                  Showing [291] routes
+

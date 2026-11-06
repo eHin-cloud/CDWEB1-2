@@ -1,0 +1,2201 @@
+{
+  "11. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 11: QUẢN LÝ TÒA NHÀ & CƠ SỞ LƯU TRÚ (BUILDINGS MANAGEMENT) (FEAT_11_BUILDING)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ trọ có tài khoản hợp lệ. Không được trùng tên tòa nhà trong danh sách của cùng một chủ.",
+      "• • Tên tòa nhà: Loại bỏ khoảng trắng thừa (trim).",
+      "• • Số tầng: Phải là số nguyên > 0.",
+      "• Regex quy định: Floors: ^[1-9][0-9]*$",
+      "1. Chủ trọ mở form 'Thêm mới tòa nhà'.",
+      "2. Nhập tên cơ sở, chọn tỉnh thành và địa chỉ cụ thể.",
+      "3. Bấm 'Lưu thông tin'.",
+      "5. Nếu hợp lệ, hệ thống tạo bản ghi mới trong bảng buildings và chuyển về danh sách tòa nhà.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 11.1: Giao diện Quản lý danh sách Tòa nhà & Cơ sở lưu trú",
+      "Mô tả chức năng: Bảng danh mục các chi nhánh nhà trọ của chủ đầu tư, kèm địa chỉ, tổng số phòng đang vận hành và tỷ lệ lấp đầy.",
+      "Hình 11.2: Giao diện Biểu mẫu thêm mới cơ sở Tòa nhà",
+      "Mô tả chức năng: Form nhập liệu thông tin cơ sở mới: tên chi nhánh, địa chỉ chi tiết, số tầng lầu và quy chế vận hành tòa nhà.",
+      "Hình 11.3: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi để trống",
+      "Mô tả chức năng: Hệ thống bôi đỏ viền ô nhập liệu và báo lỗi chi tiết khi người dùng chưa cung cấp tên tòa nhà hoặc địa chỉ.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_11_BUILDING"
+        ],
+        [
+          "Tên Tính Năng",
+          "Quản lý Tòa nhà & Cơ sở lưu trú (Buildings Management)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Chủ sở hữu bất động sản, Quản lý chuỗi nhà trọ."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Bấm '+ Thêm tòa nhà' trên trang Quản lý tòa nhà (/smartroom/admin/buildings/create)."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Tài khoản chủ trọ đã được kích hoạt."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/buildings",
+          "auth, tenant.scope",
+          "Danh sách cơ sở lưu trú (Tòa nhà, Khách sạn, Dãy trọ)"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/buildings/store",
+          "auth, tenant.scope",
+          "Thêm mới cơ sở lưu trú kèm cấu hình tiện ích chung"
+        ],
+        [
+          "DELETE",
+          "/smartroom/admin/buildings/{id}/delete",
+          "auth, tenant.scope",
+          "Xóa cơ sở (Guard Check chặn khi còn phòng trực thuộc)"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "name",
+          "Tên cơ sở / Tòa nhà",
+          "string",
+          "Có",
+          "2–150 ký tự, không toàn khoảng trắng"
+        ],
+        [
+          "address",
+          "Địa chỉ chi tiết",
+          "string",
+          "Có",
+          "Địa chỉ số nhà, tên đường cụ thể"
+        ],
+        [
+          "province_id",
+          "Tỉnh / Thành phố",
+          "integer",
+          "Có",
+          "ID tỉnh/thành phố hợp lệ"
+        ],
+        [
+          "total_floors",
+          "Tổng số tầng",
+          "integer",
+          "Có",
+          "Số nguyên dương từ 1 đến 100"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Để trống tên cơ sở / tòa nhà",
+          "ERR_11_01",
+          "Tên cơ sở lưu trú không được để trống.",
+          "Bôi đỏ viền ô input Tên cơ sở"
+        ],
+        [
+          "Để trống địa chỉ cơ sở",
+          "ERR_11_02",
+          "Địa chỉ cơ sở lưu trú là bắt buộc.",
+          "Bôi đỏ viền ô input Địa chỉ"
+        ],
+        [
+          "Để trống số tầng",
+          "ERR_11_03",
+          "Vui lòng nhập số tầng của tòa nhà.",
+          "Bôi đỏ viền ô input Số tầng"
+        ],
+        [
+          "Nhập số tầng nhỏ hơn 1",
+          "ERR_11_04",
+          "Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.",
+          "Bôi đỏ viền ô input Số tầng"
+        ],
+        [
+          "Xóa tòa nhà còn phòng đang cho thuê",
+          "ERR_11_05",
+          "Không thể xóa cơ sở lưu trú đang có phòng có cư dân thuê hoạt động.",
+          "Hiển thị Modal cảnh báo lỗi chặn xóa dữ liệu"
+        ],
+        [
+          "Lưu cơ sở lưu trú thành công",
+          "ERR_11_06",
+          "Lưu thông tin cơ sở lưu trú thành công!",
+          "Hiển thị Toast thông báo màu xanh lá, nạp lại danh mục"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Input",
+          "name",
+          "Tên cơ sở / Tòa nhà *",
+          "VD: Tòa nhà Renty House Tân Bình",
+          "Ô nhập văn bản chính"
+        ],
+        [
+          "2",
+          "Input",
+          "address",
+          "Địa chỉ chi tiết *",
+          "123/45 Đường Hoàng Hoa Thám...",
+          "Ô nhập địa chỉ"
+        ],
+        [
+          "3",
+          "Select",
+          "city",
+          "Tỉnh / Thành phố *",
+          "TP. Hồ Chí Minh",
+          "Dropdown chọn tỉnh"
+        ],
+        [
+          "4",
+          "Button",
+          "btnSaveBuilding",
+          "Lưu tòa nhà",
+          "—",
+          "Nền xanh đậm"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Để trống Tên tòa nhà và bấm Lưu",
+          "Báo lỗi đỏ 'Tên tòa nhà không được để trống'",
+          "Kiểm tra Required"
+        ],
+        [
+          "2",
+          "Nhập đầy đủ thông tin hợp lệ",
+          "Lưu DB thành công và chuyển hướng về danh sách",
+          "Happy case"
+        ]
+      ]
+    ]
+  },
+  "12. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 12: QUẢN LÝ TRANG THIẾT BỊ & TÀI SẢN (EQUIPMENT MANAGEMENT) (FEAT_12_EQUIPMENT)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ trọ và nhân viên quản lý cơ sở.",
+      "• • Mã thiết bị: Nếu có nhập mã serial thì không được trùng với thiết bị khác trong cùng phòng.",
+      "• Regex quy định: N/A",
+      "1. Quản lý mở trang 'Quản lý thiết bị'.",
+      "2. Hệ thống tải bảng danh sách thiết bị theo phòng.",
+      "3. Bấm 'Gán thiết bị' vào phòng.",
+      "5. Dữ liệu hợp lệ được lưu và liên kết với tài sản phòng trọ.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 12.1: Giao diện Quản lý Trang thiết bị & Tài sản trong phòng",
+      "Mô tả chức năng: Bảng thống kê toàn bộ trang thiết bị gắn với từng căn phòng, kèm trạng thái sử dụng, nguyên giá và hạn bảo dưỡng.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_12_EQUIPMENT"
+        ],
+        [
+          "Tên Tính Năng",
+          "Quản lý Trang thiết bị & Tài sản (Equipment Management)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Chủ trọ, Kỹ thuật viên bảo trì."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Chọn menu 'Quản lý thiết bị' (/smartroom/admin/equipment)."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Đã có phòng trọ trong hệ thống."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/equipment",
+          "auth, tenant.scope",
+          "Quản lý danh mục trang thiết bị, tài sản kho và phân bổ phòng"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/equipment/handover",
+          "auth, tenant.scope",
+          "Bàn giao thiết bị cho khách thuê hoặc thu hồi khấu trừ cọc"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "name",
+          "Tên thiết bị / Tài sản",
+          "string",
+          "Có",
+          "Ví dụ: Điều hòa Daikin Inverter 1.5HP"
+        ],
+        [
+          "room_id",
+          "Phòng trang bị",
+          "integer",
+          "Có",
+          "ID phòng hợp lệ"
+        ],
+        [
+          "serial_number",
+          "Mã Serial / Số seri",
+          "string",
+          "Không",
+          "Chuỗi mã ký tự thiết bị"
+        ],
+        [
+          "status",
+          "Tình trạng hoạt động",
+          "enum",
+          "Có",
+          "Mới, Đang hoạt động, Cần bảo trì, Hỏng hóc"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Để trống tên thiết bị",
+          "ERR_12_01",
+          "Tên trang thiết bị tài sản không được để trống.",
+          "Bôi đỏ viền ô input Tên thiết bị"
+        ],
+        [
+          "Để trống mã thiết bị",
+          "ERR_12_02",
+          "Mã quản lý thiết bị là bắt buộc.",
+          "Bôi đỏ viền ô input Mã thiết bị"
+        ],
+        [
+          "Nhập số lượng tồn kho nhỏ hơn 0",
+          "ERR_12_03",
+          "Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.",
+          "Bôi đỏ viền ô input Số lượng"
+        ],
+        [
+          "Nhập đơn giá tài sản là số âm",
+          "ERR_12_04",
+          "Đơn giá giá trị tài sản không được là số âm.",
+          "Bôi đỏ viền ô input Đơn giá"
+        ],
+        [
+          "Bàn giao số lượng vượt quá tồn kho",
+          "ERR_12_05",
+          "Số lượng thiết bị bàn giao vượt quá số lượng tồn kho khả dụng!",
+          "Bôi đỏ ô input Số lượng bàn giao, hiện cảnh báo"
+        ],
+        [
+          "Bàn giao thiết bị vào phòng thành công",
+          "ERR_12_06",
+          "Đã bàn giao trang thiết bị vào phòng thành công.",
+          "Đóng modal, tự động trừ tồn kho và cập nhật danh sách"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Input",
+          "name",
+          "Tên trang thiết bị *",
+          "Máy lạnh Daikin Inverter...",
+          "Ô nhập văn bản"
+        ],
+        [
+          "2",
+          "Select",
+          "room_id",
+          "Phòng gắn thiết bị *",
+          "Chọn phòng...",
+          "Dropdown chọn phòng"
+        ],
+        [
+          "3",
+          "Select",
+          "status",
+          "Tình trạng *",
+          "Đang sử dụng tốt",
+          "Dropdown chọn trạng thái"
+        ],
+        [
+          "4",
+          "Button",
+          "btnSaveEquip",
+          "Lưu thiết bị",
+          "—",
+          "Nền xanh dương"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Để trống tên thiết bị rồi bấm Lưu",
+          "Báo lỗi đỏ 'Vui lòng nhập tên thiết bị hoặc tài sản'",
+          "Kiểm tra Required"
+        ],
+        [
+          "2",
+          "Nhập thông tin hợp lệ",
+          "Lưu DB và cập nhật số lượng thiết bị của phòng",
+          "Happy case"
+        ]
+      ]
+    ]
+  },
+  "13. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 13: SƠ ĐỒ MA TRẬN PHÒNG THỜI GIAN THỰC (ROOM MATRIX SSE) (FEAT_13_ROOM_MATRIX)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ sở hữu tòa nhà.",
+      "• • Màu sắc trạng thái: Xanh lá = Phòng trống; Đỏ = Đang có khách ở; Vàng = Sắp hết hạn hợp đồng; Xám = Đang bảo trì.",
+      "• Regex quy định: N/A",
+      "1. Chủ trọ mở trang Ma trận phòng thời gian thực.",
+      "2. Client thiết lập kết nối luồng sự kiện SSE đến máy chủ `/stream/room-status`.",
+      "3. Khi có sự thay đổi (khách ký hợp đồng, trả phòng, báo hỏng), máy chủ đẩy bản tin thời gian thực.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 13.1: Giao diện Sơ đồ ma trận phòng thời gian thực (Room Matrix SSE)",
+      "Mô tả chức năng: Màn hình lưới trực quan theo từng tầng lầu với các mã màu phân biệt phòng trống, phòng đang ở và phòng trễ hạn tiền.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_13_ROOM_MATRIX"
+        ],
+        [
+          "Tên Tính Năng",
+          "Sơ đồ Ma trận phòng thời gian thực (Room Matrix SSE)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Chủ trọ, Quản trị viên chi nhánh."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Chọn menu 'Ma trận phòng' (/smartroom/admin/matrix)."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Đã thiết lập phòng theo tầng trong tòa nhà."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/room-matrix",
+          "auth, tenant.scope",
+          "Sơ đồ ma trận phòng trực quan theo tầng"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/room-matrix/sse",
+          "auth, tenant.scope",
+          "Luồng đồng bộ dữ liệu thời gian thực Server-Sent Events (SSE)"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "building_id",
+          "Tòa nhà cần xem",
+          "integer",
+          "Có",
+          "ID tòa nhà hợp lệ"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Mất kết nối luồng SSE thời gian thực",
+          "ERR_13_01",
+          "Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...",
+          "Hiển thị nhãn huy hiệu màu vàng nhấp nháy góc phải"
+        ],
+        [
+          "Đổi phòng sang Bảo trì khi đang có khách",
+          "ERR_13_02",
+          "Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.",
+          "Hiển thị Popup cảnh báo xung đột nghiệp vụ"
+        ],
+        [
+          "Bộ lọc tầng không có phòng nào",
+          "ERR_13_03",
+          "Tầng được chọn chưa có phòng nào được tạo.",
+          "Hiển thị khung trạng thái trống nhắc nhở cấu hình phòng"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Floor Row",
+          "floor_container",
+          "Danh sách tầng",
+          "Tầng 1, Tầng 2, Tầng 3...",
+          "Các hàng ngang phân tầng"
+        ],
+        [
+          "2",
+          "Room Box",
+          "matrix_box",
+          "Ô vuông phòng trọ",
+          "P.101 - 3.5tr",
+          "Thẻ ô vuông đổi màu theo trạng thái"
+        ],
+        [
+          "3",
+          "Status Legend",
+          "legend_bar",
+          "Chú thích màu sắc",
+          "Trống / Đã thuê / Nợ tiền",
+          "Thanh ghi chú góc trên"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Mở trang ma trận phòng",
+          "Toàn bộ các tầng và phòng hiển thị đúng màu theo trạng thái hợp đồng",
+          "Kiểm tra render lưới"
+        ],
+        [
+          "2",
+          "Mất kết nối mạng Internet",
+          "Hiển thị thông báo vàng 'Đang kết nối lại luồng SSE...'",
+          "Kiểm tra ngắt kết nối"
+        ]
+      ]
+    ]
+  },
+  "14. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 14: HỆ SINH THÁI TRỢ LÝ AI HỖ TRỢ TOÀN DIỆN (TRA CỨU PHÒNG, CỐ VẤN CHỦ TRỌ & XỬ LÝ SỰ CỐ) (FEAT_14_AI_ASSISTANT_HUB)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Khách tìm phòng (Public Guest) được tự do tra cứu phòng thông minh; Chủ trọ cần đăng nhập để sử dụng Cố vấn kinh doanh & Viết bài chuẩn SEO; Cư dân cần đăng nhập hợp đồng để báo sự cố kỹ thuật.",
+      "• • Câu hỏi / Yêu cầu người dùng (prompt): Tối thiểu 5 ký tự và tối đa 2.000 ký tự. • Chế độ tác vụ (agent_mode): Phải thuộc danh mục [room_finder, landlord_advisor, tenant_incident]. • Tần suất: Tối đa 20 yêu cầu/phút/người dùng để chống nghẽn và quá tải token API.",
+      "• Regex kiểm tra ký tự điều khiển: /^[^<>]+$/u",
+      "1. Người dùng mở giao diện \"Trợ lý AI Hỗ trợ toàn diện\" và chọn tab nghiệp vụ mong muốn (Khách tìm phòng / Cố vấn chủ trọ & Viết bài SEO / Cư dân báo sự cố).",
+      "2. Nhập câu hỏi hoặc yêu cầu cần trợ giúp vào khung chat (hoặc chọn tiện ích phòng, đính kèm ảnh sự cố).",
+      "3. Bấm nút \"Gửi yêu cầu AI\" (hoặc bấm phím Enter).",
+      "5. Nếu hợp lệ, hệ thống định tuyến (orchestration) đến Agent chuyên biệt: Tra cứu cơ sở dữ liệu phòng trống theo ngữ nghĩa; hoặc sinh bài viết SEO / phân tích hợp đồng; hoặc phân loại sự cố khẩn cấp và đề xuất giải pháp sơ cứu an toàn tức thời. AI phản hồi với hiệu ứng gõ chữ trực quan (typewriter effect) kèm cụm nút thao tác nhanh (Sao chép bài viết, Đặt lịch hẹn xem phòng, Xác nhận tạo ticket kỹ thuật).",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 14.1: Giao diện Hệ sinh thái Trợ lý AI Hỗ trợ toàn diện (SmartRoom & Renty AI Assistant Hub)",
+      "Mô tả chức năng: Trung tâm trợ lý ảo đa tác nhân hỗ trợ tra cứu phòng thông minh theo ngôn ngữ tự nhiên, cố vấn kinh doanh & viết bài quảng cáo SEO cho chủ trọ, và tiếp nhận phân loại sự cố khẩn cấp của cư dân.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_14_AI_ASSISTANT_HUB"
+        ],
+        [
+          "Tên Tính Năng",
+          "Hệ sinh thái Trợ lý AI Hỗ trợ toàn diện (SmartRoom & Renty AI Assistant Hub)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Khách tìm phòng (Guest), Chủ trọ/Quản lý cơ sở (Landlord), Cư dân đang thuê phòng (Resident)."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Nhấp biểu tượng \"Trợ lý ảo AI\" tại thanh điều hướng hoặc nút \"Nhờ AI hỗ trợ\" tại các phân hệ tương ứng."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Có kết nối Internet, máy chủ kích hoạt Google Gemini 2.5 Flash / OpenAI API."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "POST",
+          "/api/ai/assistant-hub",
+          "auth:api, throttle:30,1",
+          "Trung tâm điều phối AI đa tác nhân: Tra cứu, Cố vấn chủ trọ & Tiếp nhận sự cố"
+        ],
+        [
+          "POST",
+          "/api/ai/room-finder",
+          "throttle:60,1",
+          "Trợ lý AI tra cứu và gợi ý phòng trọ thông minh theo ngôn ngữ tự nhiên"
+        ],
+        [
+          "POST",
+          "/api/ai/landlord-advisor",
+          "auth, role:landlord",
+          "Cố vấn kinh doanh, tối ưu giá thuê & soạn bài đăng chuẩn SEO"
+        ],
+        [
+          "POST",
+          "/api/ai/incident-triage",
+          "auth, role:resident",
+          "Tiếp nhận, phân loại khẩn cấp sự cố kỹ thuật và hướng dẫn xử lý an toàn"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "agent_mode",
+          "Chế độ tác vụ AI",
+          "enum",
+          "Có",
+          "room_finder (Tìm phòng), landlord_advisor (Chủ trọ), tenant_incident (Cư dân)"
+        ],
+        [
+          "prompt",
+          "Câu hỏi / Yêu cầu người dùng",
+          "string",
+          "Có",
+          "Tối thiểu 5 ký tự, tối đa 2.000 ký tự"
+        ],
+        [
+          "context_id",
+          "ID ngữ cảnh (Phòng/Hợp đồng)",
+          "integer",
+          "Không",
+          "ID phòng hoặc mã hợp đồng liên quan"
+        ],
+        [
+          "tone",
+          "Văn phong phản hồi",
+          "enum",
+          "Không",
+          "Thân thiện, Chuyên nghiệp, Khẩn cấp, Sáng tạo SEO"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Để trống câu hỏi khi gửi AI",
+          "ERR_14_01",
+          "Vui lòng nhập câu hỏi hoặc yêu cầu cần trợ lý AI hỗ trợ.",
+          "Bôi đỏ viền khung chat, rung nhẹ (shake animation)"
+        ],
+        [
+          "Nội dung yêu cầu dưới 5 ký tự",
+          "ERR_14_02",
+          "Nội dung yêu cầu quá ngắn (tối thiểu 5 ký tự) để AI có đủ ngữ cảnh xử lý.",
+          "Bôi đỏ viền ô input và hiển thị cảnh báo đỏ bên dưới"
+        ],
+        [
+          "Kết nối máy chủ Gemini AI bị Timeout",
+          "ERR_14_03",
+          "Kết nối máy chủ AI quá thời gian chờ (6s), tự động kích hoạt câu trả lời từ kho tri thức dự phòng.",
+          "Hiển thị bài viết/lời khuyên từ kho mẫu kèm Toast vàng"
+        ],
+        [
+          "Vượt quá giới hạn tần suất truy vấn",
+          "ERR_14_04",
+          "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!",
+          "Khóa nút gửi, hiển thị đồng hồ đếm ngược Countdown"
+        ],
+        [
+          "Sao chép nội dung bài viết AI thành công",
+          "ERR_14_05",
+          "Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!",
+          "Hiển thị Toast thông báo xanh lá góc phải màn hình"
+        ],
+        [
+          "AI phân loại sự cố khẩn cấp và tạo ticket",
+          "ERR_14_06",
+          "Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!",
+          "Hiển thị Modal thông báo màu đỏ cam ưu tiên xử lý"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Tab Selector",
+          "tabMode",
+          "Chế độ hỗ trợ",
+          "—",
+          "Thanh điều hướng 3 tab: Tìm phòng, Cố vấn chủ trọ & SEO, Báo sự cố kỹ thuật"
+        ],
+        [
+          "2",
+          "Textarea",
+          "txtPrompt",
+          "Câu hỏi / Yêu cầu *",
+          "Bạn cần AI hỗ trợ điều gì? Nhập yêu cầu tại đây...",
+          "Khung soạn thảo linh hoạt, hỗ trợ phím Enter để gửi"
+        ],
+        [
+          "3",
+          "Select",
+          "cboTone",
+          "Phong cách phản hồi",
+          "Chuyên nghiệp, thu hút",
+          "Dropdown lựa chọn phong cách trả lời của AI"
+        ],
+        [
+          "4",
+          "Button",
+          "btnSendAI",
+          "Gửi yêu cầu đến AI",
+          "—",
+          "Nền tím Gradient hiện đại kèm icon tia sét phát sáng"
+        ],
+        [
+          "5",
+          "Chat Stream",
+          "responseBox",
+          "Phản hồi của Trợ lý AI",
+          "—",
+          "Khung chat dạng thẻ tin nhắn kèm hiệu ứng gõ chữ thời gian thực"
+        ],
+        [
+          "6",
+          "Action Buttons",
+          "btnQuickAction",
+          "Thao tác nhanh",
+          "Sao chép / Đặt lịch / Tạo Ticket",
+          "Cụm nút hành động nổi bật bên dưới câu trả lời của AI"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Bấm gửi khi khung chat để trống",
+          "Báo lỗi viền đỏ \"Vui lòng nhập câu hỏi hoặc yêu cầu cần trợ lý AI hỗ trợ\"",
+          "Kiểm tra Empty Validation"
+        ],
+        [
+          "2",
+          "Chọn tab \"Cố vấn chủ trọ\" và nhập \"Viết bài phòng 101\"",
+          "AI sinh bài đăng chuẩn SEO đầy đủ tiêu đề, tiện ích và lời kêu gọi hành động CTA",
+          "Happy path Landlord Copywriting"
+        ],
+        [
+          "3",
+          "Chọn tab \"Báo sự cố\" nhập \"Chập điện bốc khói\"",
+          "AI phân loại khẩn cấp (Emergency), hướng dẫn cúp cầu dao và tự động tạo ticket bảo trì",
+          "Happy path Incident Triage"
+        ]
+      ]
+    ]
+  },
+  "15. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 15: CHỐT SỐ ĐIỆN - NƯỚC ĐỊNH KỲ HÀNG LOẠT (BULK UTILITY INPUT) (FEAT_15_UTILITY_BULK)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ sở hữu hoặc quản lý tòa nhà.",
+      "• • Ràng buộc lũy kế: Chỉ số mới không được nhỏ hơn chỉ số cũ (trừ trường hợp thay đồng hồ mới).",
+      "• Regex quy định: Utility: ^[0-9]+(\\.[0-9]{1,2})?$",
+      "1. Quản lý mở trang 'Chốt số điện nước'.",
+      "2. Hệ thống tải bảng danh sách phòng cùng chỉ số cũ tháng trước.",
+      "3. Quản lý nhập chỉ số mới vào các ô của từng phòng.",
+      "5. Nếu để trống hoặc nhập chỉ số mới nhỏ hơn chỉ số cũ, ô đó lập tức viền đỏ và báo lỗi trực tiếp.",
+      "6. Dữ liệu hợp lệ được lưu và tự động cập nhật sản lượng tiêu thụ trong tháng.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 15.1: Giao diện Chốt số Điện - Nước định kỳ hàng loạt cho toàn tòa nhà",
+      "Mô tả chức năng: Bảng nhập liệu tập trung hiển thị chỉ số điện nước cũ, cột nhập chỉ số mới và tự động tính số lượng tiêu thụ tức thời.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_15_UTILITY_BULK"
+        ],
+        [
+          "Tên Tính Năng",
+          "Chốt số Điện - Nước định kỳ hàng loạt (Bulk Utility Input)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Chủ trọ, Quản lý tòa nhà, Kế toán nhà trọ."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Chọn menu 'Ghi điện nước hàng tháng' (/smartroom/admin/utilities/bulk)."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Đã có chỉ số công tơ tháng trước để so sánh."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/utility/bulk",
+          "auth, tenant.scope",
+          "Bảng nhập chỉ số điện nước hàng loạt định kỳ theo tầng/tòa"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/utility/bulk-store",
+          "auth, tenant.scope",
+          "Lưu trữ chỉ số điện nước hàng loạt và kiểm tra chống ngược dòng"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "billing_month",
+          "Kỳ hóa đơn (Tháng/Năm)",
+          "string",
+          "Có",
+          "Định dạng MM/YYYY"
+        ],
+        [
+          "electric_new",
+          "Chỉ số điện mới (kWh)",
+          "numeric",
+          "Có",
+          "Phải lớn hơn hoặc bằng chỉ số điện cũ"
+        ],
+        [
+          "water_new",
+          "Chỉ số nước mới (m³)",
+          "numeric",
+          "Có",
+          "Phải lớn hơn hoặc bằng chỉ số nước cũ"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Để trống tháng chốt cước",
+          "ERR_15_01",
+          "Vui lòng chọn tháng tính cước hóa đơn điện nước.",
+          "Bôi đỏ ô chọn Tháng chốt cước"
+        ],
+        [
+          "Chỉ số điện mới nhỏ hơn điện cũ",
+          "ERR_15_02",
+          "Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.",
+          "Bôi đỏ viền ô input Điện mới của phòng vi phạm"
+        ],
+        [
+          "Chỉ số nước mới nhỏ hơn nước cũ",
+          "ERR_15_03",
+          "Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.",
+          "Bôi đỏ viền ô input Nước mới của phòng vi phạm"
+        ],
+        [
+          "Nhập ký tự chữ vào ô chỉ số",
+          "ERR_15_04",
+          "Chỉ số công tơ điện nước chỉ được phép nhập số.",
+          "Chặn ký tự chữ, bôi đỏ ô input vi phạm"
+        ],
+        [
+          "Lưu chốt số thành công",
+          "ERR_15_05",
+          "Đã lưu chỉ số điện nước thành công cho toàn bộ các phòng!",
+          "Hiển thị Toast xanh, cập nhật trạng thái đã chốt cước"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Month Selector",
+          "cboMonth",
+          "Kỳ ghi chỉ số",
+          "Tháng 10/2026",
+          "Bộ chọn tháng"
+        ],
+        [
+          "2",
+          "Editable Table",
+          "tblUtility",
+          "Bảng ghi số",
+          "—",
+          "Cột: Tên phòng, Số điện cũ, Số điện mới (*), Số nước cũ, Số nước mới (*), Tiêu thụ"
+        ],
+        [
+          "3",
+          "Button",
+          "btnSaveAll",
+          "Lưu toàn bộ chỉ số",
+          "—",
+          "Nền xanh lá cây"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Nhập chỉ số điện mới = 100 trong khi chỉ số cũ = 150",
+          "Báo lỗi đỏ 'Chỉ số mới không được nhỏ hơn chỉ số kỳ trước (150)'",
+          "Kiểm tra ràng buộc lũy kế"
+        ],
+        [
+          "2",
+          "Để trống một vài phòng và bấm Lưu",
+          "Các ô để trống viền đỏ kèm thông báo 'Vui lòng nhập chỉ số điện mới'",
+          "Kiểm tra Required"
+        ],
+        [
+          "3",
+          "Nhập toàn bộ chỉ số mới hợp lệ",
+          "Lưu thành công và chuyển sang bước tính hóa đơn",
+          "Happy case"
+        ]
+      ]
+    ]
+  },
+  "16. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 16: AI QUÉT SỐ CÔNG TƠ ĐIỆN NƯỚC (AI VISION OCR) (FEAT_16_AI_OCR)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ trọ hoặc quản lý được phân quyền.",
+      "• • Độ tin cậy OCR: AI chỉ tự động điền khi độ tin cậy nhận diện (confidence score) đạt từ 85% trở lên.",
+      "• Regex quy định: N/A",
+      "1. Người dùng bấm nút 'Quét công tơ bằng AI'.",
+      "2. Chụp ảnh hoặc chọn file ảnh mặt đồng hồ điện/nước.",
+      "3. Bấm 'Nhận diện số'.",
+      "5. Nếu hợp lệ, hệ thống gửi ảnh đến mô hình thị giác máy tính (AI OCR), bóc tách con số và tự động điền vào ô chỉ số mới.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 16.1: Giao diện AI Quét số công tơ điện nước (AI Vision OCR)",
+      "Mô tả chức năng: Khung hình quét hình ảnh công tơ điện nước, công nghệ AI tự động khoanh vùng chữ số và trích xuất chỉ số điện năng.",
+      "Hình 16.2: Hộp thoại Modal quét ảnh nhận diện chỉ số đồng hồ điện",
+      "Mô tả chức năng: Cửa sổ chụp ảnh trực tiếp và xem trước vùng số nhận diện được trước khi áp dụng vào hóa đơn.",
+      "Hình 16.3: Hộp thoại Quét AI hàng loạt đồng hồ điện nước",
+      "Mô tả chức năng: Tính năng tải lên cùng lúc nhiều ảnh công tơ để AI tự động phân loại theo phòng.",
+      "Hình 16.4: Tích hợp thiết bị đo đạc công tơ thông minh IoT",
+      "Mô tả chức năng: Giao diện đồng bộ dữ liệu tự động từ các công tơ điện tử thông minh kết nối Wifi/Zigbee.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_16_AI_OCR"
+        ],
+        [
+          "Tên Tính Năng",
+          "AI Quét số công tơ điện nước (AI Vision OCR)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Người ghi số điện nước, Chủ trọ."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Bấm icon camera 'Quét số bằng AI' tại mỗi dòng nhập điện nước."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Có ảnh chụp công tơ sắc nét, không bị lóa sáng hay rung lắc."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/ai/ocr-meter",
+          "auth, tenant.scope",
+          "AI Vision nhận diện mặt số công tơ điện nước từ ảnh chụp đơn lẻ"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/ai/ocr-meter-bulk",
+          "auth, tenant.scope",
+          "Tải lên hàng loạt ảnh công tơ, AI bóc tách và khớp mã số đồng hồ"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "meter_image",
+          "Ảnh chụp mặt đồng hồ công tơ",
+          "file",
+          "Có",
+          "Ảnh định dạng JPG/PNG, dung lượng tối đa 10MB"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Chưa chọn tệp ảnh công tơ",
+          "ERR_16_01",
+          "Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.",
+          "Viền đỏ khung upload ảnh"
+        ],
+        [
+          "Ảnh chụp quá mờ hoặc lóa sáng",
+          "ERR_16_02",
+          "Ảnh chụp quá mờ hoặc lóa sáng, AI không nhận diện được chữ số rõ ràng.",
+          "Hiển thị cảnh báo đỏ yêu cầu chụp lại ảnh rõ nét"
+        ],
+        [
+          "Ảnh không phải mặt công tơ đo đếm",
+          "ERR_16_03",
+          "Tệp tải lên không phải là ảnh công tơ đo đếm điện nước hợp lệ.",
+          "Báo lỗi nhận diện và từ chối xử lý"
+        ],
+        [
+          "AI nhận diện chỉ số thành công",
+          "ERR_16_04",
+          "Đã nhận diện thành công chỉ số công tơ và tự khớp vào phòng!",
+          "Tự động điền số vào ô input tương ứng và viền xanh"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Camera / File Input",
+          "camera_input",
+          "Chụp ảnh / Tải ảnh *",
+          "—",
+          "Nút mở camera trực tiếp trên điện thoại"
+        ],
+        [
+          "2",
+          "Image Preview",
+          "img_preview",
+          "Ảnh công tơ",
+          "—",
+          "Khung xem trước ảnh có lưới căn chỉnh"
+        ],
+        [
+          "3",
+          "OCR Output",
+          "ocr_result",
+          "Số nhận diện được",
+          "VD: 14852",
+          "Ô hiển thị số bóc tách được để người dùng kiểm tra lại"
+        ],
+        [
+          "4",
+          "Button",
+          "btnConfirmOCR",
+          "Xác nhận áp dụng số",
+          "—",
+          "Nền xanh lá"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Bấm 'Quét số' mà chưa tải ảnh",
+          "Báo lỗi đỏ 'Vui lòng chọn ảnh chụp công tơ điện nước'",
+          "Kiểm tra File Required"
+        ],
+        [
+          "2",
+          "Tải ảnh công tơ rõ nét",
+          "Trích xuất đúng chuỗi số và điền vào ô kết quả",
+          "Happy case OCR"
+        ]
+      ]
+    ]
+  },
+  "17. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 17: TÍNH TIỀN PHÒNG & XUẤT HÓA ĐƠN TỰ ĐỘNG (FEAT_17_BILLING)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ trọ sở hữu tòa nhà.",
+      "• • Hạn thanh toán: Phải lớn hơn hoặc bằng Ngày lập hóa đơn.",
+      "• • Tổng tiền: Công thức: Tiền phòng + (Số điện * Đơn giá) + (Số nước * Đơn giá) + Phí cố định + Nợ cũ.",
+      "• Regex quy định: Date: ^\\d{4}-\\d{2}-\\d{2}$",
+      "1. Chủ trọ chọn phòng và kỳ hóa đơn.",
+      "2. Hệ thống tổng hợp các khoản phí theo công thức nghiệp vụ.",
+      "3. Hiển thị bảng chiết tính chi tiết cho chủ trọ kiểm tra.",
+      "5. Nếu để trống hạn thanh toán hoặc ngày không hợp lệ, bôi đỏ ô và báo lỗi.",
+      "6. Hệ thống lưu hóa đơn, tạo mã QR VietQR động và gửi thông báo cho khách thuê.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 17.1: Giao diện Tính tiền phòng, quản lý hóa đơn và công nợ định kỳ",
+      "Mô tả chức năng: Bản xem trước hóa đơn tổng hợp tiền phòng, điện nước tiêu thụ, dịch vụ kèm theo và trạng thái gạch nợ.",
+      "Hình 17.2: Hộp thoại Modal quét mã VietQR thanh toán tiền phòng tự động",
+      "Mô tả chức năng: Cửa sổ phóng to mã QR thanh toán chuẩn Napas chứa số tiền chính xác và cú pháp chuyển khoản tự động.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_17_BILLING"
+        ],
+        [
+          "Tên Tính Năng",
+          "Tính tiền phòng & Xuất Hóa đơn tự động"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Chủ trọ, Kế toán."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Bấm nút 'Tạo hóa đơn tháng' từ trang Quản lý hóa đơn (/smartroom/admin/invoices)."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Đã có hợp đồng còn hiệu lực và chỉ số điện nước đã chốt."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/utility/calculate",
+          "auth, tenant.scope",
+          "Tính toán chiết tính tiền phòng, điện nước và dịch vụ tự động"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/utility/{id}/vietqr",
+          "auth, tenant.scope",
+          "Xuất mã QR thanh toán động VietQR NAPAS247 chuẩn ngân hàng"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/utility/{id}/invoice-pdf",
+          "auth, tenant.scope",
+          "Kết xuất hóa đơn điện tử tiền phòng định dạng PDF"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "room_id",
+          "Phòng tính tiền",
+          "integer",
+          "Có",
+          "ID phòng hợp lệ"
+        ],
+        [
+          "invoice_date",
+          "Ngày lập hóa đơn",
+          "date",
+          "Có",
+          "Định dạng YYYY-MM-DD"
+        ],
+        [
+          "due_date",
+          "Hạn chót thanh toán",
+          "date",
+          "Có",
+          "Phải sau ngày lập hóa đơn ít nhất 3 ngày"
+        ],
+        [
+          "other_fees",
+          "Phí phát sinh (nếu có)",
+          "numeric",
+          "Không",
+          "Tiền đền bù hỏng đồ, vệ sinh thêm..."
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Phòng chưa có cư dân thuê đại diện",
+          "ERR_17_01",
+          "Phòng này chưa có cư dân đại diện thuê, không thể sinh hóa đơn thu tiền.",
+          "Hiển thị cảnh báo vàng chặn xuất hóa đơn"
+        ],
+        [
+          "Đơn giá dịch vụ bị trống hoặc bằng 0",
+          "ERR_17_02",
+          "Đơn giá điện nước chưa được cấu hình trong bảng giá cơ sở.",
+          "Bôi đỏ trường đơn giá, nhắc nhở cài đặt giá dịch vụ"
+        ],
+        [
+          "Sinh hóa đơn tính tiền thành công",
+          "ERR_17_03",
+          "Hóa đơn tiền nhà tháng đã được tính toán và tạo tự động thành công!",
+          "Dòng hóa đơn chuyển sang trạng thái Chờ thanh toán"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Invoice Summary",
+          "summary_card",
+          "Tổng tiền thanh toán",
+          "4.850.000 đ",
+          "Chữ to nổi bật trên nền trắng"
+        ],
+        [
+          "2",
+          "DatePicker",
+          "due_date",
+          "Hạn thanh toán *",
+          "Chọn ngày...",
+          "Bộ chọn ngày"
+        ],
+        [
+          "3",
+          "QR VietQR",
+          "qr_code",
+          "Mã thanh toán ngân hàng",
+          "—",
+          "Mã QR chứa số tài khoản, số tiền và nội dung chuyển khoản"
+        ],
+        [
+          "4",
+          "Button",
+          "btnPublish",
+          "Phát hành hóa đơn",
+          "—",
+          "Nền xanh đậm"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Để trống hạn thanh toán và bấm Phát hành",
+          "Báo lỗi đỏ 'Vui lòng chọn hạn chót thanh toán'",
+          "Kiểm tra Date Required"
+        ],
+        [
+          "2",
+          "Chọn hạn thanh toán trước ngày lập hóa đơn",
+          "Báo lỗi 'Hạn thanh toán không được trước ngày lập hóa đơn'",
+          "Kiểm tra Date range"
+        ],
+        [
+          "3",
+          "Nhập ngày hợp lệ và phát hành",
+          "Lập hóa đơn thành công, trạng thái chuyển sang 'Chờ thanh toán'",
+          "Happy case"
+        ]
+      ]
+    ]
+  },
+  "18. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 18: PHÂN HỆ LỄ TÂN & BUỒNG PHÒNG (DỌN PHÒNG) (FEAT_18_HOUSEKEEPING_FRONTDESK)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Tài khoản Nhân viên Lễ tân, Nhân viên Buồng phòng hoặc Quản lý cơ sở đã đăng nhập.",
+      "• • Trạng thái buồng phòng (housekeeping_status): Bắt buộc thuộc tập hợp [dirty, cleaning, clean, inspected, out_of_service]. • Chuyển trạng thái tuân thủ nghiêm ngặt máy trạng thái FSM: Phòng chưa Inspected/Clean tuyệt đối không cho phép Check-in đón khách mới. • Nhân viên phụ trách: Phải là nhân sự còn hoạt động thuộc cơ sở lưu trú.",
+      "• Regex mã phòng: /^[A-Z0-9\\.\\-]+$/i",
+      "1. Khách trả phòng hoặc bắt đầu ca làm việc: Lễ tân mở giao diện \"Sơ đồ Buồng phòng & Lễ tân\".",
+      "2. Hệ thống hiển thị trực quan các thẻ phòng với màu sắc phân định trạng thái dọn dẹp (Màu đỏ: Cần dọn, Màu vàng: Đang dọn, Màu xanh lục: Đã dọn xong, Màu xanh ngọc: Đã kiểm tra sẵn sàng đón khách).",
+      "3. Lễ tân chọn phòng cần dọn, chọn nhân viên buồng phòng phụ trách và đặt mức độ ưu tiên dọn dẹp (Khẩn cấp nếu chuẩn bị có khách mới đến).",
+      "5. Hoàn tất vệ sinh: Nhân viên kiểm đếm minibar, nhập vật tư tiêu hao (nếu có) và bấm \"Báo dọn xong\" (chuyển sang clean). Lễ tân hoặc Trưởng ca kiểm tra thực tế, bấm \"Nghiệm thu đạt chuẩn\", phòng chính thức chuyển sang inspected và sẵn sàng bàn giao chìa khóa cho khách mới.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 18.1: Giao diện Sơ đồ Ma trận Quản lý Buồng phòng & Điều phối Lễ tân dọn phòng",
+      "Mô tả chức năng: Bảng điều khiển buồng phòng thời gian thực cho phép lễ tân theo dõi trạng thái vệ sinh từng phòng, phân công ca dọn dẹp cho nhân viên và kiểm soát quy trình nghiệm thu phòng sẵn sàng đón khách.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_18_HOUSEKEEPING_FRONTDESK"
+        ],
+        [
+          "Tên Tính Năng",
+          "Phân hệ Lễ tân & Buồng phòng (Dọn phòng - Housekeeping & Front Desk Management)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Nhân viên Lễ tân (Receptionist), Nhân viên Buồng phòng (Housekeeper), Chủ cơ sở/Quản lý tòa nhà (Landlord/Manager)."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Khách trả phòng (Check-out tự động chuyển phòng sang Dirty), yêu cầu dọn phòng định kỳ theo ca, hoặc cư dân gửi yêu cầu dọn phòng đột xuất."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Danh mục phòng và tòa nhà đã được cấu hình trong hệ thống, nhân viên được cấp tài khoản phân quyền buồng phòng."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/housekeeping/matrix",
+          "auth, tenant.scope",
+          "Sơ đồ buồng phòng thời gian thực, hiển thị trực quan mã màu FSM dọn phòng"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/housekeeping/assign",
+          "auth, tenant.scope",
+          "Phân công nhân viên buồng phòng dọn dẹp theo ca"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/housekeeping/status",
+          "auth, tenant.scope",
+          "Cập nhật tiến độ dọn phòng (Bắt đầu dọn -> Dọn sạch sẽ)"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/housekeeping/inspect",
+          "auth, tenant.scope",
+          "Lễ tân nghiệm thu buồng phòng đạt chuẩn sẵn sàng đón khách"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/frontdesk/checkin",
+          "auth, tenant.scope",
+          "Check-in khách lưu trú (Guard Check chặn tuyệt đối phòng Dirty)"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/frontdesk/checkout",
+          "auth, tenant.scope",
+          "Check-out trả phòng, tự động chuyển phòng sang Dirty và đối soát minibar"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "room_id",
+          "Phòng lưu trú",
+          "integer",
+          "Có",
+          "ID phòng tồn tại và thuộc quyền quản lý của cơ sở"
+        ],
+        [
+          "housekeeping_status",
+          "Trạng thái buồng phòng",
+          "enum",
+          "Có",
+          "dirty, cleaning, clean, inspected, out_of_service"
+        ],
+        [
+          "assigned_staff_id",
+          "Nhân viên buồng phòng",
+          "integer",
+          "Không",
+          "ID tài khoản nhân viên buồng phòng phụ trách"
+        ],
+        [
+          "priority",
+          "Mức độ ưu tiên",
+          "enum",
+          "Có",
+          "urgent (Khẩn cấp), high (Cao), normal (Bình thường), low (Thấp)"
+        ],
+        [
+          "inspection_notes",
+          "Ghi chú kiểm phòng",
+          "string",
+          "Không",
+          "Tối đa 255 ký tự ghi nhận tình trạng trang thiết bị"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Chưa chọn phòng cần phân công dọn",
+          "ERR_18_01",
+          "Vui lòng chọn ít nhất một phòng cần phân công dọn dẹp vệ sinh.",
+          "Bôi đỏ viền thẻ phòng trên ma trận, rung nhẹ"
+        ],
+        [
+          "Cố tình Check-in vào phòng chưa dọn",
+          "ERR_18_02",
+          "Phòng [Số phòng] đang ở trạng thái Cần dọn (Dirty). Không thể thực hiện Check-in đón khách!",
+          "Modal cảnh báo đỏ chặn nút Check-in, yêu cầu dọn phòng trước"
+        ],
+        [
+          "Chưa phân công nhân viên dọn phòng",
+          "ERR_18_03",
+          "Vui lòng chọn nhân viên buồng phòng phụ trách thực hiện ca dọn dẹp này.",
+          "Bôi đỏ dropdown chọn Nhân viên phụ trách"
+        ],
+        [
+          "Chuyển trạng thái FSM buồng phòng sai quy trình",
+          "ERR_18_04",
+          "Chuyển đổi trạng thái buồng phòng không hợp lệ theo quy trình FSM (Phòng phải qua bước Sạch trước khi Nghiệm thu).",
+          "Hiển thị Toast cảnh báo màu đỏ góc màn hình"
+        ],
+        [
+          "Số lượng vật tư tiêu hao minibar không hợp lệ",
+          "ERR_18_05",
+          "Số lượng vật tư tiêu hao minibar phải là số nguyên dương lớn hơn hoặc bằng 0.",
+          "Bôi đỏ ô nhập số lượng vật tư minibar"
+        ],
+        [
+          "Nghiệm thu buồng phòng thành công",
+          "ERR_18_06",
+          "Đã nghiệm thu buồng phòng thành công! Phòng đã sẵn sàng đón khách lưu trú mới.",
+          "Hiển thị Toast thông báo thành công màu xanh lá"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Filter Buttons",
+          "btnStatusFilter",
+          "Lọc trạng thái phòng",
+          "Tất cả / Cần dọn / Đang dọn / Đã xong",
+          "Thanh công cụ lọc phía trên ma trận phòng"
+        ],
+        [
+          "2",
+          "Room Matrix Grid",
+          "gridHousekeeping",
+          "Sơ đồ buồng phòng",
+          "—",
+          "Khung hiển thị lưới các phòng kèm mã màu FSM trực quan"
+        ],
+        [
+          "3",
+          "Select",
+          "cboStaff",
+          "Nhân viên dọn phòng *",
+          "Chọn nhân viên phụ trách...",
+          "Dropdown danh sách nhân sự buồng phòng"
+        ],
+        [
+          "4",
+          "Select",
+          "cboPriority",
+          "Mức độ ưu tiên",
+          "Khẩn cấp đón khách / Bình thường",
+          "Dropdown chọn mức độ ưu tiên ca dọn"
+        ],
+        [
+          "5",
+          "Button",
+          "btnStartClean",
+          "Bắt đầu dọn phòng",
+          "—",
+          "Nền vàng cam kèm icon chổi dọn dẹp"
+        ],
+        [
+          "6",
+          "Button",
+          "btnInspectPass",
+          "Nghiệm thu phòng đạt chuẩn",
+          "—",
+          "Nền xanh ngọc (#0D9488) kèm icon tích xanh hoàn tất"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Bấm phân công khi chưa chọn nhân viên buồng phòng",
+          "Báo lỗi đỏ \"Vui lòng chọn nhân viên buồng phòng phụ trách thực hiện ca dọn dẹp này\"",
+          "Kiểm tra Assigned Staff Required"
+        ],
+        [
+          "2",
+          "Bấm Check-in khi phòng đang ở trạng thái Dirty",
+          "Hiển thị modal đỏ chặn thao tác: \"Phòng đang ở trạng thái Cần dọn. Không thể Check-in!\"",
+          "Kiểm tra FSM Guard Condition"
+        ],
+        [
+          "3",
+          "Nhân viên bấm Báo dọn xong -> Lễ tân bấm Nghiệm thu",
+          "Phòng chuyển trạng thái sang Inspected (Xanh ngọc), sẵn sàng bàn giao chìa khóa",
+          "Happy path Housekeeping Lifecycle"
+        ]
+      ]
+    ]
+  },
+  "19. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 19: SỔ QUỸ THU - CHI TÀI CHÍNH (FINANCIAL LEDGER) (FEAT_19_LEDGER)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Chủ sở hữu hoặc kế toán được phân quyền.",
+      "• • Số tiền: Bắt buộc phải là số dương lớn hơn 0.",
+      "• Regex quy định: Amount: ^[1-9][0-9]*$",
+      "1. Người dùng mở trang 'Sổ quỹ thu chi'.",
+      "2. Bấm nút '+ Tạo phiếu thu' hoặc '+ Tạo phiếu chi'.",
+      "3. Nhập số tiền, chọn hạng mục và ngày giao dịch.",
+      "5. Nếu để trống số tiền hoặc số tiền <= 0, bôi đỏ ô nhập và báo lỗi ngay bên dưới.",
+      "6. Nếu hợp lệ, lưu vào bảng financial_ledger và cập nhật lại số dư quỹ tiền mặt tức thời.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 19.1: Giao diện Báo cáo tài chính & Sổ quỹ thu chi toàn hệ thống",
+      "Mô tả chức năng: Bảng kê khai chi tiết các phiếu thu, phiếu chi của toàn bộ hệ thống nhà trọ kèm biểu đồ biến động dòng tiền theo tháng.",
+      "Hình 19.2: Hộp thoại Modal Sổ Quỹ Thu Chi & Báo Cáo Lợi Nhuận",
+      "Mô tả chức năng: Cửa sổ nhập liệu số tiền phát sinh, phân loại định khoản kế toán và tải lên chứng từ đính kèm.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_19_LEDGER"
+        ],
+        [
+          "Tên Tính Năng",
+          "Sổ quỹ Thu - Chi tài chính (Financial Ledger)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Chủ nhà trọ, Kế toán."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Chọn menu 'Sổ quỹ thu chi' (/smartroom/admin/ledger)."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Người dùng đã đăng nhập vào quyền quản lý."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/reports/cash-flow",
+          "auth, tenant.scope",
+          "Sổ quỹ thu - chi tài chính và biểu đồ dòng tiền Chart.js"
+        ],
+        [
+          "POST",
+          "/smartroom/admin/reports/transactions",
+          "auth, tenant.scope",
+          "Ghi nhận giao dịch phát sinh thu chi ngoài tiền phòng"
+        ],
+        [
+          "GET",
+          "/smartroom/admin/reports/export-excel",
+          "auth, tenant.scope",
+          "Xuất báo cáo sổ quỹ tài chính ra định dạng Excel/CSV UTF-8"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "type",
+          "Loại phiếu",
+          "enum",
+          "Có",
+          "Giá trị: 'Thu' hoặc 'Chi'"
+        ],
+        [
+          "amount",
+          "Số tiền (VNĐ)",
+          "numeric",
+          "Có",
+          "Lớn hơn 0, định dạng số nguyên dương"
+        ],
+        [
+          "category",
+          "Khoản mục thu / chi",
+          "string",
+          "Có",
+          "Tiền thuê phòng, Sửa chữa điện nước, Lương quản lý..."
+        ],
+        [
+          "date",
+          "Ngày ghi nhận",
+          "date",
+          "Có",
+          "Định dạng YYYY-MM-DD"
+        ],
+        [
+          "note",
+          "Diễn giải chi tiết",
+          "string",
+          "Không",
+          "Ghi chú chứng từ, hóa đơn kèm theo"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Để trống số tiền giao dịch",
+          "ERR_19_01",
+          "Vui lòng nhập số tiền phát sinh thu hoặc chi.",
+          "Bôi đỏ viền ô input Số tiền"
+        ],
+        [
+          "Nhập số tiền bằng 0 hoặc số âm",
+          "ERR_19_02",
+          "Số tiền giao dịch phải là số nguyên dương lớn hơn 0 đồng.",
+          "Bôi đỏ viền ô input Số tiền"
+        ],
+        [
+          "Để trống danh mục thu chi",
+          "ERR_19_03",
+          "Vui lòng chọn danh mục giao dịch (Tiền phòng, Sửa chữa, Vệ sinh...).",
+          "Bôi đỏ dropdown Danh mục thu chi"
+        ],
+        [
+          "Để trống ngày phát sinh giao dịch",
+          "ERR_19_04",
+          "Ngày ghi nhận giao dịch không được để trống.",
+          "Bôi đỏ ô chọn Ngày giao dịch"
+        ],
+        [
+          "Ghi nhận giao dịch thành công",
+          "ERR_19_05",
+          "Ghi nhận giao dịch vào sổ quỹ thành công!",
+          "Dòng giao dịch mới xuất hiện đầu bảng, cập nhật Lợi nhuận ròng"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Radio Group",
+          "rdoType",
+          "Loại phiếu *",
+          "Phiếu Thu (+) / Phiếu Chi (-)",
+          "Nút chọn loại"
+        ],
+        [
+          "2",
+          "Input",
+          "amount",
+          "Số tiền giao dịch *",
+          "VD: 1.500.000",
+          "Ô nhập tiền có format tiền tệ"
+        ],
+        [
+          "3",
+          "Select",
+          "category",
+          "Khoản mục *",
+          "Chọn hạng mục...",
+          "Dropdown chọn danh mục"
+        ],
+        [
+          "4",
+          "Button",
+          "btnSaveLedger",
+          "Lưu phiếu giao dịch",
+          "—",
+          "Nền xanh đậm"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Để trống số tiền và bấm Lưu",
+          "Báo lỗi đỏ 'Vui lòng nhập số tiền giao dịch'",
+          "Kiểm tra Amount Required"
+        ],
+        [
+          "2",
+          "Nhập số tiền = 0",
+          "Báo lỗi đỏ 'Số tiền phải là số nguyên dương lớn hơn 0'",
+          "Kiểm tra Value > 0"
+        ],
+        [
+          "3",
+          "Nhập đúng thông tin phiếu chi",
+          "Lưu thành công và giảm số dư quỹ tương ứng",
+          "Happy case Phiếu chi"
+        ]
+      ]
+    ]
+  },
+  "20. ĐẶC TẢ KỸ THUẬT: TÍNH NĂNG 20: BẢNG ĐIỀU KHIỂN QUẢN TRỊ NỀN TẢNG HỆ THỐNG (SUPERADMIN CONSOLE) (FEAT_20_SUPERADMIN)": {
+    "paragraphs": [
+      "1. Phạm vi & Endpoints API",
+      "2. Thuật toán & Luồng xử lý nghiệp vụ (Business Logic Flow)",
+      "• Nghiêm ngặt: Chỉ tài khoản có vai trò Superadmin mới được phép truy cập. Mọi vai trò khác bị từ chối 403 Forbidden.",
+      "• • Khóa tài khoản: Không được phép tự khóa chính tài khoản Superadmin đang đăng nhập.",
+      "• • Phân quyền: Chỉ Superadmin mới có quyền nâng cấp người dùng thành Admin hoặc hạ quyền.",
+      "• Regex quy định: N/A",
+      "1. Superadmin đăng nhập vào hệ thống.",
+      "2. Truy cập bảng điều khiển /dashboard.",
+      "3. Hệ thống kiểm tra quyền hạn (Role check). Nếu hợp lệ, tải toàn bộ chỉ số KPI hệ thống (Tổng người dùng, Doanh thu sàn, Số tin đăng hoạt động).",
+      "5. Mọi thao tác quản trị viên được ghi nhận đầy đủ vào bảng Audit Log để truy vết an ninh.",
+      "3. Hợp đồng Dữ liệu (API Contract) & Bảng Input Specification",
+      "4. Bảng Thông Báo Lỗi Và Xác Thực Giao Diện (UI Validation Error Messages)",
+      "5. Hình Ảnh Giao Diện & Phác Thảo UI (UI Wireframe)",
+      "Hình 20.1: Bảng điều khiển Quản trị nền tảng hệ thống Superadmin Console",
+      "Mô tả chức năng: Trung tâm điều hành cấp cao của Superadmin quản lý toàn bộ cơ sở dữ liệu người dùng, phân quyền vai trò và theo dõi nhật ký hệ thống.",
+      "Hình 20.2: Giao diện Cấu hình tham số hệ thống & Phân quyền RBAC",
+      "Mô tả chức năng: Bảng thiết lập các thông số toàn sàn, hạn ngạch tài khoản, chính sách hoa hồng và danh mục phân quyền.",
+      "6. Bảng Mô Tả Chi Tiết Từng Phần Tử UI (UI Elements Description)",
+      "7. Kịch bản Kiểm thử & Tiêu chí Nghiệm thu (Definition of Done - DoD)",
+      "☐ Giao diện hiển thị đúng chuẩn Responsive, thân thiện trên Desktop và Mobile.",
+      "☐ Toàn bộ các thông điệp lỗi (validation error) xuất hiện đúng vị trí và viền đỏ theo kịch bản.",
+      "☐ Dữ liệu được lưu trữ toàn vẹn vào Cơ sở dữ liệu và bảo toàn phân quyền Multi-tenancy."
+    ],
+    "tables": [
+      [
+        [
+          "Thông Tin Chung",
+          "Chi Tiết Kỹ Thuật"
+        ],
+        [
+          "Mã Chức Năng (Feature Code)",
+          "FEAT_20_SUPERADMIN"
+        ],
+        [
+          "Tên Tính Năng",
+          "Bảng điều khiển Quản trị nền tảng hệ thống (Superadmin Console)"
+        ],
+        [
+          "Thành viên phụ trách",
+          "Nguyễn Anh Quý"
+        ],
+        [
+          "Tác nhân (Actor)",
+          "Superadmin (Quản trị viên tối cao)."
+        ],
+        [
+          "Sự kiện kích hoạt (Trigger)",
+          "Đăng nhập với tài khoản Superadmin và truy cập /dashboard."
+        ],
+        [
+          "Điều kiện tiên quyết",
+          "Tài khoản có role = 'superadmin' trong cơ sở dữ liệu."
+        ]
+      ],
+      [
+        [
+          "Method",
+          "Endpoint URL",
+          "Middlewares",
+          "Mô Tả Chức Năng Nghiệp Vụ"
+        ],
+        [
+          "GET",
+          "/admin/dashboard",
+          "auth, role:superadmin",
+          "Bảng điều khiển quản trị nền tảng hệ thống Superadmin Console"
+        ],
+        [
+          "GET",
+          "/admin/audit-logs",
+          "auth, role:superadmin",
+          "Nhật ký kiểm toán an ninh truy vết bất biến toàn hệ thống"
+        ],
+        [
+          "POST",
+          "/admin/system/config",
+          "auth, role:superadmin",
+          "Thiết lập tham số toàn sàn, hạn ngạch tài khoản và chính sách phí"
+        ]
+      ],
+      [
+        [
+          "Trường",
+          "Tên hiển thị",
+          "Kiểu dữ liệu",
+          "Bắt buộc",
+          "Ràng buộc chính"
+        ],
+        [
+          "search_user",
+          "Tìm kiếm người dùng",
+          "string",
+          "Không",
+          "Email, họ tên hoặc số điện thoại"
+        ],
+        [
+          "role_filter",
+          "Lọc theo vai trò",
+          "enum",
+          "Không",
+          "Tất cả, Chủ trọ, Khách thuê, Quản trị viên"
+        ],
+        [
+          "status_filter",
+          "Trạng thái tài khoản",
+          "enum",
+          "Không",
+          "Đang hoạt động, Đã khóa, Chờ duyệt"
+        ]
+      ],
+      [
+        [
+          "Nguyên nhân / Kịch bản lỗi",
+          "Mã lỗi",
+          "Message cụ thể (nguyên văn)",
+          "Giao diện & Hiệu ứng phản hồi"
+        ],
+        [
+          "Chưa chọn vai trò khi phân quyền",
+          "ERR_20_01",
+          "Vui lòng chọn vai trò phân quyền hợp lệ cho tài khoản.",
+          "Bôi đỏ dropdown chọn Vai trò"
+        ],
+        [
+          "Gán vai trò Nhân viên nhưng thiếu cơ sở",
+          "ERR_20_02",
+          "Nhân viên hoặc Quản lý bắt buộc phải được gán vào một cơ sở lưu trú cụ thể.",
+          "Bôi đỏ dropdown chọn Cơ sở lưu trú"
+        ],
+        [
+          "Tự khóa chính tài khoản đang đăng nhập",
+          "ERR_20_03",
+          "Không thể tự khóa tài khoản quản trị viên đang thực hiện phiên làm việc!",
+          "Bật Modal cảnh báo đỏ từ chối hành động"
+        ],
+        [
+          "Cập nhật phân quyền thành công",
+          "ERR_20_04",
+          "Đã cập nhật vai trò và phân quyền tài khoản thành công!",
+          "Hiển thị Toast thông báo thành công màu xanh lá"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Loại phần tử",
+          "Tên field",
+          "Label hiển thị",
+          "Placeholder",
+          "Vị trí trên form & Quy cách"
+        ],
+        [
+          "1",
+          "Metric Cards",
+          "kpi_cards",
+          "Chỉ số toàn sàn",
+          "Tổng User, Tổng Doanh thu, Tin đăng...",
+          "4 thẻ thống kê đầu trang"
+        ],
+        [
+          "2",
+          "User Table",
+          "tblUsers",
+          "Danh sách tài khoản",
+          "—",
+          "Cột: Họ tên, Email, Vai trò, Tình trạng, Hành động"
+        ],
+        [
+          "3",
+          "Action Menu",
+          "menuActions",
+          "Thao tác quản trị",
+          "Phân quyền, Đổi mật khẩu, Khóa tài khoản",
+          "Nút thao tác cuối dòng"
+        ],
+        [
+          "4",
+          "Audit Log",
+          "log_viewer",
+          "Nhật ký an ninh",
+          "—",
+          "Bảng ghi lại vết thao tác của admin"
+        ]
+      ],
+      [
+        [
+          "STT",
+          "Input kiểm thử",
+          "Kết quả mong đợi",
+          "Ghi chú phân loại"
+        ],
+        [
+          "1",
+          "Tài khoản Khách thuê cố tình truy cập /dashboard",
+          "Hệ thống chặn truy cập và hiển thị lỗi 403 Forbidden",
+          "Kiểm tra Role Superadmin"
+        ],
+        [
+          "2",
+          "Tìm kiếm người dùng theo số điện thoại '0901234567'",
+          "Bảng lọc đúng người dùng có số điện thoại tương ứng",
+          "Kiểm tra Search user"
+        ],
+        [
+          "3",
+          "Nâng quyền một người dùng từ 'User' lên 'Admin'",
+          "Cập nhật quyền thành công và ghi nhận vào Audit Log",
+          "Happy case Phân quyền"
+        ]
+      ]
+    ]
+  }
+}
