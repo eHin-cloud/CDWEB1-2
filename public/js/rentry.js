@@ -4225,7 +4225,22 @@ document.addEventListener('DOMContentLoaded', () => {
             particles.push(new Particle());
         }
         
+        let isCanvasVisible = true;
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const wasVisible = isCanvasVisible;
+                    isCanvasVisible = entry.isIntersecting;
+                    if (!wasVisible && isCanvasVisible) {
+                        requestAnimationFrame(animate);
+                    }
+                });
+            }, { threshold: 0.05 });
+            observer.observe(canvas);
+        }
+
         function animate() {
+            if (!isCanvasVisible) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update();

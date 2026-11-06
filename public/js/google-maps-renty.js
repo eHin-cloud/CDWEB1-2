@@ -748,16 +748,22 @@ class GoogleMapsRenty {
             const layer = L.tileLayer(primaryUrl, Object.assign({
                 maxZoom: 20,
                 subdomains: primarySubdomains,
-                crossOrigin: true
+                keepBuffer: 1
             }, options));
 
             let failedAttempts = 0;
+            let loadedCount = 0;
             let switchedToFallback = false;
+
+            layer.on('tileload', function() {
+                loadedCount++;
+                failedAttempts = 0;
+            });
 
             layer.on('tileerror', function() {
                 failedAttempts++;
-                // Nếu Google Maps tile bị lỗi / chặn / timeout (>= 2 tile)
-                if (failedAttempts >= 2 && !switchedToFallback && fallbackUrl) {
+                // Chỉ chuyển sang dự phòng khi Google Maps hoàn toàn không tải được (lỗi liên tiếp >= 8 tile và chưa tải được tile nào)
+                if (failedAttempts >= 8 && loadedCount === 0 && !switchedToFallback && fallbackUrl) {
                     switchedToFallback = true;
                     console.warn('[RentyMap] Google Maps tile error. Auto-switching to fallback provider:', fallbackUrl);
                     layer.setUrl(fallbackUrl);
@@ -767,19 +773,11 @@ class GoogleMapsRenty {
                     if (typeof layer.redraw === 'function') {
                         layer.redraw();
                     }
-                    // Ẩn banner lỗi nếu fallback xử lý thành công
                     const banner = document.getElementById('gm-tiles-error-banner');
                     if (banner) banner.classList.add('hidden');
-                } else if (failedAttempts >= 8 && switchedToFallback) {
-                    // Nếu cả Google lẫn Fallback đều rớt (mất mạng hoàn toàn)
+                } else if (failedAttempts >= 16 && switchedToFallback) {
                     const banner = document.getElementById('gm-tiles-error-banner');
                     if (banner) banner.classList.remove('hidden');
-                }
-            });
-
-            layer.on('load', function() {
-                if (!switchedToFallback) {
-                    failedAttempts = 0;
                 }
             });
 
@@ -895,24 +893,31 @@ class GoogleMapsRenty {
             this.container.innerHTML = '';
         }
 
+        const mapOptions = {
+            center: center,
+            zoom: initialZoom,
+            zoomControl: false,
+            attributionControl: false,
+            preferCanvas: true,
+            zoomAnimation: true,
+            markerZoomAnimation: true,
+            fadeAnimation: true,
+            wheelDebounceTime: 50,
+            wheelPxPerZoomLevel: 100,
+            zoomSnap: 1,
+            zoomDelta: 1,
+            inertia: true,
+            inertiaDeceleration: 3000
+        };
+
         try {
-            this.map = L.map(this.containerId, {
-                center: center,
-                zoom: initialZoom,
-                zoomControl: false,
-                attributionControl: false
-            });
+            this.map = L.map(this.containerId, mapOptions);
         } catch (err) {
             console.warn('Leaflet map re-initialization catch:', err);
             if (this.container) {
                 this.container._leaflet_id = null;
                 this.container.innerHTML = '';
-                this.map = L.map(this.containerId, {
-                    center: center,
-                    zoom: initialZoom,
-                    zoomControl: false,
-                    attributionControl: false
-                });
+                this.map = L.map(this.containerId, mapOptions);
             }
         }
 
@@ -943,11 +948,20 @@ class GoogleMapsRenty {
         }
         this.renderCampusChips();
 
-        // 5. Invalidate size after layout transition and re-center
-        [80, 200, 450, 750].forEach(delay => {
+        // Track user interaction to prevent resetting viewport during drag/pan
+        this._userHasInteracted = false;
+        this.map.on('movestart zoomstart dragstart', () => {
+            this._userHasInteracted = true;
+        });
+
+        // 5. Invalidate size after layout transition and re-center smoothly once
+        let hasFittedInitialView = false;
+        [150, 450].forEach(delay => {
             setTimeout(() => {
-                if (this.map && typeof this.map.invalidateSize === 'function') {
-                    this.map.invalidateSize();
+                if (!this.map || typeof this.map.invalidateSize !== 'function') return;
+                this.map.invalidateSize({ pan: false });
+                if (!hasFittedInitialView && !this._userHasInteracted) {
+                    hasFittedInitialView = true;
                     if (this.currentCity === 'all' && this.markers && Object.keys(this.markers).length > 0) {
                         try {
                             const markerGroup = L.featureGroup(Object.values(this.markers));
@@ -957,8 +971,6 @@ class GoogleMapsRenty {
                                 this.map.setView(this.initialCenter, this.options.defaultZoom || 6, { animate: false });
                             }
                         }
-                    } else if (this.initialCenter) {
-                        this.map.setView(this.initialCenter, this.options.defaultZoom || 14, { animate: false });
                     }
                 }
             }, delay);
@@ -1112,9 +1124,9 @@ class GoogleMapsRenty {
                         font-size: 11px;
                         font-weight: 800;
                         font-family: 'Plus Jakarta Sans', sans-serif;
-                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+                        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
                         cursor: pointer;
-                        transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        transition: transform 0.15s ease, box-shadow 0.15s ease;
                         white-space: nowrap;
                         ${badgeBg}
                     ">
@@ -1297,16 +1309,26 @@ class GoogleMapsRenty {
     }
 
     highlightBuildingMarker(buildingId) {
-        document.querySelectorAll('.gm-price-marker').forEach(el => {
-            el.style.transform = 'scale(1)';
-            el.style.zIndex = '1';
-            el.style.filter = 'none';
-        });
+        if (!buildingId || this._activeHighlightedBuildingId === buildingId) return;
+
+        // Reset previous highlighted marker in O(1)
+        if (this._activeHighlightedBuildingId) {
+            const prevEl = document.getElementById(`marker-building-${this._activeHighlightedBuildingId}`) ||
+                           document.getElementById(`marker-room-${this._activeHighlightedBuildingId}`);
+            if (prevEl) {
+                prevEl.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                prevEl.style.zIndex = '1';
+                prevEl.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85)';
+                prevEl.style.filter = 'none';
+            }
+        }
+
+        this._activeHighlightedBuildingId = buildingId;
         const markerEl = document.getElementById(`marker-building-${buildingId}`);
         if (markerEl) {
-            markerEl.style.transform = 'scale(1.22)';
+            markerEl.style.transform = 'translate3d(0, 0, 0) scale(1.18)';
             markerEl.style.zIndex = '9999';
-            markerEl.style.filter = 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.9))';
+            markerEl.style.boxShadow = '0 0 0 3px #38bdf8, 0 8px 24px rgba(56, 189, 248, 0.65)';
         }
     }
 
@@ -1320,35 +1342,32 @@ class GoogleMapsRenty {
     }
 
     highlightMarker(roomId) {
-        document.querySelectorAll('.gm-price-marker').forEach(el => {
-            el.style.transform = 'scale(1)';
-            el.style.zIndex = '1';
-            el.style.filter = 'none';
-        });
-
         const targetBuildingId = (this.buildingMapByRoomId && this.buildingMapByRoomId[roomId]) || null;
-        let markerEl = null;
         if (targetBuildingId) {
-            markerEl = document.getElementById(`marker-building-${targetBuildingId}`);
-        }
-        if (!markerEl) {
-            markerEl = document.getElementById(`marker-room-${roomId}`);
+            this.highlightBuildingMarker(targetBuildingId);
+            return;
         }
 
+        if (!roomId || this._activeHighlightedBuildingId === roomId) return;
+
+        if (this._activeHighlightedBuildingId) {
+            const prevEl = document.getElementById(`marker-building-${this._activeHighlightedBuildingId}`) ||
+                           document.getElementById(`marker-room-${this._activeHighlightedBuildingId}`);
+            if (prevEl) {
+                prevEl.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                prevEl.style.zIndex = '1';
+                prevEl.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85)';
+                prevEl.style.filter = 'none';
+            }
+        }
+
+        this._activeHighlightedBuildingId = roomId;
+        const markerEl = document.getElementById(`marker-room-${roomId}`);
         if (markerEl) {
-            markerEl.style.transform = 'scale(1.22)';
+            markerEl.style.transform = 'translate3d(0, 0, 0) scale(1.18)';
             markerEl.style.zIndex = '9999';
-            markerEl.style.filter = 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.9))';
+            markerEl.style.boxShadow = '0 0 0 3px #38bdf8, 0 8px 24px rgba(56, 189, 248, 0.65)';
         }
-    }
-
-    getMarkerElementForRoom(roomId) {
-        const targetBuildingId = (this.buildingMapByRoomId && this.buildingMapByRoomId[roomId]) || null;
-        if (targetBuildingId) {
-            const bEl = document.getElementById(`marker-building-${targetBuildingId}`);
-            if (bEl) return bEl;
-        }
-        return document.getElementById(`marker-room-${roomId}`) || document.querySelector(`.marker-room-${roomId}`);
     }
 
     buildInfoWindowHtml(room, coords) {
@@ -1544,6 +1563,11 @@ class GoogleMapsRenty {
 
         const uni = this.universities.find(u => u.id === uniId);
         if (!uni) return;
+
+        // Tự động chuyển tab thành phố sang thành phố của trường nếu đang khác
+        if (uni.city && this.currentCity !== 'all' && uni.city !== this.currentCity) {
+            this.switchCity(uni.city);
+        }
 
         if (this.customPlacePin) {
             this.map.removeLayer(this.customPlacePin);
@@ -1757,6 +1781,20 @@ class GoogleMapsRenty {
         this.selectedUniversity = null;
         this.activeCenter = null;
 
+        // Đồng bộ giao diện tab thành phố trên HUD Hàng 2
+        document.querySelectorAll('.gm-city-tab').forEach(btn => {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+            btn.classList.add('text-slate-300');
+        });
+        const activeCityTab = document.getElementById(`city-tab-${city}`);
+        if (activeCityTab) {
+            activeCityTab.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+            activeCityTab.classList.remove('text-slate-300');
+            if (typeof activeCityTab.scrollIntoView === 'function') {
+                activeCityTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
         if (this.campusRadiusCircle) {
             this.map.removeLayer(this.campusRadiusCircle);
             this.campusRadiusCircle = null;
@@ -1773,14 +1811,21 @@ class GoogleMapsRenty {
         document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
 
         // Di chuyển đến trung tâm thành phố tương ứng êm dịu, không giật màn hình
-        if (city === 'hcm') {
-            this.map.setView([10.800, 106.705], 13, { animate: false });
-        } else if (city === 'hanoi') {
-            this.map.setView([21.028, 105.834], 13, { animate: false });
-        } else if (city === 'danang') {
-            this.map.setView([16.060, 108.220], 13, { animate: false });
-        } else if (city === 'dalat') {
-            this.map.setView([11.942, 108.440], 13, { animate: false });
+        const cityCoords = {
+            'hcm': [10.800, 106.705],
+            'hanoi': [21.028, 105.834],
+            'danang': [16.060, 108.220],
+            'dalat': [11.942, 108.440],
+            'nhatrang': [12.245, 109.196],
+            'vungtau': [10.346, 107.084],
+            'hoian': [15.880, 108.338],
+            'phuquoc': [10.228, 103.957],
+            'hue': [16.463, 107.590],
+            'sapa': [22.336, 103.843]
+        };
+
+        if (cityCoords[city]) {
+            this.map.setView(cityCoords[city], 13, { animate: false });
         } else {
             this.resetView();
         }
@@ -1817,12 +1862,24 @@ class GoogleMapsRenty {
             const isDanang = addr.includes('đà nẵng') || addr.includes('da nang') || addr.includes('hải châu') || addr.includes('sơn trà') || addr.includes('ngũ hành sơn') || addr.includes('thanh khê') || addr.includes('liên chiểu') || addr.includes('cẩm lệ') || addr.includes('hòa vang');
             const isDalat = addr.includes('đà lạt') || addr.includes('da lat') || addr.includes('lâm đồng') || addr.includes('tuyền lâm') || addr.includes('trại mát') || addr.includes('vạn thành') || addr.includes('thái phiên');
             const isHanoi = addr.includes('hà nội') || addr.includes('hanoi') || addr.includes('cầu giấy') || addr.includes('đống đa') || addr.includes('thanh xuân') || addr.includes('tây hồ') || addr.includes('ba đình') || addr.includes('hai bà trưng') || addr.includes('nam từ liêm') || addr.includes('bắc từ liêm') || addr.includes('hà đông') || addr.includes('hoàng mai');
+            const isNhatrang = addr.includes('nha trang') || addr.includes('khánh hòa');
+            const isVungtau = addr.includes('vũng tàu') || addr.includes('bà rịa');
+            const isHoian = addr.includes('hội an') || addr.includes('quảng nam');
+            const isPhuquoc = addr.includes('phú quốc') || addr.includes('kiên giang');
+            const isHue = addr.includes('huế') || addr.includes('thừa thiên');
+            const isSapa = addr.includes('sa pa') || addr.includes('sapa') || addr.includes('lào cai');
 
             let matchesCity = false;
             if (city === 'hcm') matchesCity = isHcm;
             else if (city === 'hanoi') matchesCity = isHanoi;
             else if (city === 'danang') matchesCity = isDanang;
             else if (city === 'dalat') matchesCity = isDalat;
+            else if (city === 'nhatrang') matchesCity = isNhatrang;
+            else if (city === 'vungtau') matchesCity = isVungtau;
+            else if (city === 'hoian') matchesCity = isHoian;
+            else if (city === 'phuquoc') matchesCity = isPhuquoc;
+            else if (city === 'hue') matchesCity = isHue;
+            else if (city === 'sapa') matchesCity = isSapa;
 
             if (matchesCity) {
                 card.classList.remove('hidden');
@@ -1846,7 +1903,19 @@ class GoogleMapsRenty {
 
         const countEl = document.getElementById('results-count');
         if (countEl) {
-            const cityName = city === 'hcm' ? 'TP. Hồ Chí Minh' : (city === 'hanoi' ? 'Hà Nội' : (city === 'danang' ? 'Đà Nẵng' : (city === 'dalat' ? 'Đà Lạt' : 'toàn quốc')));
+            const cityNameMap = {
+                'hcm': 'TP. Hồ Chí Minh',
+                'hanoi': 'Hà Nội',
+                'danang': 'Đà Nẵng',
+                'dalat': 'Đà Lạt',
+                'nhatrang': 'Nha Trang',
+                'vungtau': 'Vũng Tàu',
+                'hoian': 'Hội An',
+                'phuquoc': 'Phú Quốc',
+                'hue': 'Huế',
+                'sapa': 'Sa Pa'
+            };
+            const cityName = cityNameMap[city] || 'toàn quốc';
             countEl.innerHTML = `Tìm thấy <span class="text-emerald-400 font-extrabold">${visibleCount}</span> phòng tại <span class="text-sky-300 font-bold">${cityName}</span>`;
         }
     }
@@ -2298,6 +2367,53 @@ class GoogleMapsRenty {
 
     geocodeAndFly(addressOrPlace) {
         if (!addressOrPlace || !this.map) return;
+        const normKey = removeVietnameseTones(addressOrPlace);
+        const tokens = normKey.split(/\s+/).filter(Boolean);
+
+        // 1. Kiểm tra nhanh nếu là trường đại học / cao đẳng trong danh bạ
+        if (this.universities && this.universities.length > 0 && tokens.length > 0) {
+            let effectiveTokens = tokens;
+            if (tokens.length > 1 && (tokens.includes('truong') || tokens.includes('trg'))) {
+                effectiveTokens = tokens.filter(t => t !== 'truong' && t !== 'trg');
+            }
+            const matchedUni = this.universities.find(u => {
+                const searchPool = [
+                    'truong',
+                    u.type === 'college' ? 'cao dang cd cđ' : 'dai hoc dh đh',
+                    removeVietnameseTones(u.name || ''),
+                    removeVietnameseTones(u.shortName || ''),
+                    removeVietnameseTones(u.campus || ''),
+                    removeVietnameseTones(u.district || ''),
+                    removeVietnameseTones(u.address || ''),
+                    removeVietnameseTones(u.fullName || ''),
+                    removeVietnameseTones(u.id || ''),
+                    ...(u.aliases || []).map(a => removeVietnameseTones(a))
+                ];
+                return effectiveTokens.every(tok => {
+                    if (tok === 'cd' || tok === 'cđ') return u.type === 'college' || searchPool.some(f => f.includes('cao dang'));
+                    if (tok === 'dh' || tok === 'đh') return u.type !== 'college' || searchPool.some(f => f.includes('dai hoc'));
+                    return searchPool.some(field => field.includes(tok));
+                });
+            });
+
+            if (matchedUni) {
+                if (this.currentCity !== 'all' && matchedUni.city !== this.currentCity) {
+                    this.switchCity(matchedUni.city);
+                }
+                this.selectCampus(matchedUni.id);
+                const chip = document.querySelector(`.gm-campus-chip[onclick*="'${matchedUni.id}'"]`);
+                if (chip) {
+                    document.querySelectorAll('.gm-campus-chip').forEach(c => c.classList.remove('active', 'bg-blue-600', 'text-white'));
+                    chip.classList.add('active', 'bg-blue-600', 'text-white');
+                    if (typeof chip.scrollIntoView === 'function') {
+                        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
+                return;
+            }
+        }
+
+        // 2. Tìm kiếm qua dịch vụ Live Geocoding OpenStreetMap
         const query = encodeURIComponent(addressOrPlace.trim() + ', Vietnam');
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
             headers: { 'Accept-Language': 'vi,en' }
@@ -2313,13 +2429,20 @@ class GoogleMapsRenty {
                     }
                 }
                 // Không tìm thấy tọa độ hợp lệ
-                console.warn('[ERR_05_03] Không xác định được tọa độ hợp lệ cho:', addressOrPlace);
-                this.showCoordErrorToast();
-                this.resetView();
+                console.warn('[Geocoding] Không tìm thấy tọa độ cho:', addressOrPlace);
+                if (typeof showRentyToast === 'function') {
+                    showRentyToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`, 'warning');
+                } else {
+                    this.showCoordErrorToast();
+                }
             })
             .catch(() => {
-                this.showCoordErrorToast();
-                this.resetView();
+                console.warn('[Geocoding Error] Lỗi kết nối geocode cho:', addressOrPlace);
+                if (typeof showRentyToast === 'function') {
+                    showRentyToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`, 'warning');
+                } else {
+                    this.showCoordErrorToast();
+                }
             });
     }
 
@@ -3067,16 +3190,19 @@ window.onMapSearchSubmit = async function(e) {
 window.toggleGnHudDetails = function() {
     const el = document.getElementById('gm-hud-collapsible');
     const icon = document.getElementById('gm-hud-toggle-icon');
+    const iconInline = document.getElementById('gm-hud-toggle-icon-inline');
     if (!el) return;
     if (el.classList.contains('hidden')) {
         el.classList.remove('hidden');
         if (icon) icon.style.transform = 'rotate(180deg)';
+        if (iconInline) iconInline.style.transform = 'rotate(180deg)';
         if (typeof initCampusBarDragScroll === 'function') {
             initCampusBarDragScroll();
         }
     } else {
         el.classList.add('hidden');
         if (icon) icon.style.transform = 'rotate(0deg)';
+        if (iconInline) iconInline.style.transform = 'rotate(0deg)';
     }
 };
 
@@ -3711,6 +3837,13 @@ function initMapSearchEngine() {
     });
 }
 
+window.scrollCityBar = function(offset) {
+    const bar = document.querySelector('.gm-city-switcher');
+    if (bar) {
+        bar.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+};
+
 window.scrollCampusBar = function(offset) {
     const bar = document.querySelector('.gm-campus-bar');
     if (bar) {
@@ -3733,48 +3866,57 @@ function makeHorizontalScrollable(selector) {
 
     let isDown = false;
     let startX = 0;
-    let startY = 0;
     let scrollStartX = 0;
-    let isDragging = false;
+    let hasDragged = false;
+    const DRAG_THRESHOLD = 6; // px
+
+    slider.style.cursor = 'grab';
 
     slider.addEventListener('mousedown', (e) => {
-        // Nếu nhấp vào nút bấm, link hoặc input: TUYỆT ĐỐI không kích hoạt kéo chuột để nút bấm nhận click 100%
-        if (e.target.closest('button, a, input, select, label')) {
-            return;
-        }
+        // Chỉ kéo rê bằng chuột trái
         if (e.button !== 0) return;
         isDown = true;
-        isDragging = false;
+        hasDragged = false;
         startX = e.pageX;
-        startY = e.pageY;
         scrollStartX = slider.scrollLeft;
     });
 
-    const stopDrag = () => {
+    const endDrag = () => {
+        if (!isDown) return;
         isDown = false;
-        isDragging = false;
-        slider.style.cursor = '';
+        slider.style.cursor = 'grab';
+        // Giữ cờ hasDragged ngắn hạn để chặn click nếu vừa kéo chuột
+        setTimeout(() => {
+            hasDragged = false;
+        }, 80);
     };
 
-    slider.addEventListener('mouseleave', stopDrag);
-    slider.addEventListener('mouseup', stopDrag);
+    window.addEventListener('mouseup', endDrag);
+    slider.addEventListener('mouseleave', () => {
+        if (isDown) endDrag();
+    });
 
     slider.addEventListener('mousemove', (e) => {
         if (!isDown) return;
         const deltaX = e.pageX - startX;
-        const deltaY = e.pageY - startY;
 
-        // Chỉ cuộn khi người dùng thực sự kéo rê chuột ngang ngoài nút > 15px
-        if (!isDragging && Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            isDragging = true;
+        // Nếu di chuyển quá ngưỡng drag thì coi là kéo rê cuộn
+        if (Math.abs(deltaX) > DRAG_THRESHOLD) {
+            hasDragged = true;
             slider.style.cursor = 'grabbing';
-        }
-
-        if (isDragging) {
             e.preventDefault();
             slider.scrollLeft = scrollStartX - deltaX;
         }
     });
+
+    // Bắt chặn sự kiện click nếu vừa thực hiện thao tác kéo rê chuột
+    slider.addEventListener('click', (e) => {
+        if (hasDragged) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+    }, true); // useCapture: true để chặn trước khi sự kiện tới button
 
     // Cuộn ngang tức thì bằng con lăn chuột (Mouse Wheel)
     slider.addEventListener('wheel', (e) => {
@@ -3802,6 +3944,7 @@ document.addEventListener('click', (e) => {
 });
 
 function initCampusBarDragScroll() {
+    makeHorizontalScrollable('.gm-city-switcher');
     makeHorizontalScrollable('.gm-campus-bar');
     makeHorizontalScrollable('.gm-nearby-bar');
 }
@@ -3834,13 +3977,17 @@ window.initRoomCardMapSync = function() {
                 // 2. Mở popup InfoWindow xem trước phòng
                 marker.openPopup();
 
-                // 3. Di chuyển tâm bản đồ tới vị trí trọ nhẹ nhàng
-                mapInstance.map.panTo(marker.getLatLng(), {
-                    animate: true,
-                    duration: 0.5
-                });
+                // 3. Chỉ panTo nếu marker thực sự nằm ngoài khung nhìn hiện tại của bản đồ
+                const bounds = mapInstance.map.getBounds();
+                const latLng = marker.getLatLng();
+                if (bounds && !bounds.contains(latLng)) {
+                    mapInstance.map.panTo(latLng, {
+                        animate: true,
+                        duration: 0.35
+                    });
+                }
             }
-        }, 70);
+        }, 90);
     });
 };
 
@@ -3848,10 +3995,14 @@ window.initRoomCardMapSync = function() {
 document.addEventListener('DOMContentLoaded', () => {
     const mapEl = document.getElementById('renty-interactive-map');
     if (mapEl && window.ResizeObserver) {
+        let resizeTimer = null;
         const resizeObserver = new ResizeObserver(() => {
-            if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
-                window.rentyGoogleMap.map.invalidateSize();
-            }
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+                    window.rentyGoogleMap.map.invalidateSize({ pan: false });
+                }
+            }, 100);
         });
         resizeObserver.observe(mapEl);
     }

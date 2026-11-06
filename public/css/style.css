@@ -3141,18 +3141,31 @@ body.renty-map-mode .renty-split-right {
     padding: 20px 20px 0 20px !important;
 }
 
-#renty-interactive-map {
+#renty-interactive-map,
+#renty-interactive-map.leaflet-container {
     width: 100% !important;
     height: 100% !important;
     min-height: 100% !important;
     position: relative !important;
     z-index: 1 !important;
+    background: #0f172a !important;
+    transform: translateZ(0);
 }
 
-#renty-interactive-map .leaflet-container {
-    width: 100% !important;
-    height: 100% !important;
-    background: #e8ecf2 !important;
+#renty-interactive-map .leaflet-tile-container {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+#renty-interactive-map .leaflet-marker-pane {
+    will-change: transform;
+}
+
+.gm-price-marker {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .renty-new-badge {
@@ -3351,13 +3364,13 @@ body.renty-map-mode .room-item-card .room-card-footer {
     z-index: 1000 !important;
     pointer-events: auto !important;
     box-sizing: border-box !important;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.45) 45%, rgba(15, 23, 42, 0.70) 100%) !important;
-    backdrop-filter: blur(24px) saturate(200%) contrast(95%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(200%) contrast(95%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    border-top: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+    background: rgba(15, 23, 42, 0.94) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.3) !important;
     border-radius: 18px !important;
-    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 0 15px rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
 }
 
 .no-scrollbar::-webkit-scrollbar,
@@ -3425,10 +3438,10 @@ body.renty-map-mode .room-item-card .room-card-footer {
 
 /* Interactive Map Popup / Floating Preview Card above clicked pin */
 .leaflet-popup-content-wrapper {
-    background: rgba(15, 23, 42, 0.92) !important;
+    background: rgba(15, 23, 42, 0.96) !important;
     border: 1px solid rgba(45, 212, 191, 0.3) !important;
-    backdrop-filter: blur(16px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
     border-radius: 16px !important;
     color: #f1f5f9 !important;
@@ -6742,10 +6755,10 @@ body.theme-light .floors-pill span {
    ========================================================= */
 html.theme-light .gm-pro-hud,
 body.theme-light .gm-pro-hud {
-    background: rgba(255, 255, 255, 0.96) !important;
+    background: #ffffff !important;
     background-color: #ffffff !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1.5px solid #cbd5e1 !important;
     border-top: 2px solid #ffffff !important;
     box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;

@@ -2410,47 +2410,28 @@
             <!-- Floating Google Maps Pro HUD Control Bar (Hiệu ứng Liquid Glass lỏng trong suốt, Search Box giữ bình thường) -->
             <div class="gm-pro-hud absolute top-3 left-3 right-3 z-[1000] rounded-2xl p-2.5 flex flex-col gap-2 transition-all duration-300">
                 
-                <!-- Row 1: City Tabs + Smart Search Engine + Compact Map Controls (Khóa cứng 1 dòng, không bao giờ nhảy xuống) -->
-                <div class="flex items-center gap-2 w-full flex-nowrap">
-                    <!-- City Switcher Tabs -->
-                    <div class="gm-city-switcher flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[11px] font-bold shrink-0">
-                        <button type="button" onclick="switchMapCity('all', this)" id="city-tab-all" class="gm-city-tab active px-2 py-1 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm">
-                            🌐 Toàn quốc
-                        </button>
-                        <button type="button" onclick="switchMapCity('hcm', this)" id="city-tab-hcm" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
-                            🏙️ TP.HCM
-                        </button>
-                        <button type="button" onclick="switchMapCity('hanoi', this)" id="city-tab-hanoi" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
-                            🏛️ Hà Nội
-                        </button>
-                        <button type="button" onclick="switchMapCity('danang', this)" id="city-tab-danang" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
-                            🌊 Đà Nẵng
-                        </button>
-                        <button type="button" onclick="switchMapCity('dalat', this)" id="city-tab-dalat" class="gm-city-tab px-2 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
-                            🌲 Đà Lạt
-                        </button>
-                    </div>
-
-                    <!-- Live Search Engine Input (Rõ nét, màu bình thường đậm đặc) -->
+                <!-- Row 1: Smart Search Engine (Siêu rộng toàn màn hình) + Compact Map Controls -->
+                <div class="flex items-center gap-2 w-full">
+                    <!-- Live Search Engine Input (Rộng rãi chuẩn Google Maps Pro) -->
                     <div class="relative flex-grow min-w-0" id="gm-search-engine-wrapper">
                         <form onsubmit="onMapSearchSubmit(event)" class="w-full flex items-center relative">
                             <input type="text" id="gm-search-input" autocomplete="off"
-                                placeholder="Tìm mọi địa điểm du lịch, đường phố, trường học, trọ..." 
-                                class="w-full pl-8 pr-12 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 transition-all font-medium truncate shadow-inner">
-                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-sky-400 text-[11px]"></i>
+                                placeholder="Tìm kiếm địa điểm, trường học, tên đường, khu trọ..." 
+                                class="w-full pl-9 pr-14 py-2 rounded-xl bg-slate-900 border border-slate-700/80 text-xs md:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 transition-all font-medium truncate shadow-inner">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 text-sky-400 text-xs"></i>
                             
                             <!-- Nút xóa nhanh nếu có text -->
-                            <button type="button" id="gm-search-clear-btn" onclick="clearMapSearchInput()" class="hidden absolute right-6 w-4 h-4 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] transition-all" title="Xóa">
+                            <button type="button" id="gm-search-clear-btn" onclick="clearMapSearchInput()" class="hidden absolute right-7 w-5 h-5 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[10px] transition-all" title="Xóa">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
 
-                            <button type="submit" class="absolute right-1.5 w-4 h-4 rounded-md bg-sky-500 text-white flex items-center justify-center text-[9px] transition-all" title="Tìm">
+                            <button type="submit" class="absolute right-1.5 w-6 h-6 rounded-lg bg-sky-500 hover:bg-sky-400 text-white flex items-center justify-center text-xs transition-all shadow-sm cursor-pointer" title="Tìm">
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </form>
 
                         <!-- Dropdown Autocomplete: Đồng bộ Dark/Light Mode, NỔI LÊN MỌI THỨ -->
-                        <div id="gm-search-autocomplete" style="z-index: 999999 !important;" class="hidden absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden max-h-84 overflow-y-auto text-xs">
+                        <div id="gm-search-autocomplete" style="z-index: 999999 !important;" class="hidden absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden max-h-84 overflow-y-auto text-xs shadow-2xl">
                             <!-- Kết quả tìm kiếm tự động đổ vào đây -->
                         </div>
                     </div>
@@ -2459,37 +2440,129 @@
                     <div class="flex items-center gap-1 shrink-0">
                         <!-- Layer Buttons -->
                         <div class="gm-layer-container flex items-center gap-0.5 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[10px] font-bold">
-                            <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="w-6 h-6 rounded-lg bg-blue-600 text-white font-bold transition-all flex items-center justify-center" title="Đường phố">
+                            <button type="button" onclick="setRentyMapLayer('roadmap')" id="gm-layer-roadmap" class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold transition-all flex items-center justify-center" title="Đường phố">
                                 <i class="fa-solid fa-map"></i>
                             </button>
-                            <button type="button" onclick="setRentyMapLayer('satellite')" id="gm-layer-satellite" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center" title="Vệ tinh">
+                            <button type="button" onclick="setRentyMapLayer('satellite')" id="gm-layer-satellite" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center" title="Vệ tinh">
                                 <i class="fa-solid fa-satellite"></i>
                             </button>
-                            <button type="button" onclick="setRentyMapLayer('terrain')" id="gm-layer-terrain" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center" title="Địa hình">
+                            <button type="button" onclick="setRentyMapLayer('terrain')" id="gm-layer-terrain" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center" title="Địa hình">
                                 <i class="fa-solid fa-mountain"></i>
                             </button>
                         </div>
 
                         <!-- Action Buttons -->
-                        <button type="button" onclick="locateUserRentyMap()" title="Tìm phòng quanh vị trí của tôi" class="gm-action-btn px-2 py-0.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500 hover:text-white text-emerald-400 flex items-center gap-1 text-[11px] font-bold transition-all shadow-sm cursor-pointer">
+                        <button type="button" onclick="locateUserRentyMap()" title="Tìm phòng quanh vị trí của tôi" class="gm-action-btn px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500 hover:text-white text-emerald-400 flex items-center gap-1 text-xs font-bold transition-all shadow-sm cursor-pointer">
                             <i class="fa-solid fa-crosshairs animate-pulse"></i>
                             <span class="hidden sm:inline">Gần tôi</span>
                         </button>
-                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="resetRentyMapView()" title="Về trung tâm" class="gm-action-btn w-7 h-7 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-blue-500/50 text-slate-300 hover:text-blue-400 flex items-center justify-center text-xs transition-all">
                             <i class="fa-solid fa-compass"></i>
                         </button>
-                        <button type="button" onclick="toggleRentyMapFullscreen()" id="gm-fullscreen-btn" title="Toàn màn hình (Esc)" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="toggleRentyMapFullscreen()" id="gm-fullscreen-btn" title="Toàn màn hình (Esc)" class="gm-action-btn w-7 h-7 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 flex items-center justify-center text-xs transition-all">
                             <i class="fa-solid fa-expand" id="gm-fullscreen-icon"></i>
                         </button>
-                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Tiện ích & Lọc" class="gm-action-btn w-6 h-6 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-[10px] transition-all">
+                        <button type="button" onclick="toggleGnHudDetails()" id="gm-hud-toggle-btn" title="Tiện ích & Lọc" class="gm-action-btn w-7 h-7 rounded-xl bg-slate-900/95 border border-slate-800 hover:border-teal-500/50 text-slate-300 hover:text-teal-400 flex items-center justify-center text-xs transition-all">
                             <i class="fa-solid fa-chevron-down transition-transform duration-200" id="gm-hud-toggle-icon"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Row 2: Campus Quick Chips + Navigation Arrows + Radius Selector -->
-                <div class="flex items-center justify-between gap-1.5 pt-1 border-t border-white/10">
-                    <span class="gm-campus-label text-[10px] font-bold text-sky-400 flex items-center gap-1 shrink-0 mr-0.5">
+                <!-- Row 2: City Tabs + Expand Button + Radius Selector -->
+                <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-white/10">
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                        <!-- Nút cuộn trái Thành phố -->
+                        <button type="button" onclick="scrollCityBar(-160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm cursor-pointer" title="Cuộn thành phố sang trái">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+
+                        <!-- City Switcher Tabs (Thành phố trọng điểm & Địa danh du lịch nổi tiếng) -->
+                        <div class="gm-city-switcher flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-xl border border-slate-800 text-[10px] font-bold overflow-x-auto no-scrollbar flex-1 min-w-0 select-none cursor-grab" style="scrollbar-width: none; -ms-overflow-style: none;">
+                            <button type="button" onclick="switchMapCity('all', this)" id="city-tab-all" class="gm-city-tab active px-2 py-0.5 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-sm shrink-0 whitespace-nowrap">
+                                🌐 Toàn quốc
+                            </button>
+                            <button type="button" onclick="switchMapCity('hcm', this)" id="city-tab-hcm" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🏙️ TP.HCM
+                            </button>
+                            <button type="button" onclick="switchMapCity('hanoi', this)" id="city-tab-hanoi" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🏛️ Hà Nội
+                            </button>
+                            <button type="button" onclick="switchMapCity('danang', this)" id="city-tab-danang" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🌊 Đà Nẵng
+                            </button>
+                            <button type="button" onclick="switchMapCity('dalat', this)" id="city-tab-dalat" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🌲 Đà Lạt
+                            </button>
+                            <button type="button" onclick="switchMapCity('nhatrang', this)" id="city-tab-nhatrang" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🏖️ Nha Trang
+                            </button>
+                            <button type="button" onclick="switchMapCity('vungtau', this)" id="city-tab-vungtau" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                ⚓ Vũng Tàu
+                            </button>
+                            <button type="button" onclick="switchMapCity('hoian', this)" id="city-tab-hoian" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🏮 Hội An
+                            </button>
+                            <button type="button" onclick="switchMapCity('phuquoc', this)" id="city-tab-phuquoc" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🏝️ Phú Quốc
+                            </button>
+                            <button type="button" onclick="switchMapCity('hue', this)" id="city-tab-hue" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                🏰 Huế
+                            </button>
+                            <button type="button" onclick="switchMapCity('sapa', this)" id="city-tab-sapa" class="gm-city-tab px-2 py-0.5 rounded-lg text-slate-300 hover:text-white font-semibold transition-all shrink-0 whitespace-nowrap">
+                                ⛰️ Sa Pa
+                            </button>
+                        </div>
+
+                        <!-- Nút cuộn phải Thành phố -->
+                        <button type="button" onclick="scrollCityBar(160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm cursor-pointer" title="Cuộn thành phố sang phải">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+
+                        <!-- Nút mở rộng Trường & Tiện ích -->
+                        <button type="button" onclick="toggleGnHudDetails()" class="px-2.5 py-0.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 text-sky-400 text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0">
+                            <i class="fa-solid fa-graduation-cap text-xs"></i>
+                            <span>Trường & Tiện ích</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200" id="gm-hud-toggle-icon-inline"></i>
+                        </button>
+                    </div>
+
+                    <!-- Commute Radius Slider & Selector (STT 3: range_radius - Bán kính quét) -->
+                    <div class="relative flex items-center gap-1.5 bg-slate-900/95 px-2 py-0.5 rounded-xl border border-slate-800 text-[10px] font-bold shrink-0 shadow-sm" id="radius_slider_wrapper">
+                        <label for="range_radius" class="text-slate-300 font-bold shrink-0 flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-arrows-to-circle text-emerald-400"></i> Bán kính:
+                        </label>
+                        <input type="range" 
+                               id="range_radius" 
+                               name="range_radius" 
+                               min="0" 
+                               max="10" 
+                               step="0.5" 
+                               value="3.5" 
+                               placeholder="5 km"
+                               oninput="onRadiusSliderChange(this.value)" 
+                               onchange="onRadiusSliderChange(this.value)" 
+                               class="w-16 sm:w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all border border-transparent">
+                        <span id="range_radius_val" class="text-emerald-400 font-extrabold min-w-[28px] text-center">3.5km</span>
+
+                        <!-- Preset Radius Chips -->
+                        <div class="hidden sm:flex items-center gap-0.5 border-l border-slate-700/60 pl-1">
+                            <button type="button" onclick="applyPresetRadius(1.5)" id="radius-chip-1500" class="gm-radius-chip px-1.5 py-0.2 rounded text-[9px] text-slate-400 hover:text-white transition-all">1.5km</button>
+                            <button type="button" onclick="applyPresetRadius(3.5)" id="radius-chip-3500" class="gm-radius-chip active px-1.5 py-0.2 rounded text-[9px] bg-emerald-600 text-white font-bold transition-all shadow-sm">3.5km</button>
+                            <button type="button" onclick="applyPresetRadius(5.0)" id="radius-chip-5000" class="gm-radius-chip px-1.5 py-0.2 rounded text-[9px] text-slate-400 hover:text-white transition-all">5km</button>
+                        </div>
+
+                        <!-- Khung thông báo lỗi viền đỏ theo kịch bản DoD: Bán kính tối thiểu phải từ 1km -->
+                        <div id="range_radius_error" class="hidden absolute -bottom-7 right-0 z-50 px-2 py-0.5 rounded-lg bg-rose-950/95 border border-rose-500 text-rose-300 text-[10px] font-bold shadow-xl whitespace-nowrap animate-bounce flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400"></i> Bán kính tối thiểu phải từ 1km
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible filter section (Mặc định ẩn gọn) -->
+                <div id="gm-hud-collapsible" class="hidden flex flex-col gap-2 transition-all duration-300 pt-2 border-t border-slate-800/80">
+                    <!-- Hàng 1: Trường học (Campus Quick Chips) -->
+                    <div class="flex items-center justify-between gap-1.5 flex-nowrap min-w-0">
+                        <span class="gm-campus-label text-[10px] font-bold text-sky-400 flex items-center gap-1 shrink-0 mr-0.5">
                         <i class="fa-solid fa-graduation-cap"></i> Trường:
                     </span>
 
@@ -2584,41 +2657,8 @@
                     <button type="button" onclick="scrollCampusBar(160)" class="gm-scroll-btn w-5 h-5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-[9px] shrink-0 transition-all border border-slate-700/60 shadow-sm" title="Cuộn sang phải">
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
-
-                    <!-- Commute Radius Slider & Selector (STT 3: range_radius - Bán kính quét) -->
-                    <div class="relative flex items-center gap-1.5 bg-slate-900/95 px-2 py-0.5 rounded-xl border border-slate-800 text-[10px] font-bold shrink-0 shadow-sm" id="radius_slider_wrapper">
-                        <label for="range_radius" class="text-slate-300 font-bold shrink-0 flex items-center gap-1 cursor-pointer">
-                            <i class="fa-solid fa-arrows-to-circle text-emerald-400"></i> Bán kính:
-                        </label>
-                        <input type="range" 
-                               id="range_radius" 
-                               name="range_radius" 
-                               min="0" 
-                               max="10" 
-                               step="0.5" 
-                               value="3.5" 
-                               placeholder="5 km"
-                               oninput="onRadiusSliderChange(this.value)" 
-                               onchange="onRadiusSliderChange(this.value)" 
-                               class="w-16 sm:w-20 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all border border-transparent">
-                        <span id="range_radius_val" class="text-emerald-400 font-extrabold min-w-[28px] text-center">3.5km</span>
-
-                        <!-- Preset Radius Chips -->
-                        <div class="hidden sm:flex items-center gap-0.5 border-l border-slate-700/60 pl-1">
-                            <button type="button" onclick="applyPresetRadius(1.5)" id="radius-chip-1500" class="gm-radius-chip px-1.5 py-0.2 rounded text-[9px] text-slate-400 hover:text-white transition-all">1.5km</button>
-                            <button type="button" onclick="applyPresetRadius(3.5)" id="radius-chip-3500" class="gm-radius-chip active px-1.5 py-0.2 rounded text-[9px] bg-emerald-600 text-white font-bold transition-all shadow-sm">3.5km</button>
-                            <button type="button" onclick="applyPresetRadius(5.0)" id="radius-chip-5000" class="gm-radius-chip px-1.5 py-0.2 rounded text-[9px] text-slate-400 hover:text-white transition-all">5km</button>
-                        </div>
-
-                        <!-- Khung thông báo lỗi viền đỏ theo kịch bản DoD: Bán kính tối thiểu phải từ 1km -->
-                        <div id="range_radius_error" class="hidden absolute -bottom-7 right-0 z-50 px-2 py-0.5 rounded-lg bg-rose-950/95 border border-rose-500 text-rose-300 text-[10px] font-bold shadow-xl whitespace-nowrap animate-bounce flex items-center gap-1">
-                            <i class="fa-solid fa-circle-exclamation text-rose-400"></i> Bán kính tối thiểu phải từ 1km
-                        </div>
                     </div>
-                </div>
 
-                <!-- Collapsible filter section (Mặc định ẩn gọn) -->
-                <div id="gm-hud-collapsible" class="hidden flex flex-col gap-2 transition-all duration-300 pt-2 border-t border-slate-800/80">
                     <!-- Nearby Places Amenities Scanner -->
                     <div class="flex items-center justify-between gap-1.5 flex-nowrap min-w-0">
                         <span class="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1 mr-0.5">
