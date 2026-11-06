@@ -34,6 +34,10 @@ class SolrSearchService
     protected function initClient(): void
     {
         try {
+            if (!class_exists(\Solarium\Client::class) || !class_exists(\Solarium\Core\Client\Adapter\Curl::class)) {
+                $this->client = null;
+                return;
+            }
             $adapter = new Curl();
             $dispatcher = new EventDispatcher();
             $options = [
@@ -48,7 +52,7 @@ class SolrSearchService
                 ]
             ];
             $this->client = new Client($adapter, $dispatcher, $options);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Solr Client Init Error: ' . $e->getMessage());
             $this->client = null;
         }

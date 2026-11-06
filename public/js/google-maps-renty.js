@@ -748,7 +748,7 @@ class GoogleMapsRenty {
             const layer = L.tileLayer(primaryUrl, Object.assign({
                 maxZoom: 20,
                 subdomains: primarySubdomains,
-                keepBuffer: 3,
+                keepBuffer: 1,
                 updateWhenIdle: true,
                 updateWhenZooming: false
             }, options));

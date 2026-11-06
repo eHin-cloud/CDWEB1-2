@@ -2020,7 +2020,9 @@ function filterItems(options = {}) {
 
     let matches = [];
 
-    document.querySelectorAll('.room-item-card').forEach(card => {
+    const roomCards = window._cachedRoomCards || (window._cachedRoomCards = Array.from(document.querySelectorAll('.room-item-card')));
+
+    roomCards.forEach(card => {
         const title = (card.getAttribute('data-title') || '').toLowerCase();
         const price = parseInt(card.getAttribute('data-price') || 0);
         const rating = parseFloat(card.getAttribute('data-rating') || 0);
@@ -2034,15 +2036,17 @@ function filterItems(options = {}) {
         const fridge = card.getAttribute('data-fridge') === 'true';
         const wifi = card.getAttribute('data-wifi') === 'true';
         const status = card.getAttribute('data-status');
-        const searchableText = normalizeText(
-            `${card.getAttribute('data-title') || ''} ` +
-            `${card.getAttribute('data-area-name') || ''} ` +
-            `${card.getAttribute('data-address') || ''} ` +
-            `${card.getAttribute('data-location-desc') || ''} ` +
-            `${card.getAttribute('data-space-desc') || ''} ` +
-            `${card.getAttribute('data-scenery-desc') || ''} ` +
-            `${card.textContent || ''}`
-        );
+        if (!card._cachedSearchText) {
+            card._cachedSearchText = normalizeText(
+                `${card.getAttribute('data-title') || ''} ` +
+                `${card.getAttribute('data-area-name') || ''} ` +
+                `${card.getAttribute('data-address') || ''} ` +
+                `${card.getAttribute('data-location-desc') || ''} ` +
+                `${card.getAttribute('data-space-desc') || ''} ` +
+                `${card.getAttribute('data-scenery-desc') || ''}`
+            );
+        }
+        const searchableText = card._cachedSearchText;
 
         let matchesQuery = true;
         if (normalizedQuery.trim() !== '') {
@@ -2212,8 +2216,10 @@ function filterItems(options = {}) {
     }
 
     const roomsGrid = document.getElementById('rooms-grid');
-    if (roomsGrid) {
-        matches.forEach(card => roomsGrid.appendChild(card));
+    if (roomsGrid && matches.length > 0) {
+        const fragment = document.createDocumentFragment();
+        matches.forEach(card => fragment.appendChild(card));
+        roomsGrid.appendChild(fragment);
     }
 
     const matchesCount = matches.length;

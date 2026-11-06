@@ -383,7 +383,7 @@ Route::post('/renty/newsletter/subscribe', [\App\Http\Controllers\Api\VisitorCon
 
 $rentyRooms = function ($filterEmpty = true) {
     $user = auth()->user();
-    $query = \App\Models\Room::with(['building', 'tenant.users', 'residents', 'reviews']);
+    $query = \App\Models\Room::with(['building', 'tenant.users', 'reviews']);
 
     // Nếu người dùng đăng nhập là chủ trọ hoặc quản lý có tenant_id (và không phải Superadmin),
     // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó
@@ -618,14 +618,20 @@ $rentyRooms = function ($filterEmpty = true) {
         ];
     });
 
-    $mappedRooms = $mappedRooms->map(function ($room) use ($mappedRooms) {
-        $peerRooms = $mappedRooms->filter(function ($peer) use ($room) {
-            return $peer['id'] !== $room['id']
-                && $peer['area_name'] === $room['area_name']
-                && abs((int) $peer['area'] - (int) $room['area']) <= 5;
-        });
+    $roomsByArea = $mappedRooms->groupBy('area_name');
+    $overallAvgPrice = (float) ($mappedRooms->avg('price') ?: 0);
 
-        $averagePrice = (int) round($peerRooms->count() > 0 ? $peerRooms->avg('price') : $mappedRooms->avg('price'));
+    $mappedRooms = $mappedRooms->map(function ($room) use ($roomsByArea, $overallAvgPrice) {
+        $areaRooms = $roomsByArea->get($room['area_name']);
+        $roomArea = (int) $room['area'];
+        $roomId = $room['id'];
+
+        $peerRooms = $areaRooms ? $areaRooms->filter(function ($peer) use ($roomId, $roomArea) {
+            return $peer['id'] !== $roomId
+                && abs((int) $peer['area'] - $roomArea) <= 5;
+        }) : collect();
+
+        $averagePrice = (int) round($peerRooms->count() > 0 ? $peerRooms->avg('price') : $overallAvgPrice);
         $priceDiffPercent = $averagePrice > 0 ? (($room['price'] - $averagePrice) / $averagePrice) * 100 : 0;
 
         $room['area_average_price'] = $averagePrice;

@@ -282,15 +282,12 @@
                 if (gridBtn) gridBtn.classList.remove('active');
                 localStorage.setItem('rentry_view_mode', 'map');
                 if (typeof window.initRentyMap === 'function') window.initRentyMap();
-                [50, 150, 300, 500, 800].forEach(delay => {
-                    setTimeout(() => {
-                        if (typeof window.initRentyMap === 'function') window.initRentyMap();
-                        const m = (window.rentyGoogleMap && window.rentyGoogleMap.map) || (typeof rentyMap !== 'undefined' ? rentyMap : null);
-                        if (m && typeof m.invalidateSize === 'function') {
-                            m.invalidateSize();
-                        }
-                    }, delay);
-                });
+                setTimeout(() => {
+                    const m = (window.rentyGoogleMap && window.rentyGoogleMap.map) || (typeof rentyMap !== 'undefined' ? rentyMap : null);
+                    if (m && typeof m.invalidateSize === 'function') {
+                        m.invalidateSize({ pan: false });
+                    }
+                }, 150);
             } else {
                 document.body.classList.remove('renty-map-mode');
                 document.body.classList.remove('renty-map-fullscreen');
