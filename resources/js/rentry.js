@@ -2173,7 +2173,7 @@ function filterItems(options = {}) {
         if (isCampusFilterActive) {
             const uni = mapInstance.selectedUniversity;
             const activeRadius = mapInstance.currentRadius || 3500;
-            const maxRadiusKm = (activeRadius / 1000) + 0.6;
+            const maxRadiusKm = (activeRadius / 1000);
             const roomId = card.getAttribute('data-room-id');
             const roomData = window.rentyRoomsData && window.rentyRoomsData[roomId];
             let distKm = 999;
@@ -2189,7 +2189,7 @@ function filterItems(options = {}) {
         } else if (isCustomPlaceFilterActive) {
             const center = mapInstance.activeCenter;
             const activeRadius = mapInstance.currentRadius || 5000;
-            const maxRadiusKm = (activeRadius / 1000) + 0.6;
+            const maxRadiusKm = (activeRadius / 1000);
             const roomId = card.getAttribute('data-room-id');
             const roomData = window.rentyRoomsData && window.rentyRoomsData[roomId];
             let distKm = 999;
@@ -2206,9 +2206,12 @@ function filterItems(options = {}) {
 
         if (matchesQuery && matchesPrice && matchesArea && matchesRoomType && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus && matchesMapRadius) {
             matches.push(card);
+            card.dataset.filteredOut = 'false';
             showMarker(card.getAttribute('data-room-id'));
         } else {
             card.classList.add('hidden');
+            card.style.display = 'none';
+            card.dataset.filteredOut = 'true';
             hideMarker(card.getAttribute('data-room-id'));
         }
     });

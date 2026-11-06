@@ -1636,14 +1636,16 @@ class GoogleMapsRenty {
             roomDistances.push({ card, distKm, roomId });
         });
 
-        // Lọc hiển thị phòng theo bán kính đã chọn
-        const maxRadiusKm = (activeRadius / 1000) + 0.6;
+        // Lọc hiển thị phòng theo bán kính đã chọn (Chuẩn xác 100% theo khoảng cách thực tế)
+        const maxRadiusKm = (activeRadius / 1000);
         roomDistances.forEach(item => {
             const isNearby = item.distKm <= maxRadiusKm;
             const markerEl = this.getMarkerElementForRoom(item.roomId);
 
             if (isNearby) {
                 item.card.classList.remove('hidden');
+                item.card.style.display = '';
+                item.card.dataset.filteredOut = 'false';
                 nearbyCount++;
 
                 if (markerEl) {
@@ -1681,6 +1683,8 @@ class GoogleMapsRenty {
                     markerEl.style.filter = 'none';
                 }
                 item.card.classList.add('hidden');
+                item.card.style.display = 'none';
+                item.card.dataset.filteredOut = 'true';
             }
         });
 
@@ -1705,6 +1709,13 @@ class GoogleMapsRenty {
                     weight: 3
                 });
             }
+
+            // Đảm bảo ẩn toàn bộ các thẻ phòng trọ khi không có phòng nào trong bán kính
+            cards.forEach(c => {
+                c.classList.add('hidden');
+                c.style.display = 'none';
+                c.dataset.filteredOut = 'true';
+            });
 
             if (countEl) {
                 countEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Không tìm thấy phòng trọ nào quanh ${cleanUniName} (< ${radiusKmText} km)</span>`;
@@ -1736,6 +1747,10 @@ class GoogleMapsRenty {
                 `;
                 roomsGrid.parentNode.insertBefore(emptyBanner, roomsGrid);
             }
+
+            if (typeof renderPaginationControls === 'function') {
+                renderPaginationControls(0);
+            }
         } else {
             // Có phòng phù hợp -> Vòng quét màu xanh
             if (this.campusRadiusCircle) {
@@ -1748,9 +1763,29 @@ class GoogleMapsRenty {
                 });
             }
 
+            // Phân trang danh sách phòng phù hợp
+            let visibleIdx = 0;
+            roomDistances.forEach(item => {
+                if (item.distKm <= maxRadiusKm) {
+                    if (visibleIdx < 9) {
+                        item.card.classList.remove('hidden');
+                        item.card.style.display = '';
+                    } else {
+                        item.card.classList.add('hidden');
+                        item.card.style.display = 'none';
+                    }
+                    visibleIdx++;
+                }
+            });
+
             // Cập nhật tiêu đề danh sách
             if (countEl) {
                 countEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${nearbyCount}</span> phòng trong bán kính ${radiusKmText}km quanh <span class="text-sky-300 font-bold">${cleanUniName}</span> <button type="button" onclick="selectCampusFilter('all')" class="ml-2 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>Hủy lọc</button>`;
+            }
+
+            if (typeof renderPaginationControls === 'function') {
+                const totalPages = Math.ceil(nearbyCount / 9);
+                renderPaginationControls(totalPages);
             }
         }
 
@@ -1941,22 +1976,26 @@ class GoogleMapsRenty {
             matchedChip.classList.remove('text-slate-400');
         }
 
-        if (this.activeCenter) {
-            this.scanRadiusAtLocation(this.activeCenter.lat, this.activeCenter.lng, this.activeCenter.label, radiusMeters);
-        } else if (this.selectedUniversity) {
+        if (this.selectedUniversity && this.selectedCampusId && this.selectedCampusId !== 'all') {
             this.selectCampus(this.selectedUniversity.id);
+        } else if (this.activeCenter) {
+            this.scanRadiusAtLocation(this.activeCenter.lat, this.activeCenter.lng, this.activeCenter.label, radiusMeters);
         }
     }
 
-    showCoordErrorToast() {
+    showCoordErrorToast(customMessage = null) {
         const toast = document.getElementById('gm-coord-error-toast');
         if (toast) {
+            if (customMessage) {
+                const span = toast.querySelector('span');
+                if (span) span.textContent = customMessage;
+            }
             toast.classList.remove('hidden');
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 5500);
         } else if (typeof showRentyToast === 'function') {
-            showRentyToast('Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.', 'error', 'Mã lỗi: ERR_05_03');
+            showRentyToast(customMessage || 'Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.', 'error', 'Mã lỗi: ERR_05_03');
         }
     }
 
@@ -2014,7 +2053,7 @@ class GoogleMapsRenty {
             roomDistances.push({ card, distKm, roomId });
         });
 
-        const maxRadiusKm = (activeRadius / 1000) + 0.3;
+        const maxRadiusKm = (activeRadius / 1000);
         roomDistances.forEach(item => {
             const isNearby = item.distKm <= maxRadiusKm;
             const markerEl = this.getMarkerElementForRoom(item.roomId);
@@ -2022,6 +2061,7 @@ class GoogleMapsRenty {
             if (isNearby) {
                 item.card.classList.remove('hidden');
                 item.card.style.display = '';
+                item.card.dataset.filteredOut = 'false';
                 nearbyCount++;
 
                 if (markerEl) {
@@ -2059,6 +2099,7 @@ class GoogleMapsRenty {
                 }
                 item.card.classList.add('hidden');
                 item.card.style.display = 'none';
+                item.card.dataset.filteredOut = 'true';
             }
         });
 
@@ -2072,6 +2113,13 @@ class GoogleMapsRenty {
 
         // [ERR_05_02]: Không có phòng trong bán kính chọn
         if (nearbyCount === 0) {
+            // Ẩn toàn bộ thẻ phòng
+            cards.forEach(c => {
+                c.classList.add('hidden');
+                c.style.display = 'none';
+                c.dataset.filteredOut = 'true';
+            });
+
             // Hiển thị vòng quét trên bản đồ dạng viền đỏ cảnh báo theo spec
             if (this.campusRadiusCircle) {
                 this.campusRadiusCircle.setStyle({
@@ -2433,7 +2481,7 @@ class GoogleMapsRenty {
                 if (typeof showRentyToast === 'function') {
                     showRentyToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`, 'warning');
                 } else {
-                    this.showCoordErrorToast();
+                    this.showCoordErrorToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`);
                 }
             })
             .catch(() => {
@@ -2441,7 +2489,7 @@ class GoogleMapsRenty {
                 if (typeof showRentyToast === 'function') {
                     showRentyToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`, 'warning');
                 } else {
-                    this.showCoordErrorToast();
+                    this.showCoordErrorToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`);
                 }
             });
     }
@@ -2465,7 +2513,7 @@ class GoogleMapsRenty {
         let walkMins = Math.max(3, Math.round((distKm / 4.5) * 60));
         let busMins = Math.max(10, Math.round((distKm / 16) * 60 + 8));
         let routeDistanceKm = distKm;
-        let latLngs = [[startCoords.lat, startCoords.lng], [destLat, destLng]];
+        let latLngs = null;
 
         // Fetch OSRM tuyến đường giao thông thực tế (bám theo mạng lưới đường sá, không đâm xuyên nhà cửa)
         const routingEndpoints = [
@@ -2477,7 +2525,7 @@ class GoogleMapsRenty {
         for (const ep of routingEndpoints) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
                 const resp = await fetch(ep, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
@@ -2485,79 +2533,61 @@ class GoogleMapsRenty {
                     const data = await resp.json();
                     if (data.routes && data.routes.length > 0) {
                         const route = data.routes[0];
-                        latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                        routeDistanceKm = route.distance / 1000;
-                        bikeMins = Math.max(2, Math.round(route.duration / 60));
-                        walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
-                        busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
-                        break; // Đã lấy được tuyến đường thành công, dừng thử các mirror khác
+                        if (route.geometry && Array.isArray(route.geometry.coordinates) && route.geometry.coordinates.length > 1) {
+                            latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                            routeDistanceKm = route.distance / 1000;
+                            bikeMins = Math.max(2, Math.round(route.duration / 60));
+                            walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
+                            busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
+                            break; // Lấy tuyến đường thành công
+                        }
                     }
                 }
             } catch (err) {
-                // Thử endpoint tiếp theo trong danh sách dự phòng
+                // Thử mirror tiếp theo
             }
+        }
+
+        // Nếu OSRM không phản hồi hoặc mất mạng: tạo đường cong uốn lượn tự nhiên mô phỏng lộ trình giao thông (không kẻ 1 đường thẳng tắp xuyên qua các tòa nhà)
+        if (!latLngs || latLngs.length < 2) {
+            latLngs = [];
+            const numSteps = 20;
+            const midLat = (startCoords.lat + destLat) / 2;
+            const midLng = (startCoords.lng + destLng) / 2;
+            // Tạo độ lệch nhẹ sang trục giao thông chính
+            const offsetLat = (destLng - startCoords.lng) * 0.12;
+            const offsetLng = -(destLat - startCoords.lat) * 0.12;
+            const ctrlLat = midLat + offsetLat;
+            const ctrlLng = midLng + offsetLng;
+
+            for (let i = 0; i <= numSteps; i++) {
+                const t = i / numSteps;
+                // Bậc 2 Bezier curve
+                const curLat = (1 - t) * (1 - t) * startCoords.lat + 2 * (1 - t) * t * ctrlLat + t * t * destLat;
+                const curLng = (1 - t) * (1 - t) * startCoords.lng + 2 * (1 - t) * t * ctrlLng + t * t * destLng;
+                latLngs.push([curLat, curLng]);
+            }
+            routeDistanceKm = distKm * 1.25;
+            bikeMins = Math.max(2, Math.round((routeDistanceKm / 24) * 60 + 2));
+            walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
         }
 
         // Tuyến đường thực tế bám sát theo mặt đường
         this.routePolyline = L.polyline(latLngs, {
-            color: '#2563eb',
+            color: '#0284c7',
             weight: 5,
-            opacity: 0.88,
+            opacity: 0.92,
             lineJoin: 'round',
-            lineCap: 'round'
+            lineCap: 'round',
+            dashArray: '8, 8'
         }).addTo(this.map);
-
-        // Tạo nhãn Huy hiệu hiển thị số km & thời gian di chuyển trực tiếp giữa tuyến đường trên bản đồ
-        const midIndex = Math.floor(latLngs.length / 2);
-        const midCoord = latLngs[midIndex] || [(startCoords.lat + destLat) / 2, (startCoords.lng + destLng) / 2];
-
-        const cleanUniName = destUni.shortName || destName.split('(')[0].trim();
-        const badgeHtml = `
-            <div style="
-                background: rgba(11, 17, 32, 0.95);
-                backdrop-filter: blur(12px);
-                border: 1.5px solid #38bdf8;
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.65), 0 0 15px rgba(56, 189, 248, 0.45);
-                border-radius: 9999px;
-                padding: 6px 14px;
-                color: #ffffff;
-                font-family: 'Plus Jakarta Sans', sans-serif;
-                font-size: 11px;
-                font-weight: 800;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                white-space: nowrap;
-                transform: translate(-50%, -50%);
-                cursor: pointer;
-                transition: transform 0.2s ease;
-            " title="Khoảng cách từ ${cleanUniName} đến phòng trọ">
-                <span style="color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
-                    <i class="fa-solid fa-route text-sky-400"></i> ${routeDistanceKm.toFixed(1)} km
-                </span>
-                <span style="color: #475569;">•</span>
-                <span style="color: #34d399; display: inline-flex; align-items: center; gap: 4px;" title="Thời gian đi xe máy">
-                    <i class="fa-solid fa-motorcycle text-emerald-400"></i> ${bikeMins} phút
-                </span>
-                <span style="color: #475569;">•</span>
-                <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;" title="Thời gian đi bộ">
-                    <i class="fa-solid fa-person-walking text-amber-400"></i> ${walkMins} phút
-                </span>
-            </div>
-        `;
-
-        const badgeIcon = L.divIcon({
-            html: badgeHtml,
-            className: 'gm-route-badge-container',
-            iconSize: [0, 0],
-            iconAnchor: [0, 0]
-        });
-
-        this.routeBadgeMarker = L.marker(midCoord, { icon: badgeIcon, zIndexOffset: 1200 }).addTo(this.map);
 
         const bounds = L.latLngBounds(latLngs);
         this.map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: false });
 
+        const cleanUniName = destUni.shortName || destName.split('(')[0].trim();
+
+        // Cập nhật duy nhất Hộp hiển thị khoảng cách ở góc trái dưới bản đồ (không tạo badge che khuất trên bản đồ)
         this.updateCommuteBox({
             distance: routeDistanceKm.toFixed(1),
             bikeTime: bikeMins,

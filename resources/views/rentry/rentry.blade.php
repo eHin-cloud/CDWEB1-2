@@ -209,6 +209,14 @@
             const roomCard = document.querySelector(`.room-item-card[data-room-id="${roomId}"]`);
             if (!roomCard) return;
 
+            // Nếu phòng này đang bị lọc ra ngoài bán kính quét hoặc bộ lọc hiện tại, không tự ý gỡ bỏ ẩn
+            if (roomCard.dataset.filteredOut === 'true') {
+                if (typeof showRentyToast === 'function') {
+                    showRentyToast('Phòng này nằm ngoài bán kính quét bản đồ hiện tại.', 'info');
+                }
+                return;
+            }
+
             // 1. Nếu thẻ đang bị ẩn do phân trang, tự động chuyển đến trang chứa phòng đó
             const allCards = Array.from(document.querySelectorAll('.room-item-card'));
             const activeCards = allCards.filter(c => c.dataset.filteredOut !== 'true' && c.style.display !== 'none');
@@ -221,7 +229,7 @@
                 }
             }
 
-            // Đảm bảo card luôn hiển thị
+            // Hiển thị thẻ phòng hợp lệ
             roomCard.classList.remove('hidden');
             roomCard.style.display = '';
 
