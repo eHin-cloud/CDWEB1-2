@@ -1817,7 +1817,7 @@ exit /b 1
 :: EXIT SYSTEM CLEANLY (THOAT CO CHE AN TOAN TRA VE MA 0)
 :: ======================================================================
 :EXIT_CLEAN
-:: Reset lai errorlevel ve 0 tranh lỗi do cac lenh taskkill truoc do de lai
+:: Reset lai errorlevel ve 0 tranh loi do cac lenh taskkill truoc do de lai
 cmd /c "exit /b 0"
 exit /b 0
 

@@ -380,7 +380,7 @@ $btnExit         = $window.FindName("btnExit")
 $txtStatus       = $window.FindName("txtStatus")
 $chkAppMode      = $window.FindName("chkAppMode")
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } elseif ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
 
 # Ham dam bao MySQL da bat va san sang tiep nhan ket noi
 function Start-MySqlServer {
