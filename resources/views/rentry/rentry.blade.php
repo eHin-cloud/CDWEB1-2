@@ -465,14 +465,81 @@
             color: #059669 !important;
         }
 
+        /* Đồng bộ ô tìm kiếm Hero & Header luôn giữ nền tối trong Dark Mode, không bị trắng tinh */
+        #hero-search-input,
+        #search-input,
+        .renty-search-input {
+            background-color: transparent !important;
+            background: transparent !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        #hero-search-input:focus,
+        #hero-search-input:active,
+        #search-input:focus,
+        #search-input:active,
+        .renty-search-input:focus,
+        .renty-search-input:active {
+            background-color: transparent !important;
+            background: transparent !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Triệt tiêu hoàn toàn lỗi browser autofill làm ô tìm kiếm biến thành màu trắng tinh/xanh nhạt */
+        #hero-search-input:-webkit-autofill,
+        #hero-search-input:-webkit-autofill:hover,
+        #hero-search-input:-webkit-autofill:focus,
+        #hero-search-input:-webkit-autofill:active,
+        #search-input:-webkit-autofill,
+        #search-input:-webkit-autofill:hover,
+        #search-input:-webkit-autofill:focus,
+        #search-input:-webkit-autofill:active,
+        .renty-search-input:-webkit-autofill,
+        .renty-search-input:-webkit-autofill:hover,
+        .renty-search-input:-webkit-autofill:focus,
+        .renty-search-input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
+            box-shadow: 0 0 0 1000px #020617 inset !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            color: #f1f5f9 !important;
+            caret-color: #34d399 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .theme-light #hero-search-input,
         html.theme-light #hero-search-input,
         body.theme-light #hero-search-input {
             background-color: transparent !important;
             background: transparent !important;
             color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
             border: none !important;
             box-shadow: none !important;
+        }
+
+        html.theme-light #hero-search-input:-webkit-autofill,
+        html.theme-light #hero-search-input:-webkit-autofill:hover,
+        html.theme-light #hero-search-input:-webkit-autofill:focus,
+        html.theme-light #hero-search-input:-webkit-autofill:active,
+        html.theme-light #search-input:-webkit-autofill,
+        html.theme-light #search-input:-webkit-autofill:hover,
+        html.theme-light #search-input:-webkit-autofill:focus,
+        html.theme-light #search-input:-webkit-autofill:active,
+        body.theme-light #hero-search-input:-webkit-autofill,
+        body.theme-light #search-input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            box-shadow: 0 0 0 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #0f172a !important;
+            color: #0f172a !important;
+            caret-color: #059669 !important;
         }
 
         .theme-light #hero-search-input::placeholder,
@@ -551,6 +618,56 @@
             background-color: #ecfdf5 !important;
             border-color: #10b981 !important;
             color: #059669 !important;
+        }
+
+        /* FEAT_SEARCH_MODE: Styling cho 2 nút radio button tìm kiếm */
+        .search-mode-label {
+            transition: all 0.2s ease-in-out;
+        }
+        .search-mode-label.is-active {
+            border-color: rgba(16, 185, 129, 0.6) !important;
+            background: rgba(16, 185, 129, 0.12) !important;
+            color: #6ee7b7 !important;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.2) !important;
+        }
+        .search-mode-label.is-active-engine {
+            border-color: rgba(45, 212, 191, 0.6) !important;
+            background: rgba(45, 212, 191, 0.12) !important;
+            color: #5eead4 !important;
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.2) !important;
+        }
+        html.theme-light .search-mode-label,
+        body.theme-light .search-mode-label {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #475569 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.theme-light .search-mode-label:hover,
+        body.theme-light .search-mode-label:hover {
+            background-color: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            color: #1e293b !important;
+        }
+        html.theme-light .search-mode-label.is-active,
+        body.theme-light .search-mode-label.is-active {
+            background-color: #ecfdf5 !important;
+            border-color: #059669 !important;
+            color: #065f46 !important;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.15) !important;
+        }
+        html.theme-light .search-mode-label.is-active-engine,
+        body.theme-light .search-mode-label.is-active-engine {
+            background-color: #f0fdfa !important;
+            border-color: #0d9488 !important;
+            color: #115e59 !important;
+            box-shadow: 0 2px 6px rgba(13, 148, 136, 0.15) !important;
+        }
+        html.theme-light #search-engine-select,
+        body.theme-light #search-engine-select {
+            background-color: #ffffff !important;
+            border-color: #0d9488 !important;
+            color: #0f766e !important;
         }
 
         @keyframes heroTextGlow {
@@ -2035,17 +2152,21 @@
                             <!-- Quầng sáng xanh dịu nhẹ ôm sát form tìm kiếm, không lan ra ngoài -->
                             <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/30 via-teal-500/25 to-emerald-400/25 rounded-2xl opacity-20 group-hover/search-box:opacity-50 blur-sm transition duration-300 pointer-events-none"></div>
 
-                            <form onsubmit="submitHeroSearch(event)" class="relative flex items-center bg-slate-950/90 border border-slate-800/80 hover:border-emerald-500/40 focus-within:border-emerald-400/70 rounded-2xl overflow-hidden backdrop-blur-xl transition-all shadow-lg shadow-black/30" id="hero-search-box-container">
+                            <form onsubmit="submitHeroSearch(event)" autocomplete="off" class="relative flex items-center bg-slate-950/90 border border-slate-800/80 hover:border-emerald-500/40 focus-within:border-emerald-400/70 rounded-2xl overflow-hidden backdrop-blur-xl transition-all shadow-lg shadow-black/30" id="hero-search-box-container">
                                 <i class="fa-solid fa-location-dot pl-4 text-emerald-400/90 text-sm"></i>
                                 <input 
                                     type="text" 
                                     id="hero-search-input" 
                                     name="search_box" 
                                     data-field-name="search_box"
-                                    maxlength="100"
+                                    autocomplete="off"
+                                    autocorrect="off"
+                                    autocapitalize="off"
+                                    spellcheck="false"
+                                    maxlength="100" 
                                     oninput="handleSearchInput(event)" 
                                     onkeyup="handleSearchInput(event)" 
-                                    class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none text-xs md:text-sm font-semibold" 
+                                    class="w-full pl-3 pr-20 py-3.5 bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:bg-transparent text-xs md:text-sm font-semibold" 
                                     placeholder="Nhập quận, huyện, tên đường..."
                                 >
                                 <button type="button" id="hero-search-clear-btn" onclick="clearGlobalSearch()" class="hidden mr-2 text-slate-400 hover:text-white transition-colors w-6 h-6 flex items-center justify-center rounded-full bg-slate-800/80 hover:bg-slate-700 text-xs shrink-0 cursor-pointer" title="Xóa tìm kiếm">
@@ -2056,6 +2177,56 @@
                                     <span class="hidden sm:inline">Tìm</span>
                                 </button>
                             </form>
+                        </div>
+
+                        <!-- FEAT_SEARCH_MODE: Bộ chọn 2 nút radio button chế độ tìm kiếm: 1 là tìm kiếm bình thường, 2 là tìm kiếm bằng search engine -->
+                        <div class="flex items-center flex-wrap gap-2.5 sm:gap-3 mt-3 px-1 py-1" id="hero-search-mode-selector">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-sliders text-emerald-400 text-xs"></i> Chế độ tìm kiếm:
+                            </span>
+
+                            <!-- Radio 1: Tìm kiếm bình thường -->
+                            <label for="search-mode-normal" id="label-search-mode-normal" class="search-mode-label is-active flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold cursor-pointer transition-all shadow-sm select-none">
+                                <input 
+                                    type="radio" 
+                                    name="search_mode" 
+                                    id="search-mode-normal" 
+                                    value="normal" 
+                                    checked 
+                                    onchange="onSearchModeChange('normal')"
+                                    class="w-4 h-4 text-emerald-500 accent-emerald-500 bg-slate-950 border-slate-700 focus:ring-emerald-400 focus:ring-offset-0 cursor-pointer"
+                                >
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
+                                    <span>1. Tìm kiếm bình thường</span>
+                                </span>
+                            </label>
+
+                            <!-- Radio 2: Tìm kiếm bằng Search Engine -->
+                            <label for="search-mode-engine" id="label-search-mode-engine" class="search-mode-label flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold cursor-pointer transition-all shadow-sm select-none">
+                                <input 
+                                    type="radio" 
+                                    name="search_mode" 
+                                    id="search-mode-engine" 
+                                    value="engine" 
+                                    onchange="onSearchModeChange('engine')"
+                                    class="w-4 h-4 text-teal-400 accent-teal-400 bg-slate-950 border-slate-700 focus:ring-teal-400 focus:ring-offset-0 cursor-pointer"
+                                >
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-bolt text-[11px] text-amber-400 animate-pulse"></i>
+                                    <span>2. Tìm kiếm bằng Search Engine</span>
+                                </span>
+                            </label>
+
+                            <!-- Tùy chọn Search Engine (Scout / Solr / Hybrid) khi ở chế độ Search Engine -->
+                            <div id="search-engine-selector-wrap" class="hidden items-center gap-1.5 pl-1 animate-fade-in">
+                                <label for="search-engine-select" class="text-[10px] text-slate-400 font-bold uppercase">Engine:</label>
+                                <select id="search-engine-select" onchange="onSearchEngineChange(event)" class="text-[11px] font-bold bg-slate-900 text-teal-300 border border-teal-500/40 rounded-lg px-2 py-1 focus:outline-none focus:border-teal-400 cursor-pointer shadow-sm">
+                                    <option value="scout" selected>Scout Engine</option>
+                                    <option value="solr">Apache Solr</option>
+                                    <option value="hybrid">Hybrid RRF</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Thông báo lỗi khi bấm tìm kiếm mà từ khóa rỗng [ERR_04_01] -->
@@ -3683,10 +3854,106 @@
                 }
             }
 
-            if (typeof filterItems === 'function') {
-                filterItems({ resetPage: true });
+            const mode = typeof window.getSearchMode === 'function' ? window.getSearchMode() : 'normal';
+            if (mode === 'engine' && typeof window.executeSmartSearchApi === 'function') {
+                window.executeSmartSearchApi({ query: val, resetPage: true, searchMode: 'engine' });
+            } else if (typeof filterItems === 'function') {
+                filterItems({ resetPage: true, searchMode: 'normal' });
             }
         };
+
+        window.getSearchMode = function() {
+            const checked = document.querySelector('input[name="search_mode"]:checked');
+            if (checked) return checked.value;
+            const headerChecked = document.querySelector('input[name="header_search_mode"]:checked');
+            if (headerChecked) return headerChecked.value;
+            return localStorage.getItem('renty_search_mode') || 'normal';
+        };
+
+        window.onSearchModeChange = function(mode) {
+            localStorage.setItem('renty_search_mode', mode);
+
+            // Đồng bộ trạng thái radio inputs
+            document.querySelectorAll('input[name="search_mode"]').forEach(r => {
+                r.checked = (r.value === mode);
+            });
+            document.querySelectorAll('input[name="header_search_mode"]').forEach(r => {
+                r.checked = (r.value === mode);
+            });
+
+            // Cập nhật giao diện của các label
+            const normalLabel = document.getElementById('label-search-mode-normal');
+            const engineLabel = document.getElementById('label-search-mode-engine');
+            const engineSelectorWrap = document.getElementById('search-engine-selector-wrap');
+
+            if (mode === 'engine') {
+                if (normalLabel) {
+                    normalLabel.classList.remove('is-active', 'border-emerald-500/50', 'text-emerald-300');
+                    normalLabel.classList.add('border-slate-800', 'text-slate-400');
+                }
+                if (engineLabel) {
+                    engineLabel.classList.add('is-active-engine', 'border-teal-500/60', 'text-teal-300');
+                    engineLabel.classList.remove('border-slate-800', 'text-slate-400');
+                }
+                if (engineSelectorWrap) engineSelectorWrap.classList.remove('hidden');
+            } else {
+                if (engineLabel) {
+                    engineLabel.classList.remove('is-active-engine', 'border-teal-500/60', 'text-teal-300');
+                    engineLabel.classList.add('border-slate-800', 'text-slate-400');
+                }
+                if (normalLabel) {
+                    normalLabel.classList.add('is-active', 'border-emerald-500/50', 'text-emerald-300');
+                    normalLabel.classList.remove('border-slate-800', 'text-slate-400');
+                }
+                if (engineSelectorWrap) engineSelectorWrap.classList.add('hidden');
+            }
+
+            // Cập nhật nút submit tìm kiếm
+            const submitBtn = document.getElementById('btn-hero-search-submit');
+            if (submitBtn) {
+                if (mode === 'engine') {
+                    submitBtn.title = "Tìm kiếm bằng Search Engine";
+                    submitBtn.innerHTML = '<i class="fa-solid fa-bolt text-xs text-amber-300 animate-pulse"></i><span class="hidden sm:inline">Tìm Search Engine</span>';
+                } else {
+                    submitBtn.title = "Tìm kiếm bình thường";
+                    submitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass text-xs"></i><span class="hidden sm:inline">Tìm</span>';
+                }
+            }
+
+            // Nếu ô tìm kiếm đã có từ khóa, chạy tìm kiếm ngay theo chế độ mới
+            const heroInput = document.getElementById('hero-search-input');
+            const navInput = document.getElementById('search-input');
+            const currentVal = (heroInput?.value || navInput?.value || '').trim();
+            if (currentVal.length > 0) {
+                if (mode === 'engine' && typeof window.executeSmartSearchApi === 'function') {
+                    window.executeSmartSearchApi({ query: currentVal, resetPage: true, searchMode: 'engine' });
+                } else if (typeof filterItems === 'function') {
+                    filterItems({ resetPage: true, searchMode: 'normal' });
+                }
+            }
+        };
+
+        window.onSearchEngineChange = function(event) {
+            const heroInput = document.getElementById('hero-search-input');
+            const navInput = document.getElementById('search-input');
+            const currentVal = (heroInput?.value || navInput?.value || '').trim();
+            if (currentVal.length > 0 && typeof window.executeSmartSearchApi === 'function') {
+                window.executeSmartSearchApi({ query: currentVal, resetPage: true, searchMode: 'engine' });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode') || localStorage.getItem('renty_search_mode') || 'normal';
+            if (typeof window.onSearchModeChange === 'function') {
+                window.onSearchModeChange(mode);
+            }
+            const engineFromUrl = urlParams.get('engine');
+            const engineSelect = document.getElementById('search-engine-select');
+            if (engineFromUrl && engineSelect) {
+                engineSelect.value = engineFromUrl;
+            }
+        });
 
         window.applyQuickTag = function(tag) {
             const heroInput = document.getElementById('hero-search-input');
@@ -3711,8 +3978,11 @@
                 }
             }
 
-            if (typeof filterItems === 'function') {
-                filterItems({ resetPage: true });
+            const mode = typeof window.getSearchMode === 'function' ? window.getSearchMode() : 'normal';
+            if (mode === 'engine' && typeof window.executeSmartSearchApi === 'function') {
+                window.executeSmartSearchApi({ query: tag, resetPage: true, searchMode: 'engine' });
+            } else if (typeof filterItems === 'function') {
+                filterItems({ resetPage: true, searchMode: 'normal' });
             }
         };
 

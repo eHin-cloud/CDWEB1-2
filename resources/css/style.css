@@ -4852,6 +4852,55 @@ body.theme-light #hero-search-box-container .fa-location-dot {
     color: #059669 !important;
 }
 
+/* Đồng bộ ô tìm kiếm Hero & Header luôn giữ nền tối trong Dark Mode, không bị trắng tinh */
+#hero-search-input,
+#search-input,
+.renty-search-input {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#hero-search-input:focus,
+#hero-search-input:active,
+#search-input:focus,
+#search-input:active,
+.renty-search-input:focus,
+.renty-search-input:active {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Triệt tiêu hoàn toàn lỗi browser autofill làm ô tìm kiếm biến thành màu trắng tinh/xanh nhạt */
+#hero-search-input:-webkit-autofill,
+#hero-search-input:-webkit-autofill:hover,
+#hero-search-input:-webkit-autofill:focus,
+#hero-search-input:-webkit-autofill:active,
+#search-input:-webkit-autofill,
+#search-input:-webkit-autofill:hover,
+#search-input:-webkit-autofill:focus,
+#search-input:-webkit-autofill:active,
+.renty-search-input:-webkit-autofill,
+.renty-search-input:-webkit-autofill:hover,
+.renty-search-input:-webkit-autofill:focus,
+.renty-search-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
+    box-shadow: 0 0 0 1000px #020617 inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    color: #f1f5f9 !important;
+    caret-color: #34d399 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 html.theme-light #hero-search-input,
 body.theme-light #hero-search-input {
     background: transparent !important;
@@ -4860,6 +4909,24 @@ body.theme-light #hero-search-input {
     outline: none !important;
     box-shadow: none !important;
     color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+
+html.theme-light #hero-search-input:-webkit-autofill,
+html.theme-light #hero-search-input:-webkit-autofill:hover,
+html.theme-light #hero-search-input:-webkit-autofill:focus,
+html.theme-light #hero-search-input:-webkit-autofill:active,
+html.theme-light #search-input:-webkit-autofill,
+html.theme-light #search-input:-webkit-autofill:hover,
+html.theme-light #search-input:-webkit-autofill:focus,
+html.theme-light #search-input:-webkit-autofill:active,
+body.theme-light #hero-search-input:-webkit-autofill,
+body.theme-light #search-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
+    -webkit-text-fill-color: #0f172a !important;
+    color: #0f172a !important;
+    caret-color: #059669 !important;
 }
 
 html.theme-light #hero-search-input::placeholder,

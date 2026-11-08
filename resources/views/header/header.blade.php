@@ -31,7 +31,7 @@
             <div class="relative w-full renty-search-shell">
                 <div class="relative flex items-center w-full">
                     <i class="fa-solid fa-location-dot absolute left-3.5 text-slate-500 pointer-events-none text-xs z-10 renty-search-icon"></i>
-                    <input type="text" id="search-input" maxlength="100" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-14 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
+                    <input type="text" id="search-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="100" oninput="handleSearchInput(event)" onkeyup="handleSearchInput(event)" onfocus="openRentySearchSuggestions()" class="renty-search-input w-full pl-9 pr-14 py-2 bg-[#0a0e17] border border-slate-800 hover:border-slate-700 focus:border-emerald-500 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 text-xs font-semibold transition-all shadow-inner" placeholder="Tìm kiếm trọ, khu vực, tiện ích...">
                     <button type="button" id="header-search-clear-btn" onclick="clearGlobalSearch()" class="hidden absolute right-8 text-slate-400 hover:text-white transition-colors w-5 h-5 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-[10px] z-10" title="Xóa tìm kiếm">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -41,6 +41,26 @@
                 </div>
                 
                 <div id="renty-search-suggestions" class="renty-search-suggestions hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 p-4 rounded-2xl bg-slate-950/95 border border-slate-800/90 shadow-2xl backdrop-blur-xl">
+                    <!-- Hộp chọn 2 radio button chế độ tìm kiếm trong Header Dropdown -->
+                    <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800/60 text-xs">
+                        <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-sliders text-emerald-400"></i> Chế độ tìm:
+                        </span>
+                        <div class="flex items-center gap-3">
+                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-white text-[11px] font-semibold">
+                                <input type="radio" name="header_search_mode" value="normal" checked onchange="onSearchModeChange('normal')" class="accent-emerald-500 w-3.5 h-3.5 cursor-pointer">
+                                <span>1. Bình thường</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-white text-[11px] font-semibold">
+                                <input type="radio" name="header_search_mode" value="engine" onchange="onSearchModeChange('engine')" class="accent-teal-400 w-3.5 h-3.5 cursor-pointer">
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-bolt text-amber-400 text-[10px]"></i>
+                                    <span>2. Search Engine</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Hộp gợi ý sửa lỗi (Did you mean) -->
                     <div id="renty-did-you-mean-box" class="hidden mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 text-xs">
                         <div class="flex items-center justify-between gap-2">

@@ -1726,40 +1726,61 @@ function restoreFiltersFromUrl() {
 }
 window.restoreFiltersFromUrl = restoreFiltersFromUrl;
 
-async function executeSmartSearchApi(params) {
+async function executeSmartSearchApi(params = {}) {
+    if (params.resetPage) {
+        rentyCurrentPage = 1;
+    }
+
     const amenities = [];
-    if (params.petChecked) amenities.push('pets');
-    if (params.loftChecked) amenities.push('loft');
-    if (params.balconyChecked) amenities.push('balcony');
-    if (params.wcChecked) amenities.push('wc');
+    if (params.petChecked !== undefined ? params.petChecked : document.getElementById('tag-pets')?.checked) amenities.push('pets');
+    if (params.loftChecked !== undefined ? params.loftChecked : document.getElementById('tag-loft')?.checked) amenities.push('loft');
+    if (params.balconyChecked !== undefined ? params.balconyChecked : document.getElementById('tag-balcony')?.checked) amenities.push('balcony');
+    if (params.wcChecked !== undefined ? params.wcChecked : document.getElementById('tag-wc')?.checked) amenities.push('wc');
     if (document.getElementById('tag-ac')?.checked) amenities.push('air_conditioner');
     if (document.getElementById('tag-washer')?.checked) amenities.push('washing_machine');
+    if (document.getElementById('tag-fridge')?.checked) amenities.push('fridge');
+    if (document.getElementById('tag-wifi')?.checked) amenities.push('wifi');
 
-    let effectiveMaxPrice = params.maxPriceVal;
-    if (effectiveMaxPrice === null && params.filterPrice && params.filterPrice !== 'all') {
-        effectiveMaxPrice = parseInt(params.filterPrice);
+    const heroInput = document.getElementById('hero-search-input');
+    const navInput = document.getElementById('search-input');
+    const query = params.query !== undefined ? params.query : (heroInput?.value || navInput?.value || '');
+
+    const minPriceInput = document.getElementById('filter-price-min');
+    const maxPriceInput = document.getElementById('filter-price-max');
+    const minPriceVal = params.minPriceVal !== undefined ? params.minPriceVal : (minPriceInput?.value ? parseInt(minPriceInput.value, 10) : null);
+    const filterPrice = params.filterPrice !== undefined ? params.filterPrice : (document.getElementById('filter-price')?.value || 'all');
+    let effectiveMaxPrice = params.maxPriceVal !== undefined ? params.maxPriceVal : (maxPriceInput?.value ? parseInt(maxPriceInput.value, 10) : null);
+    if (effectiveMaxPrice === null && filterPrice && filterPrice !== 'all') {
+        effectiveMaxPrice = parseInt(filterPrice);
     }
+    const filterRating = params.filterRating !== undefined ? params.filterRating : (document.getElementById('filter-rating')?.value || 'all');
+    const hideRented = params.hideRented !== undefined ? params.hideRented : (document.getElementById('hide-rented-toggle')?.checked || false);
 
     const sortBy = document.getElementById('sort_by')?.value || 'default';
 
     const searchParams = new URLSearchParams();
-    if (params.query) searchParams.set('q', params.query);
-    if (params.minPriceVal !== null) searchParams.set('min_price', params.minPriceVal);
-    if (effectiveMaxPrice !== null) searchParams.set('max_price', effectiveMaxPrice);
-    if (params.filterRating && params.filterRating !== 'all') searchParams.set('rating', params.filterRating);
+    if (query) searchParams.set('q', query);
+    if (minPriceVal !== null && !isNaN(minPriceVal)) searchParams.set('min_price', minPriceVal);
+    if (effectiveMaxPrice !== null && !isNaN(effectiveMaxPrice)) searchParams.set('max_price', effectiveMaxPrice);
+    if (filterRating && filterRating !== 'all') searchParams.set('rating', filterRating);
     if (sortBy !== 'default') searchParams.set('sort_by', sortBy);
-    if (params.hideRented) searchParams.set('status', 'empty');
+    if (hideRented) searchParams.set('status', 'empty');
     if (amenities.length > 0) searchParams.set('amenities', amenities.join(','));
+
+    const searchEngine = document.getElementById('search-engine-select')?.value || (new URLSearchParams(window.location.search).get('engine') || 'scout');
+    if (searchEngine) {
+        searchParams.set('engine', searchEngine);
+    }
     searchParams.set('page', rentyCurrentPage);
     searchParams.set('limit', rentyItemsPerPage);
 
     syncFilterStateToUrl({
-        q: params.query,
-        min_price: params.minPriceVal,
+        q: query,
+        min_price: minPriceVal,
         max_price: effectiveMaxPrice,
-        rating: params.filterRating,
+        rating: filterRating,
         sort_by: sortBy,
-        status: params.hideRented ? 'empty' : 'all',
+        status: hideRented ? 'empty' : 'all',
         amenities: amenities
     });
 
@@ -1779,14 +1800,17 @@ async function executeSmartSearchApi(params) {
         setSearchSkeletonLoading(false);
 
         if (!data.success) {
-            console.warn("Lỗi tìm kiếm:", data.message);
+            console.warn("Lỗi tìm kiếm Search Engine:", data.message);
+            if (typeof filterItems === 'function') {
+                filterItems({ resetPage: false, skipEngine: true });
+            }
             return;
         }
 
         // 1. Xử lý banner Did You Mean
         const didYouMeanBanner = document.getElementById('smart-search-did-you-mean-banner');
         const didYouMeanText = document.getElementById('smart-search-did-you-mean-text');
-        if (data.has_correction && data.did_you_mean && data.did_you_mean.toLowerCase() !== (params.query || '').toLowerCase()) {
+        if (data.has_correction && data.did_you_mean && data.did_you_mean.toLowerCase() !== (query || '').toLowerCase()) {
             if (didYouMeanBanner && didYouMeanText) {
                 didYouMeanText.textContent = data.did_you_mean;
                 didYouMeanBanner.classList.remove('hidden');
@@ -1795,11 +1819,13 @@ async function executeSmartSearchApi(params) {
             if (didYouMeanBanner) didYouMeanBanner.classList.add('hidden');
         }
 
-        // 2. Cập nhật số lượng kết quả
+        // 2. Cập nhật số lượng kết quả kèm thông tin Search Engine
         const resultsCountEl = document.getElementById('results-count');
         const total = data.total ?? data.count ?? 0;
         if (resultsCountEl) {
-            resultsCountEl.textContent = `Tìm thấy ${total} phòng`;
+            const engineLabel = data.engine === 'laravel_scout' ? `Scout (${data.driver || 'database'})` : (data.engine === 'solr' ? 'Apache Solr' : (data.engine || 'Search Engine'));
+            const engineBadge = `<span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-extrabold border border-teal-500/35 tracking-wide shadow-sm"><i class="fa-solid fa-bolt text-[9px] text-amber-400 animate-pulse"></i> Search Engine: ${engineLabel}</span>`;
+            resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${total}</span> phòng ${engineBadge}`;
         }
 
         // 3. Xử lý hiển thị danh sách phòng & Empty State (ERR_21_04)
@@ -1811,7 +1837,7 @@ async function executeSmartSearchApi(params) {
             if (emptyState) emptyState.classList.remove('hidden');
             const emptyTitleEl = document.getElementById('smart-search-empty-title');
             const emptyCodeTextEl = document.getElementById('smart-search-empty-code-text') || document.getElementById('smart-search-empty-code');
-            const q = (params.query || '').trim();
+            const q = (query || '').trim();
             if (emptyCodeTextEl) {
                 if (q) {
                     emptyCodeTextEl.textContent = `Lỗi: Không tìm thấy kết quả phù hợp cho "${q}" (Mã: ERR_21_04)`;
@@ -1848,9 +1874,13 @@ async function executeSmartSearchApi(params) {
         if (err.name !== 'AbortError') {
             console.error("Lỗi kết nối khi tìm kiếm:", err);
             setSearchSkeletonLoading(false);
+            if (typeof filterItems === 'function') {
+                filterItems({ resetPage: false, skipEngine: true });
+            }
         }
     }
 }
+window.executeSmartSearchApi = executeSmartSearchApi;
 
 // Search and filter function
 function filterItems(options = {}) {
@@ -1862,6 +1892,11 @@ function filterItems(options = {}) {
     // Reset page to 1 unless explicitly requested to keep page
     if (options.resetPage !== false) {
         rentyCurrentPage = 1;
+    }
+
+    const currentMode = options.searchMode || (typeof window.getSearchMode === 'function' ? window.getSearchMode() : 'normal');
+    if (currentMode === 'engine' && !options.skipEngine) {
+        return executeSmartSearchApi(options);
     }
     
     const heroInput = document.getElementById('hero-search-input');
@@ -2204,7 +2239,7 @@ function filterItems(options = {}) {
             const radiusKmText = ((mapInstance.currentRadius || 5000) / 1000).toFixed(1);
             resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${matchesCount}</span> phòng trong bán kính ${radiusKmText}km quanh <span class="text-sky-300 font-bold">${cleanLabel}</span> <button type="button" onclick="clearMapSearchInput()" class="ml-2 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>Hủy lọc</button>`;
         } else {
-            resultsCountEl.textContent = `Tìm thấy ${matchesCount} phòng`;
+            resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${matchesCount}</span> phòng <span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold border border-slate-700 shadow-sm"><i class="fa-solid fa-magnifying-glass text-[9px] text-emerald-400"></i> Tìm kiếm bình thường</span>`;
         }
     }
 
@@ -2617,10 +2652,15 @@ function triggerRentySearch() {
     const input = document.getElementById('search-input');
     if (!input) return;
     const value = input.value;
+    const mode = typeof window.getSearchMode === 'function' ? window.getSearchMode() : 'normal';
     if (!document.getElementById('rooms-grid')) {
-        window.location.href = '/renty?search=' + encodeURIComponent(value);
+        window.location.href = '/renty?search=' + encodeURIComponent(value) + '&mode=' + encodeURIComponent(mode);
     } else {
-        filterItems();
+        if (mode === 'engine' && typeof window.executeSmartSearchApi === 'function') {
+            window.executeSmartSearchApi({ query: value, resetPage: true });
+        } else {
+            filterItems({ resetPage: true, searchMode: 'normal' });
+        }
         blurRentySearch();
     }
 }
