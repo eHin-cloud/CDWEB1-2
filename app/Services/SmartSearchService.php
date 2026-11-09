@@ -86,6 +86,10 @@ class SmartSearchService
         'Phòng trọ' => ['phong tro', 'nha tro', 'phog tro'],
         'Căn hộ' => ['can ho', 'canho'],
         'Duplex' => ['duplex', 'can ho duplex'],
+
+        // Thần tượng thể thao & kiểm thử tìm kiếm
+        'Lionel Messi' => ['messi', 'ms', 'm10', 'lm10', 'leomessi', 'la pulga', 'pulga', 'inter miami', 'barca', 'barcelona'],
+        'Cristiano Ronaldo' => ['ronaldo', 'ronado', 'cr', 'cr7', 'cr 7', 'ro', 'rn', 'r7', 'siuuu', 'siu', 'al nassr', 'real madrid', 'mu'],
     ];
 
     /**
@@ -484,6 +488,7 @@ class SmartSearchService
         $scoredRooms = $filtered->map(function ($room) use ($analysis) {
             $fullSearchable = $this->normalize(
                 "{$room['room_number']} {$room['title']} {$room['building_name']} {$room['address']} {$room['area_name']} " .
+                "{$room['description']} " .
                 implode(' ', (array) ($room['amenities'] ?? [])) . " {$room['location_description']}"
             );
 
@@ -744,6 +749,7 @@ class SmartSearchService
                 'trust_badge' => $trustBadge,
                 'boost_score' => (int) ($tenant->boost_score ?? 0),
                 'amenities' => $room->amenities ?? [],
+                'description' => (string) ($room->description ?? ''),
                 'url' => route('renty.room.show', ['id' => $room->id], false),
                 'price_warning' => null,
             ];

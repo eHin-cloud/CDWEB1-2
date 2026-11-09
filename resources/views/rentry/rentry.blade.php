@@ -2977,6 +2977,34 @@
             </button>
         </div>
 
+        <!-- PLAYER SHOWCASE CARD (Khi tìm kiếm thông tin Cầu thủ như Messi, Ronaldo) -->
+        <div id="smart-search-player-showcase" class="hidden mb-8 animate-fade-in">
+            <!-- Thẻ hồ sơ thông tin cầu thủ được chèn động bằng JS -->
+        </div>
+
+        <!-- SEPARATE MATCHES GRID (Tách từng trận đấu thành từng thẻ độc lập - không gôm lại) -->
+        <div id="smart-search-matches-section" class="hidden mb-12 animate-fade-in">
+            <div class="flex items-center justify-between gap-3 mb-6 pb-2.5 border-b border-teal-500/20">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-300 text-sm shadow-md">
+                        <i class="fa-solid fa-futbol text-teal-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-slate-100 tracking-wide uppercase flex items-center gap-2">
+                            Các trận cầu lịch sử kinh điển (<span id="smart-search-matches-count" class="text-teal-400 font-extrabold">0</span>)
+                        </h3>
+                        <p class="text-[11px] text-slate-400">Mỗi trận đấu được tách biệt thành từng thẻ chi tiết độc lập</p>
+                    </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-300 text-[10px] font-extrabold border border-teal-500/25">
+                    Trận cầu siêu sao
+                </span>
+            </div>
+            <div id="smart-search-matches-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Từng thẻ trận đấu riêng biệt sẽ được render tại đây -->
+            </div>
+        </div>
+
         <!-- SMART SEARCH EMPTY STATE (FEAT_04_LANDING - ERR_04_03) -->
         <div id="smart-search-empty-state" class="hidden mb-16 py-16 px-4 text-center rounded-3xl bg-slate-900/30 border border-slate-800/60 backdrop-blur-md">
             <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl shadow-xl">

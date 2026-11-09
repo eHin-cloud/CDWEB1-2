@@ -41,6 +41,12 @@ Route::get('/renty/rooms/smart-search', [SmartSearchController::class, 'search']
 Route::get('/renty/rooms/scout-search', [SmartSearchController::class, 'scoutSearch']);
 Route::get('/renty/rooms/suggest', [SmartSearchController::class, 'suggestions']);
 Route::get('/renty/rooms/autocomplete', [SmartSearchController::class, 'suggestions']);
+Route::get('/messi', [SmartSearchController::class, 'getMessi'])->name('api.messi');
+Route::get('/m10', [SmartSearchController::class, 'getMessi'])->name('api.m10');
+Route::get('/ms', [SmartSearchController::class, 'getMessi'])->name('api.ms');
+Route::get('/ronaldo', [SmartSearchController::class, 'getRonaldo'])->name('api.ronaldo');
+Route::get('/cr7', [SmartSearchController::class, 'getRonaldo'])->name('api.cr7');
+Route::get('/cr', [SmartSearchController::class, 'getRonaldo'])->name('api.cr');
 Route::get('/renty/rooms/map', [VisitorController::class, 'map']);
 Route::get('/renty/rooms/{id}/reviews', [VisitorController::class, 'reviews']);
 Route::get('/renty/room/{id}/reviews', [VisitorController::class, 'reviews']);

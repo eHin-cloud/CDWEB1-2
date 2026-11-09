@@ -403,12 +403,7 @@ class Room extends Model
             $amenitiesText = $this->amenities;
         }
 
-        $building = $this->building;
-        $buildingName = (string) ($building?->name ?? '');
-        $buildingAddress = (string) ($building?->address ?? '');
-        $fullText = "{$this->room_number} {$this->room_type} {$this->description} {$amenitiesText} {$buildingName} {$buildingAddress}";
-
-        return [
+        $data = [
             'id' => (int) $this->id,
             'room_number' => (string) $this->room_number,
             'room_type' => (string) ($this->room_type ?? ''),
@@ -417,10 +412,21 @@ class Room extends Model
             'status' => (string) ($this->status ?? ''),
             'price' => (float) ($this->price ?? 0),
             'area' => (float) ($this->area ?? 0),
-            'building_name' => $buildingName,
-            'building_address' => $buildingAddress,
-            'unaccented_text' => \Illuminate\Support\Str::ascii($fullText),
         ];
+
+        // Với Scout Database Driver, các key trong toSearchableArray() phải là cột có thực trong bảng rooms
+        if (config('scout.driver') !== 'database') {
+            $building = $this->building;
+            $buildingName = (string) ($building?->name ?? '');
+            $buildingAddress = (string) ($building?->address ?? '');
+            $fullText = "{$this->room_number} {$this->room_type} {$this->description} {$amenitiesText} {$buildingName} {$buildingAddress}";
+
+            $data['building_name'] = $buildingName;
+            $data['building_address'] = $buildingAddress;
+            $data['unaccented_text'] = \Illuminate\Support\Str::ascii($fullText);
+        }
+
+        return $data;
     }
 
     /**

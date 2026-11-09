@@ -73,6 +73,32 @@
                         </div>
                     </div>
 
+                    <!-- Kết quả cầu thủ tìm thấy nhanh (Live Player Results) -->
+                    <div id="renty-live-players-section" class="hidden mb-3">
+                        <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-amber-500/30">
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-amber-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-trophy text-amber-400"></i> Cầu thủ phù hợp (<span id="renty-live-player-count">0</span>)
+                            </span>
+                            <span class="text-[9px] text-amber-400 font-bold">Hồ sơ siêu sao</span>
+                        </div>
+                        <div id="renty-live-players-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                            <!-- Danh sách thẻ cầu thủ -->
+                        </div>
+                    </div>
+
+                    <!-- Kết quả từng trận đấu tách riêng (Live Separate Matches Results) -->
+                    <div id="renty-live-matches-section" class="hidden mb-3">
+                        <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-teal-500/30">
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest text-teal-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-futbol text-teal-400"></i> Trận đấu kinh điển (<span id="renty-live-match-count">0</span>)
+                            </span>
+                            <span class="text-[9px] text-teal-400 font-bold">Chi tiết trận</span>
+                        </div>
+                        <div id="renty-live-matches-list" class="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+                            <!-- Danh sách từng trận đấu tách riêng -->
+                        </div>
+                    </div>
+
                     <!-- Kết quả phòng tìm thấy nhanh (Live Results) -->
                     <div id="renty-live-results-section" class="hidden mb-3">
                         <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-slate-800/60">

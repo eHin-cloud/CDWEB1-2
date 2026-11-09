@@ -1552,6 +1552,10 @@ function renderRoomCardsHtml(rooms) {
              data-loft="${room.loft}"
              data-balcony="${room.balcony}"
              data-wc="${room.wc}"
+             data-ac="${room.ac ? 'true' : 'false'}"
+             data-washer="${room.washer ? 'true' : 'false'}"
+             data-fridge="${room.fridge ? 'true' : 'false'}"
+             data-wifi="${room.wifi ? 'true' : 'false'}"
              data-distance="${room.distance}"
              data-area-name="${escapeHtml(room.area_name)}"
              data-status="${room.status}"
@@ -1607,6 +1611,10 @@ function renderRoomCardsHtml(rooms) {
                         </span>
                     </div>
                     <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-800/40">
+                        ${room.ac ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="fa-solid fa-snowflake text-[8px] mr-0.5"></i> Máy lạnh</span>' : ''}
+                        ${room.washer ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i class="fa-solid fa-soap text-[8px] mr-0.5"></i> Máy giặt</span>' : ''}
+                        ${room.fridge ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-box-archive text-[8px] mr-0.5"></i> Tủ lạnh</span>' : ''}
+                        ${room.wifi ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20"><i class="fa-solid fa-wifi text-[8px] mr-0.5"></i> Wifi</span>' : ''}
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.wc ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">WC ${room.wc_txt}</span>
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.balcony ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">Ban công ${room.balcony_txt}</span>
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.loft ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">Gác lửng ${room.loft_txt}</span>
@@ -1723,6 +1731,10 @@ function restoreFiltersFromUrl() {
     if (page && parseInt(page) > 0) {
         rentyCurrentPage = parseInt(page);
     }
+    const engineFromUrl = url.searchParams.get('engine');
+    if (engineFromUrl && document.getElementById('search-engine-select')) {
+        document.getElementById('search-engine-select').value = engineFromUrl;
+    }
 }
 window.restoreFiltersFromUrl = restoreFiltersFromUrl;
 
@@ -1822,10 +1834,165 @@ async function executeSmartSearchApi(params = {}) {
         // 2. Cập nhật số lượng kết quả kèm thông tin Search Engine
         const resultsCountEl = document.getElementById('results-count');
         const total = data.total ?? data.count ?? 0;
+        const playerShowcase = document.getElementById('smart-search-player-showcase');
+
+        // Bổ sung truy vấn API /api/messi hoặc /api/ronaldo nếu người dùng gõ từ khóa hoặc viết tắt (ms, cr, ro, rn...)
+        let playerList = data.players || [];
+        if (playerList.length === 0) {
+            const trimmedQ = (query || '').trim();
+            if (/^(messi|ms|m10|m 10|lm10|leo|la pulga|pulga)$/i.test(trimmedQ)) {
+                try {
+                    const resM = await fetch('/api/messi').catch(() => null);
+                    if (resM && resM.ok) {
+                        const mJson = await resM.json().catch(() => null);
+                        if (mJson && mJson.player) playerList = [mJson.player];
+                    }
+                } catch (e) {}
+            } else if (/^(ronaldo|ronado|cr|cr7|cr 7|ro|rn|r7|siu|siuuu|el bicho)$/i.test(trimmedQ)) {
+                try {
+                    const resR = await fetch('/api/ronaldo').catch(() => null);
+                    if (resR && resR.ok) {
+                        const rJson = await resR.json().catch(() => null);
+                        if (rJson && rJson.player) playerList = [rJson.player];
+                    }
+                } catch (e) {}
+            }
+        }
+        data.players = playerList;
+        const hasPlayers = data.players && data.players.length > 0;
+
+        if (playerShowcase) {
+            if (hasPlayers) {
+                playerShowcase.innerHTML = data.players.map(p => {
+                    const stats = p.career_stats || {};
+                    const achievements = p.achievements || {};
+                    return `
+                        <div class="p-6 rounded-3xl bg-gradient-to-br from-[#131109] via-slate-950 to-[#0c1322] border-2 border-amber-500/40 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+                            <div class="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-amber-500/20">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-300 p-0.5 shadow-xl shrink-0">
+                                        <div class="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center text-3xl font-black text-amber-300">
+                                            👑
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h3 class="text-xl font-black text-amber-300 tracking-wide">${escapeHtml(p.name)}</h3>
+                                            <span class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/40">#${p.jersey_number || 10}</span>
+                                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30">Hồ sơ Cầu thủ Siêu sao</span>
+                                        </div>
+                                        <div class="text-xs text-slate-300 font-bold mt-1">${escapeHtml(p.full_name || '')} • Biệt danh: <span class="text-amber-200">${escapeHtml(p.nickname || '')}</span></div>
+                                        <div class="text-[11px] text-slate-400 flex items-center gap-2.5 flex-wrap mt-1">
+                                            <span class="text-amber-300 font-semibold"><i class="fa-solid fa-shield-heart text-amber-400 mr-1"></i>${escapeHtml(p.current_club || '')}</span>
+                                            <span>•</span>
+                                            <span class="text-sky-300 font-semibold"><i class="fa-solid fa-flag text-sky-400 mr-1"></i>${escapeHtml(p.nationality || '')}</span>
+                                            <span>•</span>
+                                            <span><i class="fa-solid fa-cake-candles text-slate-400 mr-1"></i>${escapeHtml(p.date_of_birth || '')}</span>
+                                            <span>•</span>
+                                            <span>${escapeHtml(p.position || '')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-right">
+                                    <div class="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
+                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Bàn thắng</span>
+                                        <span class="text-sm font-black text-amber-300">${escapeHtml(stats.total_goals || '840+')}</span>
+                                    </div>
+                                    <div class="px-3 py-2 rounded-xl bg-teal-500/10 border border-teal-500/20 text-left">
+                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Kiến tạo</span>
+                                        <span class="text-sm font-black text-teal-300">${escapeHtml(stats.total_assists || '370+')}</span>
+                                    </div>
+                                    <div class="px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-left">
+                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Trận đấu</span>
+                                        <span class="text-sm font-black text-indigo-300">${escapeHtml(stats.total_appearances || '1000+')}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-slate-300 leading-relaxed my-4">${escapeHtml(p.biography || '')}</p>
+
+                            ${achievements.individual ? `
+                                <div>
+                                    <h5 class="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 mb-2 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-award text-amber-400"></i> Danh hiệu nổi bật
+                                    </h5>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        ${achievements.individual.map(ach => `
+                                            <span class="px-2.5 py-1 rounded-xl bg-amber-400/10 text-amber-200 text-[10px] font-bold border border-amber-400/25">
+                                                🏆 ${escapeHtml(ach)}
+                                            </span>
+                                        `).join('')}
+                                        ${(achievements.national_team || []).map(ach => `
+                                            <span class="px-2.5 py-1 rounded-xl bg-sky-400/10 text-sky-200 text-[10px] font-bold border border-sky-400/25">
+                                                🥇 ${escapeHtml(ach)}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+                playerShowcase.classList.remove('hidden');
+            } else {
+                playerShowcase.classList.add('hidden');
+                playerShowcase.innerHTML = '';
+            }
+        }
+
+        // TÁCH TỪNG TRẬN ĐẤU THÀNH TỪNG THẺ RIÊNG BIỆT (KHÔNG GÔM LẠI)
+        const matchesSection = document.getElementById('smart-search-matches-section');
+        const matchesGrid = document.getElementById('smart-search-matches-grid');
+        const matchesCount = document.getElementById('smart-search-matches-count');
+        const matchesList = data.matches || [];
+        const hasMatches = matchesList.length > 0;
+
+        if (matchesSection && matchesGrid) {
+            if (hasMatches) {
+                if (matchesCount) matchesCount.textContent = matchesList.length;
+                matchesGrid.innerHTML = matchesList.map(m => `
+                    <div class="p-5 rounded-3xl bg-gradient-to-br from-slate-900/95 via-slate-900 to-slate-950 border border-teal-500/30 hover:border-teal-400/80 shadow-2xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden backdrop-blur-xl">
+                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/15 text-teal-300 text-xs font-black border border-teal-500/30">
+                                <i class="fa-solid fa-trophy text-amber-400 text-xs"></i> ${escapeHtml(m.tournament || 'Trận cầu đỉnh cao')}
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-300 text-[11px] font-black border border-amber-500/30">
+                                👑 ${escapeHtml(m.player_name || '')} #${m.player_number || ''}
+                            </span>
+                        </div>
+                        <h4 class="text-base font-black text-amber-300 group-hover:text-amber-200 transition-colors leading-snug mb-2.5">
+                            ${escapeHtml(m.match)}
+                        </h4>
+                        <div class="text-xs text-slate-400 flex items-center gap-3 flex-wrap mb-3.5">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-landmark text-teal-400 text-xs"></i> ${escapeHtml(m.stadium || '')}</span>
+                            <span>•</span>
+                            <span class="flex items-center gap-1.5 text-sky-300 font-semibold"><i class="fa-solid fa-calendar-day text-sky-400 text-xs"></i> ${escapeHtml(m.date || '')}</span>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 text-xs text-slate-200 leading-relaxed">
+                            <span class="text-teal-400 font-extrabold mr-1"><i class="fa-solid fa-star text-[10px] mr-1"></i>Khoảnh khắc lịch sử:</span>
+                            ${escapeHtml(m.highlight || '')}
+                        </div>
+                    </div>
+                `).join('');
+                matchesSection.classList.remove('hidden');
+            } else {
+                matchesSection.classList.add('hidden');
+                matchesGrid.innerHTML = '';
+            }
+        }
+
         if (resultsCountEl) {
             const engineLabel = data.engine === 'laravel_scout' ? `Scout (${data.driver || 'database'})` : (data.engine === 'solr' ? 'Apache Solr' : (data.engine || 'Search Engine'));
             const engineBadge = `<span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-extrabold border border-teal-500/35 tracking-wide shadow-sm"><i class="fa-solid fa-bolt text-[9px] text-amber-400 animate-pulse"></i> Search Engine: ${engineLabel}</span>`;
-            resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${total}</span> phòng ${engineBadge}`;
+            if ((hasPlayers || hasMatches) && total === 0) {
+                resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-amber-400 font-extrabold">${data.players.length}</span> hồ sơ & <span class="text-teal-400 font-extrabold">${matchesList.length}</span> trận cầu lịch sử riêng biệt ${engineBadge}`;
+            } else if ((hasPlayers || hasMatches) && total > 0) {
+                resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-amber-400 font-extrabold">${data.players.length}</span> hồ sơ, <span class="text-teal-400 font-extrabold">${matchesList.length}</span> trận cầu & <span class="text-emerald-400 font-extrabold">${total}</span> phòng ${engineBadge}`;
+            } else {
+                resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${total}</span> phòng ${engineBadge}`;
+            }
         }
 
         // 3. Xử lý hiển thị danh sách phòng & Empty State (ERR_21_04)
@@ -1834,17 +2001,22 @@ async function executeSmartSearchApi(params = {}) {
 
         if (total === 0 || !data.rooms || data.rooms.length === 0) {
             if (roomsGrid) roomsGrid.classList.add('hidden');
-            if (emptyState) emptyState.classList.remove('hidden');
-            const emptyTitleEl = document.getElementById('smart-search-empty-title');
-            const emptyCodeTextEl = document.getElementById('smart-search-empty-code-text') || document.getElementById('smart-search-empty-code');
-            const q = (query || '').trim();
-            if (emptyCodeTextEl) {
-                if (q) {
-                    emptyCodeTextEl.textContent = `Lỗi: Không tìm thấy kết quả phù hợp cho "${q}" (Mã: ERR_21_04)`;
-                    if (emptyTitleEl) emptyTitleEl.textContent = `Không tìm thấy phòng nào khớp với "${q}".`;
-                } else {
-                    emptyCodeTextEl.textContent = 'Lỗi: Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn (Mã: ERR_21_04)';
-                    if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
+            if (hasPlayers || hasMatches) {
+                // Đã tìm thấy cầu thủ hoặc trận đấu: Không hiển thị empty state báo lỗi phòng
+                if (emptyState) emptyState.classList.add('hidden');
+            } else {
+                if (emptyState) emptyState.classList.remove('hidden');
+                const emptyTitleEl = document.getElementById('smart-search-empty-title');
+                const emptyCodeTextEl = document.getElementById('smart-search-empty-code-text') || document.getElementById('smart-search-empty-code');
+                const q = (query || '').trim();
+                if (emptyCodeTextEl) {
+                    if (q) {
+                        emptyCodeTextEl.textContent = `Lỗi: Không tìm thấy kết quả phù hợp cho "${q}" (Mã: ERR_21_04)`;
+                        if (emptyTitleEl) emptyTitleEl.textContent = `Không tìm thấy phòng nào khớp với "${q}".`;
+                    } else {
+                        emptyCodeTextEl.textContent = 'Lỗi: Không tìm thấy phòng phù hợp với bộ lọc bạn đã chọn (Mã: ERR_21_04)';
+                        if (emptyTitleEl) emptyTitleEl.textContent = 'Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.';
+                    }
                 }
             }
             renderPaginationControls(0);
@@ -2044,6 +2216,10 @@ function filterItems(options = {}) {
         const loft = card.getAttribute('data-loft') === 'true';
         const balcony = card.getAttribute('data-balcony') === 'true';
         const wc = card.getAttribute('data-wc') === 'true';
+        const ac = card.getAttribute('data-ac') === 'true';
+        const washer = card.getAttribute('data-washer') === 'true';
+        const fridge = card.getAttribute('data-fridge') === 'true';
+        const wifi = card.getAttribute('data-wifi') === 'true';
         const status = card.getAttribute('data-status');
         const searchableText = normalizeText(
             `${card.getAttribute('data-title') || ''} ` +
@@ -2131,10 +2307,10 @@ function filterItems(options = {}) {
         if (loftChecked && !loft) matchesTags = false;
         if (balconyChecked && !balcony) matchesTags = false;
         if (wcChecked && !wc) matchesTags = false;
-        if (acChecked && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
-        if (washerChecked && !searchableText.includes('may giat')) matchesTags = false;
-        if (fridgeChecked && !searchableText.includes('tu lanh')) matchesTags = false;
-        if (wifiChecked && !searchableText.includes('wifi')) matchesTags = false;
+        if (acChecked && !ac && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
+        if (washerChecked && !washer && !searchableText.includes('may giat')) matchesTags = false;
+        if (fridgeChecked && !fridge && !searchableText.includes('tu lanh')) matchesTags = false;
+        if (wifiChecked && !wifi && !searchableText.includes('wifi')) matchesTags = false;
         if (elevatorChecked && !(searchableText.includes('thang may') || searchableText.includes('thang máy'))) matchesTags = false;
 
         // Lọc diện tích (Spec FEAT_21: range_area)
@@ -2315,6 +2491,9 @@ function fetchLiveSmartSearch(query) {
 
     const didYouMeanBox = document.getElementById('renty-did-you-mean-box');
     const didYouMeanBtn = document.getElementById('renty-did-you-mean-btn');
+    const livePlayersSection = document.getElementById('renty-live-players-section');
+    const livePlayersList = document.getElementById('renty-live-players-list');
+    const livePlayerCount = document.getElementById('renty-live-player-count');
     const liveResultsSection = document.getElementById('renty-live-results-section');
     const liveRoomsList = document.getElementById('renty-live-rooms-list');
     const liveCount = document.getElementById('renty-live-count');
@@ -2326,6 +2505,7 @@ function fetchLiveSmartSearch(query) {
     if (trimmed.length === 0) {
         currentSmartSearchCorrection = null;
         if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+        if (livePlayersSection) livePlayersSection.classList.add('hidden');
         if (liveResultsSection) liveResultsSection.classList.add('hidden');
         if (loadingEl) loadingEl.classList.add('hidden');
         document.getElementById('renty-search-suggestions')?.classList.add('hidden');
@@ -2340,6 +2520,7 @@ function fetchLiveSmartSearch(query) {
     if (trimmed.length < 2) {
         currentSmartSearchCorrection = null;
         if (didYouMeanBox) didYouMeanBox.classList.add('hidden');
+        if (livePlayersSection) livePlayersSection.classList.add('hidden');
         if (liveResultsSection) liveResultsSection.classList.add('hidden');
         if (loadingEl) loadingEl.classList.add('hidden');
         if (defaultChips) defaultChips.classList.remove('hidden');
@@ -2351,14 +2532,22 @@ function fetchLiveSmartSearch(query) {
     rentySmartSearchDebounce = setTimeout(async () => {
         try {
             const startTime = performance.now();
-            // Gọi song song API Smart Search (Correction) và Autocomplete
-            const [resSmart, resAuto] = await Promise.all([
+            // Hỗ trợ từ khóa viết tắt: ms, m10 (Messi) hoặc cr, ro, rn, cr7 (Ronaldo)
+            const isMessiQuery = /^(messi|ms|m10|m 10|lm10|leo|la pulga|pulga)$/i.test(trimmed);
+            const isRonaldoQuery = /^(ronaldo|ronado|cr|cr7|cr 7|ro|rn|r7|siu|siuuu|el bicho)$/i.test(trimmed);
+
+            // Gọi song song API Smart Search (Correction), Autocomplete và API Cầu thủ
+            const [resSmart, resAuto, resMessi, resRonaldo] = await Promise.all([
                 fetch(`/api/renty/rooms/smart-search?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null),
-                fetch(`/api/renty/rooms/suggest?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null)
+                fetch(`/api/renty/rooms/suggest?q=${encodeURIComponent(trimmed)}&limit=5`).catch(() => null),
+                isMessiQuery ? fetch('/api/messi').catch(() => null) : Promise.resolve(null),
+                isRonaldoQuery ? fetch('/api/ronaldo').catch(() => null) : Promise.resolve(null)
             ]);
 
             const data = (resSmart && resSmart.ok) ? await resSmart.json().catch(() => null) : null;
             const autoData = (resAuto && resAuto.ok) ? await resAuto.json().catch(() => null) : null;
+            const messiData = (resMessi && resMessi.ok) ? await resMessi.json().catch(() => null) : null;
+            const ronaldoData = (resRonaldo && resRonaldo.ok) ? await resRonaldo.json().catch(() => null) : null;
             const latency = Math.round(performance.now() - startTime);
 
             if (loadingEl) loadingEl.classList.add('hidden');
@@ -2409,12 +2598,97 @@ function fetchLiveSmartSearch(query) {
                 document.getElementById('smart-search-suggestion')?.classList.add('hidden');
             }
 
-            // 2. Danh sách phòng gợi ý từ Search Engine hoặc Smart Search
+            // 2. Danh sách phòng & cầu thủ gợi ý từ Search Engine hoặc Smart Search
             const candidateRooms = (autoData && autoData.rooms && autoData.rooms.length > 0) 
                 ? autoData.rooms 
                 : (data && data.rooms ? data.rooms : []);
 
-            // 2.1 Cập nhật danh sách ở Header search panel
+            let candidatePlayers = (autoData && autoData.players && autoData.players.length > 0)
+                ? autoData.players
+                : (data && data.players && data.players.length > 0 ? data.players : []);
+
+            if (messiData && messiData.player) {
+                if (!candidatePlayers.some(p => p.id === messiData.player.id)) {
+                    candidatePlayers.unshift(messiData.player);
+                }
+            }
+            if (ronaldoData && ronaldoData.player) {
+                if (!candidatePlayers.some(p => p.id === ronaldoData.player.id)) {
+                    candidatePlayers.unshift(ronaldoData.player);
+                }
+            }
+
+            // 2.1 Hiển thị thông tin cầu thủ (nếu tìm thấy)
+            if (livePlayersSection && livePlayersList) {
+                if (candidatePlayers.length > 0) {
+                    if (livePlayerCount) livePlayerCount.textContent = candidatePlayers.length;
+                    livePlayersList.innerHTML = candidatePlayers.map(p => {
+                        const individualHonor = p.achievements?.individual?.[0] || '8 Quả bóng vàng (Ballon d\'Or)';
+                        const goalsText = p.career_stats?.total_goals || '840+ bàn thắng';
+                        return `
+                            <div class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-950/40 via-slate-900/95 to-slate-950 border border-amber-500/40 shadow-xl backdrop-blur-md">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow-md shrink-0">
+                                        <div class="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center text-amber-300 text-lg font-black">
+                                            👑
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow min-w-0 text-left">
+                                        <div class="flex items-center justify-between gap-1 flex-wrap">
+                                            <h4 class="text-xs font-black text-amber-300 tracking-wide">${escapeHtml(p.name)} <span class="text-[9px] text-amber-400 font-extrabold bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">#${p.jersey_number || 10}</span></h4>
+                                            <span class="text-[8px] text-amber-300 font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30">Hồ sơ Cầu thủ</span>
+                                        </div>
+                                        <div class="text-[11px] text-slate-200 font-bold mt-0.5 truncate">${escapeHtml(p.full_name || '')}</div>
+                                        <div class="text-[9px] text-slate-400 flex items-center gap-1.5 flex-wrap mt-0.5">
+                                            <span class="text-amber-200 font-semibold"><i class="fa-solid fa-shield-heart text-amber-400 text-[8px] mr-0.5"></i>${escapeHtml(p.current_club || '')}</span>
+                                            <span>•</span>
+                                            <span class="text-sky-300 font-semibold"><i class="fa-solid fa-flag text-sky-400 text-[8px] mr-0.5"></i>${escapeHtml(p.nationality || '')}</span>
+                                        </div>
+                                        <div class="mt-1.5 flex flex-wrap gap-1 text-[8px]">
+                                            <span class="px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-300 font-bold border border-amber-400/25">🏆 ${escapeHtml(individualHonor)}</span>
+                                            <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/25">⚽ ${escapeHtml(goalsText)}</span>
+                                        </div>
+                                        <p class="text-[9px] text-slate-400 mt-1 line-clamp-2 leading-tight">${escapeHtml(p.biography || '')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    livePlayersSection.classList.remove('hidden');
+                } else {
+                    livePlayersSection.classList.add('hidden');
+                }
+            }
+
+            // 2.2 Hiển thị các trận đấu kinh điển tách riêng ở Header dropdown
+            const candidateMatches = (autoData && autoData.matches && autoData.matches.length > 0)
+                ? autoData.matches
+                : (data && data.matches ? data.matches : []);
+
+            const liveMatchesSection = document.getElementById('renty-live-matches-section');
+            const liveMatchesList = document.getElementById('renty-live-matches-list');
+            const liveMatchCount = document.getElementById('renty-live-match-count');
+
+            if (liveMatchesSection && liveMatchesList) {
+                if (candidateMatches.length > 0) {
+                    if (liveMatchCount) liveMatchCount.textContent = candidateMatches.length;
+                    liveMatchesList.innerHTML = candidateMatches.map(m => `
+                        <div onclick="applySearchSuggestion('${escapeHtml(m.match)}')" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-teal-500/30 hover:border-teal-400 cursor-pointer transition-all">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-[9px] font-black text-amber-300 truncate"><i class="fa-solid fa-trophy text-amber-400 text-[8px] mr-1"></i>${escapeHtml(m.tournament || 'Trận kinh điển')}</span>
+                                <span class="text-[8px] text-teal-300 font-bold bg-teal-500/20 px-1.5 py-0.5 rounded border border-teal-500/30">${escapeHtml(m.date || '')}</span>
+                            </div>
+                            <h5 class="text-[11px] font-bold text-slate-100 hover:text-teal-300 transition-colors leading-snug line-clamp-1">${escapeHtml(m.match)}</h5>
+                            <div class="text-[9px] text-slate-400 truncate mt-0.5"><i class="fa-solid fa-landmark text-teal-400 text-[8px] mr-1"></i>${escapeHtml(m.stadium || '')}</div>
+                        </div>
+                    `).join('');
+                    liveMatchesSection.classList.remove('hidden');
+                } else {
+                    liveMatchesSection.classList.add('hidden');
+                }
+            }
+
+            // 2.3 Cập nhật danh sách phòng ở Header search panel
             if (liveResultsSection && liveRoomsList) {
                 if (candidateRooms.length > 0) {
                     if (liveCount) liveCount.textContent = candidateRooms.length;
@@ -2439,13 +2713,17 @@ function fetchLiveSmartSearch(query) {
                     `).join('');
                     liveResultsSection.classList.remove('hidden');
                 } else {
-                    liveRoomsList.innerHTML = `
-                        <div class="py-3 px-2 text-center text-[11px] text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800/60">
-                            <i class="fa-solid fa-magnifying-glass text-slate-500 mb-1 block"></i>
-                            Không có kết quả khớp. Thử tìm kiếm với từ khóa khác.
-                        </div>
-                    `;
-                    liveResultsSection.classList.remove('hidden');
+                    if (candidatePlayers.length > 0 || (candidateMatches && candidateMatches.length > 0)) {
+                        liveResultsSection.classList.add('hidden');
+                    } else {
+                        liveRoomsList.innerHTML = `
+                            <div class="py-3 px-2 text-center text-[11px] text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800/60">
+                                <i class="fa-solid fa-magnifying-glass text-slate-500 mb-1 block"></i>
+                                Không có kết quả khớp. Thử tìm kiếm với từ khóa khác.
+                            </div>
+                        `;
+                        liveResultsSection.classList.remove('hidden');
+                    }
                 }
             }
 
@@ -3916,15 +4194,7 @@ async function subscribeNewsletter() {
             }
             emailInput.value = '';
         } else {
-            let errorMsg = data.message;
-            if (!errorMsg && data.errors) {
-                const firstKey = Object.keys(data.errors)[0];
-                if (firstKey && data.errors[firstKey] && data.errors[firstKey][0]) {
-                    errorMsg = data.errors[firstKey][0];
-                }
-            }
-            if (!errorMsg) errorMsg = 'Không thể đăng ký lúc này. Vui lòng kiểm tra lại địa chỉ email.';
-
+            const errorMsg = data.message || 'Không thể đăng ký lúc này. Vui lòng thử lại sau.';
             if (typeof showCustomAlert === 'function') {
                 showCustomAlert(errorMsg, 'error');
             } else if (typeof window.showRentyToast === 'function') {
@@ -3946,7 +4216,7 @@ async function subscribeNewsletter() {
     } finally {
         if (btn) btn.disabled = false;
         if (spinner) spinner.classList.add('hidden');
-        if (btnText) btnText.textContent = 'Đang ký';
+        if (btnText) btnText.textContent = 'Đăng ký';
     }
 }
 
@@ -4253,22 +4523,7 @@ document.addEventListener('DOMContentLoaded', () => {
             particles.push(new Particle());
         }
         
-        let isCanvasVisible = true;
-        if ('IntersectionObserver' in window) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const wasVisible = isCanvasVisible;
-                    isCanvasVisible = entry.isIntersecting;
-                    if (!wasVisible && isCanvasVisible) {
-                        requestAnimationFrame(animate);
-                    }
-                });
-            }, { threshold: 0.05 });
-            observer.observe(canvas);
-        }
-
         function animate() {
-            if (!isCanvasVisible) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update();

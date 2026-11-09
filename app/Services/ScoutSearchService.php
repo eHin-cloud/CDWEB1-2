@@ -46,7 +46,7 @@ class ScoutSearchService
         // Phân tích từ khoá tiếng Việt và chuẩn hoá tìm kiếm
         $analysis = $this->smartSearchService->analyzeAndCorrect($cleanQuery);
         $searchTerms = $cleanQuery;
-        if (!empty($analysis['corrected']) && mb_strtolower($analysis['corrected']) !== mb_strtolower($cleanQuery)) {
+        if (config('scout.driver') !== 'database' && !empty($analysis['corrected']) && mb_strtolower($analysis['corrected']) !== mb_strtolower($cleanQuery)) {
             $searchTerms = "{$cleanQuery} {$analysis['corrected']}";
         }
 
