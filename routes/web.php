@@ -976,6 +976,31 @@ Route::get('/renty/notifications', function () {
                 });
         }
 
+        $roomAlerts = \App\Models\RoomAlert::with(['room.building'])
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('contact_info', $user->email);
+                if (!empty($user->phone)) {
+                    $q->orWhere('contact_info', $user->phone);
+                }
+            })
+            ->where('status', 'notified')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function ($alert) {
+                $roomTitle = $alert->room ? ('Phòng ' . $alert->room->room_number . ' (' . ($alert->room->building?->name ?? '') . ')') : ('Khu vực ' . $alert->target_district);
+                return [
+                    'id' => 'alert_' . $alert->id,
+                    'title' => '🔔 Đã có phòng trống phù hợp!',
+                    'message' => 'Chuông báo: ' . $roomTitle . ' vừa chuyển sang trạng thái trống.',
+                    'time' => $alert->notified_at ? $alert->notified_at->diffForHumans() : 'Vừa xong',
+                    'link' => $alert->room_id ? route('renty.room.detail', $alert->room_id) : route('renty.user'),
+                    'icon' => 'fa-bell',
+                    'color' => 'text-amber-400'
+                ];
+            });
+
         $tips = collect([
             [
                 'id' => 'guest_tip_1',
@@ -997,7 +1022,7 @@ Route::get('/renty/notifications', function () {
             ]
         ]);
 
-        $notifications = $guestContracts->concat($tips)->values();
+        $notifications = $roomAlerts->concat($guestContracts)->concat($tips)->values();
     }
 
     // Fallback if empty to make the tray look nice and realistic
