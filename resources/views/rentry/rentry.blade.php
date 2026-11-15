@@ -2769,6 +2769,12 @@
                         <span class="ios-slider"></span>
                     </label>
                 </div>
+
+                <!-- FEAT_24_ROOM_ALERT: Nút kích hoạt chuông báo phòng trên trang tìm kiếm -->
+                <button type="button" onclick="openGeneralRoomAlertModal()" id="btn-open-room-alert" class="px-3.5 py-2 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer select-none" title="Đăng ký nhận chuông báo khi có phòng trống phù hợp">
+                    <i class="fa-solid fa-bell text-amber-400 animate-pulse"></i>
+                    <span>Bật chuông báo phòng</span>
+                </button>
             </div>
         </div>
 
@@ -2821,9 +2827,12 @@
                 </button>
             </div>
             <p class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">Thử nới rộng khoảng giá, bỏ bớt tiêu chí tiện ích hoặc tìm kiếm theo khu vực lân cận xem sao nhé.</p>
-            <div class="flex items-center justify-center gap-3">
+            <div class="flex items-center justify-center gap-3 flex-wrap">
                 <button type="button" onclick="handleExploreClick(event)" id="btnExploreEmpty" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/25 inline-flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-compass"></i> Khám phá
+                </button>
+                <button type="button" onclick="openGeneralRoomAlertModal()" id="btnAlertEmpty" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-amber-500/20 inline-flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-bell"></i> Bật chuông báo phòng
                 </button>
                 <button type="button" onclick="resetAllFilters()" id="btnResetFilterEmpty" class="px-4 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition-all inline-flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
@@ -3456,47 +3465,125 @@
         </div>
     </div>
 
-    <!-- NOTIFY SUBSCRIBE MODAL -->
+    <!-- NOTIFY SUBSCRIBE MODAL (FEAT_24_ROOM_ALERT: Chuông báo phòng trống thông minh) -->
     <div id="notify-subscribe-modal" class="fixed inset-0 z-50 bg-[#04060b]/90 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeNotifySubscribeModal()" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all">
+            <button type="button" onclick="closeNotifySubscribeModal()" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-all cursor-pointer">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm shadow-amber-500/20">
                     <i class="fa-solid fa-bell text-lg"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-slate-100">Đăng ký chuông báo</h2>
-                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Nhận thông báo ngay khi phòng trống</p>
+                    <h2 class="text-base font-bold text-slate-100">Đăng ký nhận chuông báo phòng</h2>
+                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Nhận thông báo tự động ngay khi có phòng trống phù hợp</p>
                 </div>
             </div>
             
-            <form id="notify-subscribe-form" onsubmit="handleNotifySubscribeSubmit(event)">
-                <input type="hidden" id="notify-room-id">
+            <form id="notify-subscribe-form" onsubmit="handleNotifySubscribeSubmit(event)" novalidate>
+                <input type="hidden" id="notify-room-id" name="room_id">
                 
                 <div class="space-y-4">
+                    <div id="notify-room-info-group" class="hidden">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1.5">Phòng bạn đang theo dõi</span>
+                        <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs font-bold text-amber-300 flex items-center gap-2">
+                            <i class="fa-solid fa-door-open text-xs text-amber-400"></i>
+                            <span id="notify-room-title-display"></span>
+                        </div>
+                    </div>
+
+                    <!-- STT 1: contact_info (Input) -->
                     <div>
-                        <span class="block text-[10px] text-slate-500 font-bold uppercase mb-1.5">Tên phòng trọ</span>
-                        <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-900 text-xs font-bold text-slate-300" id="notify-room-title-display"></div>
+                        <label for="notify-contact-input" class="block text-[11px] text-slate-300 font-bold mb-1">
+                            Email hoặc Số điện thoại nhận tin <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="notify-contact-input" name="contact_info"
+                            placeholder="user@gmail.com hoặc 090..." 
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none placeholder-slate-600 transition-colors">
+                        <p id="err-contact-info" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs shrink-0"></i>
+                            <span id="err-contact-info-text"></span>
+                        </p>
                     </div>
                     
+                    <!-- STT 2: target_district (Select) -->
                     <div>
-                        <label for="notify-contact-input" class="block text-[10px] text-slate-500 font-bold uppercase mb-1.5">Email hoặc Số điện thoại</label>
-                        <input type="text" id="notify-contact-input" required placeholder="nhap-email@example.com hoặc 09xxxxxx" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 focus:border-teal-500 focus:ring-0 focus:outline-none placeholder-slate-600 transition-colors">
+                        <label for="notify-district-select" class="block text-[11px] text-slate-300 font-bold mb-1">
+                            Khu vực mong muốn <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="notify-district-select" name="target_district"
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors">
+                            <option value="">-- Chọn quận/huyện bạn đang muốn tìm phòng --</option>
+                            <optgroup label="Hồ Chí Minh">
+                                <option value="Quận Thủ Đức">Quận Thủ Đức (TP. Thủ Đức)</option>
+                                <option value="Quận Bình Thạnh">Quận Bình Thạnh</option>
+                                <option value="Quận 1">Quận 1</option>
+                                <option value="Quận 3">Quận 3</option>
+                                <option value="Quận 5">Quận 5</option>
+                                <option value="Quận 7">Quận 7</option>
+                                <option value="Quận 10">Quận 10</option>
+                                <option value="Quận Tân Bình">Quận Tân Bình</option>
+                                <option value="Quận Gò Vấp">Quận Gò Vấp</option>
+                                <option value="Quận Phú Nhuận">Quận Phú Nhuận</option>
+                            </optgroup>
+                            <optgroup label="Hà Nội">
+                                <option value="Quận Cầu Giấy">Quận Cầu Giấy</option>
+                                <option value="Quận Đống Đa">Quận Đống Đa</option>
+                                <option value="Quận Ba Đình">Quận Ba Đình</option>
+                                <option value="Quận Thanh Xuân">Quận Thanh Xuân</option>
+                                <option value="Quận Nam Từ Liêm">Quận Nam Từ Liêm</option>
+                                <option value="Quận Bắc Từ Liêm">Quận Bắc Từ Liêm</option>
+                                <option value="Quận Hai Bà Trưng">Quận Hai Bà Trưng</option>
+                                <option value="Quận Hoàng Mai">Quận Hoàng Mai</option>
+                                <option value="Quận Hà Đông">Quận Hà Đông</option>
+                                <option value="Quận Tây Hồ">Quận Tây Hồ</option>
+                            </optgroup>
+                            <optgroup label="Đà Nẵng & Các khu vực khác">
+                                <option value="Quận Hải Châu">Quận Hải Châu, Đà Nẵng</option>
+                                <option value="Quận Thanh Khê">Quận Thanh Khê, Đà Nẵng</option>
+                                <option value="Quận Sơn Trà">Quận Sơn Trà, Đà Nẵng</option>
+                                <option value="Quận Ninh Kiều">Quận Ninh Kiều, Cần Thơ</option>
+                                <option value="TP. Dĩ An">TP. Dĩ An, Bình Dương</option>
+                                <option value="TP. Biên Hòa">TP. Biên Hòa, Đồng Nai</option>
+                            </optgroup>
+                        </select>
+                        <p id="err-target-district" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs shrink-0"></i>
+                            <span id="err-target-district-text"></span>
+                        </p>
+                    </div>
+
+                    <!-- STT 3: max_budget (Input) -->
+                    <div>
+                        <label for="notify-budget-input" class="block text-[11px] text-slate-300 font-bold mb-1">
+                            Ngân sách tối đa (VNĐ) <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="number" id="notify-budget-input" name="max_budget" min="1" step="50000"
+                                placeholder="4.000.000" 
+                                class="w-full px-3.5 py-2.5 pr-14 text-xs rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none placeholder-slate-600 transition-colors">
+                            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-bold">VNĐ</span>
+                        </div>
+                        <p id="err-max-budget" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs shrink-0"></i>
+                            <span id="err-max-budget-text"></span>
+                        </p>
+                    </div>
+
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        <i class="fa-solid fa-bell text-amber-400 text-xs mt-0.5 shrink-0"></i>
+                        <p class="text-[10px] text-amber-200/90 leading-normal font-semibold">Hệ thống sẽ tự động gửi thông báo qua Email hoặc SMS ngay khi có phòng trống phù hợp với tiêu chí của bạn.</p>
                     </div>
                     
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-teal-500/5 border border-teal-500/10">
-                        <i class="fa-solid fa-circle-info text-teal-400 text-xs mt-0.5 shrink-0"></i>
-                        <p class="text-[10px] text-teal-300/85 leading-normal font-semibold">Chúng tôi sẽ tự động gửi thông báo qua Email hoặc SMS ngay khi phòng trọ này được cập nhật trạng thái "SẴN SÀNG".</p>
-                    </div>
-                    
+                    <!-- STT 4: btnSubscribe (Button với Nền cam vàng nổi bật) -->
                     <div class="flex items-center gap-2 pt-2">
-                        <button type="button" onclick="closeNotifySubscribeModal()" class="w-1/2 py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors">
+                        <button type="button" onclick="closeNotifySubscribeModal()" class="w-1/3 py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
                             Hủy
                         </button>
-                        <button type="submit" class="w-1/2 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-xs font-extrabold text-white shadow-lg shadow-teal-600/15 transition-all">
-                            Đăng ký ngay
+                        <button type="submit" id="btnSubscribe" name="btnSubscribe" class="w-2/3 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-extrabold shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>Kích hoạt chuông báo</span>
                         </button>
                     </div>
                 </div>
@@ -3601,6 +3688,288 @@
         window.closeCustomAlert = function() {
             const modal = document.getElementById('custom-alert-modal');
             if (modal) modal.classList.add('hidden');
+        };
+
+        // FEAT_24_ROOM_ALERT: Chuông báo phòng trống thông minh (Huỳnh Văn Vĩnh Em)
+        window.showRoomAlertSuccessModal = function(message) {
+            const modal = document.getElementById('custom-alert-modal');
+            const titleEl = document.getElementById('custom-alert-title');
+            const messageEl = document.getElementById('custom-alert-message');
+            const iconBox = document.getElementById('custom-alert-icon-box');
+            const iconEl = document.getElementById('custom-alert-icon');
+            const btnEl = document.getElementById('custom-alert-btn');
+
+            if (modal && titleEl && messageEl) {
+                titleEl.textContent = 'Đăng ký thành công!';
+                messageEl.textContent = message || 'Đăng ký nhận thông báo phòng trống thành công! Bạn sẽ nhận tin ngay khi có phòng mới.';
+                if (iconBox) {
+                    iconBox.className = 'w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto mb-3 shadow-lg shadow-emerald-500/20';
+                }
+                if (iconEl) {
+                    iconEl.className = 'fa-solid fa-bell text-2xl text-emerald-400 animate-bounce';
+                }
+                if (btnEl) {
+                    btnEl.className = 'w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-extrabold text-white transition-all shadow-md shadow-emerald-600/25 cursor-pointer';
+                    btnEl.textContent = 'Xác nhận';
+                }
+                modal.classList.remove('hidden');
+            } else {
+                alert(message);
+            }
+        };
+
+        window.openGeneralRoomAlertModal = function() {
+            const modal = document.getElementById('notify-subscribe-modal');
+            if (!modal) return;
+            
+            const roomIdInput = document.getElementById('notify-room-id');
+            if (roomIdInput) roomIdInput.value = '';
+            const roomInfoGroup = document.getElementById('notify-room-info-group');
+            if (roomInfoGroup) roomInfoGroup.classList.add('hidden');
+            const titleDisplay = document.getElementById('notify-room-title-display');
+            if (titleDisplay) titleDisplay.textContent = '';
+            
+            window.clearRoomAlertErrors();
+            modal.classList.remove('hidden');
+        };
+
+        window.subscribeEmptyNotification = function(event, roomId, roomTitle, district, price) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const roomIdInput = document.getElementById('notify-room-id');
+            if (roomIdInput) roomIdInput.value = roomId || '';
+            
+            const roomInfoGroup = document.getElementById('notify-room-info-group');
+            const titleDisplay = document.getElementById('notify-room-title-display');
+            if (roomTitle) {
+                if (titleDisplay) titleDisplay.textContent = roomTitle;
+                if (roomInfoGroup) roomInfoGroup.classList.remove('hidden');
+            } else {
+                if (roomInfoGroup) roomInfoGroup.classList.add('hidden');
+            }
+
+            const districtSelect = document.getElementById('notify-district-select');
+            if (districtSelect && district) {
+                for (let i = 0; i < districtSelect.options.length; i++) {
+                    const optVal = districtSelect.options[i].value;
+                    if (optVal && (district.includes(optVal) || optVal.includes(district))) {
+                        districtSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            const budgetInput = document.getElementById('notify-budget-input');
+            if (budgetInput && price && (!budgetInput.value || budgetInput.value === '0')) {
+                budgetInput.value = price;
+            }
+
+            window.clearRoomAlertErrors();
+
+            const modal = document.getElementById('notify-subscribe-modal');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeNotifySubscribeModal = function() {
+            const modal = document.getElementById('notify-subscribe-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.clearRoomAlertErrors = function() {
+            const contactInput = document.getElementById('notify-contact-input');
+            const districtSelect = document.getElementById('notify-district-select');
+            const budgetInput = document.getElementById('notify-budget-input');
+
+            const errContact = document.getElementById('err-contact-info');
+            const errDistrict = document.getElementById('err-target-district');
+            const errBudget = document.getElementById('err-max-budget');
+
+            const errContactText = document.getElementById('err-contact-info-text');
+            const errDistrictText = document.getElementById('err-target-district-text');
+            const errBudgetText = document.getElementById('err-max-budget-text');
+
+            if (contactInput) {
+                contactInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                contactInput.classList.add('border-slate-800');
+            }
+            if (districtSelect) {
+                districtSelect.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                districtSelect.classList.add('border-slate-800');
+            }
+            if (budgetInput) {
+                budgetInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                budgetInput.classList.add('border-slate-800');
+            }
+
+            if (errContact) errContact.classList.add('hidden');
+            if (errDistrict) errDistrict.classList.add('hidden');
+            if (errBudget) errBudget.classList.add('hidden');
+
+            if (errContactText) errContactText.textContent = '';
+            if (errDistrictText) errDistrictText.textContent = '';
+            if (errBudgetText) errBudgetText.textContent = '';
+        };
+
+        window.handleNotifySubscribeSubmit = async function(event) {
+            if (event) event.preventDefault();
+
+            window.clearRoomAlertErrors();
+
+            const contactInput = document.getElementById('notify-contact-input');
+            const districtSelect = document.getElementById('notify-district-select');
+            const budgetInput = document.getElementById('notify-budget-input');
+            const roomIdInput = document.getElementById('notify-room-id');
+            const btnSubscribe = document.getElementById('btnSubscribe');
+
+            const errContact = document.getElementById('err-contact-info');
+            const errDistrict = document.getElementById('err-target-district');
+            const errBudget = document.getElementById('err-max-budget');
+
+            const errContactText = document.getElementById('err-contact-info-text');
+            const errDistrictText = document.getElementById('err-target-district-text');
+            const errBudgetText = document.getElementById('err-max-budget-text');
+
+            const contactVal = contactInput ? contactInput.value.trim() : '';
+            const districtVal = districtSelect ? districtSelect.value.trim() : '';
+            const budgetRaw = budgetInput ? budgetInput.value.trim() : '';
+            const roomIdVal = roomIdInput ? roomIdInput.value.trim() : null;
+
+            let hasError = false;
+            let firstInvalidInput = null;
+
+            // 1. Kiểm tra Để trống số điện thoại hoặc email -> ERR_24_01, Email/Phone hợp lệ -> ERR_24_02
+            if (!contactVal) {
+                hasError = true;
+                if (contactInput) {
+                    contactInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                    contactInput.classList.remove('border-slate-800');
+                }
+                if (errContact && errContactText) {
+                    errContactText.textContent = 'Vui lòng nhập số điện thoại hoặc email nhận thông báo.';
+                    errContact.classList.remove('hidden');
+                }
+                if (!firstInvalidInput) firstInvalidInput = contactInput;
+            } else {
+                const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal);
+                const isPhone = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/.test(contactVal) || /^[0-9]{10}$/.test(contactVal);
+                if (!isEmail && !isPhone) {
+                    hasError = true;
+                    if (contactInput) {
+                        contactInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                        contactInput.classList.remove('border-slate-800');
+                    }
+                    if (errContact && errContactText) {
+                        errContactText.textContent = 'Địa chỉ email không đúng định dạng hợp lệ.';
+                        errContact.classList.remove('hidden');
+                    }
+                    if (!firstInvalidInput) firstInvalidInput = contactInput;
+                }
+            }
+
+            // 2. Kiểm tra Để trống khu vực mong muốn -> ERR_24_03
+            if (!districtVal) {
+                hasError = true;
+                if (districtSelect) {
+                    districtSelect.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                    districtSelect.classList.remove('border-slate-800');
+                }
+                if (errDistrict && errDistrictText) {
+                    errDistrictText.textContent = 'Vui lòng chọn quận/huyện bạn đang muốn tìm phòng.';
+                    errDistrict.classList.remove('hidden');
+                }
+                if (!firstInvalidInput) firstInvalidInput = districtSelect;
+            }
+
+            // 3. Kiểm tra Ngân sách tối đa > 0 (DoD 2)
+            const budgetNum = parseFloat(budgetRaw);
+            if (!budgetRaw || isNaN(budgetNum) || budgetNum <= 0) {
+                hasError = true;
+                if (budgetInput) {
+                    budgetInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                    budgetInput.classList.remove('border-slate-800');
+                }
+                if (errBudget && errBudgetText) {
+                    errBudgetText.textContent = 'Ngân sách tối đa phải lớn hơn 0 VNĐ';
+                    errBudget.classList.remove('hidden');
+                }
+                if (!firstInvalidInput) firstInvalidInput = budgetInput;
+            }
+
+            if (hasError) {
+                if (firstInvalidInput) firstInvalidInput.focus();
+                return;
+            }
+
+            // Gọi API POST /api/renty/room-alerts
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const originalBtnHtml = btnSubscribe ? btnSubscribe.innerHTML : '';
+            if (btnSubscribe) {
+                btnSubscribe.disabled = true;
+                btnSubscribe.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng ký...';
+            }
+
+            try {
+                const response = await fetch('/api/renty/room-alerts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        contact_info: contactVal,
+                        target_district: districtVal,
+                        max_budget: parseInt(budgetNum, 10),
+                        room_id: roomIdVal ? parseInt(roomIdVal, 10) : null,
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    window.closeNotifySubscribeModal();
+                    window.showRoomAlertSuccessModal(data.message || 'Đăng ký nhận thông báo phòng trống thành công! Bạn sẽ nhận tin ngay khi có phòng mới.');
+                    if (contactInput) contactInput.value = '';
+                    if (districtSelect) districtSelect.value = '';
+                    if (budgetInput) budgetInput.value = '';
+                } else {
+                    if (data.errors) {
+                        if (data.errors.contact_info) {
+                            contactInput?.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                            if (errContact && errContactText) {
+                                errContactText.textContent = data.errors.contact_info[0];
+                                errContact.classList.remove('hidden');
+                            }
+                        }
+                        if (data.errors.target_district) {
+                            districtSelect?.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                            if (errDistrict && errDistrictText) {
+                                errDistrictText.textContent = data.errors.target_district[0];
+                                errDistrict.classList.remove('hidden');
+                            }
+                        }
+                        if (data.errors.max_budget) {
+                            budgetInput?.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/40', 'bg-rose-950/20');
+                            if (errBudget && errBudgetText) {
+                                errBudgetText.textContent = data.errors.max_budget[0];
+                                errBudget.classList.remove('hidden');
+                            }
+                        }
+                    } else {
+                        window.showCustomAlert('Lỗi', data.message || 'Không thể đăng ký chuông báo phòng.', 'error');
+                    }
+                }
+            } catch (err) {
+                window.showCustomAlert('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng.', 'error');
+            } finally {
+                if (btnSubscribe) {
+                    btnSubscribe.disabled = false;
+                    btnSubscribe.innerHTML = originalBtnHtml;
+                }
+            }
         };
     </script>
 

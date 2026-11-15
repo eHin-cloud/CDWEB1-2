@@ -60,4 +60,12 @@ class Building extends Model
     {
         return $this->hasManyThrough(RoomEquipment::class, Room::class);
     }
+
+    public function getDistrictAttribute(): string
+    {
+        if (preg_match('/(Quận|Huyện|Thị xã|TP\.|Thành phố)\s+([^,]+)/iu', $this->address ?? '', $matches)) {
+            return trim($matches[0]);
+        }
+        return '';
+    }
 }

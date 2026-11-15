@@ -1519,8 +1519,8 @@ function renderRoomCardsHtml(rooms) {
                </span>
                <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-[0.5px] z-10"></div>
                <div class="absolute inset-0 flex items-center justify-center z-20">
-                   <button type="button" onclick="subscribeEmptyNotification(event, '${room.id}', '${escapeHtml(room.title)}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
-                       <i class="fa-solid fa-bell text-teal-400 text-xs"></i> Chuông báo khi trống phòng
+                   <button type="button" onclick="subscribeEmptyNotification(event, '${room.id}', '${escapeHtml(room.title)}', '${escapeHtml(room.district || '')}', '${room.price || ''}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
+                       <i class="fa-solid fa-bell text-amber-400 text-xs"></i> Chuông báo khi trống phòng
                    </button>
                </div>`;
 
@@ -1552,6 +1552,10 @@ function renderRoomCardsHtml(rooms) {
              data-loft="${room.loft}"
              data-balcony="${room.balcony}"
              data-wc="${room.wc}"
+             data-ac="${room.ac ? 'true' : 'false'}"
+             data-washer="${room.washer ? 'true' : 'false'}"
+             data-fridge="${room.fridge ? 'true' : 'false'}"
+             data-wifi="${room.wifi ? 'true' : 'false'}"
              data-distance="${room.distance}"
              data-area-name="${escapeHtml(room.area_name)}"
              data-status="${room.status}"
@@ -1607,6 +1611,10 @@ function renderRoomCardsHtml(rooms) {
                         </span>
                     </div>
                     <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-800/40">
+                        ${room.ac ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="fa-solid fa-snowflake text-[8px] mr-0.5"></i> Máy lạnh</span>' : ''}
+                        ${room.washer ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><i class="fa-solid fa-soap text-[8px] mr-0.5"></i> Máy giặt</span>' : ''}
+                        ${room.fridge ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-box-archive text-[8px] mr-0.5"></i> Tủ lạnh</span>' : ''}
+                        ${room.wifi ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20"><i class="fa-solid fa-wifi text-[8px] mr-0.5"></i> Wifi</span>' : ''}
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.wc ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">WC ${room.wc_txt}</span>
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.balcony ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">Ban công ${room.balcony_txt}</span>
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold ${room.loft ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-slate-900 text-slate-500'}">Gác lửng ${room.loft_txt}</span>
@@ -1723,6 +1731,10 @@ function restoreFiltersFromUrl() {
     if (page && parseInt(page) > 0) {
         rentyCurrentPage = parseInt(page);
     }
+    const engineFromUrl = url.searchParams.get('engine');
+    if (engineFromUrl && document.getElementById('search-engine-select')) {
+        document.getElementById('search-engine-select').value = engineFromUrl;
+    }
 }
 window.restoreFiltersFromUrl = restoreFiltersFromUrl;
 
@@ -1734,6 +1746,8 @@ async function executeSmartSearchApi(params) {
     if (params.wcChecked) amenities.push('wc');
     if (document.getElementById('tag-ac')?.checked) amenities.push('air_conditioner');
     if (document.getElementById('tag-washer')?.checked) amenities.push('washing_machine');
+    if (document.getElementById('tag-fridge')?.checked) amenities.push('fridge');
+    if (document.getElementById('tag-wifi')?.checked) amenities.push('wifi');
 
     let effectiveMaxPrice = params.maxPriceVal;
     if (effectiveMaxPrice === null && params.filterPrice && params.filterPrice !== 'all') {
@@ -1749,7 +1763,10 @@ async function executeSmartSearchApi(params) {
     if (params.filterRating && params.filterRating !== 'all') searchParams.set('rating', params.filterRating);
     if (sortBy !== 'default') searchParams.set('sort_by', sortBy);
     if (params.hideRented) searchParams.set('status', 'empty');
-    if (amenities.length > 0) searchParams.set('amenities', amenities.join(','));
+    const searchEngine = document.getElementById('search-engine-select')?.value || (new URLSearchParams(window.location.search).get('engine') || 'hybrid');
+    if (searchEngine && searchEngine !== 'hybrid') {
+        searchParams.set('engine', searchEngine);
+    }
     searchParams.set('page', rentyCurrentPage);
     searchParams.set('limit', rentyItemsPerPage);
 
@@ -1795,11 +1812,14 @@ async function executeSmartSearchApi(params) {
             if (didYouMeanBanner) didYouMeanBanner.classList.add('hidden');
         }
 
-        // 2. Cập nhật số lượng kết quả
+        // 2. Cập nhật số lượng kết quả kèm thông tin Search Engine
         const resultsCountEl = document.getElementById('results-count');
         const total = data.total ?? data.count ?? 0;
         if (resultsCountEl) {
-            resultsCountEl.textContent = `Tìm thấy ${total} phòng`;
+            const engineBadge = data.engine === 'laravel_scout'
+                ? `<span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold border border-cyan-500/35 tracking-wide shadow-sm"><i class="fa-solid fa-bolt text-[9px]"></i> Scout (${data.driver || 'database'})</span>`
+                : `<span class="ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/35 tracking-wide shadow-sm"><i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i> Hybrid RRF</span>`;
+            resultsCountEl.innerHTML = `Tìm thấy ${total} phòng ${engineBadge}`;
         }
 
         // 3. Xử lý hiển thị danh sách phòng & Empty State (ERR_21_04)
@@ -2011,6 +2031,10 @@ function filterItems(options = {}) {
         const loft = card.getAttribute('data-loft') === 'true';
         const balcony = card.getAttribute('data-balcony') === 'true';
         const wc = card.getAttribute('data-wc') === 'true';
+        const ac = card.getAttribute('data-ac') === 'true';
+        const washer = card.getAttribute('data-washer') === 'true';
+        const fridge = card.getAttribute('data-fridge') === 'true';
+        const wifi = card.getAttribute('data-wifi') === 'true';
         const status = card.getAttribute('data-status');
         if (!card._cachedSearchText) {
             card._cachedSearchText = normalizeText(
@@ -2100,10 +2124,10 @@ function filterItems(options = {}) {
         if (loftChecked && !loft) matchesTags = false;
         if (balconyChecked && !balcony) matchesTags = false;
         if (wcChecked && !wc) matchesTags = false;
-        if (acChecked && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
-        if (washerChecked && !searchableText.includes('may giat')) matchesTags = false;
-        if (fridgeChecked && !searchableText.includes('tu lanh')) matchesTags = false;
-        if (wifiChecked && !searchableText.includes('wifi')) matchesTags = false;
+        if (acChecked && !ac && !(searchableText.includes('may lanh') || searchableText.includes('dieu hoa'))) matchesTags = false;
+        if (washerChecked && !washer && !searchableText.includes('may giat')) matchesTags = false;
+        if (fridgeChecked && !fridge && !searchableText.includes('tu lanh')) matchesTags = false;
+        if (wifiChecked && !wifi && !searchableText.includes('wifi')) matchesTags = false;
         if (elevatorChecked && !(searchableText.includes('thang may') || searchableText.includes('thang máy'))) matchesTags = false;
 
         // Lọc diện tích (Spec FEAT_21: range_area)
@@ -3152,7 +3176,20 @@ if (document.readyState === 'loading') {
     initSearchListeners();
 }
 
-function subscribeEmptyNotification(event, roomId, roomTitle) {
+function openGeneralRoomAlertModal() {
+    if (typeof window.openGeneralRoomAlertModal === 'function') {
+        window.openGeneralRoomAlertModal();
+        return;
+    }
+    const modal = document.getElementById('notify-subscribe-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function subscribeEmptyNotification(event, roomId, roomTitle, district, price) {
+    if (typeof window.subscribeEmptyNotification === 'function' && window.subscribeEmptyNotification !== subscribeEmptyNotification) {
+        window.subscribeEmptyNotification(event, roomId, roomTitle, district, price);
+        return;
+    }
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -3170,21 +3207,18 @@ function subscribeEmptyNotification(event, roomId, roomTitle) {
 }
 
 function closeNotifySubscribeModal() {
+    if (typeof window.closeNotifySubscribeModal === 'function' && window.closeNotifySubscribeModal !== closeNotifySubscribeModal) {
+        window.closeNotifySubscribeModal();
+        return;
+    }
     const modal = document.getElementById('notify-subscribe-modal');
     if (modal) modal.classList.add('hidden');
 }
 
 function handleNotifySubscribeSubmit(event) {
-    if (event) event.preventDefault();
-    const titleDisplay = document.getElementById('notify-room-title-display');
-    const roomTitle = titleDisplay ? titleDisplay.textContent : 'Phòng trọ';
-    const contactEl = document.getElementById('notify-contact-input');
-    const contactInput = contactEl ? contactEl.value.trim() : '';
-
-    if (!contactInput) return;
-
-    closeNotifySubscribeModal();
-    showCustomAlert('Đăng ký thành công!', `Đã kích hoạt chuông báo trống phòng thành công cho phòng "${roomTitle}". Chúng tôi sẽ gửi thông báo tới "${contactInput}" ngay khi phòng Sẵn sàng.`, 'success');
+    if (typeof window.handleNotifySubscribeSubmit === 'function' && window.handleNotifySubscribeSubmit !== handleNotifySubscribeSubmit) {
+        return window.handleNotifySubscribeSubmit(event);
+    }
 }
 
 function showCustomAlert(arg1, arg2, arg3) {
@@ -3882,15 +3916,7 @@ async function subscribeNewsletter() {
             }
             emailInput.value = '';
         } else {
-            let errorMsg = data.message;
-            if (!errorMsg && data.errors) {
-                const firstKey = Object.keys(data.errors)[0];
-                if (firstKey && data.errors[firstKey] && data.errors[firstKey][0]) {
-                    errorMsg = data.errors[firstKey][0];
-                }
-            }
-            if (!errorMsg) errorMsg = 'Không thể đăng ký lúc này. Vui lòng kiểm tra lại địa chỉ email.';
-
+            const errorMsg = data.message || 'Không thể đăng ký lúc này. Vui lòng thử lại sau.';
             if (typeof showCustomAlert === 'function') {
                 showCustomAlert(errorMsg, 'error');
             } else if (typeof window.showRentyToast === 'function') {
@@ -3912,7 +3938,7 @@ async function subscribeNewsletter() {
     } finally {
         if (btn) btn.disabled = false;
         if (spinner) spinner.classList.add('hidden');
-        if (btnText) btnText.textContent = 'Đang ký';
+        if (btnText) btnText.textContent = 'Đăng ký';
     }
 }
 
@@ -3947,6 +3973,7 @@ window.openRentySearchSuggestions = openRentySearchSuggestions;
 window.blurRentySearch = blurRentySearch;
 window.applySearchSuggestion = applySearchSuggestion;
 window.handleSearchInput = handleSearchInput;
+window.openGeneralRoomAlertModal = openGeneralRoomAlertModal;
 window.subscribeEmptyNotification = subscribeEmptyNotification;
 window.closeNotifySubscribeModal = closeNotifySubscribeModal;
 window.handleNotifySubscribeSubmit = handleNotifySubscribeSubmit;
@@ -4219,22 +4246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             particles.push(new Particle());
         }
         
-        let isCanvasVisible = true;
-        if ('IntersectionObserver' in window) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const wasVisible = isCanvasVisible;
-                    isCanvasVisible = entry.isIntersecting;
-                    if (!wasVisible && isCanvasVisible) {
-                        requestAnimationFrame(animate);
-                    }
-                });
-            }, { threshold: 0.05 });
-            observer.observe(canvas);
-        }
-
         function animate() {
-            if (!isCanvasVisible) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update();

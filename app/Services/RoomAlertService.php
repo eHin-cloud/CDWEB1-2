@@ -19,26 +19,30 @@ class RoomAlertService
 
         $room->loadMissing('building');
         $district = $room->building?->district ?? '';
+        $address = $room->building?->address ?? '';
+        $buildingName = $room->building?->name ?? '';
         $roomPrice = (int) $room->price;
 
         // Tìm các alert đang active và thỏa điều kiện:
         // 1. Alert đăng ký đúng phòng này (room_id == $room->id)
         // 2. Alert đăng ký theo khu vực (room_id null hoặc bất kỳ) có target_district khớp và max_budget >= roomPrice
         $matchingAlerts = RoomAlert::where('status', 'active')
-            ->where(function ($query) use ($room, $district, $roomPrice) {
-                $query->where('room_id', $room->id);
-
-                if (!empty($district)) {
-                    $query->orWhere(function ($q) use ($district, $roomPrice) {
-                        $q->where('max_budget', '>=', $roomPrice)
-                          ->where(function ($sub) use ($district) {
-                              $sub->where('target_district', 'like', "%{$district}%")
-                                  ->orWhereRaw('? LIKE CONCAT("%", target_district, "%")', [$district]);
-                          });
-                    });
-                }
+            ->where(function ($query) use ($room, $roomPrice) {
+                $query->where('room_id', $room->id)
+                      ->orWhere('max_budget', '>=', $roomPrice);
             })
-            ->get();
+            ->get()
+            ->filter(function ($alert) use ($room, $district, $address, $buildingName) {
+                if ($alert->room_id && (int) $alert->room_id === (int) $room->id) {
+                    return true;
+                }
+                if (empty($alert->target_district)) {
+                    return true;
+                }
+                $target = mb_strtolower(trim($alert->target_district));
+                $haystack = mb_strtolower($district . ' ' . $address . ' ' . $buildingName);
+                return str_contains($haystack, $target) || str_contains($target, 'tất cả') || str_contains($target, 'toàn');
+            });
 
         $count = 0;
         foreach ($matchingAlerts as $alert) {

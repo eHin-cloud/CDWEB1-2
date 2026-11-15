@@ -73,8 +73,8 @@
                </span>
                <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-[0.5px] z-10"></div>
                <div class="absolute inset-0 flex items-center justify-center z-20">
-                   <button type="button" onclick="subscribeEmptyNotification(event, '{{ $room['id'] }}', '{{ $room['title'] }}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
-                       <i class="fa-solid fa-bell text-teal-400 text-xs"></i>
+                   <button type="button" onclick="subscribeEmptyNotification(event, '{{ $room['id'] }}', '{{ addslashes($room['title']) }}', '{{ addslashes($room['district'] ?? '') }}', '{{ $room['price'] ?? '' }}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
+                       <i class="fa-solid fa-bell text-amber-400 text-xs group-hover/bell-btn:animate-bounce"></i>
                        Chuông báo khi trống phòng
                    </button>
                </div>

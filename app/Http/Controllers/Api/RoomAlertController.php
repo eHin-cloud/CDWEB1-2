@@ -22,46 +22,44 @@ class RoomAlertController extends Controller
         $maxBudgetRaw = $request->input('max_budget');
         $roomId = $request->input('room_id');
 
+        $errors = [];
+        $firstCode = null;
+
         // Bảng 4: Kiểm tra Để trống số điện thoại hoặc email -> ERR_24_01
         if ($contactInfo === '') {
-            return response()->json([
-                'success' => false,
-                'code' => 'ERR_24_01',
-                'field' => 'contact_info',
-                'message' => 'Vui lòng nhập số điện thoại hoặc email nhận thông báo.',
-            ], 422);
-        }
+            $errors['contact_info'] = ['Vui lòng nhập số điện thoại hoặc email nhận thông báo.'];
+            $firstCode = $firstCode ?? 'ERR_24_01';
+        } else {
+            // Bảng 4: Kiểm tra Email / Số điện thoại sai định dạng -> ERR_24_02
+            $isEmail = filter_var($contactInfo, FILTER_VALIDATE_EMAIL) !== false;
+            $isPhone = preg_match('/^(0|\+84)[3|5|7|8|9][0-9]{8}$/', $contactInfo) || preg_match('/^[0-9]{10}$/', $contactInfo);
 
-        // Bảng 4: Kiểm tra Email / Số điện thoại sai định dạng -> ERR_24_02
-        $isEmail = filter_var($contactInfo, FILTER_VALIDATE_EMAIL) !== false;
-        $isPhone = preg_match('/^(0|\+84)[3|5|7|8|9][0-9]{8}$/', $contactInfo) || preg_match('/^[0-9]{10}$/', $contactInfo);
-
-        if (!$isEmail && !$isPhone) {
-            return response()->json([
-                'success' => false,
-                'code' => 'ERR_24_02',
-                'field' => 'contact_info',
-                'message' => 'Địa chỉ email không đúng định dạng hợp lệ.',
-            ], 422);
+            if (!$isEmail && !$isPhone) {
+                $errors['contact_info'] = ['Địa chỉ email không đúng định dạng hợp lệ.'];
+                $firstCode = $firstCode ?? 'ERR_24_02';
+            }
         }
 
         // Bảng 4: Kiểm tra Để trống khu vực mong muốn -> ERR_24_03
         if ($targetDistrict === '') {
-            return response()->json([
-                'success' => false,
-                'code' => 'ERR_24_03',
-                'field' => 'target_district',
-                'message' => 'Vui lòng chọn quận/huyện bạn đang muốn tìm phòng.',
-            ], 422);
+            $errors['target_district'] = ['Vui lòng chọn quận/huyện bạn đang muốn tìm phòng.'];
+            $firstCode = $firstCode ?? 'ERR_24_03';
         }
 
-        // Kiểm tra ngân sách tối đa > 0
+        // Kiểm tra ngân sách tối đa > 0 (DoD 2)
         if ($maxBudgetRaw === null || $maxBudgetRaw === '' || !is_numeric($maxBudgetRaw) || (float) $maxBudgetRaw <= 0) {
+            $errors['max_budget'] = ['Ngân sách tối đa phải lớn hơn 0 VNĐ'];
+            $firstCode = $firstCode ?? 'ERR_24_BUDGET';
+        }
+
+        if (!empty($errors)) {
+            $firstField = array_key_first($errors);
             return response()->json([
                 'success' => false,
-                'code' => 'ERR_24_BUDGET',
-                'field' => 'max_budget',
-                'message' => 'Ngân sách tối đa phải lớn hơn 0 VNĐ',
+                'code' => $firstCode,
+                'field' => $firstField,
+                'message' => $errors[$firstField][0],
+                'errors' => $errors,
             ], 422);
         }
 

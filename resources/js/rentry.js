@@ -1519,8 +1519,8 @@ function renderRoomCardsHtml(rooms) {
                </span>
                <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-[0.5px] z-10"></div>
                <div class="absolute inset-0 flex items-center justify-center z-20">
-                   <button type="button" onclick="subscribeEmptyNotification(event, '${room.id}', '${escapeHtml(room.title)}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
-                       <i class="fa-solid fa-bell text-teal-400 text-xs"></i> Chuông báo khi trống phòng
+                   <button type="button" onclick="subscribeEmptyNotification(event, '${room.id}', '${escapeHtml(room.title)}', '${escapeHtml(room.district || '')}', '${room.price || ''}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
+                       <i class="fa-solid fa-bell text-amber-400 text-xs"></i> Chuông báo khi trống phòng
                    </button>
                </div>`;
 
@@ -3176,7 +3176,20 @@ if (document.readyState === 'loading') {
     initSearchListeners();
 }
 
-function subscribeEmptyNotification(event, roomId, roomTitle) {
+function openGeneralRoomAlertModal() {
+    if (typeof window.openGeneralRoomAlertModal === 'function') {
+        window.openGeneralRoomAlertModal();
+        return;
+    }
+    const modal = document.getElementById('notify-subscribe-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function subscribeEmptyNotification(event, roomId, roomTitle, district, price) {
+    if (typeof window.subscribeEmptyNotification === 'function' && window.subscribeEmptyNotification !== subscribeEmptyNotification) {
+        window.subscribeEmptyNotification(event, roomId, roomTitle, district, price);
+        return;
+    }
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -3194,21 +3207,18 @@ function subscribeEmptyNotification(event, roomId, roomTitle) {
 }
 
 function closeNotifySubscribeModal() {
+    if (typeof window.closeNotifySubscribeModal === 'function' && window.closeNotifySubscribeModal !== closeNotifySubscribeModal) {
+        window.closeNotifySubscribeModal();
+        return;
+    }
     const modal = document.getElementById('notify-subscribe-modal');
     if (modal) modal.classList.add('hidden');
 }
 
 function handleNotifySubscribeSubmit(event) {
-    if (event) event.preventDefault();
-    const titleDisplay = document.getElementById('notify-room-title-display');
-    const roomTitle = titleDisplay ? titleDisplay.textContent : 'Phòng trọ';
-    const contactEl = document.getElementById('notify-contact-input');
-    const contactInput = contactEl ? contactEl.value.trim() : '';
-
-    if (!contactInput) return;
-
-    closeNotifySubscribeModal();
-    showCustomAlert('Đăng ký thành công!', `Đã kích hoạt chuông báo trống phòng thành công cho phòng "${roomTitle}". Chúng tôi sẽ gửi thông báo tới "${contactInput}" ngay khi phòng Sẵn sàng.`, 'success');
+    if (typeof window.handleNotifySubscribeSubmit === 'function' && window.handleNotifySubscribeSubmit !== handleNotifySubscribeSubmit) {
+        return window.handleNotifySubscribeSubmit(event);
+    }
 }
 
 function showCustomAlert(arg1, arg2, arg3) {
@@ -3963,6 +3973,7 @@ window.openRentySearchSuggestions = openRentySearchSuggestions;
 window.blurRentySearch = blurRentySearch;
 window.applySearchSuggestion = applySearchSuggestion;
 window.handleSearchInput = handleSearchInput;
+window.openGeneralRoomAlertModal = openGeneralRoomAlertModal;
 window.subscribeEmptyNotification = subscribeEmptyNotification;
 window.closeNotifySubscribeModal = closeNotifySubscribeModal;
 window.handleNotifySubscribeSubmit = handleNotifySubscribeSubmit;
