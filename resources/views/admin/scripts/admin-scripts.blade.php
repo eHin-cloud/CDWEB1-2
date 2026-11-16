@@ -4282,10 +4282,23 @@
             document.getElementById('edit-name').value = name;
             document.getElementById('edit-phone').value = phone;
             document.getElementById('edit-room-id').value = roomId;
-            document.getElementById('edit-start-date').value = startDate;
             
-            // Điền thông tin cá nhân mở rộng
-            document.getElementById('edit-dob').value = dob || '';
+            // Hàm chuẩn hóa chuỗi ngày sang định dạng YYYY-MM-DD cho input[type="date"]
+            const toInputDate = function(val) {
+                if (!val) return '';
+                if (typeof val === 'string') {
+                    const match = val.match(/^(\d{4}-\d{2}-\d{2})/);
+                    if (match) return match[1];
+                    const dmyMatch = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                    if (dmyMatch) {
+                        return `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}`;
+                    }
+                }
+                return '';
+            };
+
+            document.getElementById('edit-start-date').value = toInputDate(startDate);
+            document.getElementById('edit-dob').value = toInputDate(dob);
             document.getElementById('edit-cccd').value = cccd || '';
             document.getElementById('edit-hometown').value = hometown || '';
             document.getElementById('edit-temp-status').value = tempStatus || 'none';

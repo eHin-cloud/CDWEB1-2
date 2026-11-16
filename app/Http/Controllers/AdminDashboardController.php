@@ -1349,6 +1349,7 @@ class AdminDashboardController extends Controller
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'name' => 'required|string|max:255',
+            'gender' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -1370,6 +1371,7 @@ class AdminDashboardController extends Controller
             'tenant_id' => $room->tenant_id ?? (\App\Models\Tenant::first()->id ?? 1),
             'room_id' => $request->room_id,
             'name' => $request->name,
+            'gender' => $request->gender ?: 'Nam',
             'dob' => $request->dob,
             'phone' => $request->phone,
             'email' => $request->email ?? (str_replace(' ', '', strtolower($request->name)) . '@gmail.com'),
@@ -1422,6 +1424,7 @@ class AdminDashboardController extends Controller
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'name' => 'required|string|max:255',
+            'gender' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -1454,6 +1457,7 @@ class AdminDashboardController extends Controller
         $resident->update([
             'room_id' => $newRoomId,
             'name' => $request->name,
+            'gender' => $request->gender ?: ($resident->gender ?? 'Nam'),
             'dob' => $request->dob,
             'phone' => $request->phone,
             'email' => $request->email ?? (str_replace(' ', '', strtolower($request->name)) . '@gmail.com'),

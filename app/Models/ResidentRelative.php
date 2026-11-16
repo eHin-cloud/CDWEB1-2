@@ -14,10 +14,7 @@ class ResidentRelative extends Model
 
     protected $table = 'resident_relatives';
 
-    protected array $sensitiveMaskedAttributes = [
-        'phone' => 'phone',
-        'cccd' => 'national_id',
-    ];
+    protected array $sensitiveMaskedAttributes = [];
 
     protected $fillable = [
         'resident_id',
@@ -34,12 +31,25 @@ class ResidentRelative extends Model
     ];
 
     protected $casts = [
-        'phone' => Aes256GcmEncrypted::class,
-        'cccd' => Aes256GcmEncrypted::class,
         'dob' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
     ];
+
+    public function setDobAttribute($value): void
+    {
+        $this->attributes['dob'] = !empty($value) ? \Carbon\Carbon::parse($value)->toDateString() : null;
+    }
+
+    public function setStartDateAttribute($value): void
+    {
+        $this->attributes['start_date'] = !empty($value) ? \Carbon\Carbon::parse($value)->toDateString() : null;
+    }
+
+    public function setEndDateAttribute($value): void
+    {
+        $this->attributes['end_date'] = !empty($value) ? \Carbon\Carbon::parse($value)->toDateString() : null;
+    }
 
     protected static function booted(): void
     {

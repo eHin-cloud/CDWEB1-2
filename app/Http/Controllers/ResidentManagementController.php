@@ -230,6 +230,7 @@ class ResidentManagementController extends Controller
             'tenant_id' => $room->tenant_id,
             'room_id' => $room->id,
             'name' => $fullName,
+            'gender' => $request->input('gender', 'Nam'),
             'phone' => $phone,
             'cccd' => $idCard,
             'email' => $request->input('email') ?? (str_replace(' ', '', strtolower($fullName)) . '@gmail.com'),

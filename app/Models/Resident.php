@@ -14,16 +14,14 @@ class Resident extends Model
 {
     use MasksSensitiveAttributes;
 
-    protected array $sensitiveMaskedAttributes = [
-        'phone' => 'phone',
-        'cccd' => 'national_id',
-    ];
+    protected array $sensitiveMaskedAttributes = [];
 
     protected $fillable = [
         'tenant_id',
         'room_id',
         'user_id',
         'name',
+        'gender',
         'dob',
         'phone',
         'email',
@@ -36,11 +34,19 @@ class Resident extends Model
     ];
 
     protected $casts = [
-        'phone' => Aes256GcmEncrypted::class,
-        'cccd' => Aes256GcmEncrypted::class,
         'dob' => 'date',
         'start_date' => 'date',
     ];
+
+    public function setDobAttribute($value): void
+    {
+        $this->attributes['dob'] = !empty($value) ? \Carbon\Carbon::parse($value)->toDateString() : null;
+    }
+
+    public function setStartDateAttribute($value): void
+    {
+        $this->attributes['start_date'] = !empty($value) ? \Carbon\Carbon::parse($value)->toDateString() : now()->toDateString();
+    }
 
     protected static function booted(): void
     {
