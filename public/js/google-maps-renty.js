@@ -748,24 +748,19 @@ class GoogleMapsRenty {
             const layer = L.tileLayer(primaryUrl, Object.assign({
                 maxZoom: 20,
                 subdomains: primarySubdomains,
+                crossOrigin: true,
                 keepBuffer: 1,
                 updateWhenIdle: true,
                 updateWhenZooming: false
             }, options));
 
             let failedAttempts = 0;
-            let loadedCount = 0;
             let switchedToFallback = false;
-
-            layer.on('tileload', function() {
-                loadedCount++;
-                failedAttempts = 0;
-            });
 
             layer.on('tileerror', function() {
                 failedAttempts++;
-                // Chỉ chuyển sang dự phòng khi Google Maps hoàn toàn không tải được (lỗi liên tiếp >= 8 tile và chưa tải được tile nào)
-                if (failedAttempts >= 8 && loadedCount === 0 && !switchedToFallback && fallbackUrl) {
+                // Nếu Google Maps tile bị lỗi / chặn / timeout (>= 2 tile)
+                if (failedAttempts >= 2 && !switchedToFallback && fallbackUrl) {
                     switchedToFallback = true;
                     console.warn('[RentyMap] Google Maps tile error. Auto-switching to fallback provider:', fallbackUrl);
                     layer.setUrl(fallbackUrl);
@@ -775,11 +770,19 @@ class GoogleMapsRenty {
                     if (typeof layer.redraw === 'function') {
                         layer.redraw();
                     }
+                    // Ẩn banner lỗi nếu fallback xử lý thành công
                     const banner = document.getElementById('gm-tiles-error-banner');
                     if (banner) banner.classList.add('hidden');
-                } else if (failedAttempts >= 16 && switchedToFallback) {
+                } else if (failedAttempts >= 8 && switchedToFallback) {
+                    // Nếu cả Google lẫn Fallback đều rớt (mất mạng hoàn toàn)
                     const banner = document.getElementById('gm-tiles-error-banner');
                     if (banner) banner.classList.remove('hidden');
+                }
+            });
+
+            layer.on('load', function() {
+                if (!switchedToFallback) {
+                    failedAttempts = 0;
                 }
             });
 
@@ -843,43 +846,10 @@ class GoogleMapsRenty {
             if (savedView.zoom) initialZoom = savedView.zoom;
             if (savedView.city) preservedCity = savedView.city;
         } else {
-            // Nhận diện vị trí từ danh sách phòng hiện có
-            const firstRoom = Object.values(rooms)[0];
-            if (firstRoom) {
-                const addr = ((firstRoom.address || '') + ' ' + (firstRoom.area_name || '')).toLowerCase();
-                const isHcm = addr.includes('hồ chí minh') || addr.includes('tp.hcm') || addr.includes('tphcm') || addr.includes('hcm')
-                    || addr.includes('thủ đức') || addr.includes('bình thạnh') || addr.includes('quận 10') || addr.includes('quận 7')
-                    || addr.includes('quận 1') || addr.includes('quận 3') || addr.includes('quận 5') || addr.includes('quận 4') || addr.includes('gò vấp') || addr.includes('tân bình');
-                const isDanang = addr.includes('đà nẵng') || addr.includes('da nang') || addr.includes('hải châu') || addr.includes('sơn trà')
-                    || addr.includes('ngũ hành sơn') || addr.includes('thanh khê') || addr.includes('liên chiểu') || addr.includes('cẩm lệ') || addr.includes('hòa vang');
-                const isDalat = addr.includes('đà lạt') || addr.includes('da lat') || addr.includes('lâm đồng') || addr.includes('tuyền lâm')
-                    || addr.includes('trại mát') || addr.includes('vạn thành') || addr.includes('thái phiên');
-                const isHanoi = addr.includes('hà nội') || addr.includes('hanoi') || addr.includes('cầu giấy') || addr.includes('đống đa')
-                    || addr.includes('thanh xuân') || addr.includes('tây hồ') || addr.includes('ba đình') || addr.includes('hai bà trưng')
-                    || addr.includes('nam từ liêm') || addr.includes('bắc từ liêm') || addr.includes('hà đông') || addr.includes('hoàng mai');
-
-                if (isDanang) {
-                    center = [16.060, 108.220]; // Đà Nẵng
-                    preservedCity = 'danang';
-                } else if (isDalat) {
-                    center = [11.942, 108.440]; // Đà Lạt
-                    preservedCity = 'dalat';
-                } else if (isHcm && !isHanoi) {
-                    center = [10.798, 106.705]; // HCMC
-                    preservedCity = 'hcm';
-                } else if (isHanoi) {
-                    center = [21.036, 105.790]; // Hanoi Cầu Giấy
-                    preservedCity = 'hanoi';
-                } else {
-                    preservedCity = 'all';
-                    center = [16.047, 108.206]; // Tâm bản đồ Việt Nam
-                    initialZoom = 6;
-                }
-            } else {
-                preservedCity = 'all';
-                center = [16.047, 108.206];
-                initialZoom = 6;
-            }
+            // Mặc định ban đầu vào bản đồ: Chế độ Toàn quốc (bao quát toàn cảnh Việt Nam)
+            preservedCity = 'all';
+            center = [16.047, 108.206];
+            initialZoom = 6;
         }
 
         this.initialCenter = center;
@@ -895,31 +865,24 @@ class GoogleMapsRenty {
             this.container.innerHTML = '';
         }
 
-        const mapOptions = {
-            center: center,
-            zoom: initialZoom,
-            zoomControl: false,
-            attributionControl: false,
-            preferCanvas: true,
-            zoomAnimation: true,
-            markerZoomAnimation: true,
-            fadeAnimation: true,
-            wheelDebounceTime: 50,
-            wheelPxPerZoomLevel: 100,
-            zoomSnap: 1,
-            zoomDelta: 1,
-            inertia: true,
-            inertiaDeceleration: 3000
-        };
-
         try {
-            this.map = L.map(this.containerId, mapOptions);
+            this.map = L.map(this.containerId, {
+                center: center,
+                zoom: initialZoom,
+                zoomControl: false,
+                attributionControl: false
+            });
         } catch (err) {
             console.warn('Leaflet map re-initialization catch:', err);
             if (this.container) {
                 this.container._leaflet_id = null;
                 this.container.innerHTML = '';
-                this.map = L.map(this.containerId, mapOptions);
+                this.map = L.map(this.containerId, {
+                    center: center,
+                    zoom: initialZoom,
+                    zoomControl: false,
+                    attributionControl: false
+                });
             }
         }
 
@@ -950,20 +913,11 @@ class GoogleMapsRenty {
         }
         this.renderCampusChips();
 
-        // Track user interaction to prevent resetting viewport during drag/pan
-        this._userHasInteracted = false;
-        this.map.on('movestart zoomstart dragstart', () => {
-            this._userHasInteracted = true;
-        });
-
-        // 5. Invalidate size after layout transition and re-center smoothly once
-        let hasFittedInitialView = false;
-        [150, 450].forEach(delay => {
+        // 5. Invalidate size after layout transition and re-center
+        [80, 200, 450, 750].forEach(delay => {
             setTimeout(() => {
-                if (!this.map || typeof this.map.invalidateSize !== 'function') return;
-                this.map.invalidateSize({ pan: false });
-                if (!hasFittedInitialView && !this._userHasInteracted) {
-                    hasFittedInitialView = true;
+                if (this.map && typeof this.map.invalidateSize === 'function') {
+                    this.map.invalidateSize();
                     if (this.currentCity === 'all' && this.markers && Object.keys(this.markers).length > 0) {
                         try {
                             const markerGroup = L.featureGroup(Object.values(this.markers));
@@ -973,6 +927,8 @@ class GoogleMapsRenty {
                                 this.map.setView(this.initialCenter, this.options.defaultZoom || 6, { animate: false });
                             }
                         }
+                    } else if (this.initialCenter) {
+                        this.map.setView(this.initialCenter, this.options.defaultZoom || 14, { animate: false });
                     }
                 }
             }, delay);
@@ -1091,11 +1047,26 @@ class GoogleMapsRenty {
 
         const roomList = Array.isArray(roomsToRender) ? roomsToRender : Object.values(roomsToRender);
         const buildings = this.groupRoomsByBuilding(roomList);
+        const coordOffsets = {};
 
         buildings.forEach(b => {
             try {
-                const coords = this.computeBuildingCoordinates(b);
+                let coords = this.computeBuildingCoordinates(b);
                 if (!coords || isNaN(coords.lat) || isNaN(coords.lng)) return;
+
+                // Tự động phân tán nhẹ nếu 2 tòa nhà trùng tọa độ (chống đè khít lên nhau)
+                const coordKey = `${coords.lat.toFixed(4)}_${coords.lng.toFixed(4)}`;
+                if (coordOffsets[coordKey]) {
+                    const count = coordOffsets[coordKey]++;
+                    const angle = (count * 60) * (Math.PI / 180);
+                    const offsetDist = 0.00045 * Math.ceil(count / 6);
+                    coords = {
+                        lat: coords.lat + Math.sin(angle) * offsetDist,
+                        lng: coords.lng + Math.cos(angle) * offsetDist
+                    };
+                } else {
+                    coordOffsets[coordKey] = 1;
+                }
 
                 const minPriceM = (b.min_price / 1000000).toFixed(1).replace('.0', '');
                 const priceBadgeText = `Từ ${minPriceM}Tr • ${b.rooms.length}p`;
@@ -1126,9 +1097,9 @@ class GoogleMapsRenty {
                         font-size: 11px;
                         font-weight: 800;
                         font-family: 'Plus Jakarta Sans', sans-serif;
-                        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
                         cursor: pointer;
-                        transition: transform 0.15s ease, box-shadow 0.15s ease;
+                        transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                         white-space: nowrap;
                         ${badgeBg}
                     ">
@@ -1160,7 +1131,7 @@ class GoogleMapsRenty {
                     offset: [0, -10]
                 });
 
-                // Marker hover: Di chuột vào marker trên bản đồ -> cập nhật popup động và highlight
+                // Marker hover: Di chuột vào marker trên bản đồ -> hiện popup và highlight
                 marker.on('mouseover', () => {
                     this.highlightBuildingMarker(b.id);
                     marker.openPopup();
@@ -1169,7 +1140,7 @@ class GoogleMapsRenty {
                 // Marker click
                 marker.on('click', () => {
                     this.highlightBuildingMarker(b.id);
-                    if (this.selectedUniversity && this.selectedCampusId && this.selectedCampusId !== 'all') {
+                    if (this.selectedUniversity) {
                         this.drawCommuteRoute(coords, this.selectedUniversity);
                     }
                     if (b.rooms.length > 0 && typeof window.highlightRoomCard === 'function') {
@@ -1311,26 +1282,16 @@ class GoogleMapsRenty {
     }
 
     highlightBuildingMarker(buildingId) {
-        if (!buildingId || this._activeHighlightedBuildingId === buildingId) return;
-
-        // Reset previous highlighted marker in O(1)
-        if (this._activeHighlightedBuildingId) {
-            const prevEl = document.getElementById(`marker-building-${this._activeHighlightedBuildingId}`) ||
-                           document.getElementById(`marker-room-${this._activeHighlightedBuildingId}`);
-            if (prevEl) {
-                prevEl.style.transform = 'translate3d(0, 0, 0) scale(1)';
-                prevEl.style.zIndex = '1';
-                prevEl.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85)';
-                prevEl.style.filter = 'none';
-            }
-        }
-
-        this._activeHighlightedBuildingId = buildingId;
+        document.querySelectorAll('.gm-price-marker').forEach(el => {
+            el.style.transform = 'scale(1)';
+            el.style.zIndex = '1';
+            el.style.filter = 'none';
+        });
         const markerEl = document.getElementById(`marker-building-${buildingId}`);
         if (markerEl) {
-            markerEl.style.transform = 'translate3d(0, 0, 0) scale(1.18)';
+            markerEl.style.transform = 'scale(1.22)';
             markerEl.style.zIndex = '9999';
-            markerEl.style.boxShadow = '0 0 0 3px #38bdf8, 0 8px 24px rgba(56, 189, 248, 0.65)';
+            markerEl.style.filter = 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.9))';
         }
     }
 
@@ -1344,32 +1305,35 @@ class GoogleMapsRenty {
     }
 
     highlightMarker(roomId) {
+        document.querySelectorAll('.gm-price-marker').forEach(el => {
+            el.style.transform = 'scale(1)';
+            el.style.zIndex = '1';
+            el.style.filter = 'none';
+        });
+
+        const targetBuildingId = (this.buildingMapByRoomId && this.buildingMapByRoomId[roomId]) || null;
+        let markerEl = null;
+        if (targetBuildingId) {
+            markerEl = document.getElementById(`marker-building-${targetBuildingId}`);
+        }
+        if (!markerEl) {
+            markerEl = document.getElementById(`marker-room-${roomId}`);
+        }
+
+        if (markerEl) {
+            markerEl.style.transform = 'scale(1.22)';
+            markerEl.style.zIndex = '9999';
+            markerEl.style.filter = 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.9))';
+        }
+    }
+
+    getMarkerElementForRoom(roomId) {
         const targetBuildingId = (this.buildingMapByRoomId && this.buildingMapByRoomId[roomId]) || null;
         if (targetBuildingId) {
-            this.highlightBuildingMarker(targetBuildingId);
-            return;
+            const bEl = document.getElementById(`marker-building-${targetBuildingId}`);
+            if (bEl) return bEl;
         }
-
-        if (!roomId || this._activeHighlightedBuildingId === roomId) return;
-
-        if (this._activeHighlightedBuildingId) {
-            const prevEl = document.getElementById(`marker-building-${this._activeHighlightedBuildingId}`) ||
-                           document.getElementById(`marker-room-${this._activeHighlightedBuildingId}`);
-            if (prevEl) {
-                prevEl.style.transform = 'translate3d(0, 0, 0) scale(1)';
-                prevEl.style.zIndex = '1';
-                prevEl.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(255, 255, 255, 0.85)';
-                prevEl.style.filter = 'none';
-            }
-        }
-
-        this._activeHighlightedBuildingId = roomId;
-        const markerEl = document.getElementById(`marker-room-${roomId}`);
-        if (markerEl) {
-            markerEl.style.transform = 'translate3d(0, 0, 0) scale(1.18)';
-            markerEl.style.zIndex = '9999';
-            markerEl.style.boxShadow = '0 0 0 3px #38bdf8, 0 8px 24px rgba(56, 189, 248, 0.65)';
-        }
+        return document.getElementById(`marker-room-${roomId}`) || document.querySelector(`.marker-room-${roomId}`);
     }
 
     buildInfoWindowHtml(room, coords) {
@@ -1379,24 +1343,20 @@ class GoogleMapsRenty {
         const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${coords.lat},${coords.lng}`;
 
         let uniDistHtml = '';
-        // CHỈ hiển thị khoảng cách đến trường khi người dùng THỰC SỰ CHỌN một trường cụ thể (không phải 'Tất cả')
-        // và khoảng cách nằm trong phạm vi hợp lý (< 45km), tránh hiển thị vô lý hàng nghìn km xuyên tỉnh thành
-        if (this.selectedUniversity && this.selectedCampusId && this.selectedCampusId !== 'all') {
+        if (this.selectedUniversity) {
             const uniDistKm = this.calcHaversineDistance(coords.lat, coords.lng, this.selectedUniversity.lat, this.selectedUniversity.lng);
-            if (uniDistKm <= 45) {
-                const bikeM = Math.max(2, Math.round((uniDistKm / 24) * 60 + 2));
-                const cleanUni = this.selectedUniversity.shortName || this.selectedUniversity.name.split('(')[0].trim();
-                uniDistHtml = `
-                    <div style="margin-bottom: 10px; padding: 6px 10px; border-radius: 10px; background: rgba(14, 165, 233, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                        <span style="font-size: 11px; color: #7dd3fc; display: flex; align-items: center; gap: 5px;">
-                            <i class="fa-solid fa-graduation-cap text-sky-400"></i> Cách ${cleanUni}:
-                        </span>
-                        <span style="font-size: 11px; font-weight: 800; color: #ffffff; white-space: nowrap;">
-                            ${uniDistKm.toFixed(1)} km <span style="font-weight: 500; color: #94a3b8; font-size: 10px;">(~${bikeM}p xe máy)</span>
-                        </span>
-                    </div>
-                `;
-            }
+            const bikeM = Math.max(2, Math.round((uniDistKm / 24) * 60 + 2));
+            const cleanUni = this.selectedUniversity.shortName || this.selectedUniversity.name.split('(')[0].trim();
+            uniDistHtml = `
+                <div style="margin-bottom: 10px; padding: 6px 10px; border-radius: 10px; background: rgba(14, 165, 233, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <span style="font-size: 11px; color: #7dd3fc; display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-solid fa-graduation-cap text-sky-400"></i> Cách ${cleanUni}:
+                    </span>
+                    <span style="font-size: 11px; font-weight: 800; color: #ffffff; white-space: nowrap;">
+                        ${uniDistKm.toFixed(1)} km <span style="font-weight: 500; color: #94a3b8; font-size: 10px;">(~${bikeM}p xe máy)</span>
+                    </span>
+                </div>
+            `;
         }
 
         return `
@@ -1481,6 +1441,12 @@ class GoogleMapsRenty {
             const gmClear = document.getElementById('gm-search-clear-btn');
             if (gmClear) gmClear.classList.add('hidden');
 
+            // Đồng bộ nhãn phản hồi của thanh trượt khoảng cách về mặc định
+            const distSlider = document.getElementById('distance-slider');
+            if (distSlider && typeof window.updateDistanceSlider === 'function') {
+                window.updateDistanceSlider(distSlider.value);
+            }
+
             // Xóa Empty State banner nếu có
             const emptyBanner = document.getElementById('map-empty-state-banner');
             if (emptyBanner) emptyBanner.remove();
@@ -1496,7 +1462,6 @@ class GoogleMapsRenty {
             document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
             document.querySelectorAll('.room-item-card').forEach(card => {
                 card.style.display = '';
-                card.classList.remove('hidden');
             });
 
             // Trở về chế độ khám phá chỗ đó: Zoom bao quát toàn cảnh khu vực trường vừa xem
@@ -1526,32 +1491,7 @@ class GoogleMapsRenty {
                 allChip.classList.remove('bg-slate-900', 'text-slate-300');
             }
 
-            if (this.currentCity && this.currentCity !== 'all') {
-                // Nếu đang chọn thành phố cụ thể, chỉ hiển thị phòng thuộc thành phố đó
-                const cards = document.querySelectorAll('.room-item-card');
-                let count = 0;
-                cards.forEach(card => {
-                    const roomId = card.getAttribute('data-room-id');
-                    const roomData = (window.rentyRoomsData && window.rentyRoomsData[roomId]);
-                    const markerEl = document.getElementById(`marker-room-${roomId}`);
-                    if (!roomData) return;
-                    const addr = ((roomData.address || '') + ' ' + (roomData.area_name || '')).toLowerCase();
-                    const isHcm = addr.includes('hồ chí minh') || addr.includes('tp.hcm') || addr.includes('tphcm') || addr.includes('hcm')
-                        || addr.includes('thủ đức') || addr.includes('bình thạnh') || addr.includes('quận 10') || addr.includes('quận 7')
-                        || addr.includes('quận 1') || addr.includes('quận 4') || addr.includes('gò vấp') || addr.includes('tân bình');
-                    const isMatch = (this.currentCity === 'hcm' && isHcm) || (this.currentCity === 'hanoi' && !isHcm);
-                    if (isMatch) {
-                        card.classList.remove('hidden');
-                        if (markerEl) markerEl.style.display = 'inline-flex';
-                        count++;
-                    } else {
-                        card.classList.add('hidden');
-                        if (markerEl) markerEl.style.display = 'none';
-                    }
-                });
-                const countEl = document.getElementById('results-count');
-                if (countEl) countEl.innerHTML = `Tìm thấy <span class="text-emerald-400 font-extrabold">${count}</span> phòng`;
-            } else if (typeof window.filterItems === 'function') {
+            if (typeof window.filterItems === 'function') {
                 window.filterItems({ resetPage: true });
             } else {
                 const cards = document.querySelectorAll('.room-item-card');
@@ -1565,11 +1505,6 @@ class GoogleMapsRenty {
 
         const uni = this.universities.find(u => u.id === uniId);
         if (!uni) return;
-
-        // Tự động chuyển tab thành phố sang thành phố của trường nếu đang khác
-        if (uni.city && this.currentCity !== 'all' && uni.city !== this.currentCity) {
-            this.switchCity(uni.city);
-        }
 
         if (this.customPlacePin) {
             this.map.removeLayer(this.customPlacePin);
@@ -1638,17 +1573,26 @@ class GoogleMapsRenty {
             roomDistances.push({ card, distKm, roomId });
         });
 
-        // Lọc hiển thị phòng theo bán kính đã chọn (Chuẩn xác 100% theo khoảng cách thực tế)
-        const maxRadiusKm = (activeRadius / 1000);
+        // Sắp xếp các phòng theo khoảng cách từ gần đến xa
+        roomDistances.sort((a, b) => a.distKm - b.distKm);
+
+        // Lọc hiển thị phòng theo bán kính đã chọn và phân trang 9 phòng/trang
+        const maxRadiusKm = (activeRadius / 1000) + 0.6;
+        let visibleIdx = 0;
+
         roomDistances.forEach(item => {
             const isNearby = item.distKm <= maxRadiusKm;
             const markerEl = this.getMarkerElementForRoom(item.roomId);
 
             if (isNearby) {
-                item.card.classList.remove('hidden');
-                item.card.style.display = '';
-                item.card.dataset.filteredOut = 'false';
                 nearbyCount++;
+                if (visibleIdx < 9) {
+                    item.card.classList.remove('hidden');
+                    item.card.style.display = '';
+                } else {
+                    item.card.classList.add('hidden');
+                }
+                visibleIdx++;
 
                 if (markerEl) {
                     markerEl.style.opacity = '1';
@@ -1685,8 +1629,6 @@ class GoogleMapsRenty {
                     markerEl.style.filter = 'none';
                 }
                 item.card.classList.add('hidden');
-                item.card.style.display = 'none';
-                item.card.dataset.filteredOut = 'true';
             }
         });
 
@@ -1711,13 +1653,6 @@ class GoogleMapsRenty {
                     weight: 3
                 });
             }
-
-            // Đảm bảo ẩn toàn bộ các thẻ phòng trọ khi không có phòng nào trong bán kính
-            cards.forEach(c => {
-                c.classList.add('hidden');
-                c.style.display = 'none';
-                c.dataset.filteredOut = 'true';
-            });
 
             if (countEl) {
                 countEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Không tìm thấy phòng trọ nào quanh ${cleanUniName} (< ${radiusKmText} km)</span>`;
@@ -1749,10 +1684,6 @@ class GoogleMapsRenty {
                 `;
                 roomsGrid.parentNode.insertBefore(emptyBanner, roomsGrid);
             }
-
-            if (typeof renderPaginationControls === 'function') {
-                renderPaginationControls(0);
-            }
         } else {
             // Có phòng phù hợp -> Vòng quét màu xanh
             if (this.campusRadiusCircle) {
@@ -1765,29 +1696,9 @@ class GoogleMapsRenty {
                 });
             }
 
-            // Phân trang danh sách phòng phù hợp
-            let visibleIdx = 0;
-            roomDistances.forEach(item => {
-                if (item.distKm <= maxRadiusKm) {
-                    if (visibleIdx < 9) {
-                        item.card.classList.remove('hidden');
-                        item.card.style.display = '';
-                    } else {
-                        item.card.classList.add('hidden');
-                        item.card.style.display = 'none';
-                    }
-                    visibleIdx++;
-                }
-            });
-
             // Cập nhật tiêu đề danh sách
             if (countEl) {
                 countEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${nearbyCount}</span> phòng trong bán kính ${radiusKmText}km quanh <span class="text-sky-300 font-bold">${cleanUniName}</span> <button type="button" onclick="selectCampusFilter('all')" class="ml-2 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>Hủy lọc</button>`;
-            }
-
-            if (typeof renderPaginationControls === 'function') {
-                const totalPages = Math.ceil(nearbyCount / 9);
-                renderPaginationControls(totalPages);
             }
         }
 
@@ -1803,6 +1714,21 @@ class GoogleMapsRenty {
         if (typeof this.updateCommuteBox === 'function') {
             this.updateCommuteBox(null);
         }
+
+        // Cập nhật lại thanh phân trang đồng bộ với số phòng tìm thấy
+        if (typeof window.rentyCurrentPage !== 'undefined') {
+            window.rentyCurrentPage = 1;
+        }
+        if (typeof renderPaginationControls === 'function') {
+            const totalPages = nearbyCount > 0 ? Math.ceil(nearbyCount / 9) : 0;
+            renderPaginationControls(totalPages);
+        }
+
+        // Đồng bộ nhãn phản hồi của thanh trượt khoảng cách nếu có
+        const distSlider = document.getElementById('distance-slider');
+        if (distSlider && typeof window.updateDistanceSlider === 'function') {
+            window.updateDistanceSlider(distSlider.value);
+        }
     }
 
     setUniversityDestination(uniId) {
@@ -1810,27 +1736,13 @@ class GoogleMapsRenty {
     }
 
     /* =========================================================================
-       CITY SWITCHER (TP.HCM / HÀ NỘI / TOÀN QUỐC)
+       CITY SWITCHER (TP.HCM / HÀ NỘI / ĐÀ NẴNG / ĐÀ LẠT / HỘI AN / NHA TRANG / VŨNG TÀU / PHÚ QUỐC / HUẾ / SA PA / TOÀN QUỐC)
        ========================================================================= */
     switchCity(city) {
         this.currentCity = city;
         this.selectedCampusId = 'all';
         this.selectedUniversity = null;
         this.activeCenter = null;
-
-        // Đồng bộ giao diện tab thành phố trên HUD Hàng 2
-        document.querySelectorAll('.gm-city-tab').forEach(btn => {
-            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-            btn.classList.add('text-slate-300');
-        });
-        const activeCityTab = document.getElementById(`city-tab-${city}`);
-        if (activeCityTab) {
-            activeCityTab.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-            activeCityTab.classList.remove('text-slate-300');
-            if (typeof activeCityTab.scrollIntoView === 'function') {
-                activeCityTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
-        }
 
         if (this.campusRadiusCircle) {
             this.map.removeLayer(this.campusRadiusCircle);
@@ -1844,25 +1756,103 @@ class GoogleMapsRenty {
             this.map.removeLayer(this.routePolyline);
             this.routePolyline = null;
         }
+        if (this.routeBadgeMarker) {
+            this.map.removeLayer(this.routeBadgeMarker);
+            this.routeBadgeMarker = null;
+        }
+        if (this.map) {
+            this.map.closePopup();
+        }
         this.updateCommuteBox(null);
         document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
 
-        // Di chuyển đến trung tâm thành phố tương ứng êm dịu, không giật màn hình
-        const cityCoords = {
-            'hcm': [10.800, 106.705],
-            'hanoi': [21.028, 105.834],
-            'danang': [16.060, 108.220],
-            'dalat': [11.942, 108.440],
-            'nhatrang': [12.245, 109.196],
-            'vungtau': [10.346, 107.084],
-            'hoian': [15.880, 108.338],
-            'phuquoc': [10.228, 103.957],
-            'hue': [16.463, 107.590],
-            'sapa': [22.336, 103.843]
+        // Bảng cấu hình trung tâm toạ độ và từ khóa nhận diện tỉnh thành
+        const CITY_CONFIG = {
+            all: {
+                name: 'toàn quốc',
+                center: [16.047, 108.206],
+                zoom: 6,
+                match: () => true
+            },
+            hcm: {
+                name: 'TP. Hồ Chí Minh',
+                center: [10.800, 106.705],
+                zoom: 13,
+                match: addr => addr.includes('hồ chí minh') || addr.includes('tp.hcm') || addr.includes('tphcm') || addr.includes('hcm')
+                    || addr.includes('thủ đức') || addr.includes('bình thạnh') || addr.includes('quận 10') || addr.includes('quận 7')
+                    || addr.includes('gò vấp') || addr.includes('tân bình') || addr.includes('phú nhuận') || addr.includes('quận 1')
+                    || addr.includes('quận 3') || addr.includes('quận 5') || addr.includes('quận 4') || addr.includes('quận 6')
+                    || addr.includes('quận 8') || addr.includes('quận 11') || addr.includes('quận 12') || addr.includes('tân phú')
+                    || addr.includes('bình tân') || addr.includes('nhà bè') || addr.includes('bình chánh')
+            },
+            hanoi: {
+                name: 'Hà Nội',
+                center: [21.028, 105.834],
+                zoom: 13,
+                match: addr => addr.includes('hà nội') || addr.includes('hanoi') || addr.includes('cầu giấy') || addr.includes('đống đa')
+                    || addr.includes('thanh xuân') || addr.includes('tây hồ') || addr.includes('ba đình') || addr.includes('hai bà trưng')
+                    || addr.includes('nam từ liêm') || addr.includes('bắc từ liêm') || addr.includes('hà đông') || addr.includes('hoàng mai')
+                    || addr.includes('long biên')
+            },
+            danang: {
+                name: 'Đà Nẵng',
+                center: [16.060, 108.220],
+                zoom: 13,
+                match: addr => (addr.includes('đà nẵng') || addr.includes('da nang') || addr.includes('hải châu') || addr.includes('sơn trà')
+                    || addr.includes('ngũ hành sơn') || addr.includes('thanh khê') || addr.includes('liên chiểu') || addr.includes('cẩm lệ')
+                    || addr.includes('hòa vang')) && !addr.includes('hội an')
+            },
+            dalat: {
+                name: 'Đà Lạt',
+                center: [11.942, 108.440],
+                zoom: 13,
+                match: addr => addr.includes('đà lạt') || addr.includes('da lat') || addr.includes('lâm đồng') || addr.includes('tuyền lâm')
+                    || addr.includes('trại mát') || addr.includes('vạn thành') || addr.includes('thái phiên') || addr.includes('bùi thị xuân')
+            },
+            hoian: {
+                name: 'Hội An',
+                center: [15.8801, 108.3380],
+                zoom: 14,
+                match: addr => addr.includes('hội an') || addr.includes('hoi an') || addr.includes('cửa đại') || addr.includes('cẩm châu')
+                    || addr.includes('quảng nam') || addr.includes('an bàng') || addr.includes('phố cổ')
+            },
+            nhatrang: {
+                name: 'Nha Trang',
+                center: [12.2388, 109.1967],
+                zoom: 14,
+                match: addr => addr.includes('nha trang') || addr.includes('khánh hòa') || addr.includes('lộc thọ') || addr.includes('trần phú')
+            },
+            vungtau: {
+                name: 'Vũng Tàu',
+                center: [10.3460, 107.0843],
+                zoom: 14,
+                match: addr => addr.includes('vũng tàu') || addr.includes('vung tau') || addr.includes('bà rịa') || addr.includes('thùy vân') || addr.includes('thắng tam')
+            },
+            phuquoc: {
+                name: 'Phú Quốc',
+                center: [10.2200, 103.9600],
+                zoom: 13,
+                match: addr => addr.includes('phú quốc') || addr.includes('phu quoc') || addr.includes('kiên giang') || addr.includes('dương đông')
+            },
+            hue: {
+                name: 'Huế',
+                center: [16.4637, 107.5909],
+                zoom: 14,
+                match: addr => addr.includes('huế') || addr.includes('hue') || addr.includes('thừa thiên') || addr.includes('sông hương') || addr.includes('lê lợi')
+            },
+            sapa: {
+                name: 'Sa Pa',
+                center: [22.3364, 103.8438],
+                zoom: 14,
+                match: addr => addr.includes('sa pa') || addr.includes('sapa') || addr.includes('lào cai')
+            }
         };
 
-        if (cityCoords[city]) {
-            this.map.setView(cityCoords[city], 13, { animate: false });
+        const cityCfg = CITY_CONFIG[city] || CITY_CONFIG['all'];
+
+        // Di chuyển đến trung tâm thành phố tương ứng
+        if (cityCfg && cityCfg.center && this.map) {
+            this.map.setView(cityCfg.center, cityCfg.zoom, { animate: false });
         } else {
             this.resetView();
         }
@@ -1870,91 +1860,112 @@ class GoogleMapsRenty {
         // Cập nhật giao diện thanh Chips
         this.renderCampusChips();
 
-        // Lọc danh sách thẻ phòng hiển thị theo thành phố
-        const cards = document.querySelectorAll('.room-item-card');
-        if (city === 'all') {
-            if (typeof window.filterItems === 'function') {
-                window.filterItems({ resetPage: true });
-            } else {
-                cards.forEach(card => card.classList.remove('hidden'));
-            }
-            document.querySelectorAll('.gm-price-marker').forEach(el => el.style.display = 'inline-flex');
+        // Kích hoạt bộ lọc danh sách phòng và phân trang đồng bộ
+        if (typeof window.filterItems === 'function') {
+            window.filterItems({ resetPage: true });
+        } else {
+            const cards = document.querySelectorAll('.room-item-card');
+            cards.forEach(card => {
+                const addr = `${card.getAttribute('data-address') || ''} ${card.getAttribute('data-area-name') || ''}`.toLowerCase();
+                const isMatch = (city === 'all') || (typeof cityCfg.match === 'function' ? cityCfg.match(addr) : true);
+                if (isMatch) card.classList.remove('hidden');
+                else card.classList.add('hidden');
+            });
             const countEl = document.getElementById('results-count');
             if (countEl) {
-                countEl.innerHTML = `Tìm thấy <span class="text-emerald-400 font-extrabold">${cards.length}</span> phòng`;
+                const visibleCount = Array.from(cards).filter(c => !c.classList.contains('hidden')).length;
+                countEl.innerHTML = `Tìm thấy <span class="text-emerald-400 font-extrabold">${visibleCount}</span> phòng tại <span class="text-sky-300 font-bold">${cityCfg.name}</span>`;
             }
-            return;
         }
 
-        let visibleCount = 0;
-        const visibleBuildingIds = new Set();
-
-        cards.forEach(card => {
-            const roomId = card.getAttribute('data-room-id');
-            const roomData = (window.rentyRoomsData && window.rentyRoomsData[roomId]);
-            if (!roomData) return;
-
-            const addr = ((roomData.address || '') + ' ' + (roomData.area_name || '') + ' ' + (roomData.building_address || '')).toLowerCase();
-            const isHcm = addr.includes('hồ chí minh') || addr.includes('hcm') || addr.includes('thủ đức') || addr.includes('bình thạnh') || addr.includes('quận 10') || addr.includes('quận 7') || addr.includes('gò vấp') || addr.includes('tân bình') || addr.includes('phú nhuận') || addr.includes('quận 1') || addr.includes('quận 3') || addr.includes('quận 5');
-            const isDanang = addr.includes('đà nẵng') || addr.includes('da nang') || addr.includes('hải châu') || addr.includes('sơn trà') || addr.includes('ngũ hành sơn') || addr.includes('thanh khê') || addr.includes('liên chiểu') || addr.includes('cẩm lệ') || addr.includes('hòa vang');
-            const isDalat = addr.includes('đà lạt') || addr.includes('da lat') || addr.includes('lâm đồng') || addr.includes('tuyền lâm') || addr.includes('trại mát') || addr.includes('vạn thành') || addr.includes('thái phiên');
-            const isHanoi = addr.includes('hà nội') || addr.includes('hanoi') || addr.includes('cầu giấy') || addr.includes('đống đa') || addr.includes('thanh xuân') || addr.includes('tây hồ') || addr.includes('ba đình') || addr.includes('hai bà trưng') || addr.includes('nam từ liêm') || addr.includes('bắc từ liêm') || addr.includes('hà đông') || addr.includes('hoàng mai');
-            const isNhatrang = addr.includes('nha trang') || addr.includes('khánh hòa');
-            const isVungtau = addr.includes('vũng tàu') || addr.includes('bà rịa');
-            const isHoian = addr.includes('hội an') || addr.includes('quảng nam');
-            const isPhuquoc = addr.includes('phú quốc') || addr.includes('kiên giang');
-            const isHue = addr.includes('huế') || addr.includes('thừa thiên');
-            const isSapa = addr.includes('sa pa') || addr.includes('sapa') || addr.includes('lào cai');
-
-            let matchesCity = false;
-            if (city === 'hcm') matchesCity = isHcm;
-            else if (city === 'hanoi') matchesCity = isHanoi;
-            else if (city === 'danang') matchesCity = isDanang;
-            else if (city === 'dalat') matchesCity = isDalat;
-            else if (city === 'nhatrang') matchesCity = isNhatrang;
-            else if (city === 'vungtau') matchesCity = isVungtau;
-            else if (city === 'hoian') matchesCity = isHoian;
-            else if (city === 'phuquoc') matchesCity = isPhuquoc;
-            else if (city === 'hue') matchesCity = isHue;
-            else if (city === 'sapa') matchesCity = isSapa;
-
-            if (matchesCity) {
-                card.classList.remove('hidden');
-                visibleCount++;
-                const bId = this.buildingMapByRoomId ? this.buildingMapByRoomId[roomId] : null;
-                if (bId) visibleBuildingIds.add(String(bId));
-            } else {
-                card.classList.add('hidden');
-            }
-        });
-
-        // Ẩn/hiện marker tòa nhà tương ứng với thành phố
+        // Cập nhật hiển thị marker tòa nhà tương ứng trên bản đồ
         document.querySelectorAll('.gm-building-marker').forEach(markerEl => {
-            const bId = markerEl.getAttribute('data-building-id');
-            if (visibleBuildingIds.has(String(bId))) {
+            if (city === 'all') {
                 markerEl.style.display = 'inline-flex';
+                return;
+            }
+            const bId = markerEl.getAttribute('data-building-id');
+            const markerObj = this.buildingMarkers ? this.buildingMarkers[bId] : null;
+            const building = markerObj ? markerObj._buildingData : null;
+            const addr = building ? `${building.address || ''} ${building.area_name || ''} ${building.name || ''}`.toLowerCase() : '';
+            if (addr && typeof cityCfg.match === 'function' && cityCfg.match(addr)) {
+                markerEl.style.display = 'inline-flex';
+            } else if (markerEl.className && typeof cityCfg.match === 'function') {
+                // Kiểm tra xem tòa nhà có chứa phòng nào thuộc thành phố này không
+                let hasMatchRoom = false;
+                if (building && building.rooms) {
+                    hasMatchRoom = building.rooms.some(r => cityCfg.match(((r.address || '') + ' ' + (r.area_name || '')).toLowerCase()));
+                }
+                markerEl.style.display = hasMatchRoom ? 'inline-flex' : 'none';
             } else {
                 markerEl.style.display = 'none';
             }
         });
+    }
 
-        const countEl = document.getElementById('results-count');
-        if (countEl) {
-            const cityNameMap = {
-                'hcm': 'TP. Hồ Chí Minh',
-                'hanoi': 'Hà Nội',
-                'danang': 'Đà Nẵng',
-                'dalat': 'Đà Lạt',
-                'nhatrang': 'Nha Trang',
-                'vungtau': 'Vũng Tàu',
-                'hoian': 'Hội An',
-                'phuquoc': 'Phú Quốc',
-                'hue': 'Huế',
-                'sapa': 'Sa Pa'
-            };
-            const cityName = cityNameMap[city] || 'toàn quốc';
-            countEl.innerHTML = `Tìm thấy <span class="text-emerald-400 font-extrabold">${visibleCount}</span> phòng tại <span class="text-sky-300 font-bold">${cityName}</span>`;
+    getCityName(cityKey) {
+        const CITY_NAMES = {
+            all: 'toàn quốc',
+            hcm: 'TP. Hồ Chí Minh',
+            hanoi: 'Hà Nội',
+            danang: 'Đà Nẵng',
+            dalat: 'Đà Lạt',
+            hoian: 'Hội An',
+            nhatrang: 'Nha Trang',
+            vungtau: 'Vũng Tàu',
+            phuquoc: 'Phú Quốc',
+            hue: 'Huế',
+            sapa: 'Sa Pa'
+        };
+        return CITY_NAMES[cityKey] || 'toàn quốc';
+    }
+
+    matchesCityAddress(cityKey, text) {
+        if (!cityKey || cityKey === 'all') return true;
+        const norm = (text || '').toLowerCase();
+        if (cityKey === 'hcm') {
+            return norm.includes('hồ chí minh') || norm.includes('tp.hcm') || norm.includes('tphcm') || norm.includes('hcm')
+                || norm.includes('thủ đức') || norm.includes('bình thạnh') || norm.includes('quận 10') || norm.includes('quận 7')
+                || norm.includes('gò vấp') || norm.includes('tân bình') || norm.includes('phú nhuận') || norm.includes('quận 1')
+                || norm.includes('quận 3') || norm.includes('quận 5') || norm.includes('quận 4') || norm.includes('quận 6')
+                || norm.includes('quận 8') || norm.includes('quận 11') || norm.includes('quận 12') || norm.includes('tân phú')
+                || norm.includes('bình tân') || norm.includes('nhà bè') || norm.includes('bình chánh');
         }
+        if (cityKey === 'hanoi') {
+            return norm.includes('hà nội') || norm.includes('hanoi') || norm.includes('cầu giấy') || norm.includes('đống đa')
+                || norm.includes('thanh xuân') || norm.includes('tây hồ') || norm.includes('ba đình') || norm.includes('hai bà trưng')
+                || norm.includes('nam từ liêm') || norm.includes('bắc từ liêm') || norm.includes('hà đông') || norm.includes('hoàng mai')
+                || norm.includes('long biên');
+        }
+        if (cityKey === 'danang') {
+            return (norm.includes('đà nẵng') || norm.includes('da nang') || norm.includes('hải châu') || norm.includes('sơn trà')
+                || norm.includes('ngũ hành sơn') || norm.includes('thanh khê') || norm.includes('liên chiểu') || norm.includes('cẩm lệ')
+                || norm.includes('hòa vang')) && !norm.includes('hội an');
+        }
+        if (cityKey === 'dalat') {
+            return norm.includes('đà lạt') || norm.includes('da lat') || norm.includes('lâm đồng') || norm.includes('tuyền lâm')
+                || norm.includes('trại mát') || norm.includes('vạn thành') || norm.includes('thái phiên') || norm.includes('bùi thị xuân');
+        }
+        if (cityKey === 'hoian') {
+            return norm.includes('hội an') || norm.includes('hoi an') || norm.includes('cửa đại') || norm.includes('cẩm châu')
+                || norm.includes('quảng nam') || norm.includes('an bàng') || norm.includes('phố cổ');
+        }
+        if (cityKey === 'nhatrang') {
+            return norm.includes('nha trang') || norm.includes('khánh hòa') || norm.includes('lộc thọ') || norm.includes('trần phú');
+        }
+        if (cityKey === 'vungtau') {
+            return norm.includes('vũng tàu') || norm.includes('vung tau') || norm.includes('bà rịa') || norm.includes('thùy vân') || norm.includes('thắng tam');
+        }
+        if (cityKey === 'phuquoc') {
+            return norm.includes('phú quốc') || norm.includes('phu quoc') || norm.includes('kiên giang') || norm.includes('dương đông');
+        }
+        if (cityKey === 'hue') {
+            return norm.includes('huế') || norm.includes('hue') || norm.includes('thừa thiên') || norm.includes('sông hương') || norm.includes('lê lợi');
+        }
+        if (cityKey === 'sapa') {
+            return norm.includes('sa pa') || norm.includes('sapa') || norm.includes('lào cai');
+        }
+        return false;
     }
 
     setCommuteRadius(radiusMeters) {
@@ -1978,26 +1989,22 @@ class GoogleMapsRenty {
             matchedChip.classList.remove('text-slate-400');
         }
 
-        if (this.selectedUniversity && this.selectedCampusId && this.selectedCampusId !== 'all') {
-            this.selectCampus(this.selectedUniversity.id);
-        } else if (this.activeCenter) {
+        if (this.activeCenter) {
             this.scanRadiusAtLocation(this.activeCenter.lat, this.activeCenter.lng, this.activeCenter.label, radiusMeters);
+        } else if (this.selectedUniversity) {
+            this.selectCampus(this.selectedUniversity.id);
         }
     }
 
-    showCoordErrorToast(customMessage = null) {
+    showCoordErrorToast() {
         const toast = document.getElementById('gm-coord-error-toast');
         if (toast) {
-            if (customMessage) {
-                const span = toast.querySelector('span');
-                if (span) span.textContent = customMessage;
-            }
             toast.classList.remove('hidden');
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 5500);
         } else if (typeof showRentyToast === 'function') {
-            showRentyToast(customMessage || 'Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.', 'error', 'Mã lỗi: ERR_05_03');
+            showRentyToast('Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.', 'error', 'Mã lỗi: ERR_05_03');
         }
     }
 
@@ -2055,7 +2062,7 @@ class GoogleMapsRenty {
             roomDistances.push({ card, distKm, roomId });
         });
 
-        const maxRadiusKm = (activeRadius / 1000);
+        const maxRadiusKm = (activeRadius / 1000) + 0.3;
         roomDistances.forEach(item => {
             const isNearby = item.distKm <= maxRadiusKm;
             const markerEl = this.getMarkerElementForRoom(item.roomId);
@@ -2063,7 +2070,6 @@ class GoogleMapsRenty {
             if (isNearby) {
                 item.card.classList.remove('hidden');
                 item.card.style.display = '';
-                item.card.dataset.filteredOut = 'false';
                 nearbyCount++;
 
                 if (markerEl) {
@@ -2101,7 +2107,6 @@ class GoogleMapsRenty {
                 }
                 item.card.classList.add('hidden');
                 item.card.style.display = 'none';
-                item.card.dataset.filteredOut = 'true';
             }
         });
 
@@ -2115,13 +2120,6 @@ class GoogleMapsRenty {
 
         // [ERR_05_02]: Không có phòng trong bán kính chọn
         if (nearbyCount === 0) {
-            // Ẩn toàn bộ thẻ phòng
-            cards.forEach(c => {
-                c.classList.add('hidden');
-                c.style.display = 'none';
-                c.dataset.filteredOut = 'true';
-            });
-
             // Hiển thị vòng quét trên bản đồ dạng viền đỏ cảnh báo theo spec
             if (this.campusRadiusCircle) {
                 this.campusRadiusCircle.setStyle({
@@ -2213,6 +2211,21 @@ class GoogleMapsRenty {
         }
         if (typeof this.updateCommuteBox === 'function') {
             this.updateCommuteBox(null);
+        }
+
+        // Cập nhật lại thanh phân trang đồng bộ với số phòng tìm thấy
+        if (typeof window.rentyCurrentPage !== 'undefined') {
+            window.rentyCurrentPage = 1;
+        }
+        if (typeof renderPaginationControls === 'function') {
+            const totalPages = nearbyCount > 0 ? Math.ceil(nearbyCount / 9) : 0;
+            renderPaginationControls(totalPages);
+        }
+
+        // Đồng bộ nhãn phản hồi của thanh trượt khoảng cách nếu có
+        const distSlider = document.getElementById('distance-slider');
+        if (distSlider && typeof window.updateDistanceSlider === 'function') {
+            window.updateDistanceSlider(distSlider.value);
         }
     }
 
@@ -2366,6 +2379,37 @@ class GoogleMapsRenty {
             'phuong 10': [11.939, 108.450],
             'phuong 11': [11.945, 108.498],
             'phuong 12': [11.968, 108.485],
+
+            // Hội An
+            'hoi an': [15.8801, 108.3380],
+            'hoian': [15.8801, 108.3380],
+            'cam chau': [15.8810, 108.3450],
+            'cua dai': [15.8920, 108.3750],
+            'an bang': [15.9120, 108.3410],
+            'quang nam': [15.8801, 108.3380],
+
+            // Nha Trang
+            'nha trang': [12.2388, 109.1967],
+            'nhatrang': [12.2388, 109.1967],
+            'khanh hoa': [12.2388, 109.1967],
+
+            // Vũng Tàu
+            'vung tau': [10.3460, 107.0843],
+            'vungtau': [10.3460, 107.0843],
+            'thuy van': [10.3370, 107.0890],
+
+            // Phú Quốc
+            'phu quoc': [10.2200, 103.9600],
+            'phuquoc': [10.2200, 103.9600],
+            'duong dong': [10.2180, 103.9620],
+
+            // Huế
+            'hue': [16.4637, 107.5909],
+            'thua thien': [16.4637, 107.5909],
+
+            // Sa Pa
+            'sa pa': [22.3364, 103.8438],
+            'sapa': [22.3364, 103.8438],
         };
 
         for (const [dist, coords] of Object.entries(districtCoordinates)) {
@@ -2417,53 +2461,6 @@ class GoogleMapsRenty {
 
     geocodeAndFly(addressOrPlace) {
         if (!addressOrPlace || !this.map) return;
-        const normKey = removeVietnameseTones(addressOrPlace);
-        const tokens = normKey.split(/\s+/).filter(Boolean);
-
-        // 1. Kiểm tra nhanh nếu là trường đại học / cao đẳng trong danh bạ
-        if (this.universities && this.universities.length > 0 && tokens.length > 0) {
-            let effectiveTokens = tokens;
-            if (tokens.length > 1 && (tokens.includes('truong') || tokens.includes('trg'))) {
-                effectiveTokens = tokens.filter(t => t !== 'truong' && t !== 'trg');
-            }
-            const matchedUni = this.universities.find(u => {
-                const searchPool = [
-                    'truong',
-                    u.type === 'college' ? 'cao dang cd cđ' : 'dai hoc dh đh',
-                    removeVietnameseTones(u.name || ''),
-                    removeVietnameseTones(u.shortName || ''),
-                    removeVietnameseTones(u.campus || ''),
-                    removeVietnameseTones(u.district || ''),
-                    removeVietnameseTones(u.address || ''),
-                    removeVietnameseTones(u.fullName || ''),
-                    removeVietnameseTones(u.id || ''),
-                    ...(u.aliases || []).map(a => removeVietnameseTones(a))
-                ];
-                return effectiveTokens.every(tok => {
-                    if (tok === 'cd' || tok === 'cđ') return u.type === 'college' || searchPool.some(f => f.includes('cao dang'));
-                    if (tok === 'dh' || tok === 'đh') return u.type !== 'college' || searchPool.some(f => f.includes('dai hoc'));
-                    return searchPool.some(field => field.includes(tok));
-                });
-            });
-
-            if (matchedUni) {
-                if (this.currentCity !== 'all' && matchedUni.city !== this.currentCity) {
-                    this.switchCity(matchedUni.city);
-                }
-                this.selectCampus(matchedUni.id);
-                const chip = document.querySelector(`.gm-campus-chip[onclick*="'${matchedUni.id}'"]`);
-                if (chip) {
-                    document.querySelectorAll('.gm-campus-chip').forEach(c => c.classList.remove('active', 'bg-blue-600', 'text-white'));
-                    chip.classList.add('active', 'bg-blue-600', 'text-white');
-                    if (typeof chip.scrollIntoView === 'function') {
-                        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    }
-                }
-                return;
-            }
-        }
-
-        // 2. Tìm kiếm qua dịch vụ Live Geocoding OpenStreetMap
         const query = encodeURIComponent(addressOrPlace.trim() + ', Vietnam');
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
             headers: { 'Accept-Language': 'vi,en' }
@@ -2479,20 +2476,13 @@ class GoogleMapsRenty {
                     }
                 }
                 // Không tìm thấy tọa độ hợp lệ
-                console.warn('[Geocoding] Không tìm thấy tọa độ cho:', addressOrPlace);
-                if (typeof showRentyToast === 'function') {
-                    showRentyToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`, 'warning');
-                } else {
-                    this.showCoordErrorToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`);
-                }
+                console.warn('[ERR_05_03] Không xác định được tọa độ hợp lệ cho:', addressOrPlace);
+                this.showCoordErrorToast();
+                this.resetView();
             })
             .catch(() => {
-                console.warn('[Geocoding Error] Lỗi kết nối geocode cho:', addressOrPlace);
-                if (typeof showRentyToast === 'function') {
-                    showRentyToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`, 'warning');
-                } else {
-                    this.showCoordErrorToast(`Không tìm thấy vị trí "${addressOrPlace}". Vui lòng thử từ khóa khác.`);
-                }
+                this.showCoordErrorToast();
+                this.resetView();
             });
     }
 
@@ -2515,68 +2505,101 @@ class GoogleMapsRenty {
         let walkMins = Math.max(3, Math.round((distKm / 4.5) * 60));
         let busMins = Math.max(10, Math.round((distKm / 16) * 60 + 8));
         let routeDistanceKm = distKm;
-        let latLngs = null;
+        
+        // Tuyến đường dự phòng uốn cong mô phỏng trục đường giao thông (tránh kẻ đường thẳng đâm xuyên tòa nhà)
+        const midLat = (startCoords.lat + destLat) / 2;
+        const midLng = (startCoords.lng + destLng) / 2;
+        const deltaLat = destLat - startCoords.lat;
+        const deltaLng = destLng - startCoords.lng;
+        const bendOffset = 0.0035;
 
-        // Fetch OSRM song song siêu tốc qua Promise.any (bám 100% theo mạng lưới đường sá thực tế)
-        const routingEndpoints = [
-            `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
-            `https://routing.openstreetmap.de/routed-car/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`,
-            `https://routing.openstreetmap.de/routed-bike/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`
+        let latLngs = [
+            [startCoords.lat, startCoords.lng],
+            [startCoords.lat + deltaLat * 0.35 + bendOffset * 0.4, startCoords.lng + deltaLng * 0.25 - bendOffset * 0.8],
+            [midLat + bendOffset * 0.6, midLng + bendOffset * 0.5],
+            [startCoords.lat + deltaLat * 0.75 - bendOffset * 0.3, startCoords.lng + deltaLng * 0.8 + bendOffset * 0.4],
+            [destLat, destLng]
         ];
 
-        const fetchRoute = async (url) => {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 4000);
-            try {
-                const resp = await fetch(url, { signal: controller.signal });
-                clearTimeout(timer);
-                if (!resp.ok) throw new Error('Route status not ok');
-                const data = await resp.json();
-                if (!data.routes || !data.routes.length) throw new Error('No route');
-                const r = data.routes[0];
-                if (!r.geometry || !Array.isArray(r.geometry.coordinates) || r.geometry.coordinates.length < 2) {
-                    throw new Error('Invalid coordinates');
-                }
-                return r;
-            } catch (err) {
-                clearTimeout(timer);
-                throw err;
-            }
-        };
-
+        // Fetch OSRM tuyến đường giao thông thực tế (không đâm xuyên nhà cửa)
         try {
-            const route = await Promise.any(routingEndpoints.map(url => fetchRoute(url)));
-            if (route) {
-                latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                routeDistanceKm = route.distance / 1000;
-                bikeMins = Math.max(2, Math.round(route.duration / 60));
-                walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
-                busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords.lng},${startCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
+            const resp = await fetch(osrmUrl);
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    latLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                    routeDistanceKm = route.distance / 1000;
+                    bikeMins = Math.max(2, Math.round(route.duration / 60));
+                    walkMins = Math.max(3, Math.round((routeDistanceKm / 4.5) * 60));
+                    busMins = Math.max(8, Math.round((routeDistanceKm / 16) * 60 + 5));
+                }
             }
-        } catch (err) {
-            console.warn('[Routing] OSRM mirrors pending or unavailable:', err);
+        } catch (e) {
+            console.warn('Lỗi tải tuyến đường OSRM, chuyển sang đường nối trực tiếp:', e);
         }
 
-        // Nếu tất cả mirror OSRM đều mất mạng hoàn toàn: fallback đường nối mượt mà
-        if (!latLngs || latLngs.length < 2) {
-            latLngs = [[startCoords.lat, startCoords.lng], [destLat, destLng]];
-        }
-
-        // Tuyến đường thực tế bám sát theo mặt đường: ĐƯỜNG LIỀN MÀU RÕ NÉT (KHÔNG NÉT ĐỨT)
+        // Tuyến đường thực tế bám sát theo mặt đường
         this.routePolyline = L.polyline(latLngs, {
             color: '#2563eb',
-            weight: 6,
-            opacity: 0.9,
+            weight: 5,
+            opacity: 0.88,
             lineJoin: 'round',
             lineCap: 'round'
         }).addTo(this.map);
 
+        // Tạo nhãn Huy hiệu hiển thị số km & thời gian di chuyển trực tiếp giữa tuyến đường trên bản đồ
+        const midIndex = Math.floor(latLngs.length / 2);
+        const midCoord = latLngs[midIndex] || [(startCoords.lat + destLat) / 2, (startCoords.lng + destLng) / 2];
+
+        const cleanUniName = destUni.shortName || destName.split('(')[0].trim();
+        const badgeHtml = `
+            <div style="
+                background: rgba(11, 17, 32, 0.95);
+                backdrop-filter: blur(12px);
+                border: 1.5px solid #38bdf8;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.65), 0 0 15px rgba(56, 189, 248, 0.45);
+                border-radius: 9999px;
+                padding: 6px 14px;
+                color: #ffffff;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 11px;
+                font-weight: 800;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+                transform: translate(-50%, -50%);
+                cursor: pointer;
+                transition: transform 0.2s ease;
+            " title="Khoảng cách từ ${cleanUniName} đến phòng trọ">
+                <span style="color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-route text-sky-400"></i> ${routeDistanceKm.toFixed(1)} km
+                </span>
+                <span style="color: #475569;">•</span>
+                <span style="color: #34d399; display: inline-flex; align-items: center; gap: 4px;" title="Thời gian đi xe máy">
+                    <i class="fa-solid fa-motorcycle text-emerald-400"></i> ${bikeMins} phút
+                </span>
+                <span style="color: #475569;">•</span>
+                <span style="color: #fbbf24; display: inline-flex; align-items: center; gap: 4px;" title="Thời gian đi bộ">
+                    <i class="fa-solid fa-person-walking text-amber-400"></i> ${walkMins} phút
+                </span>
+            </div>
+        `;
+
+        const badgeIcon = L.divIcon({
+            html: badgeHtml,
+            className: 'gm-route-badge-container',
+            iconSize: [0, 0],
+            iconAnchor: [0, 0]
+        });
+
+        this.routeBadgeMarker = L.marker(midCoord, { icon: badgeIcon, zIndexOffset: 1200 }).addTo(this.map);
+
         const bounds = L.latLngBounds(latLngs);
         this.map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: false });
 
-        const cleanUniName = destUni.shortName || destName.split('(')[0].trim();
-
-        // Cập nhật duy nhất Hộp hiển thị khoảng cách ở góc trái dưới bản đồ (không tạo badge che khuất trên bản đồ)
         this.updateCommuteBox({
             distance: routeDistanceKm.toFixed(1),
             bikeTime: bikeMins,
@@ -2889,86 +2912,134 @@ class GoogleMapsRenty {
             return { lat: parseFloat(building.lat), lng: parseFloat(building.lng) };
         }
 
-        // 2. Tra cứu theo bảng tọa độ 62 Tòa nhà chuẩn của FullDemoSeeder
+        // 2. Tra cứu theo bảng tọa độ chuẩn chính xác của từng Tòa nhà trong Database
         const bId = parseInt(building.building_id || building.id || 0, 10);
         const BUILDING_COORDS = {
-            // Hà Nội (1 - 15)
-            1:  { lat: 21.0368, lng: 105.7832 }, // Cầu Giấy (Xuân Thủy)
-            2:  { lat: 21.0345, lng: 105.7958 }, // Cầu Giấy (Chùa Hà)
-            3:  { lat: 20.9982, lng: 105.8195 }, // Thanh Xuân (Vũ Tông Phan)
-            4:  { lat: 20.9912, lng: 105.8115 }, // Thanh Xuân (Khương Đình)
-            5:  { lat: 21.0152, lng: 105.8340 }, // Đống Đa (Xã Đàn)
-            6:  { lat: 21.0078, lng: 105.8285 }, // Đống Đa (Chùa Bộc)
-            7:  { lat: 21.0485, lng: 105.8080 }, // Tây Hồ (Lạc Long Quân)
-            8:  { lat: 21.0450, lng: 105.8200 }, // Tây Hồ (Trích Sài)
-            9:  { lat: 21.0045, lng: 105.8505 }, // Hai Bà Trưng (Bạch Mai)
-            10: { lat: 21.0340, lng: 105.8150 }, // Ba Đình (Liễu Giai)
-            11: { lat: 21.0185, lng: 105.7760 }, // Nam Từ Liêm (Đình Thôn)
-            12: { lat: 21.0310, lng: 105.7680 }, // Nam Từ Liêm (Lê Đức Thọ)
-            13: { lat: 20.9650, lng: 105.8280 }, // Hoàng Mai (Linh Đàm)
-            14: { lat: 21.0650, lng: 105.7720 }, // Bắc Từ Liêm (Cổ Nhuế)
-            15: { lat: 20.9810, lng: 105.7930 }, // Hà Đông (Chiến Thắng)
+            // Hà Nội (1 - 22)
+            1:  { lat: 21.0368, lng: 105.7832 }, // Cầu Giấy (12 Ngõ 105 Xuân Thủy)
+            2:  { lat: 21.0345, lng: 105.7958 }, // Cầu Giấy (36 Ngõ 86 Chùa Hà)
+            3:  { lat: 20.9982, lng: 105.8195 }, // Thanh Xuân (85 Vũ Tông Phan)
+            4:  { lat: 20.9912, lng: 105.8115 }, // Thanh Xuân (120 Khương Đình)
+            5:  { lat: 21.0152, lng: 105.8340 }, // Đống Đa (18 Ngõ 198 Xã Đàn)
+            6:  { lat: 21.0078, lng: 105.8285 }, // Đống Đa (45 Chùa Bộc)
+            7:  { lat: 21.0485, lng: 105.8080 }, // Tây Hồ (210 Lạc Long Quân)
+            8:  { lat: 21.0450, lng: 105.8200 }, // Tây Hồ (99 Trích Sài)
+            9:  { lat: 21.0045, lng: 105.8505 }, // Hai Bà Trưng (250 Bạch Mai)
+            10: { lat: 21.0020, lng: 105.8620 }, // Hai Bà Trưng (158 Minh Khai)
+            11: { lat: 21.0340, lng: 105.8150 }, // Ba Đình (68 Liễu Giai)
+            12: { lat: 21.0330, lng: 105.8230 }, // Ba Đình (142 Đội Cấn)
+            13: { lat: 21.0185, lng: 105.7760 }, // Nam Từ Liêm (56 Đình Thôn)
+            14: { lat: 21.0310, lng: 105.7680 }, // Nam Từ Liêm (89 Lê Đức Thọ)
+            15: { lat: 20.9650, lng: 105.8280 }, // Hoàng Mai (Bán đảo Linh Đàm)
+            16: { lat: 20.9750, lng: 105.8420 }, // Hoàng Mai (72 Đại Từ)
+            17: { lat: 21.0650, lng: 105.7720 }, // Bắc Từ Liêm (18 Ngõ 136 Cổ Nhuế)
+            18: { lat: 21.0550, lng: 105.7830 }, // Bắc Từ Liêm (64 Trần Cung)
+            19: { lat: 20.9720, lng: 105.7750 }, // Hà Đông (112 Quang Trung)
+            20: { lat: 20.9780, lng: 105.7880 }, // Hà Đông (35 Nguyễn Khuyến)
+            21: { lat: 21.0368, lng: 105.7832 }, // Cầu Giấy (12 Ngõ 105 Xuân Thủy)
+            22: { lat: 20.9982, lng: 105.8195 }, // Thanh Xuân (85 Vũ Tông Phan)
 
-            // TP. Hồ Chí Minh (16 - 31)
-            16: { lat: 10.7712, lng: 106.6925 }, // Quận 1 (Lê Lai)
-            17: { lat: 10.7675, lng: 106.6885 }, // Quận 1 (Cống Quỳnh)
-            18: { lat: 10.8015, lng: 106.7145 }, // Bình Thạnh (Điện Biên Phủ)
-            19: { lat: 10.7950, lng: 106.7080 }, // Bình Thạnh (Xô Viết Nghệ Tĩnh)
-            20: { lat: 10.8514, lng: 106.7578 }, // TP. Thủ Đức (Võ Văn Ngân)
-            21: { lat: 10.8405, lng: 106.8415 }, // TP. Thủ Đức (Nguyễn Xiển)
-            22: { lat: 10.7875, lng: 106.6890 }, // Quận 3 (Nam Kỳ Khởi Nghĩa)
-            23: { lat: 10.7735, lng: 106.6610 }, // Quận 10 (Thành Thái)
-            24: { lat: 10.7725, lng: 106.6578 }, // Quận 10 (Lý Thường Kiệt)
-            25: { lat: 10.7290, lng: 106.7120 }, // Quận 7 (Phú Mỹ Hưng)
-            26: { lat: 10.7410, lng: 106.7050 }, // Quận 7 (Nguyễn Thị Thập)
-            27: { lat: 10.7960, lng: 106.6870 }, // Phú Nhuận (Phan Xích Long)
-            28: { lat: 10.8140, lng: 106.6660 }, // Tân Bình (Bạch Đằng)
-            29: { lat: 10.8030, lng: 106.6490 }, // Tân Bình (Hoàng Hoa Thám)
-            30: { lat: 10.8350, lng: 106.6650 }, // Gò Vấp (Quang Trung)
-            31: { lat: 10.7570, lng: 106.6780 }, // Quận 5 (Nguyễn Trãi)
+            // TP. Hồ Chí Minh (23 - 31)
+            23: { lat: 10.7735, lng: 106.6610 }, // Quận 10 (42 Thành Thái)
+            24: { lat: 10.8490, lng: 106.7540 }, // TP. Thủ Đức (18 Võ Văn Ngân)
+            25: { lat: 10.8460, lng: 106.7780 }, // TP. Thủ Đức - Q9 (45 Lê Văn Việt)
+            26: { lat: 10.8015, lng: 106.7145 }, // Bình Thạnh (475A Điện Biên Phủ - HUTECH)
+            27: { lat: 10.8505, lng: 106.7565 }, // TP. Thủ Đức - SPKT (24 Võ Văn Ngân)
+            28: { lat: 10.8710, lng: 106.7890 }, // TP. Thủ Đức - Linh Trung (Làng ĐHQG)
+            29: { lat: 10.7610, lng: 106.6670 }, // Quận 10 (279 Nguyễn Tri Phương - UEH)
+            30: { lat: 10.7290, lng: 106.7020 }, // Quận 7 (702 Nguyễn Văn Linh - RMIT)
+            31: { lat: 10.8350, lng: 106.6650 }, // Gò Vấp (12 Nguyễn Văn Bảo - IUH)
 
-            // Đà Nẵng (32 - 46)
-            32: { lat: 16.0685, lng: 108.2245 }, // Hải Châu (Bạch Đằng)
-            33: { lat: 16.0605, lng: 108.2160 }, // Hải Châu (Nguyễn Văn Linh)
-            34: { lat: 16.0620, lng: 108.2465 }, // Sơn Trà (Võ Nguyên Giáp)
-            35: { lat: 16.0690, lng: 108.2390 }, // Sơn Trà (Dương Đình Nghệ)
-            36: { lat: 16.0020, lng: 108.2610 }, // Ngũ Hành Sơn (Trường Sa)
-            37: { lat: 16.0490, lng: 108.2410 }, // Ngũ Hành Sơn (ĐH Kinh Tế)
-            38: { lat: 16.0730, lng: 108.1960 }, // Thanh Khê (Nguyễn Tất Thành)
-            39: { lat: 16.0610, lng: 108.1920 }, // Thanh Khê (Điện Biên Phủ)
-            40: { lat: 16.0760, lng: 108.1520 }, // Liên Chiểu (Nguyễn Lương Bằng)
-            41: { lat: 16.0630, lng: 108.1680 }, // Liên Chiểu (Tôn Đức Thắng)
-            42: { lat: 16.0280, lng: 108.2050 }, // Cẩm Lệ (Cách Mạng Tháng 8)
-            43: { lat: 16.1020, lng: 108.2650 }, // Sơn Trà (Hoàng Sa)
-            44: { lat: 16.0520, lng: 108.2220 }, // Hải Châu (Cầu Rồng, 2 Tháng 9)
-            45: { lat: 16.0080, lng: 108.1400 }, // Hòa Vang (QL14B)
-            46: { lat: 16.0520, lng: 108.2450 }, // Ngũ Hành Sơn (Phố Tây An Thượng)
+            // Các tỉnh thành & Toà nhà mở rộng (36 - 69)
+            36: { lat: 21.0350, lng: 105.7980 }, // Cầu Giấy (68 Cầu Giấy, Hà Nội)
+            37: { lat: 20.8520, lng: 106.6890 }, // Hải Phòng (45 Lạch Tray)
+            38: { lat: 20.9590, lng: 107.0360 }, // Quảng Ninh (18 Hạ Long, Bãi Cháy)
+            39: { lat: 21.1860, lng: 106.0760 }, // Bắc Ninh (56 Lý Thái Tổ)
+            40: { lat: 21.5930, lng: 105.8440 }, // Thái Nguyên (42 Lương Ngọc Quyến)
+            41: { lat: 20.9400, lng: 106.3330 }, // Hải Dương (78 Bạch Đằng)
+            42: { lat: 20.4340, lng: 106.1770 }, // Nam Định (34 Trần Hưng Đạo)
+            43: { lat: 21.3090, lng: 105.5970 }, // Vĩnh Phúc (28 Mê Linh, Vĩnh Yên)
+            44: { lat: 20.6460, lng: 106.0510 }, // Hưng Yên (62 Chùa Chuông)
+            45: { lat: 21.3220, lng: 105.4010 }, // Phú Thọ (65 Hùng Vương, Việt Trì)
+            46: { lat: 20.4460, lng: 106.3400 }, // Thái Bình (39 Lê Lợi)
+            47: { lat: 20.2540, lng: 105.9750 }, // Ninh Bình (50 Trần Hưng Đạo)
+            48: { lat: 19.8070, lng: 105.7760 }, // Thanh Hóa (89 Lê Hoàn)
+            49: { lat: 18.6730, lng: 105.6810 }, // Nghệ An (102 Nguyễn Thị Minh Khai, Vinh)
+            50: { lat: 16.4637, lng: 107.5909 }, // Thừa Thiên Huế (25 Lê Lợi, Huế)
+            51: { lat: 16.0530, lng: 108.2430 }, // Đà Nẵng (120 Nguyễn Văn Thoại)
+            52: { lat: 15.8801, lng: 108.3380 }, // Quảng Nam (82 Cửa Đại, Hội An)
+            53: { lat: 13.7590, lng: 109.2190 }, // Bình Định (108 An Dương Vương, Quy Nhơn)
+            54: { lat: 12.2388, lng: 109.1967 }, // Khánh Hòa (72 Trần Phú, Nha Trang)
+            55: { lat: 10.9520, lng: 108.2160 }, // Bình Thuận (124 Nguyễn Đình Chiểu, Phan Thiết)
+            56: { lat: 11.9470, lng: 108.4410 }, // Lâm Đồng (35 Bùi Thị Xuân, Đà Lạt)
+            57: { lat: 12.6780, lng: 108.0440 }, // Đắk Lắk (54 Lê Duẩn, Buôn Ma Thuột)
+            58: { lat: 13.9830, lng: 108.0000 }, // Gia Lai (22 Hùng Vương, Pleiku)
+            59: { lat: 10.7950, lng: 106.7220 }, // TP.HCM - Bình Thạnh (208 Nguyễn Hữu Cảnh)
+            60: { lat: 10.9800, lng: 106.6740 }, // Bình Dương (230 Đại Lộ Bình Dương, Thủ Dầu Một)
+            61: { lat: 10.9570, lng: 106.8430 }, // Đồng Nai (15 Đồng Khởi, Biên Hòa)
+            62: { lat: 10.3370, lng: 107.0890 }, // Bà Rịa - Vũng Tàu (52 Thùy Vân, Vũng Tàu)
+            63: { lat: 11.3100, lng: 106.0980 }, // Tây Ninh (73 Đường 30 Tháng 4)
+            64: { lat: 10.0340, lng: 105.7820 }, // Cần Thơ (88 Đường 30 Tháng 4, Ninh Kiều)
+            65: { lat: 10.5360, lng: 106.4130 }, // Long An (45 Hùng Vương, Tân An)
+            66: { lat: 10.3600, lng: 106.3600 }, // Tiền Giang (48 Ấp Bắc, Mỹ Tho)
+            67: { lat: 10.3830, lng: 105.4330 }, // An Giang (15 Trần Hưng Đạo, Long Xuyên)
+            68: { lat: 10.2430, lng: 106.3750 }, // Bến Tre (31 Đồng Khởi)
+            69: { lat: 10.2120, lng: 103.9600 }, // Kiên Giang (91 Trần Hưng Đạo, Phú Quốc)
 
-            // Đà Lạt (47 - 62)
-            47: { lat: 11.9425, lng: 108.4380 }, // Phường 1 (Nguyễn Chí Thanh)
-            48: { lat: 11.9410, lng: 108.4350 }, // Phường 1 (Lê Thị Hồng Gấm, Chợ Đêm)
-            49: { lat: 11.9470, lng: 108.4410 }, // Phường 2 (Bùi Thị Xuân)
-            50: { lat: 11.9485, lng: 108.4340 }, // Phường 2 (Phan Đình Phùng)
-            51: { lat: 11.9250, lng: 108.4420 }, // Phường 3 (Đống Đa, Cáp Treo)
-            52: { lat: 11.9270, lng: 108.4450 }, // Phường 3 (Đường 3 Tháng 4)
-            53: { lat: 11.9410, lng: 108.4120 }, // Phường 4 (Vạn Hạnh, Làng Hoa)
-            54: { lat: 11.9380, lng: 108.4210 }, // Phường 4 (Hoàng Văn Thụ, Cam Ly)
-            55: { lat: 11.9560, lng: 108.4460 }, // Phường 8 (Phù Đổng Thiên Vương)
-            56: { lat: 11.9720, lng: 108.4510 }, // Phường 8 (Mai Anh Đào, Tình Yêu)
-            57: { lat: 11.9420, lng: 108.4550 }, // Phường 10 (Quang Trung, Ga Cổ)
-            58: { lat: 11.9360, lng: 108.4450 }, // Phường 10 (Yersin, Quảng Trường)
-            59: { lat: 11.9450, lng: 108.4980 }, // Phường 11 (Tự Phước, Trại Mát)
-            60: { lat: 11.9480, lng: 108.4720 }, // Phường 9 (Hùng Vương, Thung Lũng Đèn)
-            61: { lat: 11.9680, lng: 108.4850 }, // Phường 12 (Ngô Gia Tự, Thái Phiên)
-            62: { lat: 11.8950, lng: 108.4320 }, // Phường 3 (Hồ Tuyền Lâm, Trúc Lâm)
+            // Hà Nội Hubs (70 - 75)
+            70: { lat: 21.0368, lng: 105.7832 }, // Cầu Giấy Campus (68 Xuân Thủy)
+            71: { lat: 21.0230, lng: 105.8050 }, // Đống Đa Chùa Láng (15 Ngõ 91 Chùa Láng)
+            72: { lat: 21.0045, lng: 105.8450 }, // Bách Kinh Xây Hub (38 Tạ Quang Bửu)
+            73: { lat: 20.9980, lng: 105.8110 }, // Thanh Xuân Smart (334 Nguyễn Trãi)
+            74: { lat: 20.9780, lng: 105.7820 }, // Hà Đông Metro Hub (10 Trần Phú)
+            75: { lat: 21.0360, lng: 105.7720 }, // Nam Từ Liêm (26 Hồ Tùng Mậu)
+
+            // TP.HCM Hubs (76 - 82)
+            76: { lat: 10.8785, lng: 106.8010 }, // Renty KTX Làng ĐHQG (Đường Tô Vĩnh Diện, Đông Hòa / Linh Trung)
+            77: { lat: 10.8520, lng: 106.7582 }, // Renty Thủ Đức Tech Center (53 Võ Văn Ngân, Linh Chiểu)
+            78: { lat: 10.7725, lng: 106.6578 }, // Renty Quận 10 Bách Khoa (268 Lý Thường Kiệt)
+            79: { lat: 10.8030, lng: 106.7140 }, // Renty Bình Thạnh D2 Hub (48 Nguyễn Gia Trí)
+            80: { lat: 10.7580, lng: 106.6780 }, // Renty Quận 5 An Dương Vương (273 An Dương Vương)
+            81: { lat: 10.8350, lng: 106.6650 }, // Renty Gò Vấp Quang Trung (12 Nguyễn Văn Bảo)
+            82: { lat: 10.7300, lng: 106.7050 }, // Renty Quận 7 Nam Sài Gòn (19 Nguyễn Hữu Thọ)
         };
 
         if (bId > 0 && BUILDING_COORDS[bId]) {
             return BUILDING_COORDS[bId];
         }
 
-        // 3. Phân tích địa chỉ theo từ khóa 4 thành phố
+        // 3. Phân tích địa chỉ theo từ khóa các tỉnh thành
         const addr = ((building.address || '') + ' ' + (building.area_name || '') + ' ' + (building.name || '')).toLowerCase();
+
+        // Hội An / Quảng Nam
+        if (addr.includes('hội an') || addr.includes('hoi an') || addr.includes('quảng nam') || addr.includes('cẩm châu') || addr.includes('cửa đại') || addr.includes('an bàng')) {
+            return { lat: 15.8801, lng: 108.3380 };
+        }
+
+        // Nha Trang / Khánh Hòa
+        if (addr.includes('nha trang') || addr.includes('khánh hòa') || addr.includes('lộc thọ') || addr.includes('trần phú')) {
+            return { lat: 12.2388, lng: 109.1967 };
+        }
+
+        // Vũng Tàu / Bà Rịa - Vũng Tàu
+        if (addr.includes('vũng tàu') || addr.includes('vung tau') || addr.includes('bà rịa') || addr.includes('thùy vân') || addr.includes('thắng tam')) {
+            return { lat: 10.3370, lng: 107.0890 };
+        }
+
+        // Phú Quốc / Kiên Giang
+        if (addr.includes('phú quốc') || addr.includes('phu quoc') || addr.includes('kiên giang') || addr.includes('dương đông')) {
+            return { lat: 10.2120, lng: 103.9600 };
+        }
+
+        // Huế / Thừa Thiên Huế
+        if (addr.includes('huế') || addr.includes('hue') || addr.includes('thừa thiên') || addr.includes('sông hương') || addr.includes('lê lợi')) {
+            return { lat: 16.4637, lng: 107.5909 };
+        }
+
+        // Sa Pa / Lào Cai
+        if (addr.includes('sa pa') || addr.includes('sapa') || addr.includes('lào cai')) {
+            return { lat: 22.3364, lng: 103.8438 };
+        }
 
         // Đà Lạt
         if (addr.includes('đà lạt') || addr.includes('da lat') || addr.includes('lâm đồng') || addr.includes('tuyền lâm') || addr.includes('trại mát')) {
@@ -2997,16 +3068,25 @@ class GoogleMapsRenty {
 
         // TP. Hồ Chí Minh
         if (addr.includes('hồ chí minh') || addr.includes('hcm') || addr.includes('thủ đức') || addr.includes('bình thạnh') || addr.includes('quận 1') || addr.includes('quận 3') || addr.includes('quận 5') || addr.includes('quận 7') || addr.includes('quận 10') || addr.includes('tân bình') || addr.includes('gò vấp') || addr.includes('phú nhuận')) {
-            if (addr.includes('võ văn ngân') || addr.includes('thủ đức')) return { lat: 10.8514, lng: 106.7578 };
-            if (addr.includes('bình thạnh') || addr.includes('điện biên phủ')) return { lat: 10.8015, lng: 106.7145 };
+            // Tách riêng các khu vực ở Thủ Đức để không bị trùng đè toạ độ
+            if (addr.includes('làng đại học') || addr.includes('dhqg') || addr.includes('tô vĩnh diện') || addr.includes('linh trung') || addr.includes('đông hòa')) {
+                return { lat: 10.8785, lng: 106.8010 }; // Làng ĐHQG / KTX
+            }
+            if (addr.includes('lê văn việt') || addr.includes('quận 9') || addr.includes('tăng nhơn phú')) {
+                return { lat: 10.8460, lng: 106.7780 }; // Quận 9
+            }
+            if (addr.includes('võ văn ngân') || addr.includes('thủ đức') || addr.includes('linh chiểu')) {
+                return { lat: 10.8514, lng: 106.7578 }; // CĐ Công Nghệ Thủ Đức / SPKT
+            }
+            if (addr.includes('bình thạnh') || addr.includes('điện biên phủ') || addr.includes('nguyễn gia trí')) return { lat: 10.8015, lng: 106.7145 };
             if (addr.includes('quận 1') || addr.includes('lê lai') || addr.includes('bến thành')) return { lat: 10.7712, lng: 106.6925 };
             if (addr.includes('quận 3') || addr.includes('nam kỳ khởi nghĩa')) return { lat: 10.7875, lng: 106.6890 };
             if (addr.includes('quận 10') || addr.includes('thành thái') || addr.includes('lý thường kiệt')) return { lat: 10.7735, lng: 106.6610 };
-            if (addr.includes('quận 7') || addr.includes('phú mỹ hưng') || addr.includes('nguyễn thị thập')) return { lat: 10.7290, lng: 106.7120 };
+            if (addr.includes('quận 7') || addr.includes('phú mỹ hưng') || addr.includes('nguyễn thị thập') || addr.includes('nguyễn hữu thọ')) return { lat: 10.7290, lng: 106.7120 };
             if (addr.includes('phú nhuận') || addr.includes('phan xích long')) return { lat: 10.7960, lng: 106.6870 };
             if (addr.includes('tân bình') || addr.includes('bạch đằng') || addr.includes('sân bay')) return { lat: 10.8140, lng: 106.6660 };
-            if (addr.includes('gò vấp') || addr.includes('quang trung')) return { lat: 10.8350, lng: 106.6650 };
-            if (addr.includes('quận 5') || addr.includes('nguyễn trãi')) return { lat: 10.7570, lng: 106.6780 };
+            if (addr.includes('gò vấp') || addr.includes('quang trung') || addr.includes('nguyễn văn bảo')) return { lat: 10.8350, lng: 106.6650 };
+            if (addr.includes('quận 5') || addr.includes('nguyễn trãi') || addr.includes('an dương vương')) return { lat: 10.7570, lng: 106.6780 };
             return { lat: 10.7800, lng: 106.6950 }; // Trung tâm HCM
         }
 
@@ -3071,59 +3151,20 @@ window.switchToFallbackMapTiles = function() {
     }
 };
 
-let _lastCampusFilterTime = 0;
-
 window.selectCampusFilter = function(uniId, btnEl) {
-    const now = Date.now();
-    // Chống double-click hoặc gọi đúp do sự kiện nổi bọt trong vòng 350ms
-    if (now - _lastCampusFilterTime < 350) {
-        return;
-    }
-    _lastCampusFilterTime = now;
-
+    document.querySelectorAll('.gm-campus-chip').forEach(btn => {
+        btn.classList.remove('active', 'bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-900', 'text-slate-300');
+    });
     if (!btnEl && uniId) {
         btnEl = document.querySelector(`.gm-campus-chip[onclick*="'${uniId}'"]`) || (uniId === 'all' ? document.getElementById('campus-chip-all') : null);
     }
-
-    const mapInst = window.rentyGoogleMap;
-
-    // Kiểm tra xem trường này có đang được chọn hay không:
-    // Nếu bấm lại lần 2 vào chính trường đang quét -> HỦY QUÉT (chuyển về 'all')
-    const isCurrentlyActive = (
-        uniId && uniId !== 'all' && (
-            (mapInst && mapInst.selectedCampusId === uniId) ||
-            (btnEl && btnEl.classList.contains('active'))
-        )
-    );
-
-    if (isCurrentlyActive) {
-        // BẤM LẦN 2: HỦY QUÉT -> Bỏ active trường hiện tại, chuyển active về chip "Tất cả"
-        document.querySelectorAll('.gm-campus-chip').forEach(btn => {
-            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-            btn.classList.add('bg-slate-900', 'text-slate-300');
-        });
-        const allBtn = document.getElementById('campus-chip-all');
-        if (allBtn) {
-            allBtn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-            allBtn.classList.remove('bg-slate-900', 'text-slate-300');
-        }
-        if (mapInst) {
-            mapInst.selectCampus('all');
-        }
-        return;
-    }
-
-    // BẤM LẦN 1: KÍCH HOẠT QUÉT GẦN TRƯỜNG ĐÃ CHỌN
-    document.querySelectorAll('.gm-campus-chip').forEach(btn => {
-        btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-sm');
-        btn.classList.add('bg-slate-900', 'text-slate-300');
-    });
     if (btnEl) {
-        btnEl.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+        btnEl.classList.add('active', 'bg-blue-600', 'text-white');
         btnEl.classList.remove('bg-slate-900', 'text-slate-300');
     }
-    if (mapInst) {
-        mapInst.selectCampus(uniId);
+    if (window.rentyGoogleMap) {
+        window.rentyGoogleMap.selectCampus(uniId);
     }
 };
 
@@ -3209,19 +3250,16 @@ window.onMapSearchSubmit = async function(e) {
 window.toggleGnHudDetails = function() {
     const el = document.getElementById('gm-hud-collapsible');
     const icon = document.getElementById('gm-hud-toggle-icon');
-    const iconInline = document.getElementById('gm-hud-toggle-icon-inline');
     if (!el) return;
     if (el.classList.contains('hidden')) {
         el.classList.remove('hidden');
         if (icon) icon.style.transform = 'rotate(180deg)';
-        if (iconInline) iconInline.style.transform = 'rotate(180deg)';
         if (typeof initCampusBarDragScroll === 'function') {
             initCampusBarDragScroll();
         }
     } else {
         el.classList.add('hidden');
         if (icon) icon.style.transform = 'rotate(0deg)';
-        if (iconInline) iconInline.style.transform = 'rotate(0deg)';
     }
 };
 
@@ -3510,7 +3548,26 @@ function initMapSearchEngine() {
         { name: 'Phường 8 - ĐH Đà Lạt & Thung Lũng Tình Yêu', coords: [11.960, 108.448], city: 'dalat', keywords: 'phuong 8 phu dong thien vuong mai anh dao thung lung tinh yeu dai hoc da lat' },
         { name: 'Phường 10 - Ga Đà Lạt & Quảng Trường Lâm Viên', coords: [11.939, 108.450], city: 'dalat', keywords: 'phuong 10 quang trung yersin ga da lat quang truong lam vien nu hoa atiso' },
         { name: 'Phường 11 & 12 - Trại Mát & Làng Hoa Thái Phiên', coords: [11.955, 108.490], city: 'dalat', keywords: 'phuong 11 phuong 12 trai mat thai phien san may chua ve chai tu phuoc ngo gia tu' },
-        { name: 'Khu Du Lịch Hồ Tuyền Lâm (Đà Lạt)', coords: [11.895, 108.432], city: 'dalat', keywords: 'ho tuyen lam thien vien truc lam resort du lich sinh thai' }
+        { name: 'Khu Du Lịch Hồ Tuyền Lâm (Đà Lạt)', coords: [11.895, 108.432], city: 'dalat', keywords: 'ho tuyen lam thien vien truc lam resort du lich sinh thai' },
+
+        // Hội An
+        { name: 'Phố Cổ Hội An (Quảng Nam)', coords: [15.8801, 108.3380], city: 'hoian', keywords: 'hoi an pho co chua cau cam chau tran phu nguyen thai hoc bach dang cua dai' },
+        { name: 'Biển Cửa Đại & An Bàng (Hội An)', coords: [15.8920, 108.3750], city: 'hoian', keywords: 'cua dai an bang bien hoi an resort lac long quan' },
+
+        // Nha Trang
+        { name: 'Trung tâm Bờ Biển Trần Phú (Nha Trang)', coords: [12.2388, 109.1967], city: 'nhatrang', keywords: 'nha trang tran phu loc tho quang truong 2 thang 4 vinpearl bai bien' },
+
+        // Vũng Tàu
+        { name: 'Bãi Sau & Đường Thùy Vân (Vũng Tàu)', coords: [10.3370, 107.0890], city: 'vungtau', keywords: 'vung tau bai sau thuy van hoang hoa tham bai truoc ngon hai dang' },
+
+        // Phú Quốc
+        { name: 'Thị trấn Dương Đông (Phú Quốc)', coords: [10.2200, 103.9600], city: 'phuquoc', keywords: 'phu quoc duong dong tran hung dao cho dem dinh cau bai dai' },
+
+        // Huế
+        { name: 'Bờ Nam Sông Hương - Lê Lợi (Huế)', coords: [16.4637, 107.5909], city: 'hue', keywords: 'hue song huong le loi vinh ninh cau trang tien phu hoi dai hoc hue' },
+
+        // Sa Pa
+        { name: 'Thị xã Sa Pa (Lào Cai)', coords: [22.3364, 103.8438], city: 'sapa', keywords: 'sa pa sapa fansipan nha tho da muong hoa cat cat ham rong' }
     ];
 
     function renderSuggestions(queryText) {
@@ -3885,57 +3942,48 @@ function makeHorizontalScrollable(selector) {
 
     let isDown = false;
     let startX = 0;
+    let startY = 0;
     let scrollStartX = 0;
-    let hasDragged = false;
-    const DRAG_THRESHOLD = 6; // px
-
-    slider.style.cursor = 'grab';
+    let isDragging = false;
 
     slider.addEventListener('mousedown', (e) => {
-        // Chỉ kéo rê bằng chuột trái
+        // Nếu nhấp vào nút bấm, link hoặc input: TUYỆT ĐỐI không kích hoạt kéo chuột để nút bấm nhận click 100%
+        if (e.target.closest('button, a, input, select, label')) {
+            return;
+        }
         if (e.button !== 0) return;
         isDown = true;
-        hasDragged = false;
+        isDragging = false;
         startX = e.pageX;
+        startY = e.pageY;
         scrollStartX = slider.scrollLeft;
     });
 
-    const endDrag = () => {
-        if (!isDown) return;
+    const stopDrag = () => {
         isDown = false;
-        slider.style.cursor = 'grab';
-        // Giữ cờ hasDragged ngắn hạn để chặn click nếu vừa kéo chuột
-        setTimeout(() => {
-            hasDragged = false;
-        }, 80);
+        isDragging = false;
+        slider.style.cursor = '';
     };
 
-    window.addEventListener('mouseup', endDrag);
-    slider.addEventListener('mouseleave', () => {
-        if (isDown) endDrag();
-    });
+    slider.addEventListener('mouseleave', stopDrag);
+    slider.addEventListener('mouseup', stopDrag);
 
     slider.addEventListener('mousemove', (e) => {
         if (!isDown) return;
         const deltaX = e.pageX - startX;
+        const deltaY = e.pageY - startY;
 
-        // Nếu di chuyển quá ngưỡng drag thì coi là kéo rê cuộn
-        if (Math.abs(deltaX) > DRAG_THRESHOLD) {
-            hasDragged = true;
+        // Chỉ cuộn khi người dùng thực sự kéo rê chuột ngang ngoài nút > 15px
+        if (!isDragging && Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
+            isDragging = true;
             slider.style.cursor = 'grabbing';
+        }
+
+        if (isDragging) {
             e.preventDefault();
             slider.scrollLeft = scrollStartX - deltaX;
         }
     });
-
-    // Bắt chặn sự kiện click nếu vừa thực hiện thao tác kéo rê chuột
-    slider.addEventListener('click', (e) => {
-        if (hasDragged) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-        }
-    }, true); // useCapture: true để chặn trước khi sự kiện tới button
 
     // Cuộn ngang tức thì bằng con lăn chuột (Mouse Wheel)
     slider.addEventListener('wheel', (e) => {
@@ -3951,19 +3999,15 @@ document.addEventListener('click', (e) => {
     const chip = e.target.closest('.gm-campus-chip');
     if (!chip) return;
 
-    // Nếu chip đã có thuộc tính inline onclick, trình duyệt đã tự động xử lý -> không gọi lặp
-    if (chip.hasAttribute('onclick')) return;
-
     const onclickStr = chip.getAttribute('onclick') || '';
     const match = onclickStr.match(/selectCampusFilter\(['"]([^'"]+)['"]/);
-    const uniId = match ? match[1] : (chip.id === 'campus-chip-all' ? 'all' : chip.getAttribute('data-uni-id'));
+    const uniId = match ? match[1] : (chip.id === 'campus-chip-all' ? 'all' : null);
     if (uniId) {
         window.selectCampusFilter(uniId, chip);
     }
 });
 
 function initCampusBarDragScroll() {
-    makeHorizontalScrollable('.gm-city-switcher');
     makeHorizontalScrollable('.gm-campus-bar');
     makeHorizontalScrollable('.gm-nearby-bar');
 }
@@ -3990,10 +4034,19 @@ window.initRoomCardMapSync = function() {
 
             const marker = mapInstance.markers[roomId];
             if (marker && mapInstance.map) {
-                // 1. Chỉ highlight nổi bật pin/marker trên bản đồ (nhẹ nhàng, không giật lag)
+                // 1. Highlight pin trên bản đồ
                 mapInstance.highlightMarker(roomId);
+
+                // 2. Mở popup InfoWindow xem trước phòng
+                marker.openPopup();
+
+                // 3. Di chuyển tâm bản đồ tới vị trí trọ nhẹ nhàng
+                mapInstance.map.panTo(marker.getLatLng(), {
+                    animate: true,
+                    duration: 0.5
+                });
             }
-        }, 120);
+        }, 70);
     });
 };
 
@@ -4001,14 +4054,10 @@ window.initRoomCardMapSync = function() {
 document.addEventListener('DOMContentLoaded', () => {
     const mapEl = document.getElementById('renty-interactive-map');
     if (mapEl && window.ResizeObserver) {
-        let resizeTimer = null;
         const resizeObserver = new ResizeObserver(() => {
-            if (resizeTimer) clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
-                    window.rentyGoogleMap.map.invalidateSize({ pan: false });
-                }
-            }, 100);
+            if (window.rentyGoogleMap && window.rentyGoogleMap.map) {
+                window.rentyGoogleMap.map.invalidateSize();
+            }
         });
         resizeObserver.observe(mapEl);
     }

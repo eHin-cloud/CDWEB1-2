@@ -290,7 +290,49 @@ function handleExploreClick(event) {
     const path = window.location.pathname.replace(/\/$/, '');
     if (path === '/renty') {
         event.preventDefault();
-        window.location.href = '/renty';
+        
+        // 1. Chuyển sang chế độ lưới
+        if (typeof window.setViewMode === 'function') {
+            window.setViewMode('grid');
+        }
+
+        // 2. Hủy bộ lọc trường học / bán kính bản đồ
+        if (typeof window.selectCampusFilter === 'function') {
+            window.selectCampusFilter('all');
+        } else if (window.rentyGoogleMap && typeof window.rentyGoogleMap.selectCampus === 'function') {
+            window.rentyGoogleMap.selectCampus('all');
+        }
+        if (window.rentyGoogleMap) {
+            window.rentyGoogleMap.selectedCampusId = 'all';
+            window.rentyGoogleMap.selectedUniversity = null;
+            window.rentyGoogleMap.activeCenter = null;
+        }
+
+        // 3. Xóa các huy hiệu khoảng cách và banner cảnh báo
+        document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
+        const emptyBanner = document.getElementById('map-empty-state-banner');
+        if (emptyBanner) emptyBanner.remove();
+
+        // 4. Xóa trắng từ khóa tìm kiếm nếu có
+        const heroInput = document.getElementById('hero-search-input');
+        if (heroInput) heroInput.value = '';
+        const navInput = document.getElementById('search-input');
+        if (navInput) navInput.value = '';
+        const gmInput = document.getElementById('gm-search-input');
+        if (gmInput) gmInput.value = '';
+
+        // 5. Cập nhật URL sạch sẽ không kèm query params
+        if (window.history && window.history.pushState) {
+            window.history.pushState({}, '', '/renty');
+        }
+
+        // 6. Tải lại toàn bộ phòng theo phân trang trang 1
+        if (typeof window.filterItems === 'function') {
+            window.filterItems({ resetPage: true });
+        }
+
+        // 7. Cuộn mượt lên đầu trang
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 </script>

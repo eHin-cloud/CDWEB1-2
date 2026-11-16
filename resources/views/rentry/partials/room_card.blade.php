@@ -242,7 +242,19 @@
                        </div>
                    </div>
                </div>
-               <p class="text-xs text-slate-400 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-map-marker-alt text-[10px] text-slate-650"></i> {{ $room['address'] }}</p>
+                @php
+                    $displayAddress = preg_replace('/\s*\(Cách điểm tiện ích gần nhất.*?\)/u', '', $room['address'] ?? '');
+                    $distVal = floatval($room['distance'] ?? 0);
+                    $walkMins = max(2, round(($distVal / 4.5) * 60));
+                @endphp
+                <p class="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-marker-alt text-[10px] text-slate-500 shrink-0"></i> 
+                    <span class="truncate">{{ $displayAddress }}</span>
+                </p>
+                <div class="utility-distance-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[11px] font-semibold mb-3 w-fit" title="Khoảng cách từ tòa nhà tới trạm xe buýt, chợ, siêu thị hoặc tiện ích dân sinh gần nhất">
+                    <i class="fa-solid fa-person-walking text-sky-400 text-xs"></i>
+                    <span>Tiện ích gần nhất: <strong class="text-white">{{ number_format($distVal, 1) }} km</strong> <span class="text-slate-400 font-normal text-[10px]">({{ $walkMins }}p đi bộ)</span></span>
+                </div>
                <!-- Prices and tags -->
                <div class="flex items-baseline gap-1.5 mb-4">
                    <span class="text-xl font-extrabold text-emerald-400">{{ number_format($room['price'], 0, ',', '.') }}đ</span>

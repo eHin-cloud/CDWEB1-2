@@ -26,6 +26,7 @@ class SmartSearchService
      */
     protected array $dictionary = [
         // Khu vực Hà Nội
+        'Hà Nội' => ['ha noi', 'hn', 'tphn', 'tp ha noi', 'hà nội'],
         'Cầu Giấy' => ['cau giay', 'cg', 'cau giya', 'cau giau', 'cau gaiy'],
         'Thanh Xuân' => ['thanh xuan', 'tx', 'thah xuan', 'thanh xuanh'],
         'Đống Đa' => ['dong da', 'dd', 'dong daa'],
@@ -39,6 +40,7 @@ class SmartSearchService
         'Xã Đàn' => ['xa dan', 'xadan'],
 
         // Khu vực TP. Hồ Chí Minh
+        'Hồ Chí Minh' => ['hcm', 'tphcm', 'tp hcm', 'tp ho chi minh', 'sai gon', 'saigon', 'sg', 'hồ chí minh'],
         'Quận 1' => ['quan 1', 'q1', 'quan1'],
         'Quận 3' => ['quan 3', 'q3', 'quan3'],
         'Quận 4' => ['quan 4', 'q4', 'quan4'],
@@ -348,19 +350,54 @@ class SmartSearchService
             }
         }
 
-        // 3. Phân tích vị trí (Hỗ trợ cả tên xuôi và tên gõ ngược ví dụ: "giay cau", "xuan thanh", "da dong")
-        $locationPool = [
-            'Cầu Giấy', 'Thanh Xuân', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Tây Hồ',
-            'Quận 1', 'Quận 3', 'Quận 4', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Gò Vấp', 'Thủ Đức',
-            'Bách Khoa', 'HUTECH', 'Phú Mỹ Hưng', 'Làng Đại Học',
+        // 3. Phân tích vị trí & từ viết tắt (Hỗ trợ viết tắt td, q10, bt, gv, hcm, hn, trường học và từ xuôi/ngược)
+        $locationAliases = [
+            'Hồ Chí Minh' => ['hcm', 'tphcm', 'tp hcm', 'tp ho chi minh', 'sai gon', 'saigon', 'sg', 'ho chi minh'],
+            'Hà Nội' => ['ha noi', 'hn', 'tphn', 'tp ha noi'],
+            'Thủ Đức' => ['thu duc', 'td', 'thuduc', 'tp thu duc', 'quan thu duc', 'spkt', 'ute'],
+            'Quận 10' => ['quan 10', 'q10', 'quan10', 'ueh'],
+            'Bình Thạnh' => ['binh thanh', 'bt', 'binh thnah', 'hutech'],
+            'Gò Vấp' => ['go vap', 'gv', 'govap', 'iuh'],
+            'Quận 7' => ['quan 7', 'q7', 'quan7', 'rmit', 'tdtu'],
+            'Quận 1' => ['quan 1', 'q1', 'quan1'],
+            'Quận 3' => ['quan 3', 'q3', 'quan3'],
+            'Quận 4' => ['quan 4', 'q4', 'quan4'],
+            'Quận 9' => ['quan 9', 'q9', 'quan9'],
+            'Tân Bình' => ['tan binh', 'tb', 'tan bih'],
+            'Cầu Giấy' => ['cau giay', 'cg', 'cau giya'],
+            'Thanh Xuân' => ['thanh xuan', 'tx', 'thah xuan'],
+            'Đống Đa' => ['dong da', 'dd', 'dong daa'],
+            'Hai Bà Trưng' => ['hai ba trung', 'hbt', 'haibatrung'],
+            'Ba Đình' => ['ba dinh', 'bd', 'badinh'],
+            'Tây Hồ' => ['tay ho', 'th', 'tayho'],
+            'Hoàng Mai' => ['hoang mai', 'hm'],
+            'Hà Đông' => ['ha dong', 'hadong'],
+            'Nam Từ Liêm' => ['nam tu liem', 'ntl'],
+            'Bắc Từ Liêm' => ['bac tu liem', 'btl'],
+            'Bách Khoa' => ['bach khoa', 'bk', 'dhbk'],
+            'Kinh Tế Quốc Dân' => ['kinh te quoc dan', 'neu'],
+            'Làng Đại Học' => ['lang dai hoc', 'ldh', 'dhqg', 'dai hoc quoc gia'],
+            'Phú Mỹ Hưng' => ['phu my hung', 'pmh'],
         ];
 
-        foreach ($locationPool as $loc) {
+        foreach ($locationAliases as $loc => $aliases) {
             $normLoc = $this->normalize($loc);
             $locWords = explode(' ', $normLoc);
             $reversedLoc = implode(' ', array_reverse($locWords));
 
+            $matched = false;
             if (str_contains($normalized, $normLoc) || ($reversedLoc !== $normLoc && str_contains($normalized, $reversedLoc))) {
+                $matched = true;
+            } else {
+                foreach ($aliases as $alias) {
+                    if (preg_match('/\b' . preg_quote($alias, '/') . '\b/u', $normalized)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($matched) {
                 $filters['locations'][] = $loc;
             }
         }
@@ -521,29 +558,27 @@ class SmartSearchService
                 }
             }
 
-            // Khớp các thực thể nhận diện (recognized terms) - CHỈ khi term hoặc đảo term thực sự có trong query của user
+            // Khớp các thực thể nhận diện (recognized terms)
             foreach ($analysis['recognized_terms'] as $term) {
                 $normTerm = $this->normalize($term);
                 if (str_contains($fullSearchable, $normTerm)) {
-                    $termTokens = explode(' ', $normTerm);
-                    $reversedTerm = implode(' ', array_reverse($termTokens));
-                    if (str_contains($analysis['normalized'], $normTerm) || str_contains($analysis['normalized'], $reversedTerm)) {
-                        $score += 35;
-                        $hasKeywordMatch = true;
-                    }
+                    $score += 35;
+                    $hasKeywordMatch = true;
                 }
             }
 
-            // Khớp địa danh bóc tách - CHỈ khi địa danh có trong query
+            // Khớp địa danh bóc tách (kể cả viết tắt td, q10, bt, gv, hcm, hn...)
             foreach ($analysis['filters']['locations'] as $loc) {
                 $normLoc = $this->normalize($loc);
-                $locTokens = explode(' ', $normLoc);
-                $reversedLoc = implode(' ', array_reverse($locTokens));
-                if (str_contains($analysis['normalized'], $normLoc) || str_contains($analysis['normalized'], $reversedLoc)) {
-                    if (str_contains($this->normalize($room['address']), $normLoc)) {
-                        $score += 40;
-                        $hasKeywordMatch = true;
-                    }
+                if (str_contains($fullSearchable, $normLoc)) {
+                    $score += 60;
+                    $hasKeywordMatch = true;
+                } elseif ($loc === 'Hồ Chí Minh' && (str_contains($fullSearchable, 'ho chi minh') || str_contains($fullSearchable, 'sai gon') || str_contains($fullSearchable, 'thu duc') || str_contains($fullSearchable, 'binh thanh') || str_contains($fullSearchable, 'quan 10') || str_contains($fullSearchable, 'quan 7') || str_contains($fullSearchable, 'go vap'))) {
+                    $score += 60;
+                    $hasKeywordMatch = true;
+                } elseif ($loc === 'Hà Nội' && (str_contains($fullSearchable, 'ha noi') || str_contains($fullSearchable, 'cau giay') || str_contains($fullSearchable, 'thanh xuan') || str_contains($fullSearchable, 'dong da') || str_contains($fullSearchable, 'hai ba trung') || str_contains($fullSearchable, 'ba dinh') || str_contains($fullSearchable, 'tay ho') || str_contains($fullSearchable, 'hoang mai') || str_contains($fullSearchable, 'ha dong') || str_contains($fullSearchable, 'nam tu liem') || str_contains($fullSearchable, 'bac tu liem'))) {
+                    $score += 60;
+                    $hasKeywordMatch = true;
                 }
             }
 
@@ -573,6 +608,32 @@ class SmartSearchService
                     // Giữ nguyên baseline scoring nếu hybrid search có exception
                 }
                 $scoredRooms = $scoredRooms->filter(fn ($item) => !empty($item['has_keyword_match']) && (($item['relevance_score'] ?? 0) > 0 || ($item['rrf_score'] ?? 0) > 0));
+            }
+        }
+
+        // Nếu query có chỉ định địa danh cụ thể (ví dụ Thủ Đức, Cầu Giấy, HCM...), ưu tiên giữ lại các phòng khớp địa danh
+        if (!empty($analysis['filters']['locations'])) {
+            $locationFiltered = $scoredRooms->filter(function ($room) use ($analysis) {
+                $searchable = $this->normalize(
+                    "{$room['building_name']} {$room['address']} {$room['area_name']} {$room['location_description']}"
+                );
+                foreach ($analysis['filters']['locations'] as $loc) {
+                    $normLoc = $this->normalize($loc);
+                    if (str_contains($searchable, $normLoc)) {
+                        return true;
+                    }
+                    if ($loc === 'Hồ Chí Minh' && (str_contains($searchable, 'ho chi minh') || str_contains($searchable, 'sai gon') || str_contains($searchable, 'thu duc') || str_contains($searchable, 'binh thanh') || str_contains($searchable, 'quan 10') || str_contains($searchable, 'quan 7') || str_contains($searchable, 'go vap'))) {
+                        return true;
+                    }
+                    if ($loc === 'Hà Nội' && (str_contains($searchable, 'ha noi') || str_contains($searchable, 'cau giay') || str_contains($searchable, 'thanh xuan') || str_contains($searchable, 'dong da') || str_contains($searchable, 'hai ba trung') || str_contains($searchable, 'ba dinh') || str_contains($searchable, 'tay ho') || str_contains($searchable, 'hoang mai') || str_contains($searchable, 'ha dong') || str_contains($searchable, 'nam tu liem') || str_contains($searchable, 'bac tu liem'))) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if ($locationFiltered->isNotEmpty()) {
+                $scoredRooms = $locationFiltered;
             }
         }
 

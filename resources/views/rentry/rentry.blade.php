@@ -301,6 +301,24 @@
                 if (mapBtn) mapBtn.classList.remove('active');
                 if (gridBtn) gridBtn.classList.add('active');
                 localStorage.setItem('rentry_view_mode', 'grid');
+
+                // [TỰ ĐỘNG HỦY BỘ LỌC BẢN ĐỒ / TRƯỜNG HỌC KHI VỀ CHẾ ĐỘ LƯỚI]
+                if (typeof window.selectCampusFilter === 'function') {
+                    window.selectCampusFilter('all');
+                } else if (window.rentyGoogleMap && typeof window.rentyGoogleMap.selectCampus === 'function') {
+                    window.rentyGoogleMap.selectCampus('all');
+                }
+                if (window.rentyGoogleMap) {
+                    window.rentyGoogleMap.selectedCampusId = 'all';
+                    window.rentyGoogleMap.selectedUniversity = null;
+                    window.rentyGoogleMap.activeCenter = null;
+                }
+                document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
+                const emptyBanner = document.getElementById('map-empty-state-banner');
+                if (emptyBanner) emptyBanner.remove();
+                if (typeof window.filterItems === 'function') {
+                    window.filterItems({ resetPage: true });
+                }
             }
         };
 
@@ -2377,7 +2395,7 @@
 
                 <!-- Cột 4: KHOẢNG CÁCH ĐẾN TRƯỜNG/TIỆN ÍCH -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">KHOẢNG CÁCH (0 - 3KM)</label>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">KHOẢNG CÁCH ĐẾN TIỆN ÍCH / TRƯỜNG (0 - 3KM)</label>
                     <div class="slider-container relative mt-1 mb-1 px-1">
                         <input 
                             type="range" 
@@ -2399,10 +2417,10 @@
                         </div>
                     </div>
                     <!-- Feedback Box -->
-                    <div class="feedback-box mt-2 px-2.5 py-1.5 bg-[#0a0e17] border border-slate-800 rounded-xl flex items-center gap-1.5 text-slate-300 text-[11px]">
+                    <div class="feedback-box mt-2 px-2.5 py-1.5 bg-[#0a0e17] border border-slate-800 rounded-xl flex items-center gap-1.5 text-slate-300 text-[11px]" title="Khoảng cách đến trường học hoặc tiện ích gần nhất">
                         <i class="fa-solid fa-location-dot text-slate-400 text-xs shrink-0"></i>
                         <span id="distance-feedback" class="text-[11px] text-slate-300 font-medium truncate">
-                            Dưới 3km từ ĐH Bách Khoa
+                            Bán kính ≤ 3km tới tiện ích / trường
                         </span>
                     </div>
                 </div>
