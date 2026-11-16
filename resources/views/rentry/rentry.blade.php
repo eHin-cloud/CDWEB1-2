@@ -4022,7 +4022,11 @@
 
                 if (response.ok && data.success) {
                     window.closeNotifySubscribeModal();
-                    window.showRoomAlertSuccessModal(data.message || 'Đăng ký nhận thông báo phòng trống thành công! Bạn sẽ nhận tin ngay khi có phòng mới.');
+                    let successMsg = data.message || 'Đăng ký nhận thông báo phòng trống thành công! Bạn sẽ nhận tin ngay khi có phòng mới.';
+                    if (data.data && data.data.email_sent) {
+                        successMsg = 'Đăng ký thành công! Hệ thống đã gửi email xác nhận về hộp thư ' + (data.data.contact_info || '') + '. Bạn sẽ nhận được thông báo ngay khi phòng chuyển sang trống.';
+                    }
+                    window.showRoomAlertSuccessModal(successMsg);
                     if (contactInput) contactInput.value = '';
                     if (districtSelect) districtSelect.value = '';
                     if (budgetInput) budgetInput.value = '';

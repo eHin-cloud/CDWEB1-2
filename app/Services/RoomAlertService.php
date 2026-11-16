@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\NotificationLog;
 use App\Models\Room;
 use App\Models\RoomAlert;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class RoomAlertService
 {
@@ -51,7 +53,38 @@ class RoomAlertService
                 'notified_at' => now(),
             ]);
 
-            Log::info("FEAT_24_ROOM_ALERT: Đã gửi thông báo phòng trống tới [{$alert->contact_info}] cho phòng [{$room->room_number}] - Tòa [{$room->building?->name}]");
+            // Bắn email thông báo nếu contact_info là email
+            if (filter_var($alert->contact_info, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    Mail::send('emails.room_alert_empty_notification', [
+                        'alert' => $alert,
+                        'room' => $room,
+                        'email' => $alert->contact_info,
+                    ], function ($message) use ($alert, $room) {
+                        $message->to($alert->contact_info)
+                            ->subject('🔔 Phòng ' . $room->room_number . ' bạn theo dõi tại Renty vừa chuyển sang TRỐNG!');
+                    });
+                    Log::info("FEAT_24_ROOM_ALERT: Đã gửi email thông báo phòng trống tới [{$alert->contact_info}] cho phòng [{$room->room_number}]");
+                } catch (\Throwable $e) {
+                    Log::error("FEAT_24_ROOM_ALERT: Lỗi gửi email phòng trống tới [{$alert->contact_info}]: " . $e->getMessage());
+                }
+
+                try {
+                    NotificationLog::create([
+                        'type' => 'room_alert_empty_notified',
+                        'channel' => 'email',
+                        'recipient_contact' => $alert->contact_info,
+                        'recipient_name' => explode('@', $alert->contact_info)[0],
+                        'subject' => '🔔 Phòng ' . $room->room_number . ' bạn theo dõi tại Renty vừa chuyển sang TRỐNG!',
+                        'message' => "Phòng {$room->room_number} tại {$room->building?->name} đã chuyển sang trạng thái Trống.",
+                        'sent_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    //
+                }
+            }
+
+            Log::info("FEAT_24_ROOM_ALERT: Đã kích hoạt thông báo phòng trống tới [{$alert->contact_info}] cho phòng [{$room->room_number}] - Tòa [{$room->building?->name}]");
             $count++;
         }
 

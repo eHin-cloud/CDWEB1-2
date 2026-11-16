@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\RoomAlertService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -145,10 +146,12 @@ class RoomAlertFeature24Test extends TestCase
     }
 
     /**
-     * DoD 3: Nhập thông tin hợp lệ với Email -> Lưu thông tin đăng ký alert thành công (ERR_24_04)
+     * DoD 3: Nhập thông tin hợp lệ với Email -> Lưu thông tin đăng ký alert thành công (ERR_24_04) & Gửi email xác nhận
      */
     public function test_store_room_alert_successfully_with_email(): void
     {
+        Mail::fake();
+
         $response = $this->postJson('/api/renty/room-alerts', [
             'contact_info' => 'khach1@smartroom.local',
             'target_district' => 'Quận Cầu Giấy',
@@ -165,6 +168,7 @@ class RoomAlertFeature24Test extends TestCase
                     'target_district' => 'Quận Cầu Giấy',
                     'max_budget' => 4000000,
                     'status' => 'active',
+                    'email_sent' => true,
                 ],
             ]);
 
@@ -173,6 +177,11 @@ class RoomAlertFeature24Test extends TestCase
             'target_district' => 'Quận Cầu Giấy',
             'max_budget' => 4000000,
             'status' => 'active',
+        ]);
+
+        $this->assertDatabaseHas('notification_logs', [
+            'recipient_contact' => 'khach1@smartroom.local',
+            'type' => 'room_alert_registered',
         ]);
     }
 
@@ -239,10 +248,12 @@ class RoomAlertFeature24Test extends TestCase
     }
 
     /**
-     * Kịch bản kích hoạt chuông báo: khi phòng chuyển sang 'empty', RoomAlertService tự động gửi thông báo
+     * Kịch bản kích hoạt chuông báo: khi phòng chuyển sang 'empty', RoomAlertService tự động gửi email thông báo
      */
     public function test_room_alert_service_notifies_matching_alerts(): void
     {
+        Mail::fake();
+
         $alert = RoomAlert::create([
             'tenant_id' => $this->tenant->id,
             'contact_info' => 'nhanthongbao@smartroom.local',
@@ -264,6 +275,11 @@ class RoomAlertFeature24Test extends TestCase
         $alertFresh = $alert->fresh();
         $this->assertEquals('notified', $alertFresh->status);
         $this->assertNotNull($alertFresh->notified_at);
+
+        $this->assertDatabaseHas('notification_logs', [
+            'recipient_contact' => 'nhanthongbao@smartroom.local',
+            'type' => 'room_alert_empty_notified',
+        ]);
     }
 
     /**

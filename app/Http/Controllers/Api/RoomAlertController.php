@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\NotificationLog;
 use App\Models\Room;
 use App\Models\RoomAlert;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class RoomAlertController extends Controller
@@ -89,6 +92,42 @@ class RoomAlertController extends Controller
             'status' => 'active',
         ]);
 
+        $emailSent = false;
+        $isEmail = filter_var($contactInfo, FILTER_VALIDATE_EMAIL) !== false;
+
+        if ($isEmail) {
+            try {
+                Mail::send('emails.room_alert_confirmation', [
+                    'alert' => $alert,
+                    'room' => $room,
+                    'email' => $contactInfo,
+                    'district' => $targetDistrict,
+                    'budget' => $maxBudget,
+                ], function ($message) use ($contactInfo) {
+                    $message->to($contactInfo)
+                        ->subject('SmartRoom & Renty - Xác Nhận Kích Hoạt Chuông Báo Phòng Trống Thông Minh');
+                });
+                $emailSent = true;
+                Log::info("FEAT_24_ROOM_ALERT: Email xác nhận chuông báo phòng đã gửi thành công tới: {$contactInfo}");
+            } catch (\Throwable $e) {
+                Log::error("FEAT_24_ROOM_ALERT: Không thể gửi email tới {$contactInfo}: " . $e->getMessage());
+            }
+
+            try {
+                NotificationLog::create([
+                    'type' => 'room_alert_registered',
+                    'channel' => 'email',
+                    'recipient_contact' => $contactInfo,
+                    'recipient_name' => explode('@', $contactInfo)[0],
+                    'subject' => 'SmartRoom & Renty - Xác Nhận Kích Hoạt Chuông Báo Phòng Trống Thông Minh',
+                    'message' => "Đăng ký chuông báo phòng: Khu vực {$targetDistrict}, Ngân sách tối đa " . number_format($maxBudget) . " VNĐ" . ($room ? " (Theo dõi phòng {$room->room_number} - {$room->building?->name})" : ""),
+                    'sent_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                // Không chặn luồng nếu bảng log gặp sự cố
+            }
+        }
+
         return response()->json([
             'success' => true,
             'code' => 'ERR_24_04',
@@ -100,6 +139,7 @@ class RoomAlertController extends Controller
                 'max_budget' => $alert->max_budget,
                 'room_id' => $alert->room_id,
                 'status' => $alert->status,
+                'email_sent' => $emailSent,
                 'created_at' => $alert->created_at?->toIso8601String(),
             ],
         ], 201);
