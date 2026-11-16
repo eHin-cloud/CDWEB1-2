@@ -1,0 +1,214 @@
+{
+  "11": [
+    [
+      "image1.png",
+      "Hình 11.1: Minh chứng kiểm thử kịch bản ERR_11_01 - Để trống tên cơ sở / tòa nhà\nPhản hồi hệ thống: \"Tên cơ sở lưu trú không được để trống.\" | Giao diện: Bôi đỏ viền ô input Tên cơ sở"
+    ],
+    [
+      "image2.png",
+      "Hình 11.2: Minh chứng kiểm thử kịch bản ERR_11_02 - Để trống địa chỉ cơ sở\nPhản hồi hệ thống: \"Địa chỉ cơ sở lưu trú là bắt buộc.\" | Giao diện: Bôi đỏ viền ô input Địa chỉ"
+    ],
+    [
+      "image3.png",
+      "Hình 11.3: Minh chứng kiểm thử kịch bản ERR_11_03 - Để trống số tầng\nPhản hồi hệ thống: \"Vui lòng nhập số tầng của tòa nhà.\" | Giao diện: Bôi đỏ viền ô input Số tầng"
+    ],
+    [
+      "image4.png",
+      "Hình 11.4: Minh chứng kiểm thử kịch bản ERR_11_04 - Nhập số tầng nhỏ hơn 1\nPhản hồi hệ thống: \"Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.\" | Giao diện: Bôi đỏ viền ô input Số tầng"
+    ],
+    [
+      "image5.png",
+      "Hình 11.5: Minh chứng kiểm thử kịch bản ERR_11_05 - Xóa tòa nhà còn phòng đang cho thuê\nPhản hồi hệ thống: \"Không thể xóa cơ sở lưu trú đang có phòng có cư dân thuê hoạt động.\" | Giao diện: Hiển thị Modal cảnh báo lỗi chặn xóa dữ liệu"
+    ],
+    [
+      "image6.png",
+      "Hình 11.6: Minh chứng kiểm thử kịch bản ERR_11_06 - Lưu cơ sở lưu trú thành công\nPhản hồi hệ thống: \"Lưu thông tin cơ sở lưu trú thành công!\" | Giao diện: Hiển thị Toast thông báo màu xanh lá, nạp lại danh mục"
+    ]
+  ],
+  "12": [
+    [
+      "image7.png",
+      "Hình 12.1: Minh chứng kiểm thử kịch bản ERR_12_01 - Để trống tên thiết bị\nPhản hồi hệ thống: \"Tên trang thiết bị tài sản không được để trống.\" | Giao diện: Bôi đỏ viền ô input Tên thiết bị"
+    ],
+    [
+      "image8.png",
+      "Hình 12.2: Minh chứng kiểm thử kịch bản ERR_12_02 - Để trống mã thiết bị\nPhản hồi hệ thống: \"Mã quản lý thiết bị là bắt buộc.\" | Giao diện: Bôi đỏ viền ô input Mã thiết bị"
+    ],
+    [
+      "image9.png",
+      "Hình 12.3: Minh chứng kiểm thử kịch bản ERR_12_03 - Nhập số lượng tồn kho nhỏ hơn 0\nPhản hồi hệ thống: \"Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.\" | Giao diện: Bôi đỏ viền ô input Số lượng"
+    ],
+    [
+      "image10.png",
+      "Hình 12.4: Minh chứng kiểm thử kịch bản ERR_12_04 - Nhập đơn giá tài sản là số âm\nPhản hồi hệ thống: \"Đơn giá giá trị tài sản không được là số âm.\" | Giao diện: Bôi đỏ viền ô input Đơn giá"
+    ],
+    [
+      "image11.png",
+      "Hình 12.5: Minh chứng kiểm thử kịch bản ERR_12_05 - Bàn giao số lượng vượt quá tồn kho\nPhản hồi hệ thống: \"Số lượng thiết bị bàn giao vượt quá số lượng tồn kho khả dụng!\" | Giao diện: Bôi đỏ ô input Số lượng bàn giao, hiện cảnh báo"
+    ],
+    [
+      "image12.png",
+      "Hình 12.6: Minh chứng kiểm thử kịch bản ERR_12_06 - Bàn giao thiết bị vào phòng thành công\nPhản hồi hệ thống: \"Đã bàn giao trang thiết bị vào phòng thành công.\" | Giao diện: Đóng modal, tự động trừ tồn kho và cập nhật danh sách"
+    ]
+  ],
+  "13": [
+    [
+      "image13.png",
+      "Hình 13.1: Minh chứng kiểm thử kịch bản ERR_13_01 - Mất kết nối luồng SSE thời gian thực\nPhản hồi hệ thống: \"Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...\" | Giao diện: Hiển thị nhãn huy hiệu màu vàng nhấp nháy góc phải"
+    ],
+    [
+      "image14.png",
+      "Hình 13.2: Minh chứng kiểm thử kịch bản ERR_13_02 - Đổi phòng sang Bảo trì khi đang có khách\nPhản hồi hệ thống: \"Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.\" | Giao diện: Hiển thị Popup cảnh báo xung đột nghiệp vụ"
+    ],
+    [
+      "image15.png",
+      "Hình 13.3: Minh chứng kiểm thử kịch bản ERR_13_03 - Bộ lọc tầng không có phòng nào\nPhản hồi hệ thống: \"Tầng được chọn chưa có phòng nào được tạo.\" | Giao diện: Hiển thị khung trạng thái trống nhắc nhở cấu hình phòng"
+    ]
+  ],
+  "14": [
+    [
+      "image16.png",
+      "Hình 14.1: Minh chứng kiểm thử kịch bản ERR_14_01 - Để trống câu hỏi khi gửi AI\nPhản hồi hệ thống: \"Vui lòng nhập câu hỏi hoặc yêu cầu cần trợ lý AI hỗ trợ.\" | Giao diện: Bôi đỏ viền khung chat, rung nhẹ (shake animation)"
+    ],
+    [
+      "image17.png",
+      "Hình 14.2: Minh chứng kiểm thử kịch bản ERR_14_02 - Nội dung yêu cầu dưới 5 ký tự\nPhản hồi hệ thống: \"Nội dung yêu cầu quá ngắn (tối thiểu 5 ký tự) để AI có đủ ngữ cảnh xử lý.\" | Giao diện: Bôi đỏ viền ô input và hiển thị cảnh báo đỏ bên dưới"
+    ],
+    [
+      "image18.png",
+      "Hình 14.3: Minh chứng kiểm thử kịch bản ERR_14_03 - Kết nối máy chủ Gemini AI bị Timeout\nPhản hồi hệ thống: \"Kết nối máy chủ AI quá thời gian chờ (6s), tự động kích hoạt câu trả lời từ kho tri thức dự phòng.\" | Giao diện: Hiển thị bài viết/lời khuyên từ kho mẫu kèm Toast vàng"
+    ],
+    [
+      "image19.png",
+      "Hình 14.4: Minh chứng kiểm thử kịch bản ERR_14_04 - Vượt quá giới hạn tần suất truy vấn\nPhản hồi hệ thống: \"Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!\" | Giao diện: Khóa nút gửi, hiển thị đồng hồ đếm ngược Countdown"
+    ],
+    [
+      "image20.png",
+      "Hình 14.5: Minh chứng kiểm thử kịch bản ERR_14_05 - Sao chép nội dung bài viết AI thành công\nPhản hồi hệ thống: \"Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!\" | Giao diện: Hiển thị Toast thông báo xanh lá góc phải màn hình"
+    ],
+    [
+      "image21.png",
+      "Hình 14.6: Minh chứng kiểm thử kịch bản ERR_14_06 - AI phân loại sự cố khẩn cấp và tạo ticket\nPhản hồi hệ thống: \"Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!\" | Giao diện: Hiển thị Modal thông báo màu đỏ cam ưu tiên xử lý"
+    ]
+  ],
+  "15": [
+    [
+      "image22.png",
+      "Hình 15.1: Minh chứng kiểm thử kịch bản ERR_15_01 - Để trống tháng chốt cước\nPhản hồi hệ thống: \"Vui lòng chọn tháng tính cước hóa đơn điện nước.\" | Giao diện: Bôi đỏ ô chọn Tháng chốt cước"
+    ],
+    [
+      "image23.png",
+      "Hình 15.2: Minh chứng kiểm thử kịch bản ERR_15_02 - Chỉ số điện mới nhỏ hơn điện cũ\nPhản hồi hệ thống: \"Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.\" | Giao diện: Bôi đỏ viền ô input Điện mới của phòng vi phạm"
+    ],
+    [
+      "image24.png",
+      "Hình 15.3: Minh chứng kiểm thử kịch bản ERR_15_03 - Chỉ số nước mới nhỏ hơn nước cũ\nPhản hồi hệ thống: \"Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.\" | Giao diện: Bôi đỏ viền ô input Nước mới của phòng vi phạm"
+    ],
+    [
+      "image25.png",
+      "Hình 15.4: Minh chứng kiểm thử kịch bản ERR_15_04 - Nhập ký tự chữ vào ô chỉ số\nPhản hồi hệ thống: \"Chỉ số công tơ điện nước chỉ được phép nhập số.\" | Giao diện: Chặn ký tự chữ, bôi đỏ ô input vi phạm"
+    ],
+    [
+      "image26.png",
+      "Hình 15.5: Minh chứng kiểm thử kịch bản ERR_15_05 - Lưu chốt số thành công\nPhản hồi hệ thống: \"Đã lưu chỉ số điện nước thành công cho toàn bộ các phòng!\" | Giao diện: Hiển thị Toast xanh, cập nhật trạng thái đã chốt cước"
+    ]
+  ],
+  "16": [
+    [
+      "image27.png",
+      "Hình 16.1: Minh chứng kiểm thử kịch bản ERR_16_01 - Chưa chọn tệp ảnh công tơ\nPhản hồi hệ thống: \"Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.\" | Giao diện: Viền đỏ khung upload ảnh"
+    ],
+    [
+      "image28.png",
+      "Hình 16.2: Minh chứng kiểm thử kịch bản ERR_16_02 - Ảnh chụp quá mờ hoặc lóa sáng\nPhản hồi hệ thống: \"Ảnh chụp quá mờ hoặc lóa sáng, AI không nhận diện được chữ số rõ ràng.\" | Giao diện: Hiển thị cảnh báo đỏ yêu cầu chụp lại ảnh rõ nét"
+    ],
+    [
+      "image29.png",
+      "Hình 16.3: Minh chứng kiểm thử kịch bản ERR_16_03 - Ảnh không phải mặt công tơ đo đếm\nPhản hồi hệ thống: \"Tệp tải lên không phải là ảnh công tơ đo đếm điện nước hợp lệ.\" | Giao diện: Báo lỗi nhận diện và từ chối xử lý"
+    ],
+    [
+      "image30.png",
+      "Hình 16.4: Minh chứng kiểm thử kịch bản ERR_16_04 - AI nhận diện chỉ số thành công\nPhản hồi hệ thống: \"Đã nhận diện thành công chỉ số công tơ và tự khớp vào phòng!\" | Giao diện: Tự động điền số vào ô input tương ứng và viền xanh"
+    ]
+  ],
+  "17": [
+    [
+      "image31.png",
+      "Hình 17.1: Minh chứng kiểm thử kịch bản ERR_17_01 - Phòng chưa có cư dân thuê đại diện\nPhản hồi hệ thống: \"Phòng này chưa có cư dân đại diện thuê, không thể sinh hóa đơn thu tiền.\" | Giao diện: Hiển thị cảnh báo vàng chặn xuất hóa đơn"
+    ],
+    [
+      "image32.png",
+      "Hình 17.2: Minh chứng kiểm thử kịch bản ERR_17_02 - Đơn giá dịch vụ bị trống hoặc bằng 0\nPhản hồi hệ thống: \"Đơn giá điện nước chưa được cấu hình trong bảng giá cơ sở.\" | Giao diện: Bôi đỏ trường đơn giá, nhắc nhở cài đặt giá dịch vụ"
+    ],
+    [
+      "image33.png",
+      "Hình 17.3: Minh chứng kiểm thử kịch bản ERR_17_03 - Sinh hóa đơn tính tiền thành công\nPhản hồi hệ thống: \"Hóa đơn tiền nhà tháng đã được tính toán và tạo tự động thành công!\" | Giao diện: Dòng hóa đơn chuyển sang trạng thái Chờ thanh toán"
+    ]
+  ],
+  "18": [
+    [
+      "image34.png",
+      "Hình 18.1: Minh chứng kiểm thử kịch bản ERR_18_01 - Chưa chọn phòng cần phân công dọn\nPhản hồi hệ thống: \"Vui lòng chọn ít nhất một phòng cần phân công dọn dẹp vệ sinh.\" | Giao diện: Bôi đỏ viền thẻ phòng trên ma trận, rung nhẹ"
+    ],
+    [
+      "image35.png",
+      "Hình 18.2: Minh chứng kiểm thử kịch bản ERR_18_02 - Cố tình Check-in vào phòng chưa dọn\nPhản hồi hệ thống: \"Phòng [Số phòng] đang ở trạng thái Cần dọn (Dirty). Không thể thực hiện Check-in đón khách!\" | Giao diện: Modal cảnh báo đỏ chặn nút Check-in, yêu cầu dọn phòng trước"
+    ],
+    [
+      "image36.png",
+      "Hình 18.3: Minh chứng kiểm thử kịch bản ERR_18_03 - Chưa phân công nhân viên dọn phòng\nPhản hồi hệ thống: \"Vui lòng chọn nhân viên buồng phòng phụ trách thực hiện ca dọn dẹp này.\" | Giao diện: Bôi đỏ dropdown chọn Nhân viên phụ trách"
+    ],
+    [
+      "image37.png",
+      "Hình 18.4: Minh chứng kiểm thử kịch bản ERR_18_04 - Chuyển trạng thái FSM buồng phòng sai quy trình\nPhản hồi hệ thống: \"Chuyển đổi trạng thái buồng phòng không hợp lệ theo quy trình FSM (Phòng phải qua bước Sạch trước khi Nghiệm thu).\" | Giao diện: Hiển thị Toast cảnh báo màu đỏ góc màn hình"
+    ],
+    [
+      "image38.png",
+      "Hình 18.5: Minh chứng kiểm thử kịch bản ERR_18_05 - Số lượng vật tư tiêu hao minibar không hợp lệ\nPhản hồi hệ thống: \"Số lượng vật tư tiêu hao minibar phải là số nguyên dương lớn hơn hoặc bằng 0.\" | Giao diện: Bôi đỏ ô nhập số lượng vật tư minibar"
+    ],
+    [
+      "image39.png",
+      "Hình 18.6: Minh chứng kiểm thử kịch bản ERR_18_06 - Nghiệm thu buồng phòng thành công\nPhản hồi hệ thống: \"Đã nghiệm thu buồng phòng thành công! Phòng đã sẵn sàng đón khách lưu trú mới.\" | Giao diện: Hiển thị Toast thông báo thành công màu xanh lá"
+    ]
+  ],
+  "19": [
+    [
+      "image40.png",
+      "Hình 19.1: Minh chứng kiểm thử kịch bản ERR_19_01 - Để trống số tiền giao dịch\nPhản hồi hệ thống: \"Vui lòng nhập số tiền phát sinh thu hoặc chi.\" | Giao diện: Bôi đỏ viền ô input Số tiền"
+    ],
+    [
+      "image41.png",
+      "Hình 19.2: Minh chứng kiểm thử kịch bản ERR_19_02 - Nhập số tiền bằng 0 hoặc số âm\nPhản hồi hệ thống: \"Số tiền giao dịch phải là số nguyên dương lớn hơn 0 đồng.\" | Giao diện: Bôi đỏ viền ô input Số tiền"
+    ],
+    [
+      "image42.png",
+      "Hình 19.3: Minh chứng kiểm thử kịch bản ERR_19_03 - Để trống danh mục thu chi\nPhản hồi hệ thống: \"Vui lòng chọn danh mục giao dịch (Tiền phòng, Sửa chữa, Vệ sinh...).\" | Giao diện: Bôi đỏ dropdown Danh mục thu chi"
+    ],
+    [
+      "image43.png",
+      "Hình 19.4: Minh chứng kiểm thử kịch bản ERR_19_04 - Để trống ngày phát sinh giao dịch\nPhản hồi hệ thống: \"Ngày ghi nhận giao dịch không được để trống.\" | Giao diện: Bôi đỏ ô chọn Ngày giao dịch"
+    ],
+    [
+      "image44.png",
+      "Hình 19.5: Minh chứng kiểm thử kịch bản ERR_19_05 - Ghi nhận giao dịch thành công\nPhản hồi hệ thống: \"Ghi nhận giao dịch vào sổ quỹ thành công!\" | Giao diện: Dòng giao dịch mới xuất hiện đầu bảng, cập nhật Lợi nhuận ròng"
+    ]
+  ],
+  "20": [
+    [
+      "image45.png",
+      "Hình 20.1: Minh chứng kiểm thử kịch bản ERR_20_01 - Chưa chọn vai trò khi phân quyền\nPhản hồi hệ thống: \"Vui lòng chọn vai trò phân quyền hợp lệ cho tài khoản.\" | Giao diện: Bôi đỏ dropdown chọn Vai trò"
+    ],
+    [
+      "image46.png",
+      "Hình 20.2: Minh chứng kiểm thử kịch bản ERR_20_02 - Gán vai trò Nhân viên nhưng thiếu cơ sở\nPhản hồi hệ thống: \"Nhân viên hoặc Quản lý bắt buộc phải được gán vào một cơ sở lưu trú cụ thể.\" | Giao diện: Bôi đỏ dropdown chọn Cơ sở lưu trú"
+    ],
+    [
+      "image47.png",
+      "Hình 20.3: Minh chứng kiểm thử kịch bản ERR_20_03 - Tự khóa chính tài khoản đang đăng nhập\nPhản hồi hệ thống: \"Không thể tự khóa tài khoản quản trị viên đang thực hiện phiên làm việc!\" | Giao diện: Bật Modal cảnh báo đỏ từ chối hành động"
+    ],
+    [
+      "image48.png",
+      "Hình 20.4: Minh chứng kiểm thử kịch bản ERR_20_04 - Cập nhật phân quyền thành công\nPhản hồi hệ thống: \"Đã cập nhật vai trò và phân quyền tài khoản thành công!\" | Giao diện: Hiển thị Toast thông báo thành công màu xanh lá"
+    ]
+  ]
+}

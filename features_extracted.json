@@ -1,0 +1,2138 @@
+{
+  "1": {
+    "num": 1,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_01_AUTH"
+      ],
+      [
+        "Tên Tính Năng",
+        "Đăng ký & Đăng nhập hệ thống (Xác thực OTP & Mật khẩu)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách vãng lai, Khách thuê trọ, Chủ trọ đã có tài khoản."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm 'Đăng nhập' trên thanh điều hướng hoặc truy cập đường dẫn /login; bấm 'Đăng ký' hoặc truy cập /register."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Người dùng chưa đăng nhập; thiết bị kết nối mạng Internet ổn định."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống thông tin đăng nhập (Tài khoản / Mật khẩu)",
+        "ERR_01_01",
+        "Vui lòng nhập tài khoản đăng nhập / Vui lòng nhập mật khẩu",
+        "Bôi đỏ viền các ô input và hiển thị dòng thông báo lỗi màu đỏ ngay bên dưới ô nhập liệu"
+      ],
+      [
+        "Để trống thông tin đăng ký tài khoản người dùng",
+        "ERR_01_02",
+        "Vui lòng nhập tài khoản đăng nhập / Vui lòng nhập số điện thoại (bắt buộc)",
+        "Bôi đỏ viền các ô input bắt buộc và hiển thị thông báo đỏ chi tiết dưới từng ô nhập liệu"
+      ],
+      [
+        "Tên đăng nhập dưới 3 ký tự",
+        "ERR_01_03",
+        "Tài khoản đăng nhập tối thiểu 3 ký tự.",
+        "Bôi đỏ viền ô input và báo lỗi dưới ô"
+      ],
+      [
+        "Tên đăng nhập đã được sử dụng",
+        "ERR_01_04",
+        "Tài khoản đăng nhập này đã được sử dụng trong hệ thống.",
+        "Bôi đỏ ô input, hiện icon chấm than đỏ"
+      ],
+      [
+        "Để trống mật khẩu",
+        "ERR_01_05",
+        "Mật khẩu là bắt buộc.",
+        "Bôi đỏ viền ô input Mật khẩu"
+      ],
+      [
+        "Mật khẩu dưới 6 ký tự",
+        "ERR_01_06",
+        "Mật khẩu phải có tối thiểu 6 ký tự.",
+        "Bôi đỏ viền ô input Mật khẩu"
+      ],
+      [
+        "Để trống số điện thoại",
+        "ERR_01_07",
+        "Vui lòng nhập số điện thoại (bắt buộc).",
+        "Bôi đỏ viền ô input Số điện thoại"
+      ],
+      [
+        "Số điện thoại không đúng 10 số",
+        "ERR_01_08",
+        "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (ví dụ: 0988123456).",
+        "Bôi đỏ ô input Số điện thoại"
+      ],
+      [
+        "Số điện thoại đã tồn tại",
+        "ERR_01_09",
+        "Số điện thoại này đã được đăng ký tài khoản trong hệ thống.",
+        "Bôi đỏ ô input Số điện thoại, hiện thông báo trùng"
+      ],
+      [
+        "Nhập sai mã OTP",
+        "ERR_01_10",
+        "Mã xác thực OTP không chính xác. Bạn còn lại X lần thử.",
+        "Bôi đỏ 6 ô nhập mã OTP, hiệu ứng rung lắc (shake animation)"
+      ],
+      [
+        "Mã OTP đã hết hạn (quá 5 phút)",
+        "ERR_01_11",
+        "Mã xác thực OTP đã hết hiệu lực (quá 5 phút). Vui lòng bấm Gửi lại mã.",
+        "Bôi đỏ ô OTP, hiển thị nút Gửi lại mã OTP"
+      ],
+      [
+        "Đăng nhập / Đăng ký thành công",
+        "ERR_01_12",
+        "Đăng nhập thành công! Chào mừng bạn quay trở lại SmartRoom.",
+        "Hiển thị thông báo Toast màu xanh lá (Success) và chuyển hướng"
+      ]
+    ]
+  },
+  "2": {
+    "num": 2,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_02_PROFILE"
+      ],
+      [
+        "Tên Tính Năng",
+        "Quản lý Hồ sơ cá nhân & Cài đặt Chủ trọ (Landlord Profile)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Quản trị viên chi nhánh đã đăng nhập."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm vào ảnh đại diện hoặc chọn menu 'Hồ sơ cá nhân' (/profile)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Người dùng đã đăng nhập vào tài khoản hợp lệ."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống họ và tên chủ trọ",
+        "ERR_02_01",
+        "Họ và tên chủ cơ sở không được để trống.",
+        "Bôi đỏ viền ô input Họ và tên"
+      ],
+      [
+        "Để trống số điện thoại liên hệ",
+        "ERR_02_02",
+        "Vui lòng nhập số điện thoại liên hệ chính của chủ trọ.",
+        "Bôi đỏ viền ô input Số điện thoại"
+      ],
+      [
+        "Để trống tên cơ sở lưu trú",
+        "ERR_02_03",
+        "Tên cơ sở lưu trú / khu trọ không được để trống.",
+        "Bôi đỏ viền ô input Tên cơ sở"
+      ],
+      [
+        "Để trống địa chỉ cơ sở",
+        "ERR_02_04",
+        "Địa chỉ cơ sở lưu trú là bắt buộc để khách hàng định vị.",
+        "Bôi đỏ viền ô input Địa chỉ"
+      ],
+      [
+        "Để trống số tài khoản ngân hàng",
+        "ERR_02_05",
+        "Số tài khoản ngân hàng không được để trống để tạo mã VietQR.",
+        "Bôi đỏ viền ô input Số tài khoản"
+      ],
+      [
+        "Chưa chọn ngân hàng thụ hưởng",
+        "ERR_02_06",
+        "Vui lòng chọn ngân hàng thụ hưởng nhận tiền thuê phòng.",
+        "Bôi đỏ dropdown Ngân hàng thụ hưởng"
+      ],
+      [
+        "Số tài khoản chứa chữ cái",
+        "ERR_02_07",
+        "Số tài khoản ngân hàng chỉ được bao gồm các chữ số nguyên.",
+        "Bôi đỏ ô input Số tài khoản"
+      ],
+      [
+        "Cập nhật hồ sơ thành công",
+        "ERR_02_08",
+        "Cập nhật hồ sơ chủ trọ và tài khoản nhận tiền thành công!",
+        "Hiển thị Toast thông báo màu xanh lá góc trên bên phải"
+      ]
+    ]
+  },
+  "3": {
+    "num": 3,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_03_ROOM_MGMT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Quản lý Danh mục Phòng trọ & Cấu hình phòng (CRUD Room)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Quản lý tòa nhà."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Quản lý phòng' (/smartroom/admin/rooms) trên thanh bên quản trị."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Chủ trọ đã đăng nhập và đã tạo ít nhất một Tòa nhà."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống số phòng",
+        "ERR_03_01",
+        "Số phòng không được để trống.",
+        "Bôi đỏ viền ô input Số phòng"
+      ],
+      [
+        "Số phòng bị trùng trong cùng tòa",
+        "ERR_03_02",
+        "Số phòng này đã tồn tại trong cơ sở lưu trú, vui lòng chọn số khác.",
+        "Bôi đỏ ô input Số phòng và cảnh báo trùng lặp"
+      ],
+      [
+        "Để trống giá thuê phòng",
+        "ERR_03_03",
+        "Giá thuê phòng hàng tháng là bắt buộc.",
+        "Bôi đỏ viền ô input Giá thuê"
+      ],
+      [
+        "Nhập giá thuê phòng nhỏ hơn 0",
+        "ERR_03_04",
+        "Giá thuê phòng phải là số nguyên dương lớn hơn 0 đồng.",
+        "Bôi đỏ viền ô input Giá thuê"
+      ],
+      [
+        "Để trống diện tích phòng",
+        "ERR_03_05",
+        "Vui lòng nhập diện tích phòng lưu trú.",
+        "Bôi đỏ viền ô input Diện tích"
+      ],
+      [
+        "Diện tích phòng nhỏ hơn hoặc bằng 0",
+        "ERR_03_06",
+        "Diện tích phòng phải lớn hơn 0 mét vuông.",
+        "Bôi đỏ viền ô input Diện tích"
+      ],
+      [
+        "Để trống tầng",
+        "ERR_03_07",
+        "Vui lòng nhập tầng bố trí phòng.",
+        "Bôi đỏ viền ô input Tầng"
+      ],
+      [
+        "Tải tệp ảnh sai định dạng",
+        "ERR_03_08",
+        "Tệp ảnh phòng phải có định dạng hợp lệ (JPG, JPEG, PNG).",
+        "Viền đỏ khung tải ảnh, từ chối nạp tệp"
+      ],
+      [
+        "Dung lượng ảnh vượt quá 5MB",
+        "ERR_03_09",
+        "Ảnh tải lên vượt quá dung lượng tối đa cho phép (5MB).",
+        "Hiển thị Toast thông báo cảnh báo dung lượng"
+      ],
+      [
+        "Lưu phòng thành công",
+        "ERR_03_10",
+        "Lưu thông tin phòng lưu trú thành công!",
+        "Đóng modal, nạp lại danh sách phòng và hiện Toast xanh"
+      ]
+    ]
+  },
+  "4": {
+    "num": 4,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_04_LANDING"
+      ],
+      [
+        "Tên Tính Năng",
+        "Trang chủ Sàn phòng trọ Renty (Landing Page)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách vãng lai, Người thuê trọ, Sinh viên, Người đi làm."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Người dùng truy cập vào trang chủ hệ thống (domain /)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Không yêu cầu đăng nhập."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Bấm tìm kiếm khi từ khóa rỗng",
+        "ERR_04_01",
+        "Vui lòng nhập khu vực, tên đường hoặc trường đại học cần tìm phòng.",
+        "Viền sáng ô tìm kiếm và hiển thị danh sách từ khóa gợi ý"
+      ],
+      [
+        "Nhập từ khóa chứa mã độc/ký tự lạ",
+        "ERR_04_02",
+        "Từ khóa tìm kiếm chứa ký tự không hợp lệ.",
+        "Tự động làm sạch chuỗi tìm kiếm"
+      ],
+      [
+        "Không tìm thấy kết quả phù hợp",
+        "ERR_04_03",
+        "Không tìm thấy phòng trọ nào khớp với từ khóa tìm kiếm của bạn.",
+        "Hiển thị khung trạng thái trống (Empty State) kèm nút Khám phá"
+      ],
+      [
+        "Mất kết nối máy chủ dữ liệu phòng",
+        "ERR_04_04",
+        "Không thể nạp danh sách phòng lúc này. Vui lòng kiểm tra lại kết nối.",
+        "Hiển thị thông báo lỗi mạng kèm nút Bấm để tải lại"
+      ]
+    ]
+  },
+  "5": {
+    "num": 5,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_05_SMART_MAP"
+      ],
+      [
+        "Tên Tính Năng",
+        "Bản đồ Phòng trọ thông minh (Smart Map)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách thuê tìm phòng theo vị trí địa lý."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm vào nút 'Xem bản đồ' hoặc truy cập /map."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Trình duyệt được cấp quyền truy cập định vị (Geolocation) để gợi ý vị trí hiện tại."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Từ chối cấp quyền định vị GPS",
+        "ERR_05_01",
+        "Vui lòng cho phép truy cập vị trí trên trình duyệt để tìm phòng gần bạn nhất.",
+        "Hiển thị Popup thông báo hướng dẫn bật GPS"
+      ],
+      [
+        "Không có phòng trong bán kính chọn",
+        "ERR_05_02",
+        "Không tìm thấy phòng trọ nào trong bán kính đã chọn.",
+        "Hiển thị vòng quét trên bản đồ và gợi ý tăng bán kính"
+      ],
+      [
+        "Tọa độ địa lý không hợp lệ",
+        "ERR_05_03",
+        "Tọa độ tìm kiếm nằm ngoài phạm vi bản đồ hỗ trợ.",
+        "Tự động chuyển tâm bản đồ về khu vực trung tâm mặc định"
+      ],
+      [
+        "Lỗi kết nối dịch vụ bản đồ số",
+        "ERR_05_04",
+        "Không thể tải lớp bản đồ số (Tiles Server timeout).",
+        "Hiển thị thông báo lỗi kèm tùy chọn chuyển sang chế độ danh sách"
+      ]
+    ]
+  },
+  "6": {
+    "num": 6,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_06_ROOM_DETAIL"
+      ],
+      [
+        "Tên Tính Năng",
+        "Trang Chi tiết phòng trọ (Room Detail)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách thuê, Cư dân, Chủ trọ xem trước tin đăng."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm vào bất kỳ thẻ phòng nào trên trang chủ hoặc bản đồ."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Phòng trọ đang tồn tại và công khai trên hệ thống."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Mã phòng trên URL không tồn tại",
+        "ERR_06_01",
+        "Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.",
+        "Chuyển hướng về trang danh sách phòng kèm thông báo lỗi"
+      ],
+      [
+        "Phòng đã có người thuê",
+        "ERR_06_02",
+        "Phòng lưu trú này hiện đã có người thuê, tạm ngừng nhận đăng ký.",
+        "Gắn nhãn huy hiệu ĐÃ THUÊ màu xám, vô hiệu hóa nút đặt phòng"
+      ],
+      [
+        "Lỗi tải ảnh trong thư viện Gallery",
+        "ERR_06_03",
+        "Không thể tải một số ảnh độ phân giải cao của phòng.",
+        "Tự động nạp ảnh thế mạng (Placeholder Image) mặc định"
+      ],
+      [
+        "Bấm sao chép liên kết phòng",
+        "ERR_06_04",
+        "Đã sao chép liên kết chia sẻ phòng vào bộ nhớ tạm!",
+        "Hiển thị thông báo Toast xanh xác nhận"
+      ]
+    ]
+  },
+  "7": {
+    "num": 7,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_07_CONTACT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Tiếp nhận & Quản lý yêu cầu hẹn xem phòng (Contact Requests)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách thuê (gửi lịch hẹn), Chủ trọ (tiếp nhận & xử lý lịch hẹn)."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Khách bấm 'Hẹn xem phòng' tại trang chi tiết phòng; Chủ trọ bấm menu 'Yêu cầu hẹn xem'."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Khách thuê nhập đầy đủ số điện thoại và thời gian hẹn hợp lệ trong tương lai."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Khách để trống họ và tên",
+        "ERR_07_01",
+        "Vui lòng nhập họ và tên để chủ trọ tiện xưng hô liên hệ.",
+        "Bôi đỏ viền ô input Họ và tên"
+      ],
+      [
+        "Khách để trống số điện thoại",
+        "ERR_07_02",
+        "Vui lòng nhập số điện thoại để nhận cuộc gọi tư vấn.",
+        "Bôi đỏ viền ô input Số điện thoại"
+      ],
+      [
+        "Số điện thoại không đủ 10 số",
+        "ERR_07_03",
+        "Số điện thoại liên hệ phải có chính xác 10 chữ số.",
+        "Bôi đỏ viền ô input Số điện thoại"
+      ],
+      [
+        "Chọn ngày hẹn trong quá khứ",
+        "ERR_07_04",
+        "Ngày hẹn đến xem phòng không thể là ngày trong quá khứ.",
+        "Bôi đỏ ô chọn Ngày hẹn xem phòng"
+      ],
+      [
+        "Gửi yêu cầu hẹn xem phòng thành công",
+        "ERR_07_05",
+        "Gửi yêu cầu hẹn xem phòng thành công! Chủ trọ sẽ sớm liên hệ lại.",
+        "Hiển thị Modal popup thông báo cảm ơn và xác nhận"
+      ],
+      [
+        "Chủ trọ cập nhật trạng thái cuộc gọi",
+        "ERR_07_06",
+        "Đã cập nhật trạng thái yêu cầu tư vấn thành công.",
+        "Hàng dữ liệu đổi trạng thái sang Đã liên hệ, trừ badge đỏ"
+      ]
+    ]
+  },
+  "8": {
+    "num": 8,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_08_CONTRACT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Hợp đồng thuê phòng Online (Ký số Canvas & Xuất PDF)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ (tạo hợp đồng), Khách thuê (ký nhận hợp đồng)."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm 'Tạo hợp đồng' từ danh sách phòng hoặc khi xác nhận khách dọn vào ở."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã có thông tin khách thuê, phòng trọ và giá thuê đã thống nhất."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chưa chọn phòng thuê",
+        "ERR_08_01",
+        "Vui lòng chọn phòng lưu trú để thiết lập hợp đồng.",
+        "Bôi đỏ dropdown chọn Phòng"
+      ],
+      [
+        "Chưa chọn cư dân đại diện",
+        "ERR_08_02",
+        "Vui lòng chọn cư dân đại diện đứng tên trên hợp đồng.",
+        "Bôi đỏ dropdown chọn Cư dân"
+      ],
+      [
+        "Ngày kết thúc trước ngày bắt đầu",
+        "ERR_08_03",
+        "Thời hạn kết thúc hợp đồng phải sau ngày bắt đầu hiệu lực.",
+        "Bôi đỏ ô chọn Ngày kết thúc"
+      ],
+      [
+        "Nhập tiền cọc hợp đồng âm",
+        "ERR_08_04",
+        "Số tiền đặt cọc hợp đồng phải lớn hơn hoặc bằng 0 đồng.",
+        "Bôi đỏ ô input Tiền cọc"
+      ],
+      [
+        "Chưa vẽ chữ ký trên khung Canvas",
+        "ERR_08_05",
+        "Vui lòng vẽ chữ ký tay vào khung ký số trước khi bấm xác nhận.",
+        "Viền đỏ nhấp nháy khung ký Canvas, rung nhẹ cảnh báo"
+      ],
+      [
+        "Chưa nhập mã OTP xác thực ký số",
+        "ERR_08_06",
+        "Vui lòng nhập mã OTP 6 số được gửi về SĐT cư dân để ký kết.",
+        "Bôi đỏ ô nhập mã OTP"
+      ],
+      [
+        "Nhập sai mã OTP ký hợp đồng",
+        "ERR_08_07",
+        "Mã xác thực OTP ký hợp đồng không chính xác hoặc đã hết hạn.",
+        "Bôi đỏ ô OTP, hiển thị thông báo lỗi xác thực"
+      ],
+      [
+        "Ký số và kích hoạt hợp đồng thành công",
+        "ERR_08_08",
+        "Hợp đồng đã được ký số thành công và chuyển sang trạng thái Hiệu lực!",
+        "Hiển thị Popup thành công, mở khóa nút Tải tệp PDF hợp đồng"
+      ]
+    ]
+  },
+  "9": {
+    "num": 9,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_09_KYC"
+      ],
+      [
+        "Tên Tính Năng",
+        "Xác thực định danh & Đăng ký Tích Xanh KYC Chủ trọ"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ nhà trọ muốn gia tăng uy tín cho tin đăng."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm vào banner 'Nâng cấp Tích Xanh uy tín' hoặc vào mục Cài đặt KYC (/smartroom/admin/kyc)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Tài khoản chủ trọ đã cập nhật số điện thoại và email."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống số CCCD",
+        "ERR_09_01",
+        "Vui lòng nhập số Căn cước công dân của chủ cơ sở.",
+        "Bôi đỏ viền ô input Số CCCD"
+      ],
+      [
+        "Số CCCD không đúng 12 chữ số",
+        "ERR_09_02",
+        "Số Căn cước công dân phải gồm chính xác 12 chữ số.",
+        "Bôi đỏ viền ô input Số CCCD"
+      ],
+      [
+        "Chưa tải ảnh mặt trước CCCD",
+        "ERR_09_03",
+        "Vui lòng tải lên hình ảnh chụp mặt trước Căn cước công dân.",
+        "Viền đỏ khung upload ảnh mặt trước"
+      ],
+      [
+        "Chưa tải ảnh mặt sau CCCD",
+        "ERR_09_04",
+        "Vui lòng tải lên hình ảnh chụp mặt sau Căn cước công dân.",
+        "Viền đỏ khung upload ảnh mặt sau"
+      ],
+      [
+        "Tải tệp không đúng định dạng",
+        "ERR_09_05",
+        "Tài liệu xác minh chỉ chấp nhận định dạng JPG, PNG hoặc PDF.",
+        "Khung tải file báo lỗi định dạng không hỗ trợ"
+      ],
+      [
+        "Dung lượng tệp vượt quá 10MB",
+        "ERR_09_06",
+        "Dung lượng tệp tài liệu vượt quá giới hạn cho phép (10MB).",
+        "Hiển thị cảnh báo dung lượng vượt mức quy định"
+      ],
+      [
+        "Gửi hồ sơ KYC thành công",
+        "ERR_09_07",
+        "Hồ sơ xác minh KYC đã được gửi thành công! Vui lòng chờ Admin duyệt.",
+        "Hiển thị thẻ trạng thái Chờ duyệt KYC màu vàng cam"
+      ]
+    ]
+  },
+  "10": {
+    "num": 10,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_10_ADMIN_KYC"
+      ],
+      [
+        "Tên Tính Năng",
+        "Kiểm duyệt hồ sơ Chủ trọ & Cấp Tích Xanh (Admin Verification)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Thanh Hiền"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Quản trị viên Superadmin / Kiểm duyệt viên hệ thống."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Admin truy cập mục 'Kiểm duyệt hồ sơ' (/admin/verifications)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Tài khoản có quyền Quản trị viên (Role: Admin/Superadmin)."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Từ chối hồ sơ nhưng để trống lý do",
+        "ERR_10_01",
+        "Vui lòng nhập lý do từ chối để chủ cơ sở nắm rõ thông tin bổ sung.",
+        "Bôi đỏ viền ô textarea Lý do từ chối"
+      ],
+      [
+        "Lý do từ chối quá ngắn (< 10 ký tự)",
+        "ERR_10_02",
+        "Nội dung lý do từ chối phải có độ dài tối thiểu 10 ký tự.",
+        "Bôi đỏ viền ô textarea Lý do từ chối"
+      ],
+      [
+        "Phiên xem tài liệu bảo mật hết hạn",
+        "ERR_10_03",
+        "Phiên xem ảnh tài liệu bảo mật đã hết hạn (Signed URL TTL 300s).",
+        "Báo lỗi HTTP 403, tự động làm mới chữ ký URL"
+      ],
+      [
+        "Phê duyệt cấp Tích Xanh thành công",
+        "ERR_10_04",
+        "Đã phê duyệt hồ sơ KYC và cấp Tích Xanh uy tín cho cơ sở thành công!",
+        "Đổi trạng thái sang Đã xác minh (Tích Xanh), hiện Toast xanh"
+      ]
+    ]
+  },
+  "11": {
+    "num": 11,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_11_BUILDING"
+      ],
+      [
+        "Tên Tính Năng",
+        "Quản lý Tòa nhà & Cơ sở lưu trú (Buildings Management)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ sở hữu bất động sản, Quản lý chuỗi nhà trọ."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm '+ Thêm tòa nhà' trên trang Quản lý tòa nhà (/smartroom/admin/buildings/create)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Tài khoản chủ trọ đã được kích hoạt."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống tên cơ sở / tòa nhà",
+        "ERR_11_01",
+        "Tên cơ sở lưu trú không được để trống.",
+        "Bôi đỏ viền ô input Tên cơ sở"
+      ],
+      [
+        "Để trống địa chỉ cơ sở",
+        "ERR_11_02",
+        "Địa chỉ cơ sở lưu trú là bắt buộc.",
+        "Bôi đỏ viền ô input Địa chỉ"
+      ],
+      [
+        "Để trống số tầng",
+        "ERR_11_03",
+        "Vui lòng nhập số tầng của tòa nhà.",
+        "Bôi đỏ viền ô input Số tầng"
+      ],
+      [
+        "Nhập số tầng nhỏ hơn 1",
+        "ERR_11_04",
+        "Số tầng tòa nhà phải là số nguyên dương lớn hơn hoặc bằng 1.",
+        "Bôi đỏ viền ô input Số tầng"
+      ],
+      [
+        "Xóa tòa nhà còn phòng đang cho thuê",
+        "ERR_11_05",
+        "Không thể xóa cơ sở lưu trú đang có phòng có cư dân thuê hoạt động.",
+        "Hiển thị Modal cảnh báo lỗi chặn xóa dữ liệu"
+      ],
+      [
+        "Lưu cơ sở lưu trú thành công",
+        "ERR_11_06",
+        "Lưu thông tin cơ sở lưu trú thành công!",
+        "Hiển thị Toast thông báo màu xanh lá, nạp lại danh mục"
+      ]
+    ]
+  },
+  "12": {
+    "num": 12,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_12_EQUIPMENT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Quản lý Trang thiết bị & Tài sản (Equipment Management)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Kỹ thuật viên bảo trì."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Quản lý thiết bị' (/smartroom/admin/equipment)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã có phòng trọ trong hệ thống."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống tên thiết bị",
+        "ERR_12_01",
+        "Tên trang thiết bị tài sản không được để trống.",
+        "Bôi đỏ viền ô input Tên thiết bị"
+      ],
+      [
+        "Để trống mã thiết bị",
+        "ERR_12_02",
+        "Mã quản lý thiết bị là bắt buộc.",
+        "Bôi đỏ viền ô input Mã thiết bị"
+      ],
+      [
+        "Nhập số lượng tồn kho nhỏ hơn 0",
+        "ERR_12_03",
+        "Số lượng trang thiết bị nhập kho phải lớn hơn hoặc bằng 0.",
+        "Bôi đỏ viền ô input Số lượng"
+      ],
+      [
+        "Nhập đơn giá tài sản là số âm",
+        "ERR_12_04",
+        "Đơn giá giá trị tài sản không được là số âm.",
+        "Bôi đỏ viền ô input Đơn giá"
+      ],
+      [
+        "Bàn giao số lượng vượt quá tồn kho",
+        "ERR_12_05",
+        "Số lượng thiết bị bàn giao vượt quá số lượng tồn kho khả dụng!",
+        "Bôi đỏ ô input Số lượng bàn giao, hiện cảnh báo"
+      ],
+      [
+        "Bàn giao thiết bị vào phòng thành công",
+        "ERR_12_06",
+        "Đã bàn giao trang thiết bị vào phòng thành công.",
+        "Đóng modal, tự động trừ tồn kho và cập nhật danh sách"
+      ]
+    ]
+  },
+  "13": {
+    "num": 13,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_13_ROOM_MATRIX"
+      ],
+      [
+        "Tên Tính Năng",
+        "Sơ đồ Ma trận phòng thời gian thực (Room Matrix SSE)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Quản trị viên chi nhánh."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Ma trận phòng' (/smartroom/admin/matrix)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã thiết lập phòng theo tầng trong tòa nhà."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Mất kết nối luồng SSE thời gian thực",
+        "ERR_13_01",
+        "Mất kết nối dữ liệu thời gian thực. Hệ thống đang tự động kết nối lại...",
+        "Hiển thị nhãn huy hiệu màu vàng nhấp nháy góc phải"
+      ],
+      [
+        "Đổi phòng sang Bảo trì khi đang có khách",
+        "ERR_13_02",
+        "Phòng đang có hợp đồng thuê hoạt động, không thể chuyển sang bảo trì.",
+        "Hiển thị Popup cảnh báo xung đột nghiệp vụ"
+      ],
+      [
+        "Bộ lọc tầng không có phòng nào",
+        "ERR_13_03",
+        "Tầng được chọn chưa có phòng nào được tạo.",
+        "Hiển thị khung trạng thái trống nhắc nhở cấu hình phòng"
+      ]
+    ]
+  },
+  "14": {
+    "num": 14,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_14_AI_ASSISTANT_HUB"
+      ],
+      [
+        "Tên Tính Năng",
+        "Hệ sinh thái Trợ lý AI Hỗ trợ toàn diện (SmartRoom & Renty AI Assistant Hub)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách tìm phòng (Guest), Chủ trọ/Quản lý cơ sở (Landlord), Cư dân đang thuê phòng (Resident)."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Nhấp biểu tượng \"Trợ lý ảo AI\" tại thanh điều hướng hoặc nút \"Nhờ AI hỗ trợ\" tại các phân hệ tương ứng."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Có kết nối Internet, máy chủ kích hoạt Google Gemini 2.5 Flash / OpenAI API."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống câu hỏi khi gửi AI",
+        "ERR_14_01",
+        "Vui lòng nhập câu hỏi hoặc yêu cầu cần trợ lý AI hỗ trợ.",
+        "Bôi đỏ viền khung chat, rung nhẹ (shake animation)"
+      ],
+      [
+        "Nội dung yêu cầu dưới 5 ký tự",
+        "ERR_14_02",
+        "Nội dung yêu cầu quá ngắn (tối thiểu 5 ký tự) để AI có đủ ngữ cảnh xử lý.",
+        "Bôi đỏ viền ô input và hiển thị cảnh báo đỏ bên dưới"
+      ],
+      [
+        "Kết nối máy chủ Gemini AI bị Timeout",
+        "ERR_14_03",
+        "Kết nối máy chủ AI quá thời gian chờ (6s), tự động kích hoạt câu trả lời từ kho tri thức dự phòng.",
+        "Hiển thị bài viết/lời khuyên từ kho mẫu kèm Toast vàng"
+      ],
+      [
+        "Vượt quá giới hạn tần suất truy vấn",
+        "ERR_14_04",
+        "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 20 req/phút). Vui lòng đợi 30 giây!",
+        "Khóa nút gửi, hiển thị đồng hồ đếm ngược Countdown"
+      ],
+      [
+        "Sao chép nội dung bài viết AI thành công",
+        "ERR_14_05",
+        "Đã sao chép nội dung bài viết marketing chuẩn SEO vào bộ nhớ tạm thành công!",
+        "Hiển thị Toast thông báo xanh lá góc phải màn hình"
+      ],
+      [
+        "AI phân loại sự cố khẩn cấp và tạo ticket",
+        "ERR_14_06",
+        "Sự cố kỹ thuật khẩn cấp đã được AI ghi nhận và chuyển ngay đến đội ngũ bảo trì tòa nhà!",
+        "Hiển thị Modal thông báo màu đỏ cam ưu tiên xử lý"
+      ]
+    ]
+  },
+  "15": {
+    "num": 15,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_15_UTILITY_BULK"
+      ],
+      [
+        "Tên Tính Năng",
+        "Chốt số Điện - Nước định kỳ hàng loạt (Bulk Utility Input)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Quản lý tòa nhà, Kế toán nhà trọ."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Ghi điện nước hàng tháng' (/smartroom/admin/utilities/bulk)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã có chỉ số công tơ tháng trước để so sánh."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống tháng chốt cước",
+        "ERR_15_01",
+        "Vui lòng chọn tháng tính cước hóa đơn điện nước.",
+        "Bôi đỏ ô chọn Tháng chốt cước"
+      ],
+      [
+        "Chỉ số điện mới nhỏ hơn điện cũ",
+        "ERR_15_02",
+        "Chỉ số điện mới phải lớn hơn hoặc bằng chỉ số điện kỳ trước.",
+        "Bôi đỏ viền ô input Điện mới của phòng vi phạm"
+      ],
+      [
+        "Chỉ số nước mới nhỏ hơn nước cũ",
+        "ERR_15_03",
+        "Chỉ số nước mới phải lớn hơn hoặc bằng chỉ số nước kỳ trước.",
+        "Bôi đỏ viền ô input Nước mới của phòng vi phạm"
+      ],
+      [
+        "Nhập ký tự chữ vào ô chỉ số",
+        "ERR_15_04",
+        "Chỉ số công tơ điện nước chỉ được phép nhập số.",
+        "Chặn ký tự chữ, bôi đỏ ô input vi phạm"
+      ],
+      [
+        "Lưu chốt số thành công",
+        "ERR_15_05",
+        "Đã lưu chỉ số điện nước thành công cho toàn bộ các phòng!",
+        "Hiển thị Toast xanh, cập nhật trạng thái đã chốt cước"
+      ]
+    ]
+  },
+  "16": {
+    "num": 16,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_16_AI_OCR"
+      ],
+      [
+        "Tên Tính Năng",
+        "AI Quét số công tơ điện nước (AI Vision OCR)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Người ghi số điện nước, Chủ trọ."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm icon camera 'Quét số bằng AI' tại mỗi dòng nhập điện nước."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Có ảnh chụp công tơ sắc nét, không bị lóa sáng hay rung lắc."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chưa chọn tệp ảnh công tơ",
+        "ERR_16_01",
+        "Vui lòng chọn hoặc kéo thả ít nhất một ảnh chụp mặt công tơ.",
+        "Viền đỏ khung upload ảnh"
+      ],
+      [
+        "Ảnh chụp quá mờ hoặc lóa sáng",
+        "ERR_16_02",
+        "Ảnh chụp quá mờ hoặc lóa sáng, AI không nhận diện được chữ số rõ ràng.",
+        "Hiển thị cảnh báo đỏ yêu cầu chụp lại ảnh rõ nét"
+      ],
+      [
+        "Ảnh không phải mặt công tơ đo đếm",
+        "ERR_16_03",
+        "Tệp tải lên không phải là ảnh công tơ đo đếm điện nước hợp lệ.",
+        "Báo lỗi nhận diện và từ chối xử lý"
+      ],
+      [
+        "AI nhận diện chỉ số thành công",
+        "ERR_16_04",
+        "Đã nhận diện thành công chỉ số công tơ và tự khớp vào phòng!",
+        "Tự động điền số vào ô input tương ứng và viền xanh"
+      ]
+    ]
+  },
+  "17": {
+    "num": 17,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_17_BILLING"
+      ],
+      [
+        "Tên Tính Năng",
+        "Tính tiền phòng & Xuất Hóa đơn tự động"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Kế toán."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm nút 'Tạo hóa đơn tháng' từ trang Quản lý hóa đơn (/smartroom/admin/invoices)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã có hợp đồng còn hiệu lực và chỉ số điện nước đã chốt."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Phòng chưa có cư dân thuê đại diện",
+        "ERR_17_01",
+        "Phòng này chưa có cư dân đại diện thuê, không thể sinh hóa đơn thu tiền.",
+        "Hiển thị cảnh báo vàng chặn xuất hóa đơn"
+      ],
+      [
+        "Đơn giá dịch vụ bị trống hoặc bằng 0",
+        "ERR_17_02",
+        "Đơn giá điện nước chưa được cấu hình trong bảng giá cơ sở.",
+        "Bôi đỏ trường đơn giá, nhắc nhở cài đặt giá dịch vụ"
+      ],
+      [
+        "Sinh hóa đơn tính tiền thành công",
+        "ERR_17_03",
+        "Hóa đơn tiền nhà tháng đã được tính toán và tạo tự động thành công!",
+        "Dòng hóa đơn chuyển sang trạng thái Chờ thanh toán"
+      ]
+    ]
+  },
+  "18": {
+    "num": 18,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_18_HOUSEKEEPING_FRONTDESK"
+      ],
+      [
+        "Tên Tính Năng",
+        "Phân hệ Lễ tân & Buồng phòng (Dọn phòng - Housekeeping & Front Desk Management)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Nhân viên Lễ tân (Receptionist), Nhân viên Buồng phòng (Housekeeper), Chủ cơ sở/Quản lý tòa nhà (Landlord/Manager)."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Khách trả phòng (Check-out tự động chuyển phòng sang Dirty), yêu cầu dọn phòng định kỳ theo ca, hoặc cư dân gửi yêu cầu dọn phòng đột xuất."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Danh mục phòng và tòa nhà đã được cấu hình trong hệ thống, nhân viên được cấp tài khoản phân quyền buồng phòng."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chưa chọn phòng cần phân công dọn",
+        "ERR_18_01",
+        "Vui lòng chọn ít nhất một phòng cần phân công dọn dẹp vệ sinh.",
+        "Bôi đỏ viền thẻ phòng trên ma trận, rung nhẹ"
+      ],
+      [
+        "Cố tình Check-in vào phòng chưa dọn",
+        "ERR_18_02",
+        "Phòng [Số phòng] đang ở trạng thái Cần dọn (Dirty). Không thể thực hiện Check-in đón khách!",
+        "Modal cảnh báo đỏ chặn nút Check-in, yêu cầu dọn phòng trước"
+      ],
+      [
+        "Chưa phân công nhân viên dọn phòng",
+        "ERR_18_03",
+        "Vui lòng chọn nhân viên buồng phòng phụ trách thực hiện ca dọn dẹp này.",
+        "Bôi đỏ dropdown chọn Nhân viên phụ trách"
+      ],
+      [
+        "Chuyển trạng thái FSM buồng phòng sai quy trình",
+        "ERR_18_04",
+        "Chuyển đổi trạng thái buồng phòng không hợp lệ theo quy trình FSM (Phòng phải qua bước Sạch trước khi Nghiệm thu).",
+        "Hiển thị Toast cảnh báo màu đỏ góc màn hình"
+      ],
+      [
+        "Số lượng vật tư tiêu hao minibar không hợp lệ",
+        "ERR_18_05",
+        "Số lượng vật tư tiêu hao minibar phải là số nguyên dương lớn hơn hoặc bằng 0.",
+        "Bôi đỏ ô nhập số lượng vật tư minibar"
+      ],
+      [
+        "Nghiệm thu buồng phòng thành công",
+        "ERR_18_06",
+        "Đã nghiệm thu buồng phòng thành công! Phòng đã sẵn sàng đón khách lưu trú mới.",
+        "Hiển thị Toast thông báo thành công màu xanh lá"
+      ]
+    ]
+  },
+  "19": {
+    "num": 19,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_19_LEDGER"
+      ],
+      [
+        "Tên Tính Năng",
+        "Sổ quỹ Thu - Chi tài chính (Financial Ledger)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ nhà trọ, Kế toán."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Sổ quỹ thu chi' (/smartroom/admin/ledger)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Người dùng đã đăng nhập vào quyền quản lý."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống số tiền giao dịch",
+        "ERR_19_01",
+        "Vui lòng nhập số tiền phát sinh thu hoặc chi.",
+        "Bôi đỏ viền ô input Số tiền"
+      ],
+      [
+        "Nhập số tiền bằng 0 hoặc số âm",
+        "ERR_19_02",
+        "Số tiền giao dịch phải là số nguyên dương lớn hơn 0 đồng.",
+        "Bôi đỏ viền ô input Số tiền"
+      ],
+      [
+        "Để trống danh mục thu chi",
+        "ERR_19_03",
+        "Vui lòng chọn danh mục giao dịch (Tiền phòng, Sửa chữa, Vệ sinh...).",
+        "Bôi đỏ dropdown Danh mục thu chi"
+      ],
+      [
+        "Để trống ngày phát sinh giao dịch",
+        "ERR_19_04",
+        "Ngày ghi nhận giao dịch không được để trống.",
+        "Bôi đỏ ô chọn Ngày giao dịch"
+      ],
+      [
+        "Ghi nhận giao dịch thành công",
+        "ERR_19_05",
+        "Ghi nhận giao dịch vào sổ quỹ thành công!",
+        "Dòng giao dịch mới xuất hiện đầu bảng, cập nhật Lợi nhuận ròng"
+      ]
+    ]
+  },
+  "20": {
+    "num": 20,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_20_SUPERADMIN"
+      ],
+      [
+        "Tên Tính Năng",
+        "Bảng điều khiển Quản trị nền tảng hệ thống (Superadmin Console)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Nguyễn Anh Quý"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Superadmin (Quản trị viên tối cao)."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Đăng nhập với tài khoản Superadmin và truy cập /dashboard."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Tài khoản có role = 'superadmin' trong cơ sở dữ liệu."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chưa chọn vai trò khi phân quyền",
+        "ERR_20_01",
+        "Vui lòng chọn vai trò phân quyền hợp lệ cho tài khoản.",
+        "Bôi đỏ dropdown chọn Vai trò"
+      ],
+      [
+        "Gán vai trò Nhân viên nhưng thiếu cơ sở",
+        "ERR_20_02",
+        "Nhân viên hoặc Quản lý bắt buộc phải được gán vào một cơ sở lưu trú cụ thể.",
+        "Bôi đỏ dropdown chọn Cơ sở lưu trú"
+      ],
+      [
+        "Tự khóa chính tài khoản đang đăng nhập",
+        "ERR_20_03",
+        "Không thể tự khóa tài khoản quản trị viên đang thực hiện phiên làm việc!",
+        "Bật Modal cảnh báo đỏ từ chối hành động"
+      ],
+      [
+        "Cập nhật phân quyền thành công",
+        "ERR_20_04",
+        "Đã cập nhật vai trò và phân quyền tài khoản thành công!",
+        "Hiển thị Toast thông báo thành công màu xanh lá"
+      ]
+    ]
+  },
+  "21": {
+    "num": 21,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_21_SMART_SEARCH"
+      ],
+      [
+        "Tên Tính Năng",
+        "Cổng tìm kiếm & Bộ lọc phòng trọ thông minh Renty"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách tìm thuê trọ, Sinh viên."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm vào thanh tìm kiếm hoặc truy cập /search."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Hệ thống có cơ sở dữ liệu tin đăng phòng trọ."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Khoảng giá Min lớn hơn Max",
+        "ERR_21_01",
+        "Giá tối thiểu không thể lớn hơn giá tối đa.",
+        "Bôi đỏ cả hai ô input Khoảng giá"
+      ],
+      [
+        "Diện tích Min lớn hơn Max",
+        "ERR_21_02",
+        "Diện tích tối thiểu không thể lớn hơn diện tích tối đa.",
+        "Bôi đỏ cả hai ô input Diện tích"
+      ],
+      [
+        "Nhập ký tự chữ vào ô khoảng giá",
+        "ERR_21_03",
+        "Giá phòng và diện tích chỉ được nhập số.",
+        "Chặn ký tự chữ, bôi đỏ ô input vi phạm"
+      ],
+      [
+        "Không có phòng nào khớp bộ lọc",
+        "ERR_21_04",
+        "Không tìm thấy phòng nào phù hợp với bộ lọc bạn đã chọn.",
+        "Hiển thị khung thông báo trống kèm nút Xóa bộ lọc"
+      ]
+    ]
+  },
+  "22": {
+    "num": 22,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_22_AI_CHATBOT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Trợ lý ảo AI Renty Chatbot tư vấn tìm phòng"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách tìm thuê phòng trò chuyện với AI."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm vào biểu tượng bong bóng Chatbot AI ở góc phải dưới màn hình."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Kết nối mạng ổn định để giao tiếp với AI Backend."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Gửi tin nhắn rỗng",
+        "ERR_22_01",
+        "Vui lòng nhập nội dung câu hỏi trước khi gửi.",
+        "Rung nhẹ ô input tin nhắn, viền đỏ"
+      ],
+      [
+        "Mất kết nối máy chủ AI Chatbot",
+        "ERR_22_02",
+        "Không thể kết nối với máy chủ AI lúc này, vui lòng thử lại sau.",
+        "Hiện icon chấm than đỏ trên bong bóng chat kèm nút Gửi lại"
+      ],
+      [
+        "Câu hỏi không liên quan đến thuê phòng",
+        "ERR_22_03",
+        "Trợ lý ảo Renty chỉ hỗ trợ tư vấn thông tin thuê phòng và tiện ích lưu trú.",
+        "AI phản hồi nhắc nhở người dùng quay lại chủ đề tìm phòng"
+      ]
+    ]
+  },
+  "23": {
+    "num": 23,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_23_ROOM_COMPARE"
+      ],
+      [
+        "Tên Tính Năng",
+        "So sánh phòng trực quan (Room Compare)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách thuê đang phân vân giữa nhiều lựa chọn."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm icon 'So sánh' trên các thẻ phòng và chọn 'Xem so sánh' (/rooms/compare)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã chọn ít nhất 2 phòng vào danh sách so sánh."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chọn phòng thứ 4 vào bảng so sánh",
+        "ERR_23_01",
+        "Bạn chỉ có thể so sánh đối đầu tối đa 3 phòng cùng lúc.",
+        "Bật Popup cảnh báo giới hạn 3 phòng"
+      ],
+      [
+        "Chưa chọn đủ 2 phòng để so sánh",
+        "ERR_23_02",
+        "Vui lòng chọn ít nhất 2 phòng để tiến hành so sánh đối đầu.",
+        "Hiển thị thông báo nhắc nhở chọn thêm phòng"
+      ],
+      [
+        "Xóa phòng khỏi danh sách so sánh",
+        "ERR_23_03",
+        "Đã xóa phòng khỏi danh sách so sánh.",
+        "Cột phòng biến mất mượt mà, cập nhật lại điểm số"
+      ]
+    ]
+  },
+  "24": {
+    "num": 24,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_24_ROOM_ALERT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Chuông báo phòng trống thông minh (Room Alert)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách tìm thuê phòng có nhu cầu cụ thể."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm nút 'Bật chuông báo phòng' trên trang tìm kiếm."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Người dùng cung cấp số điện thoại hoặc email liên hệ."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống số điện thoại hoặc email",
+        "ERR_24_01",
+        "Vui lòng nhập số điện thoại hoặc email nhận thông báo.",
+        "Bôi đỏ ô input liên hệ"
+      ],
+      [
+        "Email sai định dạng",
+        "ERR_24_02",
+        "Địa chỉ email không đúng định dạng hợp lệ.",
+        "Bôi đỏ viền ô input Email"
+      ],
+      [
+        "Để trống khu vực mong muốn",
+        "ERR_24_03",
+        "Vui lòng chọn quận/huyện bạn đang muốn tìm phòng.",
+        "Bôi đỏ dropdown chọn Khu vực"
+      ],
+      [
+        "Đăng ký chuông báo thành công",
+        "ERR_24_04",
+        "Đăng ký nhận thông báo phòng trống thành công! Bạn sẽ nhận tin ngay khi có phòng mới.",
+        "Hiển thị Popup chúc mừng kèm icon chuông xanh"
+      ]
+    ]
+  },
+  "25": {
+    "num": 25,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_25_REVIEW_REPORT"
+      ],
+      [
+        "Tên Tính Năng",
+        "Đánh giá phòng thực tế & Báo cáo sai phạm"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách thuê đã từng ở phòng trọ."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm 'Viết đánh giá' hoặc 'Báo cáo tin sai sự thật' tại trang chi tiết phòng."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Người dùng đã đăng nhập tài khoản."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chưa chọn số sao đánh giá",
+        "ERR_25_01",
+        "Vui lòng chọn số sao xếp hạng (từ 1 đến 5 sao).",
+        "Nhấp nháy cụm sao vàng cảnh báo"
+      ],
+      [
+        "Nhận xét đánh giá quá ngắn (< 10 ký tự)",
+        "ERR_25_02",
+        "Nội dung nhận xét đánh giá phải có độ dài tối thiểu 10 ký tự.",
+        "Bôi đỏ viền ô textarea Nhận xét"
+      ],
+      [
+        "Báo cáo vi phạm chưa chọn lý do",
+        "ERR_25_03",
+        "Vui lòng chọn lý do vi phạm (Lừa cọc, Ảnh sai thực tế, Giá ảo...).",
+        "Bôi đỏ dropdown Lý do vi phạm"
+      ],
+      [
+        "Gửi báo cáo sai phạm thành công",
+        "ERR_25_04",
+        "Đã tiếp nhận báo cáo vi phạm. Quản trị viên sẽ kiểm duyệt tin này trong 12h.",
+        "Hiển thị Toast thông báo thành công màu xanh lá"
+      ]
+    ]
+  },
+  "26": {
+    "num": 26,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_26_RESIDENTS"
+      ],
+      [
+        "Tên Tính Năng",
+        "Quản lý Cư dân & Khách thuê (Resident Management)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Công an khu vực kiểm tra tạm trú."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Quản lý cư dân' (/smartroom/admin/residents)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã có phòng đang có người ở."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Để trống họ và tên cư dân",
+        "ERR_26_01",
+        "Họ và tên cư dân là bắt buộc.",
+        "Bôi đỏ viền ô input Họ và tên"
+      ],
+      [
+        "Để trống số CCCD",
+        "ERR_26_02",
+        "Số Căn cước công dân là bắt buộc để đăng ký cư trú.",
+        "Bôi đỏ viền ô input Số CCCD"
+      ],
+      [
+        "Số CCCD bị trùng trong hệ thống",
+        "ERR_26_03",
+        "Số Căn cước công dân này đã được đăng ký cho một cư dân khác.",
+        "Bôi đỏ viền ô input Số CCCD, hiện thông báo trùng"
+      ],
+      [
+        "Chưa chọn phòng bàn giao cho cư dân",
+        "ERR_26_04",
+        "Vui lòng chọn phòng lưu trú bàn giao cho cư dân ở.",
+        "Bôi đỏ dropdown chọn Phòng"
+      ],
+      [
+        "Thêm cư dân thành công",
+        "ERR_26_05",
+        "Đã lưu hồ sơ cư dân thành công! Phòng đã tự động chuyển sang trạng thái Đã thuê.",
+        "Đóng modal, nạp lại danh sách cư dân và hiện Toast xanh"
+      ]
+    ]
+  },
+  "27": {
+    "num": 27,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_27_PORTAL"
+      ],
+      [
+        "Tên Tính Năng",
+        "Cổng dịch vụ Cư dân (Resident Portal)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Khách thuê đang ở trong phòng trọ."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Đăng nhập với tài khoản người thuê và truy cập /portal."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Tài khoản người dùng đang có hợp đồng thuê trọ còn hiệu lực."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Đăng nhập sai mã phòng hoặc số điện thoại",
+        "ERR_27_01",
+        "Thông tin phòng hoặc số điện thoại không chính xác trong hệ thống.",
+        "Bôi đỏ ô input, thông báo sai tài khoản"
+      ],
+      [
+        "Hợp đồng thuê phòng đã hết hạn",
+        "ERR_27_02",
+        "Hợp đồng thuê của phòng này đã kết thúc hoặc chưa được kích hoạt.",
+        "Hiển thị màn hình khóa tạm thời kèm hotline liên hệ"
+      ],
+      [
+        "Bấm mở mã VietQR thanh toán tiền nhà",
+        "ERR_27_03",
+        "Hiển thị mã VietQR thanh toán tiền nhà chuẩn Napas 247.",
+        "Bật Modal mã QR động kèm số tiền chính xác cần chuyển"
+      ]
+    ]
+  },
+  "28": {
+    "num": 28,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_28_TICKETS"
+      ],
+      [
+        "Tên Tính Năng",
+        "Xử lý báo hỏng & Dọn phòng (Tickets & Housekeeping)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Cư dân (gửi ticket báo hỏng), Chủ trọ/Thợ sửa (xử lý ticket)."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Bấm 'Báo hỏng thiết bị' tại Resident Portal hoặc mục 'Yêu cầu sửa chữa' của Admin."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Cư dân đã đăng nhập vào hệ thống."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Cư dân gửi báo hỏng để trống mô tả",
+        "ERR_28_01",
+        "Vui lòng mô tả chi tiết sự cố hư hỏng gặp phải.",
+        "Bôi đỏ viền ô textarea Mô tả sự cố"
+      ],
+      [
+        "Chưa chọn phân loại sự cố hỏng hóc",
+        "ERR_28_02",
+        "Vui lòng chọn loại sự cố (Điện, Nước, Khóa cửa, Khác...).",
+        "Bôi đỏ dropdown Loại sự cố"
+      ],
+      [
+        "Gửi phiếu báo hỏng thành công",
+        "ERR_28_03",
+        "Đã gửi yêu cầu sửa chữa sự cố thành công! Kỹ thuật viên sẽ xử lý sớm nhất.",
+        "Hiển thị Toast thông báo xanh xác nhận"
+      ],
+      [
+        "Nhân viên buồng phòng bấm dọn xong",
+        "ERR_28_04",
+        "Phòng đã chuyển sang trạng thái Đã sạch (Clean), sẵn sàng đón khách.",
+        "Đổi màu thẻ phòng sang Xanh, phát sự kiện đồng bộ ma trận"
+      ]
+    ]
+  },
+  "29": {
+    "num": 29,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_29_PAYMENTS"
+      ],
+      [
+        "Tên Tính Năng",
+        "Quản lý Thanh toán & Đối soát công nợ (Payment Management)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ trọ, Kế toán."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Chọn menu 'Quản lý thanh toán' (/smartroom/admin/payments)."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Đã có các hóa đơn phát hành trong hệ thống."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Bấm cập nhật nhưng chưa chọn phương thức",
+        "ERR_29_01",
+        "Vui lòng chọn hình thức nhận tiền (Tiền mặt hoặc Chuyển khoản).",
+        "Bôi đỏ dropdown Phương thức nhận tiền"
+      ],
+      [
+        "Cập nhật trạng thái thanh toán thành công",
+        "ERR_29_02",
+        "Đã ghi nhận thanh toán tiền phòng thành công!",
+        "Dòng phòng chuyển sang Đã thanh toán, tự động trừ nợ"
+      ],
+      [
+        "Bấm nút Xuất CSV đối soát",
+        "ERR_29_03",
+        "Tải xuống tệp danh sách đối soát thanh toán định dạng .csv thành công.",
+        "Trình duyệt tự động tải tệp CSV về máy tính"
+      ]
+    ]
+  },
+  "30": {
+    "num": 30,
+    "info_rows": [
+      [
+        "Thông Tin Chung",
+        "Chi Tiết Kỹ Thuật"
+      ],
+      [
+        "Mã Chức Năng (Feature Code)",
+        "FEAT_30_DASHBOARD"
+      ],
+      [
+        "Tên Tính Năng",
+        "Bảng điều khiển Thống kê tổng quan phòng & Doanh thu (Dashboard)"
+      ],
+      [
+        "Thành viên phụ trách",
+        "Huỳnh Văn Vĩnh Em"
+      ],
+      [
+        "Tác nhân (Actor)",
+        "Chủ nhà trọ, Nhà đầu tư chuỗi phòng trọ."
+      ],
+      [
+        "Sự kiện kích hoạt (Trigger)",
+        "Đăng nhập với vai trò chủ trọ hoặc bấm logo SmartRoom."
+      ],
+      [
+        "Điều kiện tiên quyết",
+        "Tài khoản chủ trọ đã đăng nhập."
+      ]
+    ],
+    "err_rows": [
+      [
+        "Nguyên nhân / Kịch bản lỗi",
+        "Mã lỗi",
+        "Message cụ thể (nguyên văn)",
+        "Giao diện & Hiệu ứng phản hồi"
+      ],
+      [
+        "Chọn khoảng thời gian không có doanh thu",
+        "ERR_30_01",
+        "Chưa có số liệu doanh thu phát sinh trong khoảng thời gian này.",
+        "Biểu đồ hiển thị trạng thái Không có dữ liệu mượt mà"
+      ],
+      [
+        "Lỗi nạp thư viện biểu đồ đồ họa",
+        "ERR_30_02",
+        "Không thể nạp thư viện biểu đồ đồ họa, vui lòng làm mới trang.",
+        "Hiển thị thông báo cảnh báo kèm nút Bấm để tải lại"
+      ],
+      [
+        "Kích hoạt AI Dashboard Insight",
+        "ERR_30_03",
+        "AI đang phân tích bức tranh kinh doanh của toàn bộ cơ sở lưu trú...",
+        "Hiển thị thanh quét dữ liệu thông minh và bật Modal gợi ý"
+      ]
+    ]
+  }
+}
