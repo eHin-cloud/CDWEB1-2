@@ -381,13 +381,14 @@ Route::post('/renty/contact-requests', [AdminDashboardController::class, 'storeC
 Route::post('/renty/newsletter/subscribe', [\App\Http\Controllers\Api\VisitorController::class, 'subscribeNewsletter'])->middleware('throttle:10,1')->name('renty.newsletter.subscribe');
 
 
-$rentyRooms = function ($filterEmpty = true) {
+$rentyRooms = function ($filterEmpty = true, $ignoreTenant = false) {
     $user = auth()->user();
     $query = \App\Models\Room::with(['building', 'tenant.users', 'reviews']);
 
     // Nếu người dùng đăng nhập là chủ trọ hoặc quản lý có tenant_id (và không phải Superadmin),
-    // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó
-    if ($user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin()) {
+    // chỉ lọc và hiển thị danh sách phòng thuộc đúng cơ sở/vùng của chủ trọ đó khi không xem bản đồ và không phải ignoreTenant
+    $isMapMode = request()->input('view') === 'map' || request()->routeIs('renty.map');
+    if (!$ignoreTenant && !$isMapMode && $user && $user->canAccessLandlordDashboard() && $user->tenant_id && !$user->isAdmin()) {
         if (!request()->boolean('all_tenants')) {
             $query->where('tenant_id', $user->tenant_id);
         }
@@ -562,12 +563,41 @@ $rentyRooms = function ($filterEmpty = true) {
             ?? $tenant?->users?->firstWhere('role_id', 1)
             ?? $tenant?->users?->first();
 
+        $bId = (int) $room->building_id;
+        $buildingCoordsMap = [
+            1 => [21.0368, 105.7832], 2 => [21.0345, 105.7958], 3 => [20.9982, 105.8195], 4 => [20.9912, 105.8115],
+            5 => [21.0152, 105.8340], 6 => [21.0078, 105.8285], 7 => [21.0485, 105.8080], 8 => [21.0450, 105.8200],
+            9 => [21.0045, 105.8505], 10 => [21.0020, 105.8620], 11 => [21.0340, 105.8150], 12 => [21.0330, 105.8230],
+            13 => [21.0185, 105.7760], 14 => [21.0310, 105.7680], 15 => [20.9650, 105.8280], 16 => [20.9750, 105.8420],
+            17 => [21.0650, 105.7720], 18 => [21.0550, 105.7830], 19 => [20.9720, 105.7750], 20 => [20.9780, 105.7880],
+            21 => [21.0368, 105.7832], 22 => [20.9982, 105.8195],
+            23 => [10.7735, 106.6610], 24 => [10.8490, 106.7540], 25 => [10.8460, 106.7780], 26 => [10.8015, 106.7145],
+            27 => [10.8505, 106.7565], 28 => [10.8710, 106.7890], 29 => [10.7610, 106.6670], 30 => [10.7290, 106.7020],
+            31 => [10.8350, 106.6650], 76 => [10.8785, 106.8010], 77 => [10.8520, 106.7582], 78 => [10.7725, 106.6578],
+            79 => [10.8030, 106.7140], 80 => [10.7580, 106.6780], 81 => [10.8350, 106.6650], 82 => [10.7300, 106.7050]
+        ];
+        $roomLat = $buildingCoordsMap[$bId][0] ?? null;
+        $roomLng = $buildingCoordsMap[$bId][1] ?? null;
+        if (!$roomLat && str_contains(mb_strtolower($buildingAddress), 'thủ đức')) {
+            $roomLat = 10.8514;
+            $roomLng = 106.7578;
+        }
+
         return [
             'id' => $room->id,
             'tenant_id' => $room->tenant_id,
             'building_id' => $room->building_id,
             'building_name' => $buildingName,
             'building_address' => $buildingAddress,
+            'latitude' => $roomLat,
+            'longitude' => $roomLng,
+            'building' => [
+                'id' => $bId,
+                'name' => $buildingName,
+                'address' => $buildingAddress,
+                'latitude' => $roomLat,
+                'longitude' => $roomLng,
+            ],
             'property_type' => $building?->property_type ?? 'apartment',
             'room_number' => $room->room_number,
             'price' => $room->price,
@@ -710,8 +740,8 @@ Route::get('/renty/room/{id}', function ($id) use ($rentyRooms) {
         return redirect()->route('renty.user')->with('error', 'Phòng trọ này không tồn tại hoặc đã được gỡ bỏ khỏi hệ thống.');
     }
 
-    // Lấy chi tiết phòng (kể cả phòng đã thuê để hiển thị trạng thái ĐÃ THUÊ - ERR_06_02)
-    $room = $rentyRooms(false)->firstWhere('id', (int) $id);
+    // Lấy chi tiết phòng (kể cả phòng đã thuê để hiển thị trạng thái ĐÃ THUÊ - ERR_06_02, bỏ qua lọc tenant vì trang xem chi tiết là công khai)
+    $room = $rentyRooms(false, true)->firstWhere('id', (int) $id);
 
     if (!$room) {
         if (request()->wantsJson()) {
