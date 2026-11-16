@@ -1,189 +1,105 @@
 {
   "1": [
     [
-      "",
-      "Hình 1.1: Giao diện Form Đăng nhập hệ thống chuẩn\t40"
-    ],
-    [
-      "",
-      "Hình 1.2: Giao diện bôi đỏ viền và hiển thị thông báo lỗi dưới ô nhập liệu khi để trống\t40"
-    ],
-    [
-      "",
-      "Hình 1.3: Giao diện thông báo lỗi khi nhập sai mật khẩu tài khoản\t40"
-    ],
-    [
-      "",
-      "Hình 1.4: Giao diện Form Đăng ký tài khoản người dùng (Khách thuê / Cư dân)\t40"
-    ],
-    [
-      "",
-      "Hình 1.5: Giao diện bôi đỏ viền và thông báo lỗi Form Đăng ký người dùng\t40"
-    ],
-    [
-      "",
-      "Hình 1.6: Giao diện Form Đăng ký tài khoản dành riêng cho Đối tác Chủ trọ\t40"
-    ],
-    [
-      "image57.png",
+      "image3.png",
       "Hình 1.1: Giao diện Form Đăng nhập hệ thống chuẩn"
     ],
     [
-      "image58.png",
+      "image4.png",
       "Hình 1.2: Giao diện bôi đỏ viền và hiển thị thông báo lỗi dưới ô nhập liệu khi để trống"
     ],
     [
-      "image59.png",
+      "image5.png",
       "Hình 1.3: Giao diện thông báo lỗi khi nhập sai mật khẩu tài khoản"
     ],
     [
-      "image60.png",
+      "image6.png",
       "Hình 1.4: Giao diện Form Đăng ký tài khoản người dùng (Khách thuê / Cư dân)"
     ],
     [
-      "image61.png",
+      "image7.png",
       "Hình 1.5: Giao diện bôi đỏ viền và thông báo lỗi Form Đăng ký người dùng"
     ],
     [
-      "image62.png",
+      "image8.png",
       "Hình 1.6: Giao diện Form Đăng ký tài khoản dành riêng cho Đối tác Chủ trọ"
     ]
   ],
   "2": [
     [
-      "",
-      "Hình 2.1: Giao diện Quản Lý Hồ Sơ & Thông Tin Chủ Trọ\t43"
-    ],
-    [
-      "",
-      "Hình 2.2: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi để trống Họ và tên\t43"
-    ],
-    [
-      "image63.png",
+      "image9.png",
       "Hình 2.1: Giao diện Quản Lý Hồ Sơ & Thông Tin Chủ Trọ"
     ],
     [
-      "image64.png",
+      "image10.png",
       "Hình 2.2: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi để trống Họ và tên"
     ]
   ],
   "3": [
     [
-      "",
-      "Hình 3.1: Giao diện Quản lý danh mục phòng trọ & Trạng thái phòng\t46"
-    ],
-    [
-      "",
-      "Hình 3.2: Giao diện hiển thị cảnh báo lỗi khi lọc khoảng giá phòng bất hợp lý\t46"
-    ],
-    [
-      "image65.png",
+      "image11.png",
       "Hình 3.1: Giao diện Quản lý danh mục phòng trọ & Trạng thái phòng"
     ],
     [
-      "image66.png",
+      "image12.png",
       "Hình 3.2: Giao diện hiển thị cảnh báo lỗi khi lọc khoảng giá phòng bất hợp lý"
     ]
   ],
   "4": [
     [
-      "",
-      "Hình 4.1: Giao diện Trang chủ Sàn phòng trọ Renty\t48"
-    ],
-    [
-      "",
-      "Hình 4.2: Lưới hiển thị toàn bộ phòng trọ đang cho thuê thực tế\t48"
-    ],
-    [
-      "image67.png",
+      "image13.png",
       "Hình 4.1: Giao diện Trang chủ Sàn phòng trọ Renty"
     ],
     [
-      "image68.png",
+      "image14.png",
       "Hình 4.2: Lưới hiển thị toàn bộ phòng trọ đang cho thuê thực tế"
     ]
   ],
   "5": [
     [
-      "",
-      "Hình 5.1: Giao diện Bản đồ phòng trọ thông minh (Smart Map)\t51"
-    ],
-    [
-      "image69.png",
+      "image15.png",
       "Hình 5.1: Giao diện Bản đồ phòng trọ thông minh (Smart Map)"
     ]
   ],
   "6": [
     [
-      "",
-      "Hình 6.1: Giao diện Chi tiết phòng trọ (Room Detail)\t54"
-    ],
-    [
-      "image70.png",
+      "image16.png",
       "Hình 6.1: Giao diện Chi tiết phòng trọ (Room Detail)"
     ]
   ],
   "7": [
     [
-      "",
-      "Hình 7.1: Giao diện Tiếp nhận & Quản lý yêu cầu hẹn xem phòng của khách\t56"
-    ],
-    [
-      "image71.png",
+      "image17.png",
       "Hình 7.1: Giao diện Tiếp nhận & Quản lý yêu cầu hẹn xem phòng của khách"
     ]
   ],
   "8": [
     [
-      "",
-      "Hình 8.1: Giao diện Tạo Hợp Đồng Thuê Nhà Mới điện tử & Thiết lập điều khoản\t59"
-    ],
-    [
-      "",
-      "Hình 8.2: Giao diện Ký số hợp đồng trực tuyến và xuất file PDF\t59"
-    ],
-    [
-      "image72.png",
+      "image18.png",
       "Hình 8.1: Giao diện Tạo Hợp Đồng Thuê Nhà Mới điện tử & Thiết lập điều khoản"
     ],
     [
-      "image73.png",
+      "image19.png",
       "Hình 8.2: Giao diện Ký số hợp đồng trực tuyến và xuất file PDF"
     ]
   ],
   "9": [
     [
-      "",
-      "Hình 9.1: Giao diện Điều khoản cam kết và Hồ sơ Xác thực định danh KYC Chủ trọ\t62"
-    ],
-    [
-      "",
-      "Hình 9.2: Giao diện Tải lên CCCD 2 mặt & Giấy phép kinh doanh đối tác\t62"
-    ],
-    [
-      "image74.png",
+      "image20.png",
       "Hình 9.1: Giao diện Điều khoản cam kết và Hồ sơ Xác thực định danh KYC Chủ trọ"
     ],
     [
-      "image75.png",
+      "image21.png",
       "Hình 9.2: Giao diện Tải lên CCCD 2 mặt & Giấy phép kinh doanh đối tác"
     ]
   ],
   "10": [
     [
-      "",
-      "Hình 10.1: Bảng điều khiển Quản trị viên kiểm duyệt hồ sơ định danh KYC\t65"
-    ],
-    [
-      "",
-      "Hình 10.2: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi từ chối mà để trống lý do\t65"
-    ],
-    [
-      "image76.png",
+      "image22.png",
       "Hình 10.1: Bảng điều khiển Quản trị viên kiểm duyệt hồ sơ định danh KYC"
     ],
     [
-      "image77.png",
+      "image23.png",
       "Hình 10.2: Giao diện bôi đỏ viền và báo lỗi dưới ô nhập liệu khi từ chối mà để trống lý do"
     ]
   ]
