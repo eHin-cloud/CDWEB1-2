@@ -393,12 +393,15 @@ $rentyRooms = function ($filterEmpty = true) {
         }
     }
 
-    // FEAT_04_LANDING: Chỉ hiển thị các tin đăng phòng còn đang 'Trống' (empty) trên sàn công khai khi $filterEmpty = true
-    if ($filterEmpty) {
-        $statusFilter = request()->input('status', 'empty');
-        if ($statusFilter !== 'all') {
-            $query->where('status', 'empty');
-        }
+    // FEAT_04_LANDING & FEAT_06: Cho phép hiển thị cả phòng còn Trống (empty) và phòng Đã thuê (occupied)
+    // để công tắc "Ẩn phòng đã thuê" và nút "Bật chuông báo phòng trống" trên giao diện hoạt động chuẩn xác 100%
+    $statusFilter = request()->input('status');
+    if ($statusFilter === 'empty') {
+        $query->where('status', 'empty');
+    } elseif ($statusFilter === 'occupied') {
+        $query->where('status', 'occupied');
+    } else {
+        $query->whereIn('status', ['empty', 'occupied']);
     }
 
     $rooms = $query->get();
