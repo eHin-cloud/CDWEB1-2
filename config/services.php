@@ -29,10 +29,10 @@ return [
     ],
 
     'ai' => [
-        'api_key' => env('AI_API_KEY'),
-        'base_url' => env('AI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta/openai'),
-        'model' => env('AI_MODEL', 'gemini-3.1-flash-lite'),
-        'timeout' => env('AI_TIMEOUT', 15),
+        'api_key' => env('AI_API_KEY', env('OPENAI_API_KEY')),
+        'base_url' => env('AI_BASE_URL', env('OPENAI_BASE_URL', 'https://gateway.respan.ai/v1')),
+        'model' => env('AI_MODEL', env('MODEL', 'gemini-4-carbon:free')),
+        'timeout' => env('AI_TIMEOUT', 30),
     ],
 
     'telegram' => [

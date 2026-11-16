@@ -3278,6 +3278,12 @@ body.renty-map-mode .room-item-card {
     position: relative !important;
 }
 
+body.renty-map-mode .room-item-card.hidden,
+body.renty-map-mode .room-item-card[data-filtered-out="true"],
+body.renty-map-mode .room-item-card[style*="display: none"] {
+    display: none !important;
+}
+
 body.renty-map-mode .room-item-card>.room-card-content {
     display: flex !important;
     flex-direction: row !important;
@@ -7697,4 +7703,15 @@ body.theme-light .room-card-media span:has(.fa-images) {
 html.theme-light .room-card-media .fa-images,
 body.theme-light .room-card-media .fa-images {
     color: #059669 !important;
+}
+
+html.theme-light .utility-distance-badge,
+body.theme-light .utility-distance-badge {
+    background-color: rgba(14, 165, 233, 0.08) !important;
+    border-color: rgba(14, 165, 233, 0.3) !important;
+    color: #0284c7 !important;
+}
+html.theme-light .utility-distance-badge strong,
+body.theme-light .utility-distance-badge strong {
+    color: #0369a1 !important;
 }

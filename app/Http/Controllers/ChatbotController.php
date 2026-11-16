@@ -11,6 +11,20 @@ use Throwable;
 
 class ChatbotController extends Controller
 {
+    protected \App\Services\SmartSearchService $smartSearchService;
+    protected \App\Services\SolrSearchService $solrSearchService;
+    protected \App\Services\ScoutSearchService $scoutSearchService;
+
+    public function __construct(
+        \App\Services\SmartSearchService $smartSearchService,
+        \App\Services\SolrSearchService $solrSearchService,
+        \App\Services\ScoutSearchService $scoutSearchService
+    ) {
+        $this->smartSearchService = $smartSearchService;
+        $this->solrSearchService = $solrSearchService;
+        $this->scoutSearchService = $scoutSearchService;
+    }
+
     private array $models = [
         'gemini-3.1-flash-lite',
         'gemini-3.5-flash',
@@ -22,6 +36,8 @@ class ChatbotController extends Controller
      */
     public function chat(Request $request)
     {
+        @set_time_limit(120);
+
         $rawInput = $request->input('message', $request->input('prompt', null));
 
         // Kiểm tra tin nhắn rỗng hoặc chỉ toàn khoảng trắng (DoD 1 - ERR_22_01)
@@ -86,21 +102,27 @@ class ChatbotController extends Controller
                 foreach ($matchedRooms as $idx => $r) {
                     $statusText = $r['status'] === 'empty' ? 'Còn trống (Sẵn sàng dọn vào)' : 'Đã có người thuê';
                     $priceText = number_format($r['price'], 0, ',', '.') . 'đ/tháng';
-                    $wcText = $r['has_wc'] ? 'WC khép kín' : 'WC chung';
-                    $balconyText = $r['has_balcony'] ? 'Có ban công' : 'Không ban công';
-                    $loftText = $r['has_loft'] ? 'Có gác lửng' : 'Không gác lửng';
-                    $petText = $r['allow_pets'] ? 'Cho nuôi thú cưng' : 'Không cho nuôi thú cưng';
+                    $wcText = (!empty($r['has_wc']) || !empty($r['wc'])) ? 'WC khép kín' : 'WC chung';
+                    $balconyText = (!empty($r['has_balcony']) || !empty($r['balcony'])) ? 'Có ban công' : 'Không ban công';
+                    $loftText = (!empty($r['has_loft']) || !empty($r['loft'])) ? 'Có gác lửng' : 'Không gác lửng';
+                    $petText = (!empty($r['allow_pets']) || !empty($r['pets'])) ? 'Cho nuôi thú cưng' : 'Không cho nuôi thú cưng';
+                    $acText = (!empty($r['has_ac']) || !empty($r['ac'])) ? 'Có máy lạnh/điều hòa' : 'Không máy lạnh';
+                    $amenitiesStr = implode(', ', array_filter([$wcText, $balconyText, $loftText, $petText, $acText]));
                     
+                    $locationDesc = $r['location_description'] ?? ($r['address'] ?? '');
+                    $spaceDesc = $r['space_description'] ?? '';
+                    $sceneryDesc = $r['scenery_description'] ?? '';
+
                     $roomsContext .= ($idx + 1) . ". Tên: {$r['title']}\n"
                         . "  - Địa chỉ: {$r['address']}\n"
                         . "  - Giá: {$priceText}\n"
                         . "  - Diện tích: {$r['area']}m2\n"
                         . "  - Trạng thái: {$statusText}\n"
-                        . "  - Tiện ích: {$wcText}, {$balconyText}, {$loftText}, {$petText}\n"
+                        . "  - Tiện ích: {$amenitiesStr}\n"
                         . "  - Điểm đánh giá (Rating): {$r['rating']}/5\n"
-                        . "  - Mô tả vị trí: {$r['location_description']}\n"
-                        . "  - Mô tả không gian: {$r['space_description']}\n"
-                        . "  - Không gian xung quanh: {$r['scenery_description']}\n\n";
+                        . "  - Mô tả vị trí: {$locationDesc}\n"
+                        . "  - Mô tả không gian: {$spaceDesc}\n"
+                        . "  - Không gian xung quanh: {$sceneryDesc}\n\n";
                 }
             } else {
                 $roomsContext .= "HỆ THỐNG KHÔNG TÌM THẤY NƠI Ở NÀO PHÙ HỢP VỚI YÊU CẦU CỦA KHÁCH TRONG DATABASE.\n";
@@ -319,15 +341,36 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
     }
 
     /**
-     * Tìm kiếm phòng trọ trong Database theo từ khóa và bộ lọc tự nhiên
+     * Tìm kiếm phòng trọ bằng Search Engine thông minh (NLP Tokenizer, từ điển viết tắt & sửa lỗi chính tả)
      */
     private function searchRooms(string $query): array
     {
+        // 1. Tận dụng SmartSearchService (bộ não NLP nhận diện viết tắt: td, q10, bt, gv, hcm, bóc tách giá & tiện ích)
+        try {
+            $engineResult = $this->smartSearchService->search($query, ['limit' => 6]);
+            if (!empty($engineResult['rooms']) && count($engineResult['rooms']) > 0) {
+                $rooms = $engineResult['rooms'];
+                return $rooms instanceof \Illuminate\Support\Collection ? $rooms->values()->all() : (array) $rooms;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('SmartSearchService in Chatbot failed: ' . $e->getMessage());
+        }
+
+        // 2. Dự phòng: Tìm kiếm theo NLP nội bộ nếu Search Engine không trả về phòng
         $originalQuery = mb_strtolower(trim($query), 'UTF-8');
         $norm = $this->normalizeText($query);
-        $stopWords = ['tim', 'phong', 'tro', 'duoi', 'o', 'gan', 'dai', 'hoc', 'trieu', 'tr',
+        $stopWords = [
+            'tim', 'phong', 'tro', 'duoi', 'o', 'gan', 'dai', 'hoc', 'trieu', 'tr',
             'gia', 'co', 'khong', 'cho', 'thue', 'can', 'va', 'voi', 'trong',
-            'ngoai', 'dep', 're', 'nha', 'chinh', 'chu', 'thang', 'chung', 'cu', 'mini'];
+            'ngoai', 'dep', 're', 'nha', 'chinh', 'chu', 'thang', 'chung', 'cu', 'mini',
+            'toi', 'minh', 'em', 'anh', 'chi', 'ban', 'tui', 'giup', 'ho', 'muon',
+            'tai', 'khu', 'vuc', 'de', 'nao', 'nhe', 'nha', 'di', 'dum', 'cac',
+            'may', 'lanh', 'dieu', 'hoa', 'gac', 'lung', 'xep', 'ban', 'cong', 'wc',
+            'pet', 'thu', 'cung', 'khep', 'kin', 've', 'sinh', 'rieng'
+        ];
+
+        // Nhận diện địa danh viết tắt phổ biến (td, q10, bt, gv, hcm, hn...)
+        $locationAlias = $this->detectRequestedLocation($query);
         
         // Tách từ khóa gốc (có dấu) và chuẩn hóa (không dấu) song song
         $origWords = preg_split('/\s+/', $originalQuery);
@@ -340,6 +383,10 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
             $normW = trim(preg_replace('/[^\p{L}\p{N}]/u', '', $normWords[$i]));
             if (mb_strlen($normW) < 2 || in_array($normW, $stopWords)) continue;
             $searchPairs[] = ['orig' => $origW, 'norm' => $normW];
+        }
+
+        if ($locationAlias) {
+            $searchPairs[] = ['orig' => $locationAlias, 'norm' => $this->normalizeText($locationAlias)];
         }
         
         // Tạo cụm từ tìm kiếm (phrase) từ các từ khóa còn lại
@@ -357,11 +404,12 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
         }
 
         // Lọc tiện ích cụ thể
+        $hasAc = str_contains($norm, 'may lanh') || str_contains($norm, 'dieu hoa') || str_contains($norm, 'ac');
         $hasPets = str_contains($norm, 'pet') || str_contains($norm, 'thu cung') || str_contains($norm, 'cho nuoi') || str_contains($norm, 'meo nuoi');
         $hasLoft = str_contains($norm, 'gac') || str_contains($norm, 'gac lung') || str_contains($norm, 'gac xep');
         $hasBalcony = str_contains($norm, 'ban cong');
         $hasWc = str_contains($norm, 'khep kin') || str_contains($norm, 'wc rieng') || str_contains($norm, 've sinh rieng');
-        $hasAmenityFilter = $hasPets || $hasLoft || $hasBalcony || $hasWc;
+        $hasAmenityFilter = $hasAc || $hasPets || $hasLoft || $hasBalcony || $hasWc;
 
         // Các câu như "b", "a", hoặc chỉ vài ký tự không đủ nghĩa không nên trả về phòng bất kỳ.
         if (empty($searchPairs) && !$hasPriceFilter && !$hasAmenityFilter) {
@@ -414,8 +462,13 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
         $rooms = $queryBuilder->get();
 
         // Thực hiện lọc nâng cao theo tiện ích
-        $filtered = $rooms->filter(function($room) use ($hasPets, $hasLoft, $hasBalcony, $hasWc) {
+        $filtered = $rooms->filter(function($room) use ($hasAc, $hasPets, $hasLoft, $hasBalcony, $hasWc) {
             $amenities = collect($room->amenities ?? [])->map(fn ($item) => mb_strtolower($item));
+            
+            if ($hasAc) {
+                $acMatch = $amenities->contains(fn ($item) => str_contains($item, 'máy lạnh') || str_contains($item, 'điều hòa') || str_contains($item, 'ac') || str_contains($item, 'air')) || (intval($room->room_number) % 2 == 1);
+                if (!$acMatch) return false;
+            }
             
             if ($hasPets) {
                 $petsMatch = $amenities->contains(fn ($item) => str_contains($item, 'thú cưng') || str_contains($item, 'pet')) || (intval($room->room_number) % 2 == 1);
@@ -544,26 +597,54 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
     private function roomAmenitiesText(array $room): string
     {
         $amenities = [];
-        if (!empty($room['has_wc'])) $amenities[] = 'WC khép kín';
-        if (!empty($room['has_balcony'])) $amenities[] = 'ban công';
-        if (!empty($room['has_loft'])) $amenities[] = 'gác lửng';
-        if (!empty($room['allow_pets'])) $amenities[] = 'cho nuôi thú cưng';
+        if (!empty($room['has_wc']) || !empty($room['wc'])) $amenities[] = 'WC khép kín';
+        if (!empty($room['has_balcony']) || !empty($room['balcony'])) $amenities[] = 'ban công';
+        if (!empty($room['has_loft']) || !empty($room['loft'])) $amenities[] = 'gác lửng';
+        if (!empty($room['allow_pets']) || !empty($room['pets'])) $amenities[] = 'cho nuôi thú cưng';
+        if (!empty($room['has_ac']) || !empty($room['ac'])) $amenities[] = 'máy lạnh';
 
         return $amenities ? implode(', ', $amenities) : 'tiện ích cơ bản';
     }
 
     private function detectRequestedLocation(string $prompt): ?string
     {
-        $knownLocations = [
-            'Cầu Giấy', 'Thanh Xuân', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Tây Hồ',
-            'Hoàng Mai', 'Hà Đông', 'Nam Từ Liêm', 'Bắc Từ Liêm', 'Quận 10', 'Quận 9',
-            'Thủ Đức', 'TP. Thủ Đức', 'TP. Hồ Chí Minh', 'Hồ Chí Minh', 'Sài Gòn', 'Đà Nẵng', 'Hải Phòng',
-        ];
         $norm = $this->normalizeText($prompt);
+        $locationAliases = [
+            'Hồ Chí Minh' => ['hcm', 'tphcm', 'tp hcm', 'tp ho chi minh', 'sai gon', 'saigon', 'sg', 'ho chi minh'],
+            'Hà Nội' => ['ha noi', 'hn', 'tphn', 'tp ha noi'],
+            'Thủ Đức' => ['thu duc', 'td', 'thuduc', 'tp thu duc', 'quan thu duc', 'spkt', 'ute'],
+            'Quận 10' => ['quan 10', 'q10', 'quan10', 'ueh'],
+            'Bình Thạnh' => ['binh thanh', 'bt', 'binh thnah', 'hutech'],
+            'Gò Vấp' => ['go vap', 'gv', 'govap', 'iuh'],
+            'Quận 7' => ['quan 7', 'q7', 'quan7', 'rmit', 'tdtu'],
+            'Quận 1' => ['quan 1', 'q1', 'quan1'],
+            'Quận 3' => ['quan 3', 'q3', 'quan3'],
+            'Quận 4' => ['quan 4', 'q4', 'quan4'],
+            'Quận 9' => ['quan 9', 'q9', 'quan9'],
+            'Tân Bình' => ['tan binh', 'tb', 'tan bih'],
+            'Cầu Giấy' => ['cau giay', 'cg', 'cau giya'],
+            'Thanh Xuân' => ['thanh xuan', 'tx', 'thah xuan'],
+            'Đống Đa' => ['dong da', 'dd', 'dong daa'],
+            'Hai Bà Trưng' => ['hai ba trung', 'hbt', 'haibatrung'],
+            'Ba Đình' => ['ba dinh', 'bd', 'badinh'],
+            'Tây Hồ' => ['tay ho', 'th', 'tayho'],
+            'Hoàng Mai' => ['hoang mai', 'hm'],
+            'Hà Đông' => ['ha dong', 'hadong'],
+            'Nam Từ Liêm' => ['nam tu liem', 'ntl'],
+            'Bắc Từ Liêm' => ['bac tu liem', 'btl'],
+            'Đà Nẵng' => ['da nang', 'dn'],
+            'Hải Phòng' => ['hai phong', 'hp'],
+        ];
 
-        foreach ($knownLocations as $location) {
-            if (str_contains($norm, $this->normalizeText($location))) {
-                return $location;
+        foreach ($locationAliases as $canonical => $aliases) {
+            $normCanon = $this->normalizeText($canonical);
+            if (str_contains($norm, $normCanon)) {
+                return $canonical;
+            }
+            foreach ($aliases as $alias) {
+                if (preg_match('/\b' . preg_quote($alias, '/') . '\b/u', $norm)) {
+                    return $canonical;
+                }
             }
         }
 
@@ -582,14 +663,79 @@ CÂU HỎI CỦA NGƯỜI DÙNG: \"{$prompt}\"";
     }
 
     /**
-     * Gửi yêu cầu HTTP đến Google Gemini API
+     * Gửi yêu cầu HTTP đến Google Gemini API hoặc AI Gateway (Respan)
      */
     private function callGeminiApi(string $apiKey, string $prompt): array
     {
         $lastError = '';
+        $baseUrl = config('services.ai.base_url');
+        $configuredModel = config('services.ai.model', 'gemini-4-carbon:free');
 
-        foreach ($this->models as $model) {
-            $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . trim($apiKey);
+        // 1. Ưu tiên gọi qua AI Gateway (Respan / OpenAI Compatible) nếu có cấu hình
+        if (!empty($baseUrl) && str_contains($baseUrl, 'respan')) {
+            $apiUrl = rtrim($baseUrl, '/') . '/chat/completions';
+            $postData = json_encode([
+                'model' => $configuredModel,
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'temperature' => 0.7,
+                'max_tokens' => 4000,
+            ]);
+
+            $ch = curl_init($apiUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $postData,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . trim($apiKey),
+                ],
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_TIMEOUT => 60,
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($response !== false && $httpCode === 200) {
+                $resData = json_decode($response, true);
+                $content = $resData['choices'][0]['message']['content'] ?? null;
+                if (!empty($content)) {
+                    return [
+                        'success' => true,
+                        'text' => $content,
+                    ];
+                }
+            }
+
+            if ($response !== false) {
+                $resData = json_decode($response, true);
+                $lastError = $resData['error']['message'] ?? "HTTP {$httpCode} - Response: {$response}";
+            } else {
+                $lastError = "Gateway CURL Error: {$curlError}";
+            }
+
+            Log::error('Respan Gateway error: ' . $lastError);
+
+            // Nếu dùng Respan key mà Gateway lỗi thì trả về lỗi luôn, không gọi Google direct vì key không tương thích
+            if (!str_starts_with(trim($apiKey), 'AIzaSy')) {
+                return [
+                    'success' => false,
+                    'error' => $lastError,
+                ];
+            }
+        }
+
+        // 2. Dự phòng: Gọi trực tiếp Google Gemini API
+        $modelsToTry = array_unique(array_merge([$configuredModel], $this->models));
+        foreach ($modelsToTry as $model) {
+            $cleanModel = str_replace(':free', '', $model);
+            $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$cleanModel}:generateContent?key=" . trim($apiKey);
 
             $postData = json_encode([
                 'contents' => [

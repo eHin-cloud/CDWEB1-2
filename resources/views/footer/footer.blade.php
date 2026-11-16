@@ -329,41 +329,41 @@
             <!-- TAB CONTENT: CÂU HỎI THƯỜNG GẶP (FAQ) -->
             <div id="policy-content-faq" class="policy-tab-pane hidden space-y-3">
                 <details class="policy-card p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 group" open>
-                    <summary class="font-bold text-white text-xs cursor-pointer flex items-center justify-between">
-                        <span>1. Tôi xem phòng trên Renty có mất phí môi giới không?</span>
+                    <summary class="policy-faq-summary font-bold text-slate-900 dark:text-white text-xs cursor-pointer flex items-center justify-between select-none">
+                        <span class="policy-faq-title">1. Tôi xem phòng trên Renty có mất phí môi giới không?</span>
                         <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] group-open:rotate-180 transition-transform"></i>
                     </summary>
-                    <p class="text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
+                    <p class="policy-faq-desc text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
                         Hoàn toàn <strong>KHÔNG</strong>. Sinh viên được xem thông tin, bản đồ cự ly, số điện thoại chủ trọ và đặt lịch xem phòng trực tiếp 100% miễn phí.
                     </p>
                 </details>
 
                 <details class="policy-card p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 group">
-                    <summary class="font-bold text-white text-xs cursor-pointer flex items-center justify-between">
-                        <span>2. Huy hiệu "Đã xác minh" (Tích xanh) có ý nghĩa gì?</span>
+                    <summary class="policy-faq-summary font-bold text-slate-900 dark:text-white text-xs cursor-pointer flex items-center justify-between select-none">
+                        <span class="policy-faq-title">2. Huy hiệu "Đã xác minh" (Tích xanh) có ý nghĩa gì?</span>
                         <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] group-open:rotate-180 transition-transform"></i>
                     </summary>
-                    <p class="text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
+                    <p class="policy-faq-desc text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
                         Huy hiệu Tích xanh chứng nhận chủ trọ đã hoàn thành định danh KYC (CCCD, tài khoản ngân hàng chính chủ và xác nhận quyền sở hữu cơ sở trọ). Thuê các phòng này đảm bảo an toàn tuyệt đối.
                     </p>
                 </details>
 
                 <details class="policy-card p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 group">
-                    <summary class="font-bold text-white text-xs cursor-pointer flex items-center justify-between">
-                        <span>3. Làm sao để tính thời gian và đường đi từ phòng trọ đến trường học?</span>
+                    <summary class="policy-faq-summary font-bold text-slate-900 dark:text-white text-xs cursor-pointer flex items-center justify-between select-none">
+                        <span class="policy-faq-title">3. Làm sao để tính thời gian và đường đi từ phòng trọ đến trường học?</span>
                         <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] group-open:rotate-180 transition-transform"></i>
                     </summary>
-                    <p class="text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
+                    <p class="policy-faq-desc text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
                         Trên thanh tìm kiếm của bản đồ, bạn chỉ cần bấm chọn trường học (ví dụ: CĐ Công nghệ Thủ Đức). Hệ thống sẽ tự động vẽ lộ trình và tính số phút đi xe máy, đi bộ từ từng phòng đến cổng trường.
                     </p>
                 </details>
 
                 <details class="policy-card p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 group">
-                    <summary class="font-bold text-white text-xs cursor-pointer flex items-center justify-between">
-                        <span>4. Tôi có thể thanh toán tiền phòng bằng những hình thức nào?</span>
+                    <summary class="policy-faq-summary font-bold text-slate-900 dark:text-white text-xs cursor-pointer flex items-center justify-between select-none">
+                        <span class="policy-faq-title">4. Tôi có thể thanh toán tiền phòng bằng những hình thức nào?</span>
                         <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] group-open:rotate-180 transition-transform"></i>
                     </summary>
-                    <p class="text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
+                    <p class="policy-faq-desc text-slate-400 text-[11px] mt-2.5 leading-relaxed pt-2 border-t border-slate-800/60">
                         Hệ thống hỗ trợ tạo mã quét VietQR tự động khớp lệnh chỉ sau 2 giây, cùng các cổng ví điện tử MoMo, VNPay và tiền mặt trực tiếp cho chủ trọ.
                     </p>
                 </details>
@@ -509,6 +509,37 @@
     body.theme-light #renty-policy-modal .policy-card p,
     body.theme-light #renty-policy-modal .policy-card li {
         color: #475569 !important;
+    }
+
+    /* FAQ Summary & Title (Hiển thị sắc nét cả Light & Dark Mode) */
+    #renty-policy-modal .policy-card summary {
+        color: #ffffff;
+    }
+    html.theme-light #renty-policy-modal .policy-card summary,
+    body.theme-light #renty-policy-modal .policy-card summary,
+    html.theme-light #renty-policy-modal .policy-card .policy-faq-title,
+    body.theme-light #renty-policy-modal .policy-card .policy-faq-title,
+    html.theme-light #renty-policy-modal .policy-card summary span,
+    body.theme-light #renty-policy-modal .policy-card summary span {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+    html.theme-light #renty-policy-modal .policy-card summary:hover,
+    body.theme-light #renty-policy-modal .policy-card summary:hover,
+    html.theme-light #renty-policy-modal .policy-card summary:hover .policy-faq-title,
+    body.theme-light #renty-policy-modal .policy-card summary:hover .policy-faq-title,
+    html.theme-light #renty-policy-modal .policy-card summary:hover span,
+    body.theme-light #renty-policy-modal .policy-card summary:hover span {
+        color: #0d9488 !important;
+    }
+    html.theme-light #renty-policy-modal .policy-card summary i,
+    body.theme-light #renty-policy-modal .policy-card summary i {
+        color: #64748b !important;
+    }
+    html.theme-light #renty-policy-modal .policy-card .policy-faq-desc,
+    body.theme-light #renty-policy-modal .policy-card .policy-faq-desc {
+        color: #475569 !important;
+        border-color: #e2e8f0 !important;
     }
 
     /* Khung khiếu nại & cảnh báo đỏ (Light Mode) */

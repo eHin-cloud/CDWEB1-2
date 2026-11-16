@@ -1253,9 +1253,34 @@ function setViewMode(mode) {
         });
     } else {
         document.body.classList.remove('renty-map-mode');
+        document.body.classList.remove('renty-map-fullscreen');
         if (mapBtn) mapBtn.classList.remove('active');
         if (gridBtn) gridBtn.classList.add('active');
         localStorage.setItem('rentry_view_mode', 'grid');
+
+        // [TỰ ĐỘNG HỦY BỘ LỌC BẢN ĐỒ / TRƯỜNG HỌC KHI VỀ CHẾ ĐỘ LƯỚI]
+        if (window.selectCampusFilter) {
+            window.selectCampusFilter('all');
+        } else if (window.rentyGoogleMap && typeof window.rentyGoogleMap.selectCampus === 'function') {
+            window.rentyGoogleMap.selectCampus('all');
+        }
+        if (window.rentyGoogleMap) {
+            window.rentyGoogleMap.selectedCampusId = 'all';
+            window.rentyGoogleMap.selectedUniversity = null;
+            window.rentyGoogleMap.activeCenter = null;
+        }
+
+        // Dọn sạch các huy hiệu khoảng cách trường học
+        document.querySelectorAll('.campus-distance-badge').forEach(b => b.remove());
+
+        // Xóa banner empty state của map nếu có
+        const emptyBanner = document.getElementById('map-empty-state-banner');
+        if (emptyBanner) emptyBanner.remove();
+
+        // Khôi phục hiển thị toàn bộ phòng hoặc chạy filterItems để đồng bộ phân trang
+        if (typeof window.filterItems === 'function') {
+            window.filterItems({ resetPage: true });
+        }
     }
 }
 window.setViewMode = setViewMode;
@@ -1994,9 +2019,10 @@ function filterItems(options = {}) {
     setSearchSkeletonLoading(false);
 
     // Đồng bộ với Bộ lọc Bản đồ Thông minh (Trường học / Bán kính)
+    const isMapMode = document.body.classList.contains('renty-map-mode');
     const mapInstance = window.rentyGoogleMap;
-    const isCampusFilterActive = mapInstance && mapInstance.selectedUniversity;
-    const isCustomPlaceFilterActive = mapInstance && mapInstance.activeCenter && !isCampusFilterActive;
+    const isCampusFilterActive = isMapMode && mapInstance && !!mapInstance.selectedUniversity;
+    const isCustomPlaceFilterActive = isMapMode && mapInstance && !!mapInstance.activeCenter && !isCampusFilterActive;
 
     let matches = [];
 
@@ -2134,7 +2160,7 @@ function filterItems(options = {}) {
         if (isCampusFilterActive) {
             const uni = mapInstance.selectedUniversity;
             const activeRadius = mapInstance.currentRadius || 3500;
-            const maxRadiusKm = (activeRadius / 1000);
+            const maxRadiusKm = (activeRadius / 1000) + 0.6;
             const roomId = card.getAttribute('data-room-id');
             const roomData = window.rentyRoomsData && window.rentyRoomsData[roomId];
             let distKm = 999;
@@ -2165,7 +2191,16 @@ function filterItems(options = {}) {
             }
         }
 
-        if (matchesQuery && matchesPrice && matchesArea && matchesRoomType && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus && matchesMapRadius) {
+        // Lọc theo Thành phố được chọn trên bản đồ (Hội An, TP.HCM, Hà Nội, Đà Nẵng, v.v.)
+        let matchesCity = true;
+        if (mapInstance && mapInstance.currentCity && mapInstance.currentCity !== 'all' && !isCampusFilterActive && !isCustomPlaceFilterActive) {
+            if (typeof mapInstance.matchesCityAddress === 'function') {
+                const roomAddrStr = `${card.getAttribute('data-address') || ''} ${card.getAttribute('data-area-name') || ''} ${card.getAttribute('data-title') || ''}`.toLowerCase();
+                matchesCity = mapInstance.matchesCityAddress(mapInstance.currentCity, roomAddrStr);
+            }
+        }
+
+        if (matchesQuery && matchesPrice && matchesArea && matchesRoomType && matchesRating && matchesDistance && matchesTags && matchesLocation && matchesStatus && matchesMapRadius && matchesCity) {
             matches.push(card);
             card.dataset.filteredOut = 'false';
             showMarker(card.getAttribute('data-room-id'));
@@ -2203,6 +2238,8 @@ function filterItems(options = {}) {
             const cleanLabel = mapInstance.activeCenter.label || 'địa điểm đã chọn';
             const radiusKmText = ((mapInstance.currentRadius || 5000) / 1000).toFixed(1);
             resultsCountEl.innerHTML = `🎯 Tìm thấy <span class="text-emerald-400 font-extrabold">${matchesCount}</span> phòng trong bán kính ${radiusKmText}km quanh <span class="text-sky-300 font-bold">${cleanLabel}</span> <button type="button" onclick="clearMapSearchInput()" class="ml-2 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>Hủy lọc</button>`;
+        } else if (mapInstance && mapInstance.currentCity && mapInstance.currentCity !== 'all' && typeof mapInstance.getCityName === 'function') {
+            resultsCountEl.innerHTML = `Tìm thấy <span class="text-emerald-400 font-extrabold">${matchesCount}</span> phòng tại <span class="text-sky-300 font-bold">${mapInstance.getCityName(mapInstance.currentCity)}</span>`;
         } else {
             resultsCountEl.textContent = `Tìm thấy ${matchesCount} phòng`;
         }
@@ -3325,16 +3362,29 @@ function closeHotAreasModal() {
 }
 
 function selectHotArea(areaQuery) {
-    document.getElementById('search-input').value = areaQuery;
+    const headerInput = document.getElementById('search-input');
+    if (headerInput) headerInput.value = areaQuery;
     filterItems();
     closeHotAreasModal();
+
+    // Đồng bộ nếu đang ở chế độ bản đồ
+    const gmSearch = document.getElementById('gm-search-input');
+    if (gmSearch) {
+        gmSearch.value = areaQuery;
+    }
+    if (window.rentyGoogleMap && typeof window.rentyGoogleMap.searchGeocodeOrCampus === 'function') {
+        window.rentyGoogleMap.searchGeocodeOrCampus(areaQuery);
+    }
+
     // Highlight search input briefly
     const input = document.getElementById('search-input');
-    input.focus();
-    input.classList.add('ring-2', 'ring-emerald-500');
-    setTimeout(() => {
-        input.classList.remove('ring-2', 'ring-emerald-500');
-    }, 1000);
+    if (input) {
+        input.focus();
+        input.classList.add('ring-2', 'ring-emerald-500');
+        setTimeout(() => {
+            input.classList.remove('ring-2', 'ring-emerald-500');
+        }, 1000);
+    }
 }
 
 function openNewReviewsModal() {
@@ -4021,11 +4071,21 @@ function updateDistanceSlider(val) {
     const percentage = ((parseFloat(val) - min) / (max - min)) * 100;
     slider.style.setProperty('--range-progress', `${percentage}%`);
     
-    // Update feedback text
+    // Update feedback text linh hoạt
     const feedback = document.getElementById('distance-feedback');
     if (feedback) {
         const formattedDist = (parseFloat(val) % 1 === 0) ? parseInt(val, 10) : parseFloat(val);
-        feedback.innerText = `Tìm phòng trong bán kính dưới ${formattedDist}km từ Đại học Bách Khoa`;
+        const mapInst = window.rentyGoogleMap;
+        const activeUni = (mapInst && mapInst.selectedUniversity)
+            ? (mapInst.selectedUniversity.shortName || mapInst.selectedUniversity.name.split('(')[0].trim())
+            : null;
+        if (activeUni) {
+            feedback.innerText = `Bán kính ≤ ${formattedDist}km quanh ${activeUni}`;
+            feedback.title = `Tìm phòng trong bán kính dưới ${formattedDist}km quanh ${activeUni}`;
+        } else {
+            feedback.innerText = `Bán kính ≤ ${formattedDist}km tới tiện ích/trường`;
+            feedback.title = `Tìm phòng trong bán kính dưới ${formattedDist}km tới trường học hoặc tiện ích gần nhất`;
+        }
     }
     
     // Update active state on ticks
