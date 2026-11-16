@@ -381,7 +381,7 @@ Route::post('/renty/contact-requests', [AdminDashboardController::class, 'storeC
 Route::post('/renty/newsletter/subscribe', [\App\Http\Controllers\Api\VisitorController::class, 'subscribeNewsletter'])->middleware('throttle:10,1')->name('renty.newsletter.subscribe');
 
 
-$rentyRooms = function ($filterEmpty = true) {
+$rentyRooms = function ($filterEmpty = false) {
     $user = auth()->user();
     $query = \App\Models\Room::with(['building', 'tenant.users', 'reviews']);
 
@@ -393,12 +393,12 @@ $rentyRooms = function ($filterEmpty = true) {
         }
     }
 
-    // FEAT_04_LANDING: Chỉ hiển thị các tin đăng phòng còn đang 'Trống' (empty) trên sàn công khai khi $filterEmpty = true
-    if ($filterEmpty) {
-        $statusFilter = request()->input('status', 'empty');
-        if ($statusFilter !== 'all') {
-            $query->where('status', 'empty');
-        }
+    // FEAT_24_ROOM_ALERT & FEAT_04: Hiển thị cả phòng ĐÃ THUÊ kèm nút chuông báo phòng (Hình 24.1), lọc empty nếu được yêu cầu
+    if ($filterEmpty || request()->input('status') === 'empty') {
+        $query->where(function ($q) {
+            $q->where('status', 'empty')
+              ->orWhereNull('status');
+        });
     }
 
     $rooms = $query->get();

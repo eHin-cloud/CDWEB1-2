@@ -64,17 +64,17 @@
            @if($room['status'] === 'empty')
                <span class="room-status-badge room-status-empty absolute top-4 left-4 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-[9px] font-extrabold uppercase tracking-wider shadow-sm z-10 flex items-center gap-1.5">
                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                   Sẵn sàng
+                   SẴN SÀNG
                </span>
            @else
-               <span class="room-status-badge room-status-rented absolute top-4 left-4 px-2.5 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg text-[9px] font-extrabold uppercase tracking-wider shadow-sm z-10 flex items-center gap-1.5">
-                   <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                   Đã thuê
+               <span class="room-status-badge room-status-rented absolute top-4 left-4 px-2.5 py-1 bg-black/60 text-white/90 border border-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider shadow-sm z-10 flex items-center gap-1.5">
+                   <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                   ĐÃ THUÊ
                </span>
-               <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-[0.5px] z-10"></div>
+               <div class="absolute inset-0 bg-black/50 z-10"></div>
                <div class="absolute inset-0 flex items-center justify-center z-20">
-                   <button type="button" onclick="subscribeEmptyNotification(event, '{{ $room['id'] }}', '{{ addslashes($room['title']) }}', '{{ addslashes($room['district'] ?? '') }}', '{{ $room['price'] ?? '' }}')" class="py-2 px-3.5 rounded-xl bg-slate-900/95 hover:bg-slate-900 border border-slate-800 text-slate-200 hover:text-white flex items-center gap-2 text-[10px] font-extrabold shadow-lg transition-all renty-notify-btn group/bell-btn">
-                       <i class="fa-solid fa-bell text-amber-400 text-xs group-hover/bell-btn:animate-bounce"></i>
+                   <button type="button" onclick="subscribeEmptyNotification(event, '{{ $room['id'] }}', '{{ addslashes($room['title']) }}', '{{ addslashes($room['area_name'] ?? '') }}', '{{ $room['price'] ?? '' }}')" class="px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black/90 border border-white/20 text-white flex items-center gap-1.5 text-[11px] font-bold shadow-lg transition-all renty-notify-btn group/bell-btn backdrop-blur-sm cursor-pointer">
+                       <i class="fa-solid fa-bell text-white text-xs"></i>
                        Chuông báo khi trống phòng
                    </button>
                </div>

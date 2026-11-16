@@ -1943,26 +1943,28 @@
             color: #059669 !important;
         }
 
-        /* FEAT_24_ROOM_ALERT: Select District & Modal Theme Sync */
+        /* FEAT_24_ROOM_ALERT: Select District & Modal Theme Sync (Tương thích Windows Chrome popup light bg) */
         #notify-district-select,
         .select-district-styled {
-            color-scheme: dark !important;
+            color-scheme: light !important;
             background-color: #090d16 !important;
             color: #f8fafc !important;
         }
 
         #notify-district-select option,
         .select-district-styled option {
-            background-color: #0b1329 !important;
-            color: #f8fafc !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
             padding: 8px 12px !important;
+            font-size: 13px !important;
         }
 
         #notify-district-select optgroup,
         .select-district-styled optgroup {
-            background-color: #050811 !important;
-            color: #f59e0b !important;
-            font-weight: 700 !important;
+            background-color: #f8fafc !important;
+            color: #b45309 !important;
+            font-weight: 800 !important;
+            font-size: 12px !important;
             padding: 6px 10px !important;
         }
 
@@ -2863,11 +2865,7 @@
                     </label>
                 </div>
 
-                <!-- FEAT_24_ROOM_ALERT: Nút kích hoạt chuông báo phòng trên trang tìm kiếm -->
-                <button type="button" onclick="openGeneralRoomAlertModal()" id="btn-open-room-alert" class="px-3.5 py-2 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer select-none" title="Đăng ký nhận chuông báo khi có phòng trống phù hợp">
-                    <i class="fa-solid fa-bell text-amber-400 animate-pulse"></i>
-                    <span>Bật chuông báo phòng</span>
-                </button>
+
             </div>
         </div>
 
@@ -3606,40 +3604,39 @@
                             Khu vực mong muốn <span class="text-rose-500">*</span>
                         </label>
                         <select id="notify-district-select" name="target_district"
-                            class="select-district-styled w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#090d16] border border-slate-800 text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors"
-                            style="color-scheme: dark; background-color: #090d16; color: #f8fafc;">
-                            <option value="" style="background-color: #0b1329; color: #94a3b8;">-- Chọn quận/huyện bạn đang muốn tìm phòng --</option>
-                            <optgroup label="TP. Hồ Chí Minh" style="background-color: #050811; color: #f59e0b; font-weight: bold;">
-                                <option value="Quận Thủ Đức" style="background-color: #0b1329; color: #f8fafc;">Quận Thủ Đức (TP. Thủ Đức)</option>
-                                <option value="Quận Bình Thạnh" style="background-color: #0b1329; color: #f8fafc;">Quận Bình Thạnh</option>
-                                <option value="Quận 1" style="background-color: #0b1329; color: #f8fafc;">Quận 1</option>
-                                <option value="Quận 3" style="background-color: #0b1329; color: #f8fafc;">Quận 3</option>
-                                <option value="Quận 5" style="background-color: #0b1329; color: #f8fafc;">Quận 5</option>
-                                <option value="Quận 7" style="background-color: #0b1329; color: #f8fafc;">Quận 7</option>
-                                <option value="Quận 10" style="background-color: #0b1329; color: #f8fafc;">Quận 10</option>
-                                <option value="Quận Tân Bình" style="background-color: #0b1329; color: #f8fafc;">Quận Tân Bình</option>
-                                <option value="Quận Gò Vấp" style="background-color: #0b1329; color: #f8fafc;">Quận Gò Vấp</option>
-                                <option value="Quận Phú Nhuận" style="background-color: #0b1329; color: #f8fafc;">Quận Phú Nhuận</option>
+                            class="select-district-styled w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#090d16] border border-slate-800 text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors">
+                            <option value="">-- Chọn quận/huyện bạn đang muốn tìm phòng --</option>
+                            <optgroup label="TP. Hồ Chí Minh">
+                                <option value="Quận Thủ Đức">Quận Thủ Đức (TP. Thủ Đức)</option>
+                                <option value="Quận Bình Thạnh">Quận Bình Thạnh</option>
+                                <option value="Quận 1">Quận 1</option>
+                                <option value="Quận 3">Quận 3</option>
+                                <option value="Quận 5">Quận 5</option>
+                                <option value="Quận 7">Quận 7</option>
+                                <option value="Quận 10">Quận 10</option>
+                                <option value="Quận Tân Bình">Quận Tân Bình</option>
+                                <option value="Quận Gò Vấp">Quận Gò Vấp</option>
+                                <option value="Quận Phú Nhuận">Quận Phú Nhuận</option>
                             </optgroup>
-                            <optgroup label="Hà Nội" style="background-color: #050811; color: #f59e0b; font-weight: bold;">
-                                <option value="Quận Cầu Giấy" style="background-color: #0b1329; color: #f8fafc;">Quận Cầu Giấy</option>
-                                <option value="Quận Đống Đa" style="background-color: #0b1329; color: #f8fafc;">Quận Đống Đa</option>
-                                <option value="Quận Ba Đình" style="background-color: #0b1329; color: #f8fafc;">Quận Ba Đình</option>
-                                <option value="Quận Thanh Xuân" style="background-color: #0b1329; color: #f8fafc;">Quận Thanh Xuân</option>
-                                <option value="Quận Nam Từ Liêm" style="background-color: #0b1329; color: #f8fafc;">Quận Nam Từ Liêm</option>
-                                <option value="Quận Bắc Từ Liêm" style="background-color: #0b1329; color: #f8fafc;">Quận Bắc Từ Liêm</option>
-                                <option value="Quận Hai Bà Trưng" style="background-color: #0b1329; color: #f8fafc;">Quận Hai Bà Trưng</option>
-                                <option value="Quận Hoàng Mai" style="background-color: #0b1329; color: #f8fafc;">Quận Hoàng Mai</option>
-                                <option value="Quận Hà Đông" style="background-color: #0b1329; color: #f8fafc;">Quận Hà Đông</option>
-                                <option value="Quận Tây Hồ" style="background-color: #0b1329; color: #f8fafc;">Quận Tây Hồ</option>
+                            <optgroup label="Hà Nội">
+                                <option value="Quận Cầu Giấy">Quận Cầu Giấy</option>
+                                <option value="Quận Đống Đa">Quận Đống Đa</option>
+                                <option value="Quận Ba Đình">Quận Ba Đình</option>
+                                <option value="Quận Thanh Xuân">Quận Thanh Xuân</option>
+                                <option value="Quận Nam Từ Liêm">Quận Nam Từ Liêm</option>
+                                <option value="Quận Bắc Từ Liêm">Quận Bắc Từ Liêm</option>
+                                <option value="Quận Hai Bà Trưng">Quận Hai Bà Trưng</option>
+                                <option value="Quận Hoàng Mai">Quận Hoàng Mai</option>
+                                <option value="Quận Hà Đông">Quận Hà Đông</option>
+                                <option value="Quận Tây Hồ">Quận Tây Hồ</option>
                             </optgroup>
-                            <optgroup label="Đà Nẵng & Các khu vực khác" style="background-color: #050811; color: #f59e0b; font-weight: bold;">
-                                <option value="Quận Hải Châu" style="background-color: #0b1329; color: #f8fafc;">Quận Hải Châu, Đà Nẵng</option>
-                                <option value="Quận Thanh Khê" style="background-color: #0b1329; color: #f8fafc;">Quận Thanh Khê, Đà Nẵng</option>
-                                <option value="Quận Sơn Trà" style="background-color: #0b1329; color: #f8fafc;">Quận Sơn Trà, Đà Nẵng</option>
-                                <option value="Quận Ninh Kiều" style="background-color: #0b1329; color: #f8fafc;">Quận Ninh Kiều, Cần Thơ</option>
-                                <option value="TP. Dĩ An" style="background-color: #0b1329; color: #f8fafc;">TP. Dĩ An, Bình Dương</option>
-                                <option value="TP. Biên Hòa" style="background-color: #0b1329; color: #f8fafc;">TP. Biên Hòa, Đồng Nai</option>
+                            <optgroup label="Đà Nẵng & Các khu vực khác">
+                                <option value="Quận Hải Châu">Quận Hải Châu, Đà Nẵng</option>
+                                <option value="Quận Thanh Khê">Quận Thanh Khê, Đà Nẵng</option>
+                                <option value="Quận Sơn Trà">Quận Sơn Trà, Đà Nẵng</option>
+                                <option value="Quận Ninh Kiều">Quận Ninh Kiều, Cần Thơ</option>
+                                <option value="TP. Dĩ An">TP. Dĩ An, Bình Dương</option>
+                                <option value="TP. Biên Hòa">TP. Biên Hòa, Đồng Nai</option>
                             </optgroup>
                         </select>
                         <p id="err-target-district" class="hidden text-[11px] text-rose-400 font-semibold mt-1.5 flex items-center gap-1.5">
