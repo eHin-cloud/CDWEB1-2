@@ -416,6 +416,7 @@
                         if (updatedRoomsData) {
                             window.rentyRoomsData = updatedRoomsData;
                         }
+                        window._cachedRoomCards = null;
 
                         // 5. Cập nhật markers trên bản đồ nếu đang ở chế độ bản đồ
                         if (isMap && window.rentyGoogleMap) {
@@ -423,6 +424,10 @@
                             if (typeof window.rentyGoogleMap.selectCampus === 'function') {
                                 window.rentyGoogleMap.selectCampus('all');
                             }
+                        }
+
+                        if (typeof filterItems === 'function') {
+                            filterItems({ resetPage: true });
                         }
 
                         // 6. Cập nhật URL trên trình duyệt

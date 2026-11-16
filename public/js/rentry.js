@@ -2046,7 +2046,7 @@ function filterItems(options = {}) {
 
     let matches = [];
 
-    const roomCards = window._cachedRoomCards || (window._cachedRoomCards = Array.from(document.querySelectorAll('.room-item-card')));
+    const roomCards = Array.from(document.querySelectorAll('.room-item-card'));
 
     roomCards.forEach(card => {
         const title = (card.getAttribute('data-title') || '').toLowerCase();
@@ -2138,7 +2138,7 @@ function filterItems(options = {}) {
         }
 
         let matchesDistance = true;
-        if (distanceSlider) {
+        if (distanceSlider && !isCampusFilterActive && !isCustomPlaceFilterActive) {
             matchesDistance = distance <= filterDistance;
         }
 
