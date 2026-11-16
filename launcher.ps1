@@ -380,7 +380,13 @@ $btnExit         = $window.FindName("btnExit")
 $txtStatus       = $window.FindName("txtStatus")
 $chkAppMode      = $window.FindName("chkAppMode")
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } elseif ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
+
+# Tu dong don dep public\hot neu Vite khong con hoat dong de tranh gay loi CSS
+$vitePortOpen = Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quiet -WarningAction SilentlyContinue
+if (-not $vitePortOpen -and (Test-Path "$scriptDir\public\hot")) {
+    Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
+}
 
 # Ham dam bao MySQL da bat va san sang tiep nhan ket noi
 function Start-MySqlServer {
@@ -647,8 +653,25 @@ $btnRunHybrid.Add_Click({
         Update-UI
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan serve --host=127.0.0.1 --port=8088" -WindowStyle Hidden
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & `"$phpPath`" artisan reverb:start --host=127.0.0.1 --port=8085" -WindowStyle Hidden
+    }
+
+    # Don dep va khoi chay Vite de tranh loi khong load duoc CSS
+    $viteActive = Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quiet -WarningAction SilentlyContinue
+    if (-not $viteActive) {
+        if (Test-Path "$scriptDir\public\hot") {
+            Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
+        }
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd /d `"$scriptDir`" & npm run dev" -WindowStyle Hidden
-        Start-Sleep -Seconds 2
+        for ($i = 0; $i -lt 10; $i++) {
+            $viteReady = Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quiet -WarningAction SilentlyContinue
+            if ($viteReady) { break }
+            Start-Sleep -Milliseconds 500
+        }
+        # Neu Vite khong len duoc ma ton tai file hot thi xoa de fallback ve production CSS
+        $viteReadyFinal = Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if (-not $viteReadyFinal -and (Test-Path "$scriptDir\public\hot")) {
+            Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
+        }
     }
 
     $targetUrl = "http://localhost:8088/renty"
@@ -668,6 +691,11 @@ $btnRunDocker.Add_Click({
         $txtStatus.Text = "❌ Docker Desktop chưa sẵn sàng."
         $btnRunDocker.IsEnabled = $true
         return
+    }
+
+    # Xoa public\hot de dam bao Docker khong bi loi CSS do ket noi toi Vite localhost
+    if (Test-Path "$scriptDir\public\hot") {
+        Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
     }
 
     # Chay docker compose up -d
@@ -859,6 +887,9 @@ $btnStopAll.Add_Click({
     $txtStatus.Text = "⏳ Đang giải phóng và dừng toàn bộ tiến trình PHP, Node ngầm..."
     Update-UI
     Stop-Process -Name "php", "node" -Force -ErrorAction SilentlyContinue
+    if (Test-Path "$scriptDir\public\hot") {
+        Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
+    }
     $txtStatus.Text = "⏹️ Đã dừng toàn bộ dịch vụ Server & Vite ngầm thành công."
 })
 
@@ -868,11 +899,17 @@ $btnOpenAdvTab.Add_Click({
 
 $btnExit.Add_Click({
     Stop-Process -Name "php", "node" -Force -ErrorAction SilentlyContinue
+    if (Test-Path "$scriptDir\public\hot") {
+        Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
+    }
     $window.Close()
 })
 
 $window.Add_Closing({
     Stop-Process -Name "php", "node" -Force -ErrorAction SilentlyContinue
+    if (Test-Path "$scriptDir\public\hot") {
+        Remove-Item -Force "$scriptDir\public\hot" -ErrorAction SilentlyContinue
+    }
 })
 
 # Hien thi Window

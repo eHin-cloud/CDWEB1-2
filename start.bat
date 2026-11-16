@@ -6,10 +6,11 @@ title SmartRoom ^& Renty - Control Dashboard
 :: Dam bao container CSDL MySQL Docker luon duoc bat
 docker start smartroom_mysql > nul 2>&1
 docker start smartroom_elasticsearch > nul 2>&1
+if exist "%~dp0public\hot" del /f /q "%~dp0public\hot" > nul 2>&1
 
 :: Neu truyen tham so --gui, khoi chay GUI App Launcher
 if "%1" neq "--cli" (
-    start "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    start "" powershell -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
     exit /b 0
 )
 
@@ -198,7 +199,7 @@ if "!compact_act!"=="4" (
     goto DASHBOARD_COMPACT
 )
 if "!compact_act!"=="5" (
-    start "" powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+    start "" powershell -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
     goto DASHBOARD_COMPACT
 )
 if "!compact_act!"=="6" (
