@@ -4275,11 +4275,14 @@
             }
         }
 
-        function openEditResidentModal(id, name, phone, roomId, startDate, dob, cccd, hometown, tempStatus, version) {
+        function openEditResidentModal(id, name, gender, phone, roomId, startDate, dob, cccd, hometown, tempStatus, version) {
             const form = document.getElementById('edit-resident-form');
             form.action = `/smartroom/admin/resident/${id}`;
             
             document.getElementById('edit-name').value = name;
+            if (document.getElementById('edit-gender')) {
+                document.getElementById('edit-gender').value = gender || 'Nam';
+            }
             document.getElementById('edit-phone').value = phone;
             document.getElementById('edit-room-id').value = roomId;
             
@@ -4319,8 +4322,11 @@
             }
         }
 
-        function openViewResidentModal(id, name, phone, email, room, startDate, status, dob, cccd, hometown, tempStatus) {
+        function openViewResidentModal(id, name, gender, phone, email, room, startDate, status, dob, cccd, hometown, tempStatus) {
             document.getElementById('view-name').textContent = name;
+            if (document.getElementById('view-gender')) {
+                document.getElementById('view-gender').textContent = gender || 'Nam';
+            }
             document.getElementById('view-phone').textContent = phone;
             document.getElementById('view-email').textContent = email || 'Chưa cung cấp';
             document.getElementById('view-room').textContent = 'Phòng ' + room;

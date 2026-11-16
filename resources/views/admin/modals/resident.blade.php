@@ -20,7 +20,14 @@
                         <input type="tel" name="phone" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none" placeholder="09xxxxxxxx">
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giới tính *</label>
+                        <select name="gender" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
                         <input type="date" name="dob" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
@@ -92,7 +99,14 @@
                         <input type="tel" name="phone" id="edit-phone" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giới tính *</label>
+                        <select name="gender" id="edit-gender" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
                         <input type="date" name="dob" id="edit-dob" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none">
@@ -160,6 +174,10 @@
                             <div class="flex justify-between text-xs border-b border-slate-800/60 pb-1.5">
                                 <span class="text-slate-500">Họ và tên:</span>
                                 <strong class="text-slate-200" id="view-name">Nguyễn Văn A</strong>
+                            </div>
+                            <div class="flex justify-between text-xs border-b border-slate-800/60 pb-1.5">
+                                <span class="text-slate-500">Giới tính:</span>
+                                <strong class="text-indigo-400 font-bold" id="view-gender">Nam</strong>
                             </div>
                             <div class="flex justify-between text-xs border-b border-slate-800/60 pb-1.5">
                                 <span class="text-slate-500">Số điện thoại:</span>

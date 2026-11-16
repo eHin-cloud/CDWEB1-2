@@ -86,7 +86,16 @@
                             <tbody class="divide-y divide-slate-900" id="resident-table-body">
                                 @foreach($residents as $resident)
                                 <tr class="hover:bg-slate-900/30 transition-all">
-                                    <td class="px-4 py-4 font-bold text-slate-200">{{ $resident->name }}</td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-bold text-slate-200 flex items-center gap-1.5 flex-wrap">
+                                            <span>{{ $resident->name }}</span>
+                                            @if(($resident->gender ?? 'Nam') === 'Nữ')
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-pink-500/10 text-pink-400 border border-pink-500/20" title="Giới tính: Nữ"><i class="fa-solid fa-venus"></i> Nữ</span>
+                                            @else
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20" title="Giới tính: Nam"><i class="fa-solid fa-mars"></i> Nam</span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-4 text-xs font-semibold text-indigo-400">P. {{ $resident->room ? $resident->room->room_number : 'N/A' }}</td>
                                     <td class="px-4 py-4 text-xs text-slate-400 font-mono">{{ $resident->phone }}</td>
                                     <td class="px-4 py-4 text-xs text-slate-400 font-mono">{{ $resident->cccd ?? '—' }}</td>
@@ -110,11 +119,11 @@
                                     <td class="px-4 py-4">
                                         <div class="flex gap-1.5 justify-center flex-wrap">
                                             {{-- Nút Xem chi tiết --}}
-                                            <button onclick="openViewResidentModal({{ $resident->id }}, '{{ addslashes($resident->name) }}', '{{ $resident->phone }}', '{{ $resident->email }}', '{{ $resident->room ? $resident->room->room_number : 'N/A' }}', '{{ $resident->start_date ? \Carbon\Carbon::parse($resident->start_date)->format('d/m/Y') : '—' }}', '{{ $resident->status === 'active' ? 'Đang hoạt động' : 'Tạm ngưng' }}', '{{ $resident->dob ? \Carbon\Carbon::parse($resident->dob)->format('d/m/Y') : '' }}', '{{ $resident->cccd }}', '{{ addslashes($resident->hometown) }}', '{{ $resident->temporary_residence_status }}')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-[10px] font-bold text-emerald-400 transition-all" title="Xem chi tiết">
+                                            <button onclick="openViewResidentModal({{ $resident->id }}, '{{ addslashes($resident->name) }}', '{{ $resident->gender ?? 'Nam' }}', '{{ $resident->phone }}', '{{ $resident->email }}', '{{ $resident->room ? $resident->room->room_number : 'N/A' }}', '{{ $resident->start_date ? \Carbon\Carbon::parse($resident->start_date)->format('d/m/Y') : '—' }}', '{{ $resident->status === 'active' ? 'Đang hoạt động' : 'Tạm ngưng' }}', '{{ $resident->dob ? \Carbon\Carbon::parse($resident->dob)->format('d/m/Y') : '' }}', '{{ $resident->cccd }}', '{{ addslashes($resident->hometown) }}', '{{ $resident->temporary_residence_status }}')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-[10px] font-bold text-emerald-400 transition-all" title="Xem chi tiết">
                                                 <i class="fa-regular fa-eye"></i>
                                             </button>
                                             {{-- Nút Sửa thông tin --}}
-                                            <button onclick="openEditResidentModal('{{ $resident->id }}', '{{ addslashes($resident->name) }}', '{{ $resident->phone }}', '{{ $resident->room_id }}', '{{ $resident->start_date ? \Carbon\Carbon::parse($resident->start_date)->format('Y-m-d') : '' }}', '{{ $resident->dob ? \Carbon\Carbon::parse($resident->dob)->format('Y-m-d') : '' }}', '{{ $resident->cccd }}', '{{ addslashes($resident->hometown) }}', '{{ $resident->temporary_residence_status }}', '{{ $resident->version }}')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-[10px] font-bold text-indigo-400 transition-all" title="Sửa thông tin">
+                                            <button onclick="openEditResidentModal('{{ $resident->id }}', '{{ addslashes($resident->name) }}', '{{ $resident->gender ?? 'Nam' }}', '{{ $resident->phone }}', '{{ $resident->room_id }}', '{{ $resident->start_date ? \Carbon\Carbon::parse($resident->start_date)->format('Y-m-d') : '' }}', '{{ $resident->dob ? \Carbon\Carbon::parse($resident->dob)->format('Y-m-d') : '' }}', '{{ $resident->cccd }}', '{{ addslashes($resident->hometown) }}', '{{ $resident->temporary_residence_status }}', '{{ $resident->version }}')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg text-[10px] font-bold text-indigo-400 transition-all" title="Sửa thông tin">
                                                 <i class="fa-regular fa-pen-to-square"></i>
                                             </button>
                                             {{-- Nút Quản lý người thân --}}
