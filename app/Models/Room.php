@@ -65,7 +65,11 @@ class Room extends Model
     protected static function booted(): void
     {
         static::saved(function ($room) {
-            if ($room->isDirty('status') && $room->status === 'empty') {
+            // FEAT_24_ROOM_ALERT: Bắn thông báo khi có phòng mới trạng thái Trống hoặc phòng chuyển sang Trống
+            $isNewEmpty = $room->wasRecentlyCreated && $room->status === 'empty';
+            $isStatusChangedToEmpty = $room->wasChanged('status') && $room->status === 'empty';
+
+            if ($isNewEmpty || $isStatusChangedToEmpty) {
                 \App\Services\RoomAlertService::notifySubscribersForRoom($room);
             }
         });

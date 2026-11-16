@@ -283,6 +283,40 @@ class RoomAlertFeature24Test extends TestCase
     }
 
     /**
+     * Kịch bản: Khi tạo phòng trống mới (New Empty Room), hệ thống tự động bắn email thông báo cho người đăng ký
+     */
+    public function test_notifies_matching_alerts_when_brand_new_empty_room_is_created(): void
+    {
+        Mail::fake();
+
+        $alert = RoomAlert::create([
+            'tenant_id' => $this->tenant->id,
+            'contact_info' => 'khachtimphongmoi@smartroom.local',
+            'target_district' => 'Quận Cầu Giấy',
+            'max_budget' => 5000000,
+            'status' => 'active',
+        ]);
+
+        // Tạo phòng mới với trạng thái empty
+        $newRoom = Room::create([
+            'tenant_id' => $this->tenant->id,
+            'building_id' => $this->building->id,
+            'room_number' => '999',
+            'floor' => 9,
+            'area' => 30,
+            'price' => 4500000,
+            'status' => 'empty',
+        ]);
+
+        // Alert phải được tự động kích hoạt thông báo
+        $this->assertEquals('notified', $alert->fresh()->status);
+        $this->assertDatabaseHas('notification_logs', [
+            'recipient_contact' => 'khachtimphongmoi@smartroom.local',
+            'type' => 'room_alert_empty_notified',
+        ]);
+    }
+
+    /**
      * Hủy chuông báo DELETE /api/renty/room-alerts/{id}
      */
     public function test_destroy_room_alert_successfully(): void

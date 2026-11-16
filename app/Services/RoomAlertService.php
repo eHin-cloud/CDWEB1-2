@@ -55,14 +55,19 @@ class RoomAlertService
 
             // Bắn email thông báo nếu contact_info là email
             if (filter_var($alert->contact_info, FILTER_VALIDATE_EMAIL)) {
+                $isDirect = $alert->room_id && (int) $alert->room_id === (int) $room->id;
+                $subject = $isDirect
+                    ? '🔔 Phòng ' . $room->room_number . ' bạn theo dõi tại Renty vừa chuyển sang TRỐNG!'
+                    : '🔔 Có phòng trống mới phù hợp tại ' . ($alert->target_district ?: 'khu vực bạn tìm kiếm') . ' - Renty';
+
                 try {
                     Mail::send('emails.room_alert_empty_notification', [
                         'alert' => $alert,
                         'room' => $room,
                         'email' => $alert->contact_info,
-                    ], function ($message) use ($alert, $room) {
-                        $message->to($alert->contact_info)
-                            ->subject('🔔 Phòng ' . $room->room_number . ' bạn theo dõi tại Renty vừa chuyển sang TRỐNG!');
+                        'isDirect' => $isDirect,
+                    ], function ($message) use ($alert, $subject) {
+                        $message->to($alert->contact_info)->subject($subject);
                     });
                     Log::info("FEAT_24_ROOM_ALERT: Đã gửi email thông báo phòng trống tới [{$alert->contact_info}] cho phòng [{$room->room_number}]");
                 } catch (\Throwable $e) {
@@ -75,7 +80,7 @@ class RoomAlertService
                         'channel' => 'email',
                         'recipient_contact' => $alert->contact_info,
                         'recipient_name' => explode('@', $alert->contact_info)[0],
-                        'subject' => '🔔 Phòng ' . $room->room_number . ' bạn theo dõi tại Renty vừa chuyển sang TRỐNG!',
+                        'subject' => $subject,
                         'message' => "Phòng {$room->room_number} tại {$room->building?->name} đã chuyển sang trạng thái Trống.",
                         'sent_at' => now(),
                     ]);

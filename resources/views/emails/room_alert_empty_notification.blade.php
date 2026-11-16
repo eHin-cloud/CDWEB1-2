@@ -17,7 +17,11 @@
                                 &#127881;
                             </div>
                             <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                                Phòng Đang Theo Dõi <span style="color: #34d399;">VỪA TRỐNG!</span>
+                                @if(!empty($isDirect))
+                                    Phòng Đang Theo Dõi <span style="color: #34d399;">VỪA TRỐNG!</span>
+                                @else
+                                    Phòng Trống Mới <span style="color: #34d399;">PHÙ HỢP TIÊU CHÍ!</span>
+                                @endif
                             </h1>
                             <p style="margin: 6px 0 0 0; font-size: 13px; color: #cbd5e1; font-weight: 500;">
                                 Chuông Báo Phòng Trống Thông Minh &ndash; SmartRoom &amp; Renty
@@ -32,7 +36,11 @@
                                 Xin chào <strong>{{ $email }}</strong>,
                             </p>
                             <p style="margin: 0 0 20px 0; font-size: 14px; color: #94a3b8; line-height: 1.6;">
-                                Căn phòng trọ bạn đang bật chuông theo dõi tại <strong>{{ $room->building?->name ?? 'SmartRoom' }}</strong> vừa được cập nhật sang trạng thái <strong>SẴN SÀNG CHO THUÊ</strong>!
+                                @if(!empty($isDirect))
+                                    Căn phòng trọ bạn đang bật chuông theo dõi (<strong>Phòng {{ $room->room_number }}</strong> tại <strong>{{ $room->building?->name ?? 'SmartRoom' }}</strong>) vừa được cập nhật sang trạng thái <strong>SẴN SÀNG CHO THUÊ</strong>!
+                                @else
+                                    Hệ thống vừa tìm thấy một căn phòng trọ trống mới phù hợp với tiêu chí khu vực <strong>{{ $alert->target_district ?? 'bạn tìm kiếm' }}</strong> (ngân sách dưới <strong>{{ number_format($alert->max_budget ?? 0) }} VNĐ</strong>)!
+                                @endif
                             </p>
 
                             <!-- Room Details Card -->
