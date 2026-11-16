@@ -131,6 +131,18 @@ class TicketManagementTest extends TestCase
             'status' => 'active',
         ]);
 
+        \App\Models\Contract::create([
+            'tenant_id' => $tenant->id,
+            'room_id' => $room->id,
+            'resident_id' => $resident->id,
+            'status' => 'active',
+            'contract_code' => 'HD_TEST_' . uniqid(),
+            'start_date' => now()->subMonth(),
+            'end_date' => now()->addMonths(6),
+            'deposit' => 3500000,
+            'terms' => 'Dieu khoan thue nha tieu chuan',
+        ]);
+
         $ticket = Ticket::create([
             'tenant_id' => $tenant->id,
             'room_id' => $room->id,
@@ -158,7 +170,7 @@ class TicketManagementTest extends TestCase
             'name' => 'Chủ Trọ Test',
             'username' => 'landlord_admin_' . uniqid(),
             'email' => 'landlord_' . uniqid() . '@example.com',
-            'role' => 'admin',
+            'role' => 'landlord',
             'password' => bcrypt('password'),
         ]);
 

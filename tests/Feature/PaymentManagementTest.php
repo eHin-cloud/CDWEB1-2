@@ -164,7 +164,7 @@ class PaymentManagementTest extends TestCase
             'name' => 'Admin',
             'username' => 'admin-payment-test',
             'email' => 'admin-payment@example.com',
-            'role' => 'admin',
+            'role' => 'landlord',
             'password' => Hash::make('password'),
         ]);
 

@@ -2,22 +2,31 @@
 
 namespace Tests\Feature;
 
+use App\Models\Building;
 use App\Models\Room;
+use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class RoomComparisonTest extends TestCase
 {
+    use RefreshDatabase;
+
+    private function createSampleRooms(): array
+    {
+        $tenant = Tenant::create(['name' => 'Tenant Compare', 'email' => 'compare_' . uniqid() . '@test.com']);
+        $building = Building::create(['tenant_id' => $tenant->id, 'name' => 'Toa Compare', 'address' => 'Ha Noi']);
+        $r1 = Room::create(['tenant_id' => $tenant->id, 'building_id' => $building->id, 'room_number' => '101', 'floor' => 1, 'price' => 3000000, 'area' => 25, 'status' => 'empty']);
+        $r2 = Room::create(['tenant_id' => $tenant->id, 'building_id' => $building->id, 'room_number' => '102', 'floor' => 1, 'price' => 3500000, 'area' => 30, 'status' => 'empty']);
+        return [$r1->id, $r2->id];
+    }
+
     /**
      * Test so sánh phòng thành công với 2-3 phòng hợp lệ
      */
     public function test_compare_rooms_success(): void
     {
-        $rooms = Room::take(2)->get();
-        if ($rooms->count() < 2) {
-            $this->markTestSkipped('Cần ít nhất 2 phòng trong database để test so sánh.');
-        }
-
-        $roomIds = $rooms->pluck('id')->toArray();
+        $roomIds = $this->createSampleRooms();
 
         $response = $this->postJson('/api/renty/rooms/compare', [
             'room_ids' => $roomIds,
@@ -102,12 +111,7 @@ class RoomComparisonTest extends TestCase
      */
     public function test_compare_rooms_ai_endpoint_success(): void
     {
-        $rooms = Room::take(2)->get();
-        if ($rooms->count() < 2) {
-            $this->markTestSkipped('Cần ít nhất 2 phòng trong database để test so sánh AI.');
-        }
-
-        $roomIds = $rooms->pluck('id')->toArray();
+        $roomIds = $this->createSampleRooms();
 
         $response = $this->postJson('/api/renty/rooms/compare-ai', [
             'room_ids' => $roomIds,
