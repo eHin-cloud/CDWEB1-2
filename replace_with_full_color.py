@@ -176,3 +176,4 @@ with open('vinhem_figures_extracted.json', 'w', encoding='utf-8') as f:
     json.dump(vinhem_data, f, ensure_ascii=False, indent=2)
 
 print("Updated Hien and Vinh Em figure mappings to 100% COLOR images!")
+
